@@ -40,11 +40,17 @@ class _SignInPageState extends ConsumerState<SignInPage> {
         password: _passwordController.text.trim(),
       );
 
-      // Force check admin custom claim
-      final isAdmin = await ref.refresh(isAdminProvider.future);
-      
+      // Force refresh token and check admin claim directly
+      final user = auth.currentUser;
+      bool isAdmin = false;
+      if (user != null) {
+        final idTokenResult = await user.getIdTokenResult(true);
+        isAdmin = idTokenResult.claims?['admin'] == true;
+      }
+
       if (mounted) {
         if (isAdmin) {
+          ref.invalidate(isAdminProvider);
           context.go('/admin');
         } else {
           // Sign out if not an admin
