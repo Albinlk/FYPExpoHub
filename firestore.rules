@@ -122,5 +122,11 @@ service cloud.firestore {
       allow read: if isAdmin();
       allow write: if false; // Prevent client direct writes, must be written server-side
     }
+    
+    // 4. Admin Settings
+    match /settings/{settingId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
   }
 }
