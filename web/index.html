@@ -18,7 +18,110 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="FYP Expo Hub - UiTM FSKM Final Year Project Exhibition">
+
+  <!-- Preload local WOFF2 fonts for instant, crisp rendering (smaller than TTF) -->
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="fonts/Inter-Regular.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="fonts/Inter-Medium.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="fonts/Inter-SemiBold.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="fonts/Inter-Bold.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="fonts/Montserrat-Regular.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="fonts/Montserrat-Medium.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="fonts/Montserrat-SemiBold.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="fonts/Montserrat-Bold.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="fonts/Montserrat-ExtraBold.woff2">
+
+  <!-- Local font-face definitions (loaded instantly from preload) -->
+  <style>
+    @font-face {
+      font-family: 'Inter';
+      src: url('fonts/Inter-Regular.woff2') format('woff2');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Inter';
+      src: url('fonts/Inter-Medium.woff2') format('woff2');
+      font-weight: 500;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Inter';
+      src: url('fonts/Inter-SemiBold.woff2') format('woff2');
+      font-weight: 600;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Inter';
+      src: url('fonts/Inter-Bold.woff2') format('woff2');
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Montserrat';
+      src: url('fonts/Montserrat-Regular.woff2') format('woff2');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Montserrat';
+      src: url('fonts/Montserrat-Medium.woff2') format('woff2');
+      font-weight: 500;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Montserrat';
+      src: url('fonts/Montserrat-SemiBold.woff2') format('woff2');
+      font-weight: 600;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Montserrat';
+      src: url('fonts/Montserrat-Bold.woff2') format('woff2');
+      font-weight: 700;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Montserrat';
+      src: url('fonts/Montserrat-ExtraBold.woff2') format('woff2');
+      font-weight: 800;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    /* Ensure crisp text rendering on all platforms */
+    * {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
+    html {
+      -webkit-text-size-adjust: 100%;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+    /* Hide the loading flash */
+    flt-glass-pane {
+      position: fixed !important;
+    }
+  </style>
+
+  <!-- Google Fonts fallback (loaded after local fonts via font-display: swap) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
@@ -29,10 +132,18 @@
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>fyp_expo_hub</title>
+  <title>FYP Expo Hub</title>
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
+  <!--
+    Use HTML renderer for crisp text rendering on web (instead of CanvasKit).
+    CanvasKit renders text as paths which can appear jagged on some displays.
+    HTML renderer uses native browser text rendering for sharp, crisp fonts.
+  -->
+  <script>
+    window.flutterWebRenderer = "html";
+  </script>
   <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader
