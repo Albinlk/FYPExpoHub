@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'dart:io';
+import 'dart:typed_data';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/firebase/firestore_service.dart';
 import '../../../../core/firebase/firebase_providers.dart';
@@ -20,6 +20,7 @@ class _AdminImportsPageState extends ConsumerState<AdminImportsPage> {
   bool _isUploading = false;
   String? _selectedFileName;
   String? _selectedFilePath;
+  Uint8List? _selectedFileBytes;
 
   void _selectFile() async {
     final file = await FirestoreService.pickExcelFile();
@@ -27,6 +28,7 @@ class _AdminImportsPageState extends ConsumerState<AdminImportsPage> {
       setState(() {
         _selectedFileName = file.name;
         _selectedFilePath = file.path;
+        _selectedFileBytes = file.bytes;
       });
     }
   }
@@ -41,7 +43,11 @@ class _AdminImportsPageState extends ConsumerState<AdminImportsPage> {
       final storagePath = 'private/imports/$importId/$_selectedFileName';
 
       // Upload file to Firebase Storage
-      FirestoreService.instance.uploadFile(_selectedFilePath!, storagePath);
+      await FirestoreService.instance.uploadFile(
+        _selectedFilePath!,
+        storagePath,
+        _selectedFileBytes,
+      );
 
       // Create import record in Firestore
       ref.read(importsProvider.notifier).addImport(ImportRecord(
