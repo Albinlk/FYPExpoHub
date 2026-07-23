@@ -11,9 +11,16 @@ void main() async {
   usePathUrlStrategy();
 
   try {
-    // For Web, Firebase.initializeApp() without options 
-    // should work if the config is in index.html
-    await Firebase.initializeApp();
+    await Firebase.initializeApp(
+      options: const FirebaseOptions(
+        apiKey: 'AIzaSyAaoWvZr70guv06Ab_f3NcThxawfCEChus',
+        appId: '1:825089478411:web:1dcd07362fdf636d9ddc0e',
+        messagingSenderId: '825089478411',
+        projectId: 'fyp-expo-hub',
+        authDomain: 'fyp-expo-hub.firebaseapp.com',
+        storageBucket: 'fyp-expo-hub.firebasestorage.app',
+      ),
+    );
   } catch (e) {
     print('Firebase init error: $e');
   }
