@@ -2,7 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'dart:io';
+import 'dart:typed_data';
 
 Map<String, dynamic> _convertTimestamps(Map<String, dynamic> data) {
   return data.map((key, value) {
@@ -174,12 +176,17 @@ class FirestoreService {
   // ---------------------------------------------------
   // FILE UPLOAD (web-compatible via putData)
   // ---------------------------------------------------
-  Future<String?> uploadFile(String localPath, String destinationPath) async {
+  Future<String?> uploadFile(String localPath, String destinationPath, Uint8List? bytes) async {
     final ref = _storage.ref(destinationPath);
-    final file = File(localPath);
-    final bytes = await file.readAsBytes();
-    await ref.putData(bytes);
+    final fileBytes = bytes ?? (await _readFileAsBytes(localPath));
+    await ref.putData(fileBytes);
     return destinationPath;
+  }
+
+  Future<Uint8List> _readFileAsBytes(String localPath) async {
+    // Fallback for mobile/desktop platforms
+    final file = File(localPath);
+    return await file.readAsBytes();
   }
 
   static Future<PlatformFile?> pickExcelFile() async {
