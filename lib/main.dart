@@ -13,7 +13,8 @@ void main() async {
   try {
     await Firebase.initializeApp();
   } catch (e) {
-    debugPrint('Firebase init skipped: $e');
+    // Use print instead of debugPrint to ensure it shows in production logs for debugging
+    print('Firebase initialization error: $e');
   }
 
   runApp(
