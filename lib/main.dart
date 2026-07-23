@@ -11,10 +11,11 @@ void main() async {
   usePathUrlStrategy();
 
   try {
+    // For Web, Firebase.initializeApp() without options 
+    // should work if the config is in index.html
     await Firebase.initializeApp();
   } catch (e) {
-    // Use print instead of debugPrint to ensure it shows in production logs for debugging
-    print('Firebase initialization error: $e');
+    print('Firebase init error: $e');
   }
 
   runApp(
