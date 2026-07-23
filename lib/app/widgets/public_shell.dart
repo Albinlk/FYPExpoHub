@@ -1,10 +1,10 @@
-import 'dart:html' as html;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:web/web.dart' as web;
 import '../theme/theme.dart';
 
 void _openAdminPortal() {
-  html.window.location.href = 'https://admin.fskmjasinfypexhibition.site/admin/sign-in';
+  web.window.location.href = 'https://admin.fskmjasinfypexhibition.site/admin/sign-in';
 }
 
 class PublicShell extends StatelessWidget {
