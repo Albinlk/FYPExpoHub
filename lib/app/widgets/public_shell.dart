@@ -1,6 +1,13 @@
+import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../theme/theme.dart';
+
+void _openAdminPortal() {
+  final location = globalContext['location'] as JSObject;
+  location['href'] = 'https://admin.fskmjasinfypexhibition.site/admin/sign-in'.toJS;
+}
 
 class PublicShell extends StatelessWidget {
   final Widget child;
@@ -90,7 +97,7 @@ class _DesktopNavBar extends StatelessWidget {
 
           // Right: Action Button
           ElevatedButton(
-            onPressed: () => _navigateTo(context, '/admin'),
+            onPressed: _openAdminPortal,
             style: ElevatedButton.styleFrom(
               backgroundColor: DesignSystem.primary,
               foregroundColor: DesignSystem.onPrimary,
@@ -194,7 +201,7 @@ class _MobileBottomNavBar extends StatelessWidget {
                 _buildMenuItem(context, 'Frequently Asked Questions', Icons.help_outline, '/faq'),
                 _buildMenuItem(context, 'Privacy Policy', Icons.privacy_tip_outlined, '/privacy'),
                 const Divider(),
-                _buildMenuItem(context, 'Admin CMS Portal', Icons.admin_panel_settings, '/admin'),
+                _buildMenuItemExternal(context, 'Admin CMS Portal', Icons.admin_panel_settings),
               ],
             ),
           ),
@@ -210,6 +217,17 @@ class _MobileBottomNavBar extends StatelessWidget {
       onTap: () {
         Navigator.pop(context);
         context.go(route);
+      },
+    );
+  }
+
+  Widget _buildMenuItemExternal(BuildContext context, String title, IconData icon) {
+    return ListTile(
+      leading: Icon(icon, color: DesignSystem.primary),
+      title: Text(title, style: DesignSystem.bodyMd),
+      onTap: () {
+        Navigator.pop(context);
+        _openAdminPortal();
       },
     );
   }
