@@ -51,7 +51,9 @@ class _SignInPageState extends ConsumerState<SignInPage> {
       if (mounted) {
         if (isAdmin) {
           ref.invalidate(isAdminProvider);
-          context.go('/admin');
+          // Small delay to allow auth state to propagate through StreamProvider
+          await Future.delayed(const Duration(milliseconds: 300));
+          if (mounted) context.go('/admin');
         } else {
           // Sign out if not an admin
           await auth.signOut();
