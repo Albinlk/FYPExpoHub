@@ -1,0 +1,25 @@
+# Exclude local build directories
+build/
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+
+# Exclude git references
+.git/
+.gitignore
+
+# Exclude IDE specific directories
+.idea/
+.vscode/
+*.imap
+*.apk
+*.ipa
+
+# Exclude Cloud Functions and local development packages
+functions/node_modules/
+node_modules/
+serviceAccountKey.json
+
+# Exclude local system logs
+*.log

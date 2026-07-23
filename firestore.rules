@@ -1,0 +1,126 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // -------------------------------------------------------------
+    // Helper Functions
+    // -------------------------------------------------------------
+    
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Check if the user is a verified administrator
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.admin == true;
+    }
+    
+    // Check if the document has a 'published' publication status
+    function isPublished(resource) {
+      return resource.data.publicationStatus == 'published';
+    }
+
+    // Default: Deny all access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // -------------------------------------------------------------
+    // PUBLIC COLLECTIONS
+    // -------------------------------------------------------------
+    
+    // 1. Events
+    match /events/{eventId} {
+      // Public: read only explicitly published events
+      allow read: if isPublished(resource) || isAdmin();
+      // Admin: full access
+      allow write: if isAdmin();
+    }
+    
+    // 2. Public Schedule Items
+    match /publicScheduleItems/{scheduleId} {
+      allow read: if isPublished(resource) || isAdmin();
+      allow write: if isAdmin();
+    }
+    
+    // 3. Public Projects
+    match /publicProjects/{projectId} {
+      allow read: if isPublished(resource) || isAdmin();
+      allow write: if isAdmin();
+    }
+    
+    // 4. Booths
+    match /booths/{boothId} {
+      allow read: if isPublished(resource) || isAdmin();
+      allow write: if isAdmin();
+    }
+    
+    // 5. Public Announcements
+    match /publicAnnouncements/{announcementId} {
+      allow read: if isPublished(resource) || isAdmin();
+      allow write: if isAdmin();
+    }
+    
+    // 6. Award Categories
+    match /awardCategories/{awardCategoryId} {
+      allow read: if isPublished(resource) || isAdmin();
+      allow write: if isAdmin();
+    }
+    
+    // 7. Published Award Winners
+    match /publishedAwardWinners/{winnerId} {
+      allow read: if isPublished(resource) || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // -------------------------------------------------------------
+    // PRIVATE COLLECTIONS
+    // -------------------------------------------------------------
+    
+    // 1. User Profiles
+    match /users/{userId} {
+      allow read: if isAdmin() || (isAuthenticated() && request.auth.uid == userId);
+      allow write: if isAdmin();
+    }
+    
+    // 2. Imports and subcollections
+    match /imports/{importId} {
+      allow read, write: if isAdmin();
+      
+      match /eventMetadataCandidates/{candidateId} {
+        allow read: if isAdmin();
+        allow write: if false; // Immutable raw parser output, no client writes
+      }
+      
+      match /scheduleCandidates/{candidateId} {
+        allow read: if isAdmin();
+        allow write: if false; // Immutable raw parser output, no client writes
+      }
+      
+      match /awardCandidates/{candidateId} {
+        allow read: if isAdmin();
+        allow write: if false; // Immutable raw parser output, no client writes
+      }
+      
+      match /privacySkips/{skipId} {
+        allow read: if isAdmin();
+        allow write: if false; // Immutable raw parser output
+      }
+      
+      match /validationIssues/{issueId} {
+        allow read: if isAdmin();
+        allow write: if false; // Immutable raw parser output
+      }
+      
+      match /reviewDecisions/{decisionId} {
+        allow read, write: if isAdmin();
+      }
+    }
+    
+    // 3. Audit Logs
+    match /auditLogs/{auditLogId} {
+      allow read: if isAdmin();
+      allow write: if false; // Prevent client direct writes, must be written server-side
+    }
+  }
+}

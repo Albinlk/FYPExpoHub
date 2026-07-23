@@ -1,0 +1,40 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // -------------------------------------------------------------
+    // Helper Functions
+    // -------------------------------------------------------------
+    
+    // Check if the user is a verified administrator
+    function isAdmin() {
+      return request.auth != null && request.auth.token.admin == true;
+    }
+    
+    // Check if file is under public path
+    function isPublicPath() {
+      return request.path[0] == 'public';
+    }
+
+    // -------------------------------------------------------------
+    // Private XLSX Workbooks
+    // -------------------------------------------------------------
+    match /private/imports/{importId}/source/{filename} {
+      // Only admins can upload or read raw workbooks
+      allow read, write: if isAdmin()
+                         && request.resource.size < 10 * 1024 * 1024; // Ensure size is < 10MB
+    }
+
+    // -------------------------------------------------------------
+    // Public Assets (images, posters, floorplans)
+    // -------------------------------------------------------------
+    match /public/assets/{allPaths=**} {
+      // Allow public read access to assets
+      allow read: if true;
+      
+      // Only admins can write (create, update, delete) assets
+      allow write: if isAdmin()
+                   && request.resource.size < 5 * 1024 * 1024 // Limit image size to 5MB
+                   && request.resource.contentType.matches('image/.*'); // Only allow images
+    }
+  }
+}
