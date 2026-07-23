@@ -15,7 +15,7 @@ final authStateChangesProvider = StreamProvider<User?>((ref) {
 
 // Admin Custom Claim validator provider (checks if user token has admin: true)
 final isAdminProvider = FutureProvider<bool>((ref) async {
-  final user = ref.watch(authStateChangesProvider).value;
+  final user = ref.watch(firebaseAuthProvider).currentUser;
   if (user == null) return false;
   
   // Force refresh token to fetch latest custom claims
