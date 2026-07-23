@@ -1,10 +1,12 @@
+import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:web/web.dart' as web;
 import '../theme/theme.dart';
 
 void _openAdminPortal() {
-  web.window.location.href = 'https://admin.fskmjasinfypexhibition.site/admin/sign-in';
+  final location = globalContext['location'] as JSObject;
+  location['href'] = 'https://admin.fskmjasinfypexhibition.site/admin/sign-in'.toJS;
 }
 
 class PublicShell extends StatelessWidget {
