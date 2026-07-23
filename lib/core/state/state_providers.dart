@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../domain/models/project.dart';
 import '../domain/models/schedule_item.dart';
@@ -7,6 +8,9 @@ import '../domain/models/award.dart';
 import '../domain/models/event.dart';
 import '../domain/models/import_models.dart';
 import '../data/excel_data.dart';
+import '../firebase/firestore_service.dart';
+
+final _fs = FirestoreService.instance;
 
 // ==========================================
 // 1. EVENT METADATA STATE
@@ -14,6 +18,7 @@ import '../data/excel_data.dart';
 class EventNotifier extends Notifier<Event> {
   @override
   Event build() {
+    _loadFromFirestore();
     return Event(
       id: 'fskm-fyp-2026',
       title: 'FSKM FYP Expo Hub 2026',
@@ -36,18 +41,9 @@ class EventNotifier extends Notifier<Event> {
       posterUrl: 'assets/images/poster.jpg',
       publicContactEmail: 'fskmfypexpo@uitm.edu.my',
       faqItems: [
-        const FaqItem(
-          question: 'What is FYP Expo Hub?',
-          answer: 'It is the official web portal for the Final Year Project Exhibition of the Faculty of Computer and Mathematical Sciences (FSKM).'
-        ),
-        const FaqItem(
-          question: 'Who can attend the exhibition?',
-          answer: 'The exhibition is open to all UiTM students, faculty members, and external industry visitors who are interested in final year student innovations.'
-        ),
-        const FaqItem(
-          question: 'Are there awards given to the projects?',
-          answer: 'Yes, projects are evaluated by a panel of industry and academic juries, and awards like Gold, Silver, Bronze, and Best Innovative Project are presented.'
-        ),
+        const FaqItem(question: 'What is FYP Expo Hub?', answer: 'It is the official web portal for the Final Year Project Exhibition of the Faculty of Computer and Mathematical Sciences (FSKM).'),
+        const FaqItem(question: 'Who can attend the exhibition?', answer: 'The exhibition is open to all UiTM students, faculty members, and external industry visitors who are interested in final year student innovations.'),
+        const FaqItem(question: 'Are there awards given to the projects?', answer: 'Projects are evaluated by a panel of industry and academic juries, and awards like Gold, Silver, Bronze, and Best Innovative Project are presented.'),
       ],
       publicationStatus: 'published',
       updatedAt: DateTime.now(),
@@ -55,86 +51,100 @@ class EventNotifier extends Notifier<Event> {
     );
   }
 
+  void _loadFromFirestore() async {
+    final data = await _fs.getEvent('fskm-fyp-2026');
+    if (data != null) {
+      state = Event.fromJson(data);
+    }
+  }
+
   void updateEvent(Event newEvent) {
     state = newEvent.copyWith(updatedAt: DateTime.now());
+    _fs.setEvent(newEvent.id, newEvent.toJson());
   }
 }
 
-final eventProvider = NotifierProvider<EventNotifier, Event>(() {
-  return EventNotifier();
-});
+final eventProvider = NotifierProvider<EventNotifier, Event>(() => EventNotifier());
 
 // ==========================================
 // 2. PROJECTS STATE
 // ==========================================
 class ProjectsNotifier extends Notifier<List<Project>> {
+  StreamSubscription? _sub;
+
   @override
   List<Project> build() {
-    return ExcelData.allProjects.map((m) {
-      return Project(
-        id: m['id'] as String,
-        eventId: m['event_id'] as String,
-        slug: m['slug'] as String,
-        title: m['title'] as String,
-        matricId: m['matric_id'] as String?,
-        programmeCode: m['programme_code'] as String,
-        programmeName: m['programme_name'] as String,
-        shortDescription: m['short_description'] as String,
-        category: m['category'] as String,
-        technologyTags: (m['technology_tags'] as List).cast<String>(),
-        boothId: m['booth_id'] as String?,
-        boothNumber: m['booth_number'] as String?,
-        boothZone: m['booth_zone'] as String?,
-        coverImageUrl: '/project_images/${m['id'] as String}.png',
-        posterUrl: m['poster_url'] as String?,
-        teamDisplayNames: (m['team_display_names'] as List).cast<String>(),
-        supervisorDisplayName: m['supervisor_display_name'] as String,
-        examinerDisplayName: m['examiner_display_name'] as String?,
-        demoUrl: m['demo_url'] as String?,
-        videoUrl: m['video_url'] as String?,
-        repositoryUrl: m['repository_url'] as String?,
-        featured: m['featured'] as bool,
-        publicationStatus: m['publication_status'] as String,
-        createdAt: m['created_at'] as DateTime,
-        updatedAt: m['updated_at'] as DateTime,
-        publishedAt: m['published_at'] as DateTime?,
-      );
-    }).toList();
+    _sub = _fs.projectsStream().listen((dataList) {
+      state = dataList.map((m) => Project.fromJson(m)).toList();
+    });
+    ref.onDispose(() => _sub?.cancel());
+    return ExcelData.allProjects.map((m) => Project(
+      id: m['id'] as String,
+      eventId: m['event_id'] as String,
+      slug: m['slug'] as String,
+      title: m['title'] as String,
+      matricId: m['matric_id'] as String?,
+      programmeCode: m['programme_code'] as String,
+      programmeName: m['programme_name'] as String,
+      shortDescription: m['short_description'] as String,
+      category: m['category'] as String,
+      technologyTags: (m['technology_tags'] as List).cast<String>(),
+      boothId: m['booth_id'] as String?,
+      boothNumber: m['booth_number'] as String?,
+      boothZone: m['booth_zone'] as String?,
+      coverImageUrl: '/project_images/${m['id'] as String}.png',
+      posterUrl: m['poster_url'] as String?,
+      teamDisplayNames: (m['team_display_names'] as List).cast<String>(),
+      supervisorDisplayName: m['supervisor_display_name'] as String,
+      examinerDisplayName: m['examiner_display_name'] as String?,
+      demoUrl: m['demo_url'] as String?,
+      videoUrl: m['video_url'] as String?,
+      repositoryUrl: m['repository_url'] as String?,
+      featured: m['featured'] as bool,
+      publicationStatus: m['publication_status'] as String,
+      createdAt: m['created_at'] as DateTime,
+      updatedAt: m['updated_at'] as DateTime,
+      publishedAt: m['published_at'] as DateTime?,
+    )).toList();
   }
 
   void addProject(Project project) {
     state = [...state, project];
+    _fs.setProject(project.id, project.toJson());
   }
 
   void updateProject(Project updated) {
+    final data = updated.copyWith(updatedAt: DateTime.now());
     state = [
       for (final p in state)
-        if (p.id == updated.id) updated.copyWith(updatedAt: DateTime.now()) else p
+        if (p.id == updated.id) data else p
     ];
+    _fs.setProject(updated.id, data.toJson());
   }
 
   void deleteProject(String id) {
     state = state.where((p) => p.id != id).toList();
+    _fs.deleteProject(id);
   }
 
   void togglePublishStatus(String id) {
+    final idx = state.indexWhere((p) => p.id == id);
+    if (idx == -1) return;
+    final p = state[idx];
+    final toggled = p.copyWith(
+      publicationStatus: p.publicationStatus == 'published' ? 'draft' : 'published',
+      publishedAt: p.publicationStatus != 'published' ? DateTime.now() : null,
+      updatedAt: DateTime.now(),
+    );
     state = [
       for (final p in state)
-        if (p.id == id)
-          p.copyWith(
-            publicationStatus: p.publicationStatus == 'published' ? 'draft' : 'published',
-            publishedAt: p.publicationStatus != 'published' ? DateTime.now() : null,
-            updatedAt: DateTime.now(),
-          )
-        else
-          p
+        if (p.id == id) toggled else p
     ];
+    _fs.setProject(id, toggled.toJson());
   }
 }
 
-final projectsProvider = NotifierProvider<ProjectsNotifier, List<Project>>(() {
-  return ProjectsNotifier();
-});
+final projectsProvider = NotifierProvider<ProjectsNotifier, List<Project>>(() => ProjectsNotifier());
 
 final featuredProjectsProvider = Provider<List<Project>>((ref) {
   return ref.watch(projectsProvider).where((p) => p.featured).toList();
@@ -152,9 +162,7 @@ class ProjectVisitCountsNotifier extends Notifier<Map<String, int>> {
   }
 }
 
-final projectVisitCountsProvider = NotifierProvider<ProjectVisitCountsNotifier, Map<String, int>>(() {
-  return ProjectVisitCountsNotifier();
-});
+final projectVisitCountsProvider = NotifierProvider<ProjectVisitCountsNotifier, Map<String, int>>(() => ProjectVisitCountsNotifier());
 
 final mostVisitedProjectsProvider = Provider<List<Project>>((ref) {
   final projects = ref.watch(projectsProvider);
@@ -168,343 +176,223 @@ final mostVisitedProjectsProvider = Provider<List<Project>>((ref) {
 // 3. DAILY SCHEDULE (TENTATIF) STATE
 // ==========================================
 class ScheduleNotifier extends Notifier<List<ScheduleItem>> {
+  StreamSubscription? _sub;
+
   @override
   List<ScheduleItem> build() {
-    final items = ExcelData.allScheduleItems.map((m) {
-      return ScheduleItem(
-        id: m['id'] as String,
-        eventId: m['event_id'] as String,
-        date: m['date'] as DateTime,
-        startAt: m['start_at'] as String,
-        endAt: m['end_at'] as String,
-        title: m['title'] as String,
-        venue: m['venue'] as String,
-        audience: m['audience'] as String,
-        description: m['description'] as String?,
-        visibility: m['visibility'] as String,
-        publicationStatus: m['publication_status'] as String,
-        sourceImportId: m['source_import_id'] as String?,
-        sourceStagingId: m['source_staging_id'] as String?,
-        createdAt: m['created_at'] as DateTime,
-        updatedAt: m['updated_at'] as DateTime,
-        publishedAt: m['published_at'] as DateTime?,
-      );
-    }).toList();
-    // Also keep the existing general schedule items
-    return [
-      ScheduleItem(
-        id: 'sch-gen-1',
-        eventId: 'fskm-fyp-2026',
-        date: DateTime(2026, 8, 6),
-        startAt: '08:30',
-        endAt: '09:00',
-        title: 'Pendaftaran Juri & Peserta',
-        venue: 'Blok Kuliah, FSKM',
-        audience: 'Juri & Peserta',
-        description: 'Sesi penyerahan kit pameran, nombor giliran, dan sarapan pagi bagi juri industri serta peserta pameran.',
-        visibility: 'public',
-        publicationStatus: 'published',
-        createdAt: DateTime(2026, 7, 1),
-        updatedAt: DateTime(2026, 7, 1),
-        publishedAt: DateTime(2026, 7, 1),
-      ),
-      ScheduleItem(
-        id: 'sch-gen-2',
-        eventId: 'fskm-fyp-2026',
-        date: DateTime(2026, 8, 7),
-        startAt: '09:00',
-        endAt: '17:00',
-        title: 'FYP Expo 2026 - Hari Terbuka',
-        venue: 'Blok Kuliah, FSKM',
-        audience: 'Awam',
-        description: 'Sesi pembukaan untuk pelawat dan industri.',
-        visibility: 'public',
-        publicationStatus: 'published',
-        createdAt: DateTime(2026, 7, 1),
-        updatedAt: DateTime(2026, 7, 1),
-        publishedAt: DateTime(2026, 7, 1),
-      ),
-      ...items,
-    ];
+    _sub = _fs.scheduleStream().listen((dataList) {
+      state = dataList.map((m) => ScheduleItem.fromJson(m)).toList();
+    });
+    ref.onDispose(() => _sub?.cancel());
+    return [];
   }
 
   void addScheduleItem(ScheduleItem item) {
     state = [...state, item];
+    _fs.setScheduleItem(item.id, item.toJson());
   }
 
   void updateScheduleItem(ScheduleItem updated) {
+    final data = updated.copyWith(updatedAt: DateTime.now());
     state = [
       for (final s in state)
-        if (s.id == updated.id) updated.copyWith(updatedAt: DateTime.now()) else s
+        if (s.id == updated.id) data else s
     ];
+    _fs.setScheduleItem(updated.id, data.toJson());
   }
 
   void deleteScheduleItem(String id) {
     state = state.where((s) => s.id != id).toList();
+    _fs.deleteScheduleItem(id);
   }
 
   void togglePublish(String id) {
+    final idx = state.indexWhere((s) => s.id == id);
+    if (idx == -1) return;
+    final s = state[idx];
+    final toggled = s.copyWith(
+      publicationStatus: s.publicationStatus == 'published' ? 'draft' : 'published',
+      publishedAt: s.publicationStatus != 'published' ? DateTime.now() : null,
+      updatedAt: DateTime.now(),
+    );
     state = [
       for (final s in state)
-        if (s.id == id)
-          s.copyWith(
-            publicationStatus: s.publicationStatus == 'published' ? 'draft' : 'published',
-            publishedAt: s.publicationStatus != 'published' ? DateTime.now() : null,
-            updatedAt: DateTime.now(),
-          )
-        else
-          s
+        if (s.id == id) toggled else s
     ];
+    _fs.setScheduleItem(id, toggled.toJson());
   }
 }
 
-final scheduleProvider = NotifierProvider<ScheduleNotifier, List<ScheduleItem>>(() {
-  return ScheduleNotifier();
-});
+final scheduleProvider = NotifierProvider<ScheduleNotifier, List<ScheduleItem>>(() => ScheduleNotifier());
 
 // ==========================================
 // 4. PHYSICAL BOOTH ALLOCATIONS STATE
 // ==========================================
 class BoothsNotifier extends Notifier<List<Booth>> {
+  StreamSubscription? _sub;
+
   @override
   List<Booth> build() {
-    return ExcelData.allBooths.map((m) {
-      return Booth(
-        id: m['id'] as String,
-        eventId: m['event_id'] as String,
-        boothNumber: m['booth_number'] as String,
-        zone: m['zone'] as String,
-        locationNote: m['location_note'] as String,
-        staticFloorPlanUrl: m['static_floor_plan_url'] as String?,
-        projectId: m['project_id'] as String?,
-        publicationStatus: m['publication_status'] as String,
-        createdAt: m['created_at'] as DateTime,
-        updatedAt: m['updated_at'] as DateTime,
-        publishedAt: m['published_at'] as DateTime?,
-      );
-    }).toList();
+    _sub = _fs.boothsStream().listen((dataList) {
+      state = dataList.map((m) => Booth.fromJson(m)).toList();
+    });
+    ref.onDispose(() => _sub?.cancel());
+    return ExcelData.allBooths.map((m) => Booth(
+      id: m['id'] as String,
+      eventId: m['event_id'] as String,
+      boothNumber: m['booth_number'] as String,
+      zone: m['zone'] as String,
+      locationNote: m['location_note'] as String,
+      staticFloorPlanUrl: m['static_floor_plan_url'] as String?,
+      projectId: m['project_id'] as String?,
+      publicationStatus: m['publication_status'] as String,
+      createdAt: m['created_at'] as DateTime,
+      updatedAt: m['updated_at'] as DateTime,
+      publishedAt: m['published_at'] as DateTime?,
+    )).toList();
   }
 
   void addBooth(Booth booth) {
     state = [...state, booth];
+    _fs.setBooth(booth.id, booth.toJson());
   }
 
   void updateBooth(Booth updated) {
+    final data = updated.copyWith(updatedAt: DateTime.now());
     state = [
       for (final b in state)
-        if (b.id == updated.id) updated.copyWith(updatedAt: DateTime.now()) else b
+        if (b.id == updated.id) data else b
     ];
+    _fs.setBooth(updated.id, data.toJson());
   }
 
   void deleteBooth(String id) {
     state = state.where((b) => b.id != id).toList();
+    _fs.deleteBooth(id);
   }
 }
 
-final boothsProvider = NotifierProvider<BoothsNotifier, List<Booth>>(() {
-  return BoothsNotifier();
-});
+final boothsProvider = NotifierProvider<BoothsNotifier, List<Booth>>(() => BoothsNotifier());
 
 // ==========================================
 // 5. ANNOUNCEMENTS STATE
 // ==========================================
 class AnnouncementsNotifier extends Notifier<List<Announcement>> {
+  StreamSubscription? _sub;
+
   @override
   List<Announcement> build() {
-    return [
-      Announcement(
-        id: 'ann-1',
-        eventId: 'fskm-fyp-2026',
-        title: 'Sesi Taklimat Penyediaan Poster Pameran',
-        body: 'Semua pelajar tahun akhir FSKM yang mengambil bahagian dalam FYP Expo 2026 diwajibkan menghadiri sesi taklimat pada tarikh 1 Ogos 2026 jam 2.30 petang di Dewan Kuliah 1. Sesi ini akan mengulas format, saiz, dan susun atur poster.',
-        category: 'Pemberitahuan Akademik',
-        pinned: true,
-        publicationStatus: 'published',
-        publishedAt: DateTime.now().subtract(const Duration(days: 2)),
-        createdAt: DateTime.now().subtract(const Duration(days: 2)),
-        updatedAt: DateTime.now(),
-      ),
-      Announcement(
-        id: 'ann-2',
-        eventId: 'fskm-fyp-2026',
-        title: 'Kemaskini Pemetaan Kedudukan Booth',
-        body: 'Sila ambil perhatian bahawa layout kedudukan booth bagi Zon B telah dikemaskini sedikit untuk memberikan laluan pengudaraan yang lebih selesa. Sila layari seksyen "Cari Booth" di portal untuk menyemak kedudukan terbaru anda.',
-        category: 'Pengumuman Logistik',
-        pinned: false,
-        publicationStatus: 'published',
-        publishedAt: DateTime.now().subtract(const Duration(days: 1)),
-        createdAt: DateTime.now().subtract(const Duration(days: 1)),
-        updatedAt: DateTime.now(),
-      ),
-      Announcement(
-        id: 'ann-3',
-        eventId: 'fskm-fyp-2026',
-        title: 'Pelawaan Juri Industri dari Syarikat Rakan Kongsi',
-        body: 'Kami berbesar hati mengumumkan kemasukan barisan juri baru dari syarikat teknologi terkemuka seperti Petronas, Aerodyne, dan Intel Malaysia yang akan mengadili sesi expo semester ini.',
-        category: 'Pengumuman Korporat',
-        pinned: false,
-        publicationStatus: 'published',
-        publishedAt: DateTime.now(),
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-    ];
+    _sub = _fs.announcementsStream().listen((dataList) {
+      state = dataList.map((m) => Announcement.fromJson(m)).toList();
+    });
+    ref.onDispose(() => _sub?.cancel());
+    return [];
   }
 
   void addAnnouncement(Announcement ann) {
     state = [...state, ann];
+    _fs.setAnnouncement(ann.id, ann.toJson());
   }
 
   void updateAnnouncement(Announcement updated) {
+    final data = updated.copyWith(updatedAt: DateTime.now());
     state = [
       for (final a in state)
-        if (a.id == updated.id) updated.copyWith(updatedAt: DateTime.now()) else a
+        if (a.id == updated.id) data else a
     ];
+    _fs.setAnnouncement(updated.id, data.toJson());
   }
 
   void deleteAnnouncement(String id) {
     state = state.where((a) => a.id != id).toList();
+    _fs.deleteAnnouncement(id);
   }
 
   void togglePinned(String id) {
+    final idx = state.indexWhere((a) => a.id == id);
+    if (idx == -1) return;
+    final toggled = state[idx].copyWith(pinned: !state[idx].pinned, updatedAt: DateTime.now());
     state = [
       for (final a in state)
-        if (a.id == id) a.copyWith(pinned: !a.pinned, updatedAt: DateTime.now()) else a
+        if (a.id == id) toggled else a
     ];
+    _fs.setAnnouncement(id, toggled.toJson());
   }
 
   void togglePublish(String id) {
+    final idx = state.indexWhere((a) => a.id == id);
+    if (idx == -1) return;
+    final a = state[idx];
+    final toggled = a.copyWith(
+      publicationStatus: a.publicationStatus == 'published' ? 'draft' : 'published',
+      publishedAt: a.publicationStatus != 'published' ? DateTime.now() : a.publishedAt,
+      updatedAt: DateTime.now(),
+    );
     state = [
       for (final a in state)
-        if (a.id == id)
-          a.copyWith(
-            publicationStatus: a.publicationStatus == 'published' ? 'draft' : 'published',
-            publishedAt: a.publicationStatus != 'published' ? DateTime.now() : a.publishedAt,
-            updatedAt: DateTime.now(),
-          )
-        else
-          a
+        if (a.id == id) toggled else a
     ];
+    _fs.setAnnouncement(id, toggled.toJson());
   }
 }
 
-final announcementsProvider = NotifierProvider<AnnouncementsNotifier, List<Announcement>>(() {
-  return AnnouncementsNotifier();
-});
+final announcementsProvider = NotifierProvider<AnnouncementsNotifier, List<Announcement>>(() => AnnouncementsNotifier());
 
 // ==========================================
 // 6. PUBLISHED AWARD WINNERS STATE
 // ==========================================
 class AwardsNotifier extends Notifier<List<PublishedAwardWinner>> {
+  StreamSubscription? _sub;
+
   @override
   List<PublishedAwardWinner> build() {
-    final projects = ref.read(projectsProvider);
-    return [
-      PublishedAwardWinner(
-        id: 'win-1',
-        eventId: 'fskm-fyp-2026',
-        awardCategoryId: 'cat-gold',
-        projectId: 'proj-cs230-004',
-        projectTitle: 'JELAJAH VR: AN IMMERSIVE VIRTUAL REALITY LEARNING SYSTEM WITH ADAPTIVE TIMELINE NAVIGATION FOR SECONDARY SCHOOL HISTORY EDUCATION',
-        programmeCode: 'CS230',
-        teamDisplayName: 'ANIQ IRFAN BIN MOHD HAFEZ',
-        supervisorDisplayName: 'PN ZAMLINA BINTI ABDULLAH',
-        publicationStatus: 'published',
-        createdAt: DateTime.now().subtract(const Duration(days: 1)),
-        updatedAt: DateTime.now(),
-        publishedAt: DateTime.now(),
-      ),
-      PublishedAwardWinner(
-        id: 'win-2',
-        eventId: 'fskm-fyp-2026',
-        awardCategoryId: 'cat-best-innovative',
-        projectId: 'proj-cs251-096',
-        projectTitle: 'DEVELOPMENT OF SOCIAL MUSIC DISCOVERY PLATFORM USING PEER BASED SOCIAL NETWORKS AND HYBRID FILTERING',
-        programmeCode: 'CS251',
-        teamDisplayName: 'ADAM BIN MOHD AKIB',
-        supervisorDisplayName: 'NURUL NAJWA BINTI ABD RAHID@RASHID',
-        publicationStatus: 'published',
-        createdAt: DateTime.now().subtract(const Duration(days: 1)),
-        updatedAt: DateTime.now(),
-        publishedAt: DateTime.now(),
-      ),
-      PublishedAwardWinner(
-        id: 'win-3',
-        eventId: 'fskm-fyp-2026',
-        awardCategoryId: 'cat-manual',
-        projectId: 'proj-cs253-161',
-        projectTitle: 'SMILEVISION VR: A GAMIFIED VIRTUAL EXPLORATION OF COSMETIC DENTAL TREATMENTS',
-        programmeCode: 'CS253',
-        teamDisplayName: 'AALIYA QISTINA BINTI MUHAMAD NASIR',
-        supervisorDisplayName: 'MADAM AZLIN DAHLAN',
-        publicationStatus: 'published',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        publishedAt: DateTime.now(),
-      ),
-    ];
+    _sub = _fs.awardWinnersStream().listen((dataList) {
+      state = dataList.map((m) => PublishedAwardWinner.fromJson(m)).toList();
+    });
+    ref.onDispose(() => _sub?.cancel());
+    return [];
   }
 
   void addWinner(PublishedAwardWinner winner) {
     state = [...state, winner];
+    _fs.setAwardWinner(winner.id, winner.toJson());
   }
 
   void updateWinner(PublishedAwardWinner updated) {
+    final data = updated.copyWith(updatedAt: DateTime.now());
     state = [
       for (final w in state)
-        if (w.id == updated.id) updated.copyWith(updatedAt: DateTime.now()) else w
+        if (w.id == updated.id) data else w
     ];
+    _fs.setAwardWinner(updated.id, data.toJson());
   }
 
   void deleteWinner(String id) {
     state = state.where((w) => w.id != id).toList();
+    _fs.deleteAwardWinner(id);
   }
 }
 
-final awardsProvider = NotifierProvider<AwardsNotifier, List<PublishedAwardWinner>>(() {
-  return AwardsNotifier();
-});
+final awardsProvider = NotifierProvider<AwardsNotifier, List<PublishedAwardWinner>>(() => AwardsNotifier());
 
 // ==========================================
 // 7. EXCEL IMPORTS & STAGING WORKFLOW STATE
 // ==========================================
 class ImportsNotifier extends Notifier<List<ImportRecord>> {
+  StreamSubscription? _sub;
+
   @override
   List<ImportRecord> build() {
-    return [
-      ImportRecord(
-        id: 'imp-001',
-        eventId: 'fskm-fyp-2026',
-        sourceFilePath: 'private/imports/imp-001/FSKM_FYP_Master_v1.xlsx',
-        sourceFileName: 'FSKM_FYP_Master_v1.xlsx',
-        sourceFileHash: 'sha256-a94b8e23f81e',
-        uploadedBy: 'admin@uitm.edu.my',
-        uploadedAt: DateTime.now().subtract(const Duration(days: 3, hours: 2)),
-        parserVersion: 'v1.0.0',
-        status: 'completed',
-        summary: {'tentatif': 6, 'pemenang': 3},
-        warningCounts: {'overlap': 0, 'privacy': 8},
-        completedAt: DateTime.now().subtract(const Duration(days: 3, hours: 2)),
-        publishedAt: DateTime.now().subtract(const Duration(days: 3)),
-      ),
-      ImportRecord(
-        id: 'imp-002',
-        eventId: 'fskm-fyp-2026',
-        sourceFilePath: 'private/imports/imp-002/FSKM_FYP_New_Imports_v2.xlsx',
-        sourceFileName: 'FSKM_FYP_New_Imports_v2.xlsx',
-        sourceFileHash: 'sha256-f8e9102c0192',
-        uploadedBy: 'admin@uitm.edu.my',
-        uploadedAt: DateTime.now().subtract(const Duration(hours: 4)),
-        parserVersion: 'v1.0.0',
-        status: 'pending_review',
-        summary: {'tentatif': 3, 'pemenang': 2},
-        warningCounts: {'overlap': 1, 'privacy': 4},
-      ),
-    ];
+    _sub = _fs.importsStream().listen((dataList) {
+      state = dataList.map((m) => ImportRecord.fromJson(m)).toList();
+    });
+    ref.onDispose(() => _sub?.cancel());
+    return [];
   }
 
   void addImport(ImportRecord r) {
     state = [r, ...state];
+    _fs.setImport(r.id, r.toJson());
   }
 
   void updateImport(ImportRecord updated) {
@@ -512,131 +400,33 @@ class ImportsNotifier extends Notifier<List<ImportRecord>> {
       for (final r in state)
         if (r.id == updated.id) updated else r
     ];
+    _fs.setImport(updated.id, updated.toJson());
   }
 }
 
-final importsProvider = NotifierProvider<ImportsNotifier, List<ImportRecord>>(() {
-  return ImportsNotifier();
+final importsProvider = NotifierProvider<ImportsNotifier, List<ImportRecord>>(() => ImportsNotifier());
+
+// Staging candidate dictionaries (stream-based)
+final scheduleCandidatesProvider = StreamProvider.family<List<ScheduleCandidate>, String>((ref, importId) {
+  return _fs.scheduleCandidatesStream(importId).map((list) {
+    return list.map((m) => ScheduleCandidate.fromJson(m)).toList();
+  });
 });
 
-// Staging candidate dictionaries
-final scheduleCandidatesProvider = Provider.family<List<ScheduleCandidate>, String>((ref, importId) {
-  if (importId == 'imp-002') {
-    return [
-      ScheduleCandidate(
-        id: 'cand-sch-1',
-        date: DateTime(2026, 8, 6),
-        startAt: '10:00 AM',
-        endAt: '11:00 AM',
-        title: 'Sesi Pembentangan Poster Kumpulan 1',
-        venue: 'Bilik Kuliah B-21',
-        audience: 'Pelajar & Juri Sektor B',
-        classification: 'publicCandidate',
-        comparisonStatus: 'new',
-        isDuplicate: false,
-        isOverlapping: false,
-      ),
-      ScheduleCandidate(
-        id: 'cand-sch-2',
-        date: DateTime(2026, 8, 6),
-        startAt: '11:30 AM',
-        endAt: '12:30 PM',
-        title: 'Penilaian Juri Sesi 1', // Overlaps with live Sesi 1
-        venue: 'Blok Kuliah, FSKM',
-        audience: 'Juri & Peserta',
-        classification: 'needsReview',
-        comparisonStatus: 'updated',
-        isDuplicate: true,
-        isOverlapping: true,
-      ),
-      ScheduleCandidate(
-        id: 'cand-sch-3',
-        date: DateTime(2026, 8, 7),
-        startAt: '01:00 PM',
-        endAt: '02:00 PM',
-        title: 'Sesi Demonstrasi Sistem Web FSKM',
-        venue: 'Lab Komputer 3',
-        audience: 'Pelawat & Pelajar',
-        classification: 'publicCandidate',
-        comparisonStatus: 'new',
-        isDuplicate: false,
-        isOverlapping: false,
-      ),
-    ];
-  }
-  return [];
+final awardCandidatesProvider = StreamProvider.family<List<AwardCandidate>, String>((ref, importId) {
+  return _fs.awardCandidatesStream(importId).map((list) {
+    return list.map((m) => AwardCandidate.fromJson(m)).toList();
+  });
 });
 
-final awardCandidatesProvider = Provider.family<List<AwardCandidate>, String>((ref, importId) {
-  if (importId == 'imp-002') {
-    return [
-      AwardCandidate(
-        id: 'cand-aw-1',
-        awardCategory: 'Anugerah Inovasi Emas',
-        projectTitle: 'JELAJAH VR: AN IMMERSIVE VIRTUAL REALITY LEARNING SYSTEM WITH ADAPTIVE TIMELINE NAVIGATION FOR SECONDARY SCHOOL HISTORY EDUCATION',
-        teamDisplayName: 'ANIQ IRFAN BIN MOHD HAFEZ',
-        supervisorDisplayName: 'PN ZAMLINA BINTI ABDULLAH',
-        programmeCode: 'CS230',
-        isSkip: false,
-      ),
-      AwardCandidate(
-        id: 'cand-aw-2',
-        awardCategory: 'Anugerah Projek Terbaik CS251',
-        projectTitle: 'DEVELOPMENT OF SOCIAL MUSIC DISCOVERY PLATFORM USING PEER BASED SOCIAL NETWORKS AND HYBRID FILTERING',
-        teamDisplayName: 'ADAM BIN MOHD AKIB',
-        supervisorDisplayName: 'NURUL NAJWA BINTI ABD RAHID@RASHID',
-        programmeCode: 'CS251',
-        isSkip: false,
-      ),
-    ];
-  }
-  return [];
+final privacySkipsProvider = StreamProvider.family<List<PrivacySkip>, String>((ref, importId) {
+  return _fs.privacySkipsStream(importId).map((list) {
+    return list.map((m) => PrivacySkip.fromJson(m)).toList();
+  });
 });
 
-final privacySkipsProvider = Provider.family<List<PrivacySkip>, String>((ref, importId) {
-  if (importId == 'imp-002') {
-    return [
-      PrivacySkip(
-        id: 'skip-1',
-        skipType: 'Student MyKad / ID',
-        count: 4,
-        reason: 'Skip Student Identification Numbers to maintain PDPA 2010 compliance',
-        worksheetName: 'Senarai_Pelajar',
-        timestamp: DateTime.now().subtract(const Duration(hours: 4)),
-      ),
-      PrivacySkip(
-        id: 'skip-2',
-        skipType: 'Personal Email & Phone',
-        count: 8,
-        reason: 'Filtered student personal phone numbers and non-official email domains',
-        worksheetName: 'Peserta',
-        timestamp: DateTime.now().subtract(const Duration(hours: 4)),
-      ),
-    ];
-  }
-  return [];
-});
-
-final validationIssuesProvider = Provider.family<List<ValidationIssue>, String>((ref, importId) {
-  if (importId == 'imp-002') {
-    return [
-      const ValidationIssue(
-        id: 'iss-1',
-        issueType: 'overlap',
-        severity: 'warning',
-        message: 'Waktu bertindih dikesan: Sesi "Penilaian Juri Sesi 1" (11:30 AM - 12:30 PM) bertembung dengan Tentatif sedia ada.',
-        worksheetName: 'Tentatif',
-        rowNumber: 4,
-      ),
-      const ValidationIssue(
-        id: 'iss-2',
-        issueType: 'blank_row',
-        severity: 'warning',
-        message: 'Baris kosong dikesan dan diabaikan secara automatik semasa pengesahan.',
-        worksheetName: 'Senarai_Anugerah',
-        rowNumber: 12,
-      ),
-    ];
-  }
-  return [];
+final validationIssuesProvider = StreamProvider.family<List<ValidationIssue>, String>((ref, importId) {
+  return _fs.validationIssuesStream(importId).map((list) {
+    return list.map((m) => ValidationIssue.fromJson(m)).toList();
+  });
 });

@@ -1,41 +1,74 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'dart:io';
 import '../../../../app/theme/theme.dart';
+import '../../../../core/firebase/firestore_service.dart';
+import '../../../../core/firebase/firebase_providers.dart';
+import '../../../../core/domain/models/import_models.dart';
+import '../../../../core/state/state_providers.dart';
 
-class AdminImportsPage extends StatefulWidget {
+class AdminImportsPage extends ConsumerStatefulWidget {
   const AdminImportsPage({super.key});
 
   @override
-  State<AdminImportsPage> createState() => _AdminImportsPageState();
+  ConsumerState<AdminImportsPage> createState() => _AdminImportsPageState();
 }
 
-class _AdminImportsPageState extends State<AdminImportsPage> {
+class _AdminImportsPageState extends ConsumerState<AdminImportsPage> {
   bool _isDragging = false;
   bool _isUploading = false;
   String? _selectedFileName;
+  String? _selectedFilePath;
 
   void _selectFile() async {
-    // In actual code, we use file_picker to pick .xlsx workbooks
-    setState(() {
-      _selectedFileName = 'master_file_fyp_v1.xlsx';
-    });
+    final file = await FirestoreService.pickExcelFile();
+    if (file != null) {
+      setState(() {
+        _selectedFileName = file.name;
+        _selectedFilePath = file.path;
+      });
+    }
   }
 
-  void _uploadAndProcess() {
-    if (_selectedFileName == null) return;
-    setState(() {
-      _isUploading = true;
-    });
+  void _uploadAndProcess() async {
+    if (_selectedFileName == null || _selectedFilePath == null) return;
+    setState(() => _isUploading = true);
 
-    Future.delayed(const Duration(seconds: 2), () {
+    try {
+      final user = ref.read(firebaseAuthProvider).currentUser;
+      final importId = 'imp-${DateTime.now().millisecondsSinceEpoch}';
+      final storagePath = 'private/imports/$importId/$_selectedFileName';
+
+      // Upload file to Firebase Storage
+      FirestoreService.instance.uploadFile(_selectedFilePath!, storagePath);
+
+      // Create import record in Firestore
+      ref.read(importsProvider.notifier).addImport(ImportRecord(
+        id: importId,
+        sourceFilePath: storagePath,
+        sourceFileName: _selectedFileName!,
+        sourceFileHash: '',
+        uploadedBy: user?.email ?? 'unknown',
+        uploadedAt: DateTime.now(),
+        parserVersion: 'v1.0.0',
+        status: 'pending_review',
+        summary: {},
+        warningCounts: {},
+      ));
+
       if (mounted) {
-        setState(() {
-          _isUploading = false;
-        });
-        // On successful parse, navigate to Staging review dashboard (ID: IMP-2026-001)
-        context.go('/admin/imports/IMP-2026-001');
+        setState(() => _isUploading = false);
+        context.go('/admin/imports/$importId');
       }
-    });
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isUploading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Upload failed: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
   }
 
   @override

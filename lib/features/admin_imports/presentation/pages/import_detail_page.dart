@@ -39,12 +39,13 @@ class _ImportDetailPageState extends ConsumerState<ImportDetailPage> with Single
 
     // Auto-select all candidates initially
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final schCandidates = ref.read(scheduleCandidatesProvider(widget.importId));
-      final awCandidates = ref.read(awardCandidatesProvider(widget.importId));
-      
-      setState(() {
-        _selectedScheduleIds.addAll(schCandidates.map((c) => c.id));
-        _selectedAwardIds.addAll(awCandidates.map((c) => c.id));
+      final schAsync = ref.read(scheduleCandidatesProvider(widget.importId));
+      final awAsync = ref.read(awardCandidatesProvider(widget.importId));
+      schAsync.whenData((list) {
+        setState(() => _selectedScheduleIds.addAll(list.map((c) => c.id)));
+      });
+      awAsync.whenData((list) {
+        setState(() => _selectedAwardIds.addAll(list.map((c) => c.id)));
       });
     });
   }
@@ -56,8 +57,10 @@ class _ImportDetailPageState extends ConsumerState<ImportDetailPage> with Single
   }
 
   void _publishSelective() {
-    final schCandidates = ref.read(scheduleCandidatesProvider(widget.importId));
-    final awCandidates = ref.read(awardCandidatesProvider(widget.importId));
+    final schAsync = ref.read(scheduleCandidatesProvider(widget.importId));
+    final awAsync = ref.read(awardCandidatesProvider(widget.importId));
+    final schCandidates = schAsync.value ?? [];
+    final awCandidates = awAsync.value ?? [];
     final imports = ref.read(importsProvider);
 
     final currentImport = imports.firstWhere((r) => r.id == widget.importId);
@@ -119,14 +122,15 @@ class _ImportDetailPageState extends ConsumerState<ImportDetailPage> with Single
     );
     ref.read(importsProvider.notifier).updateImport(updatedRecord);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Successfully published ${_selectedScheduleIds.length} schedules and ${_selectedAwardIds.length} award winners!'),
-        backgroundColor: Colors.green.shade800,
-      ),
-    );
-
-    context.go('/admin');
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Successfully published ${_selectedScheduleIds.length} schedules and ${_selectedAwardIds.length} award winners!'),
+          backgroundColor: Colors.green.shade800,
+        ),
+      );
+      context.go('/admin');
+    }
   }
 
   @override
@@ -149,10 +153,15 @@ class _ImportDetailPageState extends ConsumerState<ImportDetailPage> with Single
       ),
     );
 
-    final schCandidates = ref.watch(scheduleCandidatesProvider(widget.importId));
-    final awCandidates = ref.watch(awardCandidatesProvider(widget.importId));
-    final privacySkips = ref.watch(privacySkipsProvider(widget.importId));
-    final validationIssues = ref.watch(validationIssuesProvider(widget.importId));
+    final schAsync = ref.watch(scheduleCandidatesProvider(widget.importId));
+    final awAsync = ref.watch(awardCandidatesProvider(widget.importId));
+    final privacyAsync = ref.watch(privacySkipsProvider(widget.importId));
+    final validationAsync = ref.watch(validationIssuesProvider(widget.importId));
+
+    final schCandidates = schAsync.value ?? [];
+    final awCandidates = awAsync.value ?? [];
+    final privacySkips = privacyAsync.value ?? [];
+    final validationIssues = validationAsync.value ?? [];
 
     final isReviewed = currentImport.status == 'completed';
 
