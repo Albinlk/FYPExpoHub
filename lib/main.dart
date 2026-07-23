@@ -4,23 +4,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'app/router.dart';
 import 'app/theme/theme.dart';
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Set up clean path URLs instead of Hash (#) URLs in browser history
+
   usePathUrlStrategy();
 
-  // Try to initialize Firebase if configurations are present.
-  // In development/test mode under Emulator Suite, we can capture errors gracefully.
-  try {
-    await Firebase.initializeApp(
-      // Options will be injected by flutterfire configure or can be omitted
-      // when running locally with standard configurations.
-    );
-  } catch (e) {
-    debugPrint('Firebase initialization warning: $e');
-  }
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
   runApp(
     const ProviderScope(
