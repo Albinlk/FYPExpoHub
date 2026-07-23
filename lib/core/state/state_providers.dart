@@ -74,9 +74,14 @@ class ProjectsNotifier extends Notifier<List<Project>> {
 
   @override
   List<Project> build() {
-    _sub = _fs.projectsStream().listen((dataList) {
-      state = dataList.map((m) => Project.fromJson(m)).toList();
-    });
+    _sub = _fs.projectsStream().listen(
+      (dataList) {
+        state = dataList.map((m) => Project.fromJson(m)).toList();
+      },
+      onError: (e) {
+        print('Projects stream error (Firebase not connected?): $e');
+      },
+    );
     ref.onDispose(() => _sub?.cancel());
     return ExcelData.allProjects.map((m) => Project(
       id: m['id'] as String,
