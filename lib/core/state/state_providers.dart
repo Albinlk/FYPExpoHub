@@ -74,16 +74,8 @@ class ProjectsNotifier extends Notifier<List<Project>> {
 
   @override
   List<Project> build() {
-    _sub = _fs.projectsStream().listen(
-      (dataList) {
-        state = dataList.map((m) => Project.fromJson(m)).toList();
-      },
-      onError: (e) {
-        print('Projects stream error (Firebase not connected?): $e');
-      },
-    );
-    ref.onDispose(() => _sub?.cancel());
-    return ExcelData.allProjects.map((m) => Project(
+    // Return fallback data immediately; Firestore stream updates when connected
+    final fallback = ExcelData.allProjects.map((m) => Project(
       id: m['id'] as String,
       eventId: m['event_id'] as String,
       slug: m['slug'] as String,
@@ -111,6 +103,21 @@ class ProjectsNotifier extends Notifier<List<Project>> {
       updatedAt: m['updated_at'] as DateTime,
       publishedAt: m['published_at'] as DateTime?,
     )).toList();
+
+    try {
+      _sub = _fs.projectsStream().listen(
+        (dataList) {
+          state = dataList.map((m) => Project.fromJson(m)).toList();
+        },
+        onError: (e) {
+          print('Projects stream error (Firebase unavailable): $e');
+        },
+      );
+    } catch (e) {
+      print('Firestore projects stream setup failed: $e');
+    }
+    ref.onDispose(() => _sub?.cancel());
+    return fallback;
   }
 
   void addProject(Project project) {
