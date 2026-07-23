@@ -30,6 +30,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     initialLocation: '/',
     redirect: (context, state) async {
       final authState = ref.read(authStateChangesProvider);
+      
+      // If auth state is still loading, don't redirect yet
+      if (authState.isLoading) return null;
+      
       final user = authState.value;
       final isLoggingIn = state.uri.toString() == '/admin/sign-in';
       final isAdminPath = state.uri.toString().startsWith('/admin');
