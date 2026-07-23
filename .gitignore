@@ -44,6 +44,18 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+.firebase/
+.agents/
+.claude/
+agent/
+skills-lock.json
+web/flutter_bootstrap.js
+
+# Functions
+functions/node_modules/
+functions/lib/
+functions/package-lock.json
+
 # Firebase & secrets — NEVER commit these
 google-services.json
 GoogleService-Info.plist
