@@ -155,8 +155,8 @@ class _MobileBottomNavBar extends StatelessWidget {
     if (currentPath == '/') return 0;
     if (currentPath.startsWith('/projects')) return 1;
     if (currentPath.startsWith('/schedule')) return 2;
-    if (currentPath.startsWith('/booths')) return 3;
-    return 4; // Catch-all for menu/other
+    if (currentPath.startsWith('/lecturer')) return 3;
+    return 4;
   }
 
   void _onItemTapped(BuildContext context, int index) {
@@ -171,7 +171,7 @@ class _MobileBottomNavBar extends StatelessWidget {
         context.go('/schedule');
         break;
       case 3:
-        context.go('/booths');
+        context.go('/lecturer');
         break;
       case 4:
         _showMobileMenu(context);
@@ -271,9 +271,9 @@ class _MobileBottomNavBar extends StatelessWidget {
             label: 'Schedule',
           ),
           NavigationDestination(
-            icon: Icon(Icons.map_outlined),
-            selectedIcon: Icon(Icons.map, color: DesignSystem.onSecondaryContainer),
-            label: 'Booths',
+            icon: Icon(Icons.person_search_outlined),
+            selectedIcon: Icon(Icons.person_search, color: DesignSystem.onSecondaryContainer),
+            label: 'Lecturer',
           ),
           NavigationDestination(
             icon: Icon(Icons.menu),
