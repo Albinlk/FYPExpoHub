@@ -63,9 +63,23 @@ class _SignInPageState extends ConsumerState<SignInPage> {
         }
       }
     } catch (e) {
+      final msg = e.toString();
+      String userMsg = 'Gagal log masuk. Sila periksa e-mel dan kata laluan anda.';
+      if (msg.contains('invalid-login-credentials') || msg.contains('INVALID_LOGIN_CREDENTIALS')) {
+        userMsg = 'E-mel atau kata laluan tidak sah. Sila cuba lagi.';
+      } else if (msg.contains('invalid-email')) {
+        userMsg = 'Format e-mel tidak sah.';
+      } else if (msg.contains('user-disabled')) {
+        userMsg = 'Akaun ini telah dilumpuhkan.';
+      } else if (msg.contains('too-many-requests')) {
+        userMsg = 'Terlalu banyak percubaan. Sila cuba sebentar lagi.';
+      } else if (msg.contains('network-request-failed')) {
+        userMsg = 'Ralat rangkaian. Sila periksa sambungan internet anda.';
+      }
       setState(() {
-        _errorMessage = 'Gagal log masuk. Sila periksa e-mel dan kata laluan anda.';
+        _errorMessage = userMsg;
       });
+      print('Firebase Auth error: $e');
     } finally {
       if (mounted) {
         setState(() {
