@@ -206,19 +206,35 @@ class _LecturerPageState extends ConsumerState<LecturerPage> {
                     const SizedBox(height: 6),
                     Row(
                       children: [
-                        Text(
-                          project.programmeCode,
-                          style: DesignSystem.labelCaps.copyWith(color: DesignSystem.secondary, fontWeight: FontWeight.bold, fontSize: 10),
-                        ),
-                        const Spacer(),
-                        if (project.boothNumber != null) ...[
-                          const Icon(Icons.room, size: 12, color: DesignSystem.onSurfaceVariant),
-                          const SizedBox(width: 4),
-                          Text(
-                            project.boothNumber!,
-                            style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSurfaceVariant, fontSize: 10),
+                        Expanded(
+                          child: Text(
+                            project.programmeCode,
+                            style: DesignSystem.labelCaps.copyWith(color: DesignSystem.secondary, fontWeight: FontWeight.bold, fontSize: 10),
                           ),
-                        ],
+                        ),
+                        if (project.boothNumber != null)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: DesignSystem.tertiaryContainer,
+                              borderRadius: DesignSystem.radiusSm,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.room, size: 13, color: DesignSystem.onTertiaryContainer),
+                                const SizedBox(width: 3),
+                                Text(
+                                  project.boothNumber!,
+                                  style: DesignSystem.bodySm.copyWith(
+                                    color: DesignSystem.onTertiaryContainer,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                       ],
                     ),
                     const SizedBox(height: 4),
