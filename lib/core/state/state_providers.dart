@@ -75,7 +75,7 @@ class ProjectsNotifier extends Notifier<List<Project>> {
   @override
   List<Project> build() {
     // Return fallback data immediately; Firestore stream updates when connected
-    final fallback = ExcelData.allProjects.map((m) => Project(
+final fallback = ExcelData.allProjects.map((m) => Project(
       id: m['id'] as String,
       eventId: m['event_id'] as String,
       slug: m['slug'] as String,
@@ -89,7 +89,7 @@ class ProjectsNotifier extends Notifier<List<Project>> {
       boothId: m['booth_id'] as String?,
       boothNumber: m['booth_number'] as String?,
       boothZone: m['booth_zone'] as String?,
-      coverImageUrl: '/project_images/${m['id'] as String}.png',
+      coverImageUrl: 'https://placehold.co/400x250/3b82f6/ffffff?text=${Uri.encodeComponent(m['title'] as String)}',
       posterUrl: m['poster_url'] as String?,
       teamDisplayNames: (m['team_display_names'] as List).cast<String>(),
       supervisorDisplayName: m['supervisor_display_name'] as String,
@@ -192,11 +192,29 @@ class ScheduleNotifier extends Notifier<List<ScheduleItem>> {
 
   @override
   List<ScheduleItem> build() {
-    _sub = _fs.scheduleStream().listen((dataList) {
-      state = dataList.map((m) => ScheduleItem.fromJson(m)).toList();
-    });
+    try {
+      _sub = _fs.scheduleStream().listen((dataList) {
+        state = dataList.map((m) => ScheduleItem.fromJson(m)).toList();
+      });
+    } catch (e) {
+      print('Schedule stream setup failed: $e');
+    }
     ref.onDispose(() => _sub?.cancel());
-    return [];
+    return ExcelData.allScheduleItems.map((m) => ScheduleItem(
+      id: m['id'] as String,
+      eventId: m['event_id'] as String,
+      dayIndex: m['day_index'] as int,
+      startTime: m['start_time'] as String,
+      endTime: m['end_time'] as String,
+      title: m['title'] as String,
+      description: m['description'] as String,
+      location: m['location'] as String?,
+      speakerName: m['speaker_name'] as String?,
+      publicationStatus: m['publication_status'] as String,
+      createdAt: m['created_at'] as DateTime,
+      updatedAt: m['updated_at'] as DateTime,
+      publishedAt: m['published_at'] as DateTime?,
+    )).toList();
   }
 
   void addScheduleItem(ScheduleItem item) {
@@ -245,11 +263,7 @@ class BoothsNotifier extends Notifier<List<Booth>> {
 
   @override
   List<Booth> build() {
-    _sub = _fs.boothsStream().listen((dataList) {
-      state = dataList.map((m) => Booth.fromJson(m)).toList();
-    });
-    ref.onDispose(() => _sub?.cancel());
-    return ExcelData.allBooths.map((m) => Booth(
+    final fallback = ExcelData.allBooths.map((m) => Booth(
       id: m['id'] as String,
       eventId: m['event_id'] as String,
       boothNumber: m['booth_number'] as String,
@@ -262,6 +276,16 @@ class BoothsNotifier extends Notifier<List<Booth>> {
       updatedAt: m['updated_at'] as DateTime,
       publishedAt: m['published_at'] as DateTime?,
     )).toList();
+
+    try {
+      _sub = _fs.boothsStream().listen((dataList) {
+        state = dataList.map((m) => Booth.fromJson(m)).toList();
+      });
+    } catch (e) {
+      print('Booths stream setup failed: $e');
+    }
+    ref.onDispose(() => _sub?.cancel());
+    return fallback;
   }
 
   void addBooth(Booth booth) {
