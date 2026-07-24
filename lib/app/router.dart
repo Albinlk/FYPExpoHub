@@ -37,8 +37,15 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       
       // Fallback to synchronous currentUser if stream hasn't emitted
       final user = authState.value ?? FirebaseAuth.instance.currentUser;
-      final isLoggingIn = state.uri.toString() == '/admin/sign-in';
-      final isAdminPath = state.uri.toString().startsWith('/admin');
+      final path = state.uri.toString();
+      final isLoggingIn = path == '/admin/sign-in';
+      final isAdminPath = path.startsWith('/admin');
+      final isAdminDomain = Uri.base.host == 'admin.fskmjasinfypexhibition.site';
+
+      // On admin domain root, go to sign-in if not authenticated
+      if (isAdminDomain && path == '/') {
+        return user == null ? '/admin/sign-in' : '/admin';
+      }
 
       if (isAdminPath && !isLoggingIn) {
         if (user == null) {
