@@ -1,3 +1,5 @@
+import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +11,15 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   usePathUrlStrategy();
+
+  // On admin domain root, redirect to main public site
+  final host = Uri.base.host;
+  final path = Uri.base.path;
+  if (host == 'admin.fskmjasinfypexhibition.site' && (path == '/' || path.isEmpty)) {
+    final location = globalContext['location'] as JSObject;
+    location['href'] = 'https://fskmjasinfypexhibition.site/'.toJS;
+    return;
+  }
 
   try {
     await Firebase.initializeApp(
