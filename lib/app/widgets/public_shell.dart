@@ -271,8 +271,8 @@ class _MobileBottomNavBar extends StatelessWidget {
             label: 'Schedule',
           ),
           NavigationDestination(
-            icon: Icon(Icons.person_search_outlined),
-            selectedIcon: Icon(Icons.person_search, color: DesignSystem.onSecondaryContainer),
+            icon: Icon(Icons.school_outlined),
+            selectedIcon: Icon(Icons.school, color: DesignSystem.onSecondaryContainer),
             label: 'Lecturer',
           ),
           NavigationDestination(
