@@ -107,7 +107,15 @@ final fallback = ExcelData.allProjects.map((m) => Project(
     try {
       _sub = _fs.projectsStream().listen(
         (dataList) {
-          state = dataList.map((m) => Project.fromJson(m)).toList();
+          state = dataList.map((m) {
+            final project = Project.fromJson(m);
+            if (project.coverImageUrl == 'assets/images/project_placeholder.jpg' || project.coverImageUrl.isEmpty) {
+              return project.copyWith(
+                coverImageUrl: 'https://placehold.co/400x250/3b82f6/ffffff?text=${Uri.encodeComponent(project.title)}',
+              );
+            }
+            return project;
+          }).toList();
         },
         onError: (e) {
           print('Projects stream error (Firebase unavailable): $e');
