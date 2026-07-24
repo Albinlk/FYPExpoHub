@@ -31,7 +31,7 @@ class ProjectDetailPage extends ConsumerWidget {
         appBar: AppBar(
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
-            onPressed: () => context.go('/projects'),
+            onPressed: () => context.pop(),
           ),
           title: const Text('Projek Tidak Dijumpai'),
         ),
@@ -44,7 +44,7 @@ class ProjectDetailPage extends ConsumerWidget {
               Text('Projek tidak ditemui.', style: DesignSystem.h3.copyWith(color: DesignSystem.onSurfaceVariant)),
               const SizedBox(height: 8),
               ElevatedButton(
-                onPressed: () => context.go('/projects'),
+                onPressed: () => context.pop(),
                 child: const Text('Kembali ke Katalog'),
               ),
             ],
