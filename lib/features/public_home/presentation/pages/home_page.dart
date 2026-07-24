@@ -159,6 +159,16 @@ class _HomePageState extends ConsumerState<HomePage> {
                               ),
                               child: Text('Explore Project Catalog', style: DesignSystem.button),
                             ),
+                            ElevatedButton(
+                              onPressed: () => context.go('/lecturer'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: DesignSystem.tertiaryContainer,
+                                foregroundColor: DesignSystem.onTertiaryContainer,
+                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                                shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusFull),
+                              ),
+                              child: Text('Lecturer Portal', style: DesignSystem.button),
+                            ),
                             OutlinedButton(
                               onPressed: () => context.go('/schedule'),
                               style: OutlinedButton.styleFrom(
