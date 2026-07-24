@@ -176,7 +176,7 @@ class _LecturerPageState extends ConsumerState<LecturerPage> {
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () => context.go('/projects/${project.id}'),
+        onTap: () => context.push('/projects/${project.id}'),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
