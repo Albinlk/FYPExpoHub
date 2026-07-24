@@ -196,7 +196,7 @@ class _MobileBottomNavBar extends StatelessWidget {
                 _buildMenuItem(context, 'Schedule', Icons.event_note, '/schedule'),
                 _buildMenuItem(context, 'Announcements', Icons.campaign, '/announcements'),
                 _buildMenuItem(context, 'Award Winners', Icons.emoji_events, '/awards'),
-                _buildMenuItem(context, 'Lecturer Portal', Icons.person_search, '/lecturer'),
+
                 _buildMenuItem(context, 'Exhibition Info', Icons.info, '/info'),
                 _buildMenuItem(context, 'Frequently Asked Questions', Icons.help_outline, '/faq'),
                 _buildMenuItem(context, 'Privacy Policy', Icons.privacy_tip_outlined, '/privacy'),
