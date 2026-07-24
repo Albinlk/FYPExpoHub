@@ -12,7 +12,7 @@ class AdminShell extends ConsumerWidget {
   void _logout(BuildContext context, WidgetRef ref) async {
     await ref.read(firebaseAuthProvider).signOut();
     if (context.mounted) {
-      context.go('/');
+      context.go('/admin/sign-in');
     }
   }
 
