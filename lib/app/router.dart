@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../core/firebase/firebase_providers.dart';
@@ -34,7 +35,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       // If auth state is still loading, don't redirect yet
       if (authState.isLoading) return null;
       
-      final user = authState.value;
+      // Fallback to synchronous currentUser if stream hasn't emitted
+      final user = authState.value ?? FirebaseAuth.instance.currentUser;
       final isLoggingIn = state.uri.toString() == '/admin/sign-in';
       final isAdminPath = state.uri.toString().startsWith('/admin');
 
