@@ -1,8 +1,15 @@
+import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/firebase/firebase_providers.dart';
+
+void _goToMainSite() {
+  final location = globalContext['location'] as JSObject;
+  location['href'] = 'https://fskmjasinfypexhibition.site/'.toJS;
+}
 
 class SignInPage extends ConsumerStatefulWidget {
   const SignInPage({super.key});
@@ -195,7 +202,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                       const SizedBox(height: 16),
                       Center(
                         child: TextButton(
-                          onPressed: () => context.go('/'),
+                          onPressed: _goToMainSite,
                           child: Text(
                             'Kembali ke Laman Utama',
                             style: DesignSystem.bodySm.copyWith(color: DesignSystem.secondary, fontWeight: FontWeight.bold),
