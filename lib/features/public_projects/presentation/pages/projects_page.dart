@@ -222,20 +222,23 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
                   ),
                   if (project.boothNumber != null)
                     Positioned(
-                      bottom: 8,
-                      left: 8,
+                      top: 32,
+                      right: 8,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(
-                          color: Colors.black54,
+                          color: DesignSystem.primary,
                           borderRadius: DesignSystem.radiusSm,
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.room, size: 12, color: Colors.white),
+                            const Icon(Icons.room, size: 14, color: Colors.white),
                             const SizedBox(width: 4),
-                            Text(project.boothNumber!, style: DesignSystem.labelCaps.copyWith(color: Colors.white, fontSize: 10)),
+                            Text(
+                              project.boothNumber!,
+                              style: DesignSystem.bodySm.copyWith(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
+                            ),
                           ],
                         ),
                       ),
@@ -268,6 +271,22 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
                     ),
                   ),
                   const SizedBox(height: 6),
+                  if (project.boothNumber != null) ...[
+                    Row(
+                      children: [
+                        Icon(Icons.room, size: 14, color: DesignSystem.tertiary),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${project.boothNumber}${project.boothZone != null ? ' • ${project.boothZone}' : ''}',
+                          style: DesignSystem.bodySm.copyWith(
+                            color: DesignSystem.tertiary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                  ],
                   Text(
                     'Student(s): ${project.teamDisplayNames.join(', ')}',
                     style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant, height: 1.3),
