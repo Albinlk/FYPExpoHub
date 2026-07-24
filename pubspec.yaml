@@ -74,34 +74,29 @@ flutter:
   # Flutter section
   uses-material-design: true
 
-  # Exclude google_fonts from bundling HTTP requests at build time
-  # (fonts load from local files in index.html; this just registers the families)
   assets:
     - web/project_images/
-    - web/fonts/
 
-  # An image asset can refer to one or more resolution-specific "variants", see
-  # https://flutter.dev/to/resolution-aware-images
-
-  # For details regarding adding assets from package dependencies, see
-  # https://flutter.dev/to/asset-from-package
-
-  # To add custom fonts to your application, add a fonts section here,
-  # in this "flutter" section. Each entry in this list should have a
-  # "family" key with the font family name, and a "fonts" key with a
-  # list giving the asset and other descriptors for the font. For
-  # example:
-  # fonts:
-  #   - family: Schyler
-  #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
-  #       - asset: fonts/Schyler-Italic.ttf
-  #         style: italic
-  #   - family: Trajan Pro
-  #     fonts:
-  #       - asset: fonts/TrajanPro.ttf
-  #       - asset: fonts/TrajanPro_Bold.ttf
-  #         weight: 700
-  #
-  # For details regarding fonts from package dependencies,
-  # see https://flutter.dev/to/font-from-package
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: web/fonts/Inter-Regular.ttf
+          weight: 400
+        - asset: web/fonts/Inter-Medium.ttf
+          weight: 500
+        - asset: web/fonts/Inter-SemiBold.ttf
+          weight: 600
+        - asset: web/fonts/Inter-Bold.ttf
+          weight: 700
+    - family: Montserrat
+      fonts:
+        - asset: web/fonts/Montserrat-Regular.ttf
+          weight: 400
+        - asset: web/fonts/Montserrat-Medium.ttf
+          weight: 500
+        - asset: web/fonts/Montserrat-SemiBold.ttf
+          weight: 600
+        - asset: web/fonts/Montserrat-Bold.ttf
+          weight: 700
+        - asset: web/fonts/Montserrat-ExtraBold.ttf
+          weight: 800
