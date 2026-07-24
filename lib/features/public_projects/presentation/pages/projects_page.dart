@@ -227,17 +227,17 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(
-                          color: DesignSystem.primary,
+                          color: DesignSystem.secondaryContainer,
                           borderRadius: DesignSystem.radiusSm,
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.room, size: 14, color: Colors.white),
+                            Icon(Icons.room, size: 14, color: DesignSystem.onSecondaryContainer),
                             const SizedBox(width: 4),
                             Text(
                               project.boothNumber!,
-                              style: DesignSystem.bodySm.copyWith(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
+                              style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSecondaryContainer, fontWeight: FontWeight.bold, fontSize: 11),
                             ),
                           ],
                         ),
@@ -274,12 +274,12 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
                   if (project.boothNumber != null) ...[
                     Row(
                       children: [
-                        Icon(Icons.room, size: 14, color: DesignSystem.tertiary),
+                        Icon(Icons.room, size: 14, color: DesignSystem.secondary),
                         const SizedBox(width: 4),
                         Text(
                           '${project.boothNumber}${project.boothZone != null ? ' • ${project.boothZone}' : ''}',
                           style: DesignSystem.bodySm.copyWith(
-                            color: DesignSystem.tertiary,
+                            color: DesignSystem.secondary,
                             fontWeight: FontWeight.w600,
                           ),
                         ),

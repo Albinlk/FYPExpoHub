@@ -216,18 +216,18 @@ class _LecturerPageState extends ConsumerState<LecturerPage> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
-                              color: DesignSystem.tertiaryContainer,
+                              color: DesignSystem.secondaryContainer,
                               borderRadius: DesignSystem.radiusSm,
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.room, size: 13, color: DesignSystem.onTertiaryContainer),
+                                Icon(Icons.room, size: 13, color: DesignSystem.onSecondaryContainer),
                                 const SizedBox(width: 3),
                                 Text(
                                   project.boothNumber!,
                                   style: DesignSystem.bodySm.copyWith(
-                                    color: DesignSystem.onTertiaryContainer,
+                                    color: DesignSystem.onSecondaryContainer,
                                     fontWeight: FontWeight.bold,
                                     fontSize: 11,
                                   ),
