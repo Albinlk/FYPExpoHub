@@ -259,33 +259,26 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      Text(
-                        project.programmeCode,
-                        style: DesignSystem.labelCaps.copyWith(
-                          color: DesignSystem.secondary,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 10,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          project.teamDisplayNames.join(', '),
-                          style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant, height: 1.3),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
+                  Text(
+                    project.programmeCode,
+                    style: DesignSystem.labelCaps.copyWith(
+                      color: DesignSystem.secondary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 10,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Student(s): ${project.teamDisplayNames.join(', ')}',
+                    style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant, height: 1.3),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 2),
                   Text(
                     'Supervisor: ${project.supervisorDisplayName}',
                     style: DesignSystem.bodySm.copyWith(
                       color: DesignSystem.onSurfaceVariant,
-                      fontStyle: FontStyle.italic,
                       height: 1.3,
                     ),
                     maxLines: 1,
