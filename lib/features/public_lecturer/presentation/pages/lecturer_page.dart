@@ -95,15 +95,14 @@ class _LecturerPageState extends ConsumerState<LecturerPage> {
                       ],
                     ),
                     const SizedBox(height: DesignSystem.spaceMd),
-                    Row(
-                      mainAxisAlignment: isDesktop ? MainAxisAlignment.start : MainAxisAlignment.center,
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: DesignSystem.spaceXs,
                       children: [
                         Text('Filter by role: ', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSurfaceVariant)),
-                        const SizedBox(width: DesignSystem.spaceSm),
                         _buildRoleChip('Supervisor'),
-                        const SizedBox(width: DesignSystem.spaceXs),
                         _buildRoleChip('Examiner'),
-                        const SizedBox(width: DesignSystem.spaceXs),
                         _buildRoleChip('Both'),
                       ],
                     ),
