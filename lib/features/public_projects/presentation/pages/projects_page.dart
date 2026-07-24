@@ -72,7 +72,7 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
                       crossAxisCount: isDesktop ? 3 : 1,
                       crossAxisSpacing: DesignSystem.spaceMd,
                       mainAxisSpacing: DesignSystem.spaceMd,
-                      childAspectRatio: isDesktop ? 1.35 : 1.25,
+                      childAspectRatio: isDesktop ? 1.55 : 1.35,
                     ),
                     itemCount: filteredProjects.length,
                     itemBuilder: (context, index) {

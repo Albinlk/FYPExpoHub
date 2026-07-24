@@ -143,7 +143,7 @@ class _LecturerPageState extends ConsumerState<LecturerPage> {
                   crossAxisCount: isDesktop ? 3 : 1,
                   crossAxisSpacing: DesignSystem.spaceMd,
                   mainAxisSpacing: DesignSystem.spaceMd,
-                  childAspectRatio: isDesktop ? 1.6 : 1.5,
+                  childAspectRatio: isDesktop ? 2.2 : 1.9,
                 ),
                 itemCount: filteredProjects.length,
                 itemBuilder: (context, index) {
