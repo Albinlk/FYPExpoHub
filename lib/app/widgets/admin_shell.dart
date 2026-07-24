@@ -1,8 +1,15 @@
+import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/firebase/firebase_providers.dart';
 import '../theme/theme.dart';
+
+void _goToMainSite() {
+  final location = globalContext['location'] as JSObject;
+  location['href'] = 'https://fskmjasinfypexhibition.site/'.toJS;
+}
 
 class AdminShell extends ConsumerWidget {
   final Widget child;
@@ -12,7 +19,7 @@ class AdminShell extends ConsumerWidget {
   void _logout(BuildContext context, WidgetRef ref) async {
     await ref.read(firebaseAuthProvider).signOut();
     if (context.mounted) {
-      context.go('/admin/sign-in');
+      _goToMainSite();
     }
   }
 
