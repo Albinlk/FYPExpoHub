@@ -10,6 +10,15 @@ class ProjectDetailPage extends ConsumerWidget {
 
   const ProjectDetailPage({super.key, required this.slug});
 
+  void _goBack(BuildContext context) {
+    final from = GoRouterState.of(context).uri.queryParameters['from'];
+    if (from == 'lecturer') {
+      context.go('/lecturer');
+    } else {
+      context.pop();
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDesktop = MediaQuery.of(context).size.width >= 768;
@@ -31,7 +40,7 @@ class ProjectDetailPage extends ConsumerWidget {
         appBar: AppBar(
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
-            onPressed: () => context.pop(),
+            onPressed: () => _goBack(context),
           ),
           title: const Text('Projek Tidak Dijumpai'),
         ),
@@ -44,7 +53,7 @@ class ProjectDetailPage extends ConsumerWidget {
               Text('Projek tidak ditemui.', style: DesignSystem.h3.copyWith(color: DesignSystem.onSurfaceVariant)),
               const SizedBox(height: 8),
               ElevatedButton(
-                onPressed: () => context.pop(),
+                onPressed: () => _goBack(context),
                 child: const Text('Kembali ke Katalog'),
               ),
             ],
@@ -57,7 +66,7 @@ class ProjectDetailPage extends ConsumerWidget {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/projects'),
+          onPressed: () => _goBack(context),
         ),
         title: Text('Project Details', style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold)),
       ),
