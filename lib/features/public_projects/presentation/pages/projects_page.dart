@@ -17,6 +17,7 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
   final TextEditingController _searchController = TextEditingController();
   String _selectedProgramme = 'All';
   String _selectedCategory = 'All';
+  bool _calonIndustriOnly = false;
 
   final List<String> _programmes = ['All', 'CS230', 'CS251', 'CS253', 'CS255', 'CS266'];
   final List<String> _categories = ['All', 'Computer Science', 'Networking & Communication', 'Cybersecurity', 'Network Security & Infrastructure', 'Software Engineering & Applications'];
@@ -43,7 +44,8 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
           (project.examinerDisplayName?.toLowerCase().contains(_searchController.text.toLowerCase()) ?? false);
       final matchesProgramme = _selectedProgramme == 'All' || project.programmeCode.contains(_selectedProgramme);
       final matchesCategory = _selectedCategory == 'All' || project.category == _selectedCategory;
-      return matchesSearch && matchesProgramme && matchesCategory;
+      final matchesCalon = !_calonIndustriOnly || project.calonIndustri;
+      return matchesSearch && matchesProgramme && matchesCategory && matchesCalon;
     }).toList();
 
     return Scaffold(
@@ -112,6 +114,7 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
                       _searchController.clear();
                       _selectedProgramme = 'All';
                       _selectedCategory = 'All';
+                      _calonIndustriOnly = false;
                     }),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: DesignSystem.surfaceContainer,
@@ -137,6 +140,8 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
                       Expanded(child: _buildDropdownFilter('Project Category', _selectedCategory, _categories, (val) {
                         setState(() => _selectedCategory = val!);
                       })),
+                      const SizedBox(width: DesignSystem.spaceMd),
+                      _buildCalonChip(),
                     ],
                   )
                 : Column(
@@ -148,6 +153,8 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
                       _buildDropdownFilter('Project Category', _selectedCategory, _categories, (val) {
                         setState(() => _selectedCategory = val!);
                       }),
+                      const SizedBox(height: DesignSystem.spaceMd),
+                      _buildCalonChip(),
                     ],
                   ),
           ],
@@ -182,6 +189,33 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
               }).toList(),
             ),
           ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCalonChip() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Calon Industri', style: DesignSystem.labelCaps),
+        const SizedBox(height: 6),
+        FilterChip(
+          selected: _calonIndustriOnly,
+          onSelected: (val) => setState(() => _calonIndustriOnly = val),
+          avatar: Icon(
+            Icons.workspace_premium,
+            size: 16,
+            color: _calonIndustriOnly ? Colors.white : DesignSystem.tertiary,
+          ),
+          label: Text(
+            _calonIndustriOnly ? 'Showing only' : 'Show only',
+            style: DesignSystem.bodySm.copyWith(
+              color: _calonIndustriOnly ? Colors.white : DesignSystem.onSurfaceVariant,
+            ),
+          ),
+          selectedColor: DesignSystem.tertiary,
+          checkmarkColor: Colors.white,
         ),
       ],
     );

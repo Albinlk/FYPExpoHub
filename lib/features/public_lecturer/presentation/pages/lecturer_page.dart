@@ -15,7 +15,8 @@ class LecturerPage extends ConsumerStatefulWidget {
 
 class _LecturerPageState extends ConsumerState<LecturerPage> {
   final TextEditingController _nameController = TextEditingController();
-  String _selectedRole = 'Both'; // 'Supervisor', 'Examiner', 'Both'
+  String _selectedRole = 'Both';
+  bool _calonIndustriOnly = false;
 
   @override
   void dispose() {
@@ -38,9 +39,14 @@ class _LecturerPageState extends ConsumerState<LecturerPage> {
       final supervisorMatch = project.supervisorDisplayName.toLowerCase().contains(query);
       final examinerMatch = (project.examinerDisplayName?.toLowerCase().contains(query) ?? false);
 
-      if (_selectedRole == 'Supervisor') return supervisorMatch;
-      if (_selectedRole == 'Examiner') return examinerMatch;
-      return supervisorMatch || examinerMatch;
+      final roleMatch = _selectedRole == 'Supervisor'
+          ? supervisorMatch
+          : _selectedRole == 'Examiner'
+              ? examinerMatch
+              : supervisorMatch || examinerMatch;
+      if (!roleMatch) return false;
+      if (_calonIndustriOnly && !project.calonIndustri) return false;
+      return true;
     }).toList();
 
     return Scaffold(
@@ -104,6 +110,24 @@ class _LecturerPageState extends ConsumerState<LecturerPage> {
                         _buildRoleChip('Supervisor'),
                         _buildRoleChip('Examiner'),
                         _buildRoleChip('Both'),
+                        const SizedBox(width: DesignSystem.spaceMd),
+                        FilterChip(
+                          selected: _calonIndustriOnly,
+                          onSelected: (val) => setState(() => _calonIndustriOnly = val),
+                          avatar: Icon(
+                            Icons.workspace_premium,
+                            size: 14,
+                            color: _calonIndustriOnly ? Colors.white : DesignSystem.tertiary,
+                          ),
+                          label: Text(
+                            'Calon Industri',
+                            style: DesignSystem.bodySm.copyWith(
+                              color: _calonIndustriOnly ? Colors.white : DesignSystem.onSurfaceVariant,
+                            ),
+                          ),
+                          selectedColor: DesignSystem.tertiary,
+                          checkmarkColor: Colors.white,
+                        ),
                       ],
                     ),
                   ],
