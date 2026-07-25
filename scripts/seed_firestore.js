@@ -21,6 +21,12 @@ const ADMIN_PASSWORD = '***REMOVED***';
 
 const EXCEL_PATH = 'D:\\Downloads\\(LATEST) CSP650-DewanSeminar-ListName-Layout (6).xlsx';
 
+const CALON_MATRICS = new Set([
+  '2023414614','2023260244','2023240232','2023436724',
+  '2023240168','2023239276','2023820446','2023699244',
+  '2023674486','2023260928',
+]);
+
 const COURSE_CATEGORY = {
   CS230: { category: 'Computer Science', progPrefix: 'CS230' },
   CS253: { category: 'Cybersecurity', progPrefix: 'CS253' },
@@ -250,6 +256,7 @@ async function main() {
       videoUrl: null,
       repositoryUrl: null,
       featured: false,
+      calonIndustri: CALON_MATRICS.has(p.matric_id),
       publicationStatus: 'published',
       createdAt: new Date(),
       updatedAt: new Date(),

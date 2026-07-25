@@ -98,6 +98,7 @@ final fallback = ExcelData.allProjects.map((m) => Project(
       videoUrl: m['video_url'] as String?,
       repositoryUrl: m['repository_url'] as String?,
       featured: m['featured'] as bool,
+      calonIndustri: (m['calon_industri'] as bool?) ?? false,
       publicationStatus: m['publication_status'] as String,
       createdAt: m['created_at'] as DateTime,
       updatedAt: m['updated_at'] as DateTime,

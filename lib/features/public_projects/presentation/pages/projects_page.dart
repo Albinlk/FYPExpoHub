@@ -190,6 +190,8 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
   Widget _buildProjectCard(Project project) {
     return Card(
       clipBehavior: Clip.antiAlias,
+      color: project.calonIndustri ? DesignSystem.tertiaryContainer.withValues(alpha: 0.15) : null,
+      surfaceTintColor: project.calonIndustri ? DesignSystem.tertiary : null,
       child: InkWell(
         onTap: () => context.go('/projects/${project.id}'),
         child: Column(
@@ -220,6 +222,29 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
                       ),
                     ),
                   ),
+                  if (project.calonIndustri)
+                    Positioned(
+                      top: 8,
+                      left: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: DesignSystem.tertiary,
+                          borderRadius: DesignSystem.radiusSm,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.workspace_premium, size: 13, color: Colors.white),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Calon Industri',
+                              style: DesignSystem.labelCaps.copyWith(color: Colors.white, fontSize: 10),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   if (project.boothNumber != null)
                     Positioned(
                       top: 32,

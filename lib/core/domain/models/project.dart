@@ -28,6 +28,7 @@ abstract class Project with _$Project {
     String? videoUrl,
     String? repositoryUrl,
     required bool featured,
+    @Default(false) bool calonIndustri,
     required String publicationStatus, // 'draft', 'published', 'archived'
     required DateTime createdAt,
     required DateTime updatedAt,

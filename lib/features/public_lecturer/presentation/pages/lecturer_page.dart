@@ -175,6 +175,8 @@ class _LecturerPageState extends ConsumerState<LecturerPage> {
   Widget _buildProjectCard(Project project) {
     return Card(
       clipBehavior: Clip.antiAlias,
+      color: project.calonIndustri ? DesignSystem.tertiaryContainer.withValues(alpha: 0.15) : null,
+      surfaceTintColor: project.calonIndustri ? DesignSystem.tertiary : null,
       child: InkWell(
         onTap: () => context.push('/projects/${project.id}?from=lecturer'),
         child: Row(
@@ -183,11 +185,39 @@ class _LecturerPageState extends ConsumerState<LecturerPage> {
             // Unique cover on the left
             SizedBox(
               width: 100,
-              child: ProjectCoverImage(
-                title: project.title,
-                category: project.category,
-                imageUrl: project.coverImageUrl,
-                fit: BoxFit.cover,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  ProjectCoverImage(
+                    title: project.title,
+                    category: project.category,
+                    imageUrl: project.coverImageUrl,
+                    fit: BoxFit.cover,
+                  ),
+                  if (project.calonIndustri)
+                    Positioned(
+                      top: 4,
+                      left: 4,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: DesignSystem.tertiary,
+                          borderRadius: DesignSystem.radiusSm,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.workspace_premium, size: 11, color: Colors.white),
+                            const SizedBox(width: 3),
+                            Text(
+                              'Calon Industri',
+                              style: DesignSystem.labelCaps.copyWith(color: Colors.white, fontSize: 8),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
             Expanded(

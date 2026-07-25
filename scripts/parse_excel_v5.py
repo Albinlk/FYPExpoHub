@@ -86,6 +86,12 @@ def parse_list_sheet(ws, course_code):
     return projects, sorted(booths)
 
 
+CALON_INDUSTRI_MATRICS = {
+    '2023414614', '2023260244', '2023240232', '2023436724',
+    '2023240168', '2023239276', '2023820446', '2023699244',
+    '2023674486', '2023260928',
+}
+
 _global_counter = 0
 
 def generate_project_id(course_code):
@@ -135,7 +141,9 @@ def build_projects_dart(all_projects):
         lines.append(f'      "demo_url": null,')
         lines.append(f'      "video_url": null,')
         lines.append(f'      "repository_url": null,')
+        calon = 'true' if p['matric_id'] in CALON_INDUSTRI_MATRICS else 'false'
         lines.append(f'      "featured": false,')
+        lines.append(f'      "calon_industri": {calon},')
         lines.append(f'      "publication_status": \'published\',')
         lines.append(f'      "created_at": DateTime(2026, 07, 01),')
         lines.append(f'      "updated_at": DateTime(2026, 07, 01),')
