@@ -505,6 +505,25 @@ class _HomePageState extends ConsumerState<HomePage> {
                   style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant, fontStyle: FontStyle.italic),
                   softWrap: true,
                 ),
+                if (project.boothNumber != null) ...[
+                  const SizedBox(height: DesignSystem.spaceXs),
+                  Row(
+                    children: [
+                      Icon(Icons.room, size: 13, color: DesignSystem.secondary),
+                      const SizedBox(width: 3),
+                      Flexible(
+                        child: Text(
+                          '${project.boothNumber}${project.boothZone != null ? ' • ${project.boothZone}' : ''}',
+                          style: DesignSystem.bodySm.copyWith(
+                            color: DesignSystem.secondary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
