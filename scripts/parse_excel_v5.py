@@ -2,7 +2,7 @@ import openpyxl
 import re
 from collections import OrderedDict
 
-EXCEL_PATH = r'D:\Downloads\(LATEST) CSP650-DewanSeminar-ListName-Layout (5).xlsx'
+EXCEL_PATH = r'D:\Downloads\(LATEST) CSP650-DewanSeminar-ListName-Layout (6).xlsx'
 OUTPUT_PATH = r'D:\MobileAppDev\FYPExpoHub\lib\core\data\excel_data.dart'
 
 COURSE_CATEGORY = {
@@ -50,9 +50,10 @@ def parse_list_sheet(ws, course_code):
         supervisor = sanitize(vals[6])
         examiner = sanitize(vals[7])
 
-        if not title or title == 'None' or not student_name or student_name == 'None':
-            title = title if title and title != 'None' else 'TBD (Project Title Pending)'
-            student_name = student_name if student_name and student_name != 'None' else 'TBD (Student Name Pending)'
+        if not student_name or student_name == 'None':
+            continue
+        if not title or title == 'None':
+            title = 'TBD (Project Title Pending)'
 
         try:
             no_int = int(float(no))
@@ -301,7 +302,7 @@ def main():
     # Write Dart file
     with open(OUTPUT_PATH, 'w', encoding='utf-8') as f:
         f.write('// Auto-generated from Excel parser. Do not edit manually.\n')
-        f.write(f'// Generated from: CSP650-DewanSeminar-ListName-Layout (5).xlsx\n')
+        f.write(f'// Generated from: CSP650-DewanSeminar-ListName-Layout (6).xlsx\n')
         f.write(f'// Total projects: {project_count}, Total booths: {booth_count}\n')
         f.write('\n')
         f.write('class ExcelData {\n')
