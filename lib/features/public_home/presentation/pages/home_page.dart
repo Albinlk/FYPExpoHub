@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/project.dart';
 import '../../../../core/state/state_providers.dart';
+import '../../../../core/widgets/project_cover_image.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -213,25 +214,32 @@ class _HomePageState extends ConsumerState<HomePage> {
                   Consumer(
                     builder: (context, ref, child) {
                       final sorted = ref.watch(mostVisitedProjectsProvider);
-                      final display = sorted.take(3).toList();
+                      final display = sorted.take(10).toList();
                       if (display.isEmpty) return const SizedBox.shrink();
                       if (isDesktop) {
-                        return Row(
-                          children: List.generate(display.length * 2 - 1, (i) {
-                            if (i.isOdd) return const SizedBox(width: DesignSystem.spaceMd);
-                            return Expanded(child: _buildFeaturedCard(display[i ~/ 2]));
-                          }),
+                        return GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            crossAxisSpacing: DesignSystem.spaceMd,
+                            mainAxisSpacing: DesignSystem.spaceMd,
+                            childAspectRatio: 1.15,
+                          ),
+                          itemCount: display.length,
+                          itemBuilder: (context, index) => _buildFeaturedCard(display[index]),
                         );
                       }
-                      return Column(
-                        children: display
-                            .map((p) => Padding(
-                                  padding: EdgeInsets.only(
-                                    bottom: p == display.last ? 0 : DesignSystem.spaceMd,
-                                  ),
-                                  child: _buildFeaturedCard(p),
-                                ))
-                            .toList(),
+                      return ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: display.length,
+                        itemBuilder: (context, index) => Padding(
+                          padding: EdgeInsets.only(
+                            bottom: index == display.length - 1 ? 0 : DesignSystem.spaceMd,
+                          ),
+                          child: _buildFeaturedCard(display[index]),
+                        ),
                       );
                     },
                   ),
@@ -449,21 +457,16 @@ class _HomePageState extends ConsumerState<HomePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
+          SizedBox(
             height: 140,
-            decoration: BoxDecoration(
-              color: DesignSystem.primary.withOpacity(0.05),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
-            ),
+            width: double.infinity,
             child: ClipRRect(
               borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
-              child: Image.network(
-                project.coverImageUrl,
+              child: ProjectCoverImage(
+                title: project.title,
+                category: project.category,
+                imageUrl: project.coverImageUrl,
                 fit: BoxFit.cover,
-                width: double.infinity,
-                errorBuilder: (_, __, ___) => const Center(
-                  child: Icon(Icons.image, size: 48, color: DesignSystem.primaryContainer),
-                ),
               ),
             ),
           ),
