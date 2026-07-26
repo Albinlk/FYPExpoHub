@@ -8,7 +8,7 @@ import 'dart:typed_data';
 
 Map<String, dynamic> _convertTimestamps(Map<String, dynamic> data) {
   return data.map((key, value) {
-    if (value is Timestamp) return MapEntry(key, value.toDate());
+    if (value is Timestamp) return MapEntry(key, value.toDate().toIso8601String());
     if (value is Map<String, dynamic>) return MapEntry(key, _convertTimestamps(value));
     if (value is List) return MapEntry(key, value.map((e) => e is Map<String, dynamic> ? _convertTimestamps(e) : e).toList());
     return MapEntry(key, value);
