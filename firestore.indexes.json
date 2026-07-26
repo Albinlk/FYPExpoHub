@@ -1,6 +1,33 @@
 {
   "indexes": [
     {
+      "collectionGroup": "studentProjectVisits",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "lecturerId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "studentProjectVisits",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "eventId", "order": "ASCENDING" },
+        { "fieldPath": "projectId", "order": "ASCENDING" },
+        { "fieldPath": "lecturerId", "order": "ASCENDING" },
+        { "fieldPath": "visitRole", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "projectLecturerAssignments",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "lecturerDisplayName", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "publicProjects",
       "queryScope": "COLLECTION",
       "fields": [

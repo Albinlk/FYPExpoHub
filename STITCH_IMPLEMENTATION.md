@@ -31,6 +31,10 @@ This document tracks the status of all screens and routes, mapping them directly
 | *Extended* | Admin Awards | `/admin/awards` | ⏳ Pending | ⏳ Pending | 🟢 Multi-tab | Award categories & winners manager |
 | *Extended* | Admin Sign-In | `/admin/sign-in` | ⏳ Pending | ⏳ Pending | 🟢 Centered box | Auth and administrative entrance |
 | *Extended* | Admin Settings | `/admin/settings` | ⏳ Pending | ⏳ Pending | 🟢 Fluid form | Configurations panel |
+| *Extended* | Lawatan Saya (Lecturer) | `/lecturer/visits` | ⏳ Pending | ⏳ Pending | 🟢 Fluid | Visit tracker with progress cards, filters, and project list |
+| *Extended* | Lawatan Saya Detail | `/lecturer/visits/:projectId` | ⏳ Pending | ⏳ Pending | 🟢 Fluid | Project detail with mark/undo visit per role |
+| *Extended* | Log Masuk Pensyarah | `/lecturer/sign-in` | ⏳ Pending | ⏳ Pending | 🟢 Centered box | Lecturer authentication for visit tracking |
+| *Extended* | Pemantauan Lawatan (Admin)| `/admin/visits` | ⏳ Pending | ⏳ Pending | 🟢 Dashboard | Admin monitoring dashboard with summary, filters, and data table |
 
 ---
 

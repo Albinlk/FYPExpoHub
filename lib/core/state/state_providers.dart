@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../domain/models/project.dart';
 import '../domain/models/schedule_item.dart';
@@ -7,8 +8,12 @@ import '../domain/models/booth.dart';
 import '../domain/models/award.dart';
 import '../domain/models/event.dart';
 import '../domain/models/import_models.dart';
+import '../domain/models/lecturer.dart';
+import '../domain/models/project_lecturer_assignment.dart';
+import '../domain/models/student_visit.dart';
 import '../data/excel_data.dart';
 import '../firebase/firestore_service.dart';
+import '../firebase/firebase_providers.dart';
 
 final _fs = FirestoreService.instance;
 
@@ -475,4 +480,102 @@ final validationIssuesProvider = StreamProvider.family<List<ValidationIssue>, St
   return _fs.validationIssuesStream(importId).map((list) {
     return list.map((m) => ValidationIssue.fromJson(m)).toList();
   });
+});
+
+// ==========================================
+// 8. LECTURER CONFIG & AUTH STATE
+// ==========================================
+
+/// Maps lecturer email -> display name as stored in project data.
+const _lecturerConfig = <String, String>{
+  'albin1841@uitm.edu.my': 'ALBIN LEMUEL KUSHAN',
+};
+
+final lecturerAuthProvider = NotifierProvider<LecturerAuthNotifier, Lecturer?>(LecturerAuthNotifier.new);
+
+class LecturerAuthNotifier extends Notifier<Lecturer?> {
+  StreamSubscription? _authSub;
+
+  @override
+  Lecturer? build() {
+    _listenToAuthChanges();
+    return null;
+  }
+
+  void _listenToAuthChanges() {
+    final auth = ref.read(firebaseAuthProvider);
+    _authSub = auth.authStateChanges().listen((user) {
+      if (user != null && user.email != null && _lecturerConfig.containsKey(user.email!.toLowerCase())) {
+        final displayName = _lecturerConfig[user.email!.toLowerCase()]!;
+        state = Lecturer(
+          id: user.uid,
+          uid: user.uid,
+          displayName: displayName,
+          email: user.email,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+      } else {
+        state = null;
+      }
+    });
+    ref.onDispose(() => _authSub?.cancel());
+  }
+
+  void signOut() {
+    state = null;
+  }
+}
+
+final lecturerDisplayNameProvider = Provider<String?>((ref) {
+  return ref.watch(lecturerAuthProvider)?.displayName;
+});
+
+final lecturerUidProvider = Provider<String?>((ref) {
+  return ref.watch(lecturerAuthProvider)?.uid;
+});
+
+// ==========================================
+// 9. PROJECT LECTURER ASSIGNMENTS STATE
+// ==========================================
+final allAssignmentsProvider = StreamProvider<List<ProjectLecturerAssignment>>((ref) {
+  return _fs.assignmentsStream().map((list) {
+    return list.map((m) => ProjectLecturerAssignment.fromJson(m)).toList();
+  });
+});
+
+final lecturerAssignmentsProvider = Provider<List<ProjectLecturerAssignment>>((ref) {
+  final lecturer = ref.watch(lecturerAuthProvider);
+  final all = ref.watch(allAssignmentsProvider);
+  if (lecturer == null) return [];
+  final allList = all.asData?.value ?? [];
+  return allList.where((a) =>
+    a.lecturerDisplayName.toLowerCase().contains(lecturer.displayName.toLowerCase()) &&
+    a.status == 'active'
+  ).toList();
+});
+
+// ==========================================
+// 10. STUDENT VISITS STATE
+// ==========================================
+final allVisitsProvider = StreamProvider<List<StudentVisit>>((ref) {
+  return _fs.visitsStream().map((list) {
+    return list.map((m) => StudentVisit.fromJson(m)).toList();
+  });
+});
+
+final lecturerVisitsProvider = Provider<List<StudentVisit>>((ref) {
+  final lecturer = ref.watch(lecturerAuthProvider);
+  final all = ref.watch(allVisitsProvider);
+  if (lecturer == null) return [];
+  final allList = all.asData?.value ?? [];
+  return allList.where((v) => v.lecturerId == lecturer.uid).toList();
+});
+
+final completedVisitsProvider = Provider<Set<String>>((ref) {
+  final visits = ref.watch(lecturerVisitsProvider);
+  return visits
+    .where((v) => v.status == 'completed')
+    .map((v) => '${v.projectId}_${v.visitRole}')
+    .toSet();
 });

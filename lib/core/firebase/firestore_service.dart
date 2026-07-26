@@ -174,6 +174,70 @@ class FirestoreService {
   }
 
   // ---------------------------------------------------
+  // LECTURERS
+  // ---------------------------------------------------
+  Future<Map<String, dynamic>?> getLecturer(String uid) async {
+    final doc = await _db.collection('lecturers').doc(uid).get();
+    if (!doc.exists) return null;
+    return _convertTimestamps(doc.data()!);
+  }
+
+  Future<void> setLecturer(String uid, Map<String, dynamic> data) async {
+    await _db.collection('lecturers').doc(uid).set(data);
+  }
+
+  // ---------------------------------------------------
+  // PROJECT LECTURER ASSIGNMENTS
+  // ---------------------------------------------------
+  Stream<List<Map<String, dynamic>>> assignmentsStream() {
+    return _db.collection('projectLecturerAssignments').snapshots().map((snap) {
+      return snap.docs.map((doc) => _convertTimestamps(doc.data())).toList();
+    });
+  }
+
+  Future<Map<String, dynamic>?> getAssignment(String id) async {
+    final doc = await _db.collection('projectLecturerAssignments').doc(id).get();
+    if (!doc.exists) return null;
+    return _convertTimestamps(doc.data()!);
+  }
+
+  Future<void> setAssignment(String id, Map<String, dynamic> data) async {
+    await _db.collection('projectLecturerAssignments').doc(id).set(data);
+  }
+
+  // ---------------------------------------------------
+  // STUDENT PROJECT VISITS
+  // ---------------------------------------------------
+  Stream<List<Map<String, dynamic>>> visitsStream() {
+    return _db.collection('studentProjectVisits').snapshots().map((snap) {
+      return snap.docs.map((doc) => _convertTimestamps(doc.data())).toList();
+    });
+  }
+
+  Future<Map<String, dynamic>?> getVisit(String id) async {
+    final doc = await _db.collection('studentProjectVisits').doc(id).get();
+    if (!doc.exists) return null;
+    return _convertTimestamps(doc.data()!);
+  }
+
+  Future<void> setVisit(String id, Map<String, dynamic> data) async {
+    await _db.collection('studentProjectVisits').doc(id).set(data);
+  }
+
+  // ---------------------------------------------------
+  // AUDIT LOGS
+  // ---------------------------------------------------
+  Stream<List<Map<String, dynamic>>> auditLogsStream() {
+    return _db.collection('auditLogs').orderBy('createdAt', descending: true).snapshots().map((snap) {
+      return snap.docs.map((doc) => _convertTimestamps(doc.data())).toList();
+    });
+  }
+
+  Future<void> setAuditLog(String id, Map<String, dynamic> data) async {
+    await _db.collection('auditLogs').doc(id).set(data);
+  }
+
+  // ---------------------------------------------------
   // FILE UPLOAD (web-compatible via putData)
   // ---------------------------------------------------
   Future<String?> uploadFile(String localPath, String destinationPath, Uint8List? bytes) async {

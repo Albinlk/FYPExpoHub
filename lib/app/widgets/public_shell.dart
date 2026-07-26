@@ -1,7 +1,9 @@
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/state/state_providers.dart';
 import '../theme/theme.dart';
 
 void _openAdminPortal() {
@@ -9,33 +11,35 @@ void _openAdminPortal() {
   location['href'] = 'https://admin.fskmjasinfypexhibition.site/admin/sign-in'.toJS;
 }
 
-class PublicShell extends StatelessWidget {
+class PublicShell extends ConsumerWidget {
   final Widget child;
 
   const PublicShell({super.key, required this.child});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final location = GoRouterState.of(context).uri.toString();
     final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final lecturer = ref.watch(lecturerAuthProvider);
 
     return Scaffold(
       appBar: isDesktop
           ? PreferredSize(
               preferredSize: const Size.fromHeight(64.0),
-              child: _DesktopNavBar(currentPath: location),
+              child: _DesktopNavBar(currentPath: location, lecturerSignedIn: lecturer != null),
             )
           : null,
       body: child,
-      bottomNavigationBar: !isDesktop ? _MobileBottomNavBar(currentPath: location) : null,
+      bottomNavigationBar: !isDesktop ? _MobileBottomNavBar(currentPath: location, lecturerSignedIn: lecturer != null) : null,
     );
   }
 }
 
 class _DesktopNavBar extends StatelessWidget {
   final String currentPath;
+  final bool lecturerSignedIn;
 
-  const _DesktopNavBar({required this.currentPath});
+  const _DesktopNavBar({required this.currentPath, required this.lecturerSignedIn});
 
   bool _isActive(String path) {
     if (path == '/' && currentPath == '/') return true;
@@ -92,29 +96,34 @@ class _DesktopNavBar extends StatelessWidget {
               _buildNavLink(context, 'Awards', '/awards'),
               const SizedBox(width: DesignSystem.spaceLg),
               _buildNavLink(context, 'Lecturer Portal', '/lecturer'),
+              if (lecturerSignedIn) ...[
+                const SizedBox(width: DesignSystem.spaceLg),
+                _buildNavLink(context, 'Lawatan Saya', '/lecturer/visits'),
+              ],
             ],
           ),
 
-          // Right: Action Button
-          ElevatedButton(
-            onPressed: _openAdminPortal,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: DesignSystem.primary,
-              foregroundColor: DesignSystem.onPrimary,
-              elevation: 0,
-              padding: const EdgeInsets.symmetric(
-                horizontal: DesignSystem.spaceLg,
-                vertical: DesignSystem.spaceSm,
+          // Right: Login Button
+          if (!lecturerSignedIn)
+            ElevatedButton(
+              onPressed: _openAdminPortal,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: DesignSystem.primary,
+                foregroundColor: DesignSystem.onPrimary,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: DesignSystem.spaceLg,
+                  vertical: DesignSystem.spaceSm,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: DesignSystem.radiusFull,
+                ),
               ),
-              shape: RoundedRectangleBorder(
-                borderRadius: DesignSystem.radiusFull,
+              child: Text(
+                'Log Masuk',
+                style: DesignSystem.button.copyWith(fontSize: 14),
               ),
             ),
-            child: Text(
-              'Admin CMS',
-              style: DesignSystem.button.copyWith(fontSize: 14),
-            ),
-          ),
         ],
       ),
     );
@@ -148,8 +157,9 @@ class _DesktopNavBar extends StatelessWidget {
 
 class _MobileBottomNavBar extends StatelessWidget {
   final String currentPath;
+  final bool lecturerSignedIn;
 
-  const _MobileBottomNavBar({required this.currentPath});
+  const _MobileBottomNavBar({required this.currentPath, required this.lecturerSignedIn});
 
   int _getSelectedIndex() {
     if (currentPath == '/') return 0;
@@ -196,12 +206,15 @@ class _MobileBottomNavBar extends StatelessWidget {
                 _buildMenuItem(context, 'Schedule', Icons.event_note, '/schedule'),
                 _buildMenuItem(context, 'Announcements', Icons.campaign, '/announcements'),
                 _buildMenuItem(context, 'Award Winners', Icons.emoji_events, '/awards'),
+                if (lecturerSignedIn)
+                  _buildMenuItem(context, 'Lawatan Saya', Icons.visibility, '/lecturer/visits'),
 
                 _buildMenuItem(context, 'Exhibition Info', Icons.info, '/info'),
                 _buildMenuItem(context, 'Frequently Asked Questions', Icons.help_outline, '/faq'),
                 _buildMenuItem(context, 'Privacy Policy', Icons.privacy_tip_outlined, '/privacy'),
                 const Divider(),
-                _buildMenuItemExternal(context, 'Admin CMS Portal', Icons.admin_panel_settings),
+                if (!lecturerSignedIn)
+                  _buildMenuItemExternal(context, 'Log Masuk', Icons.login),
               ],
             ),
           ),

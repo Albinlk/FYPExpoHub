@@ -121,7 +121,41 @@ Based on the Google Stitch UI project "FYP Expo Hub", this document defines the 
 
 ---
 
-## 5. Documented UI Extensions (Responsive & Missing States)
+## 5. Visit Tracker UI Patterns (Extended Feature)
+
+### Lecturer Visit Page (`/lecturer/visits`)
+- **Progress Cards**: Two side-by-side cards showing SV and EX completion counts with progress bars. SV uses Deep Navy (`#031636`), EX uses Deep Teal (`#001B1B`).
+- **Filter Bar**: Role filter (Semua/SV/EX) and status filter (Semua/Belum Dilawati/Telah Dilawati/Voided) using `ChoiceChip`. Search field with prefix icon.
+- **Visit Project Cards**: Compact horizontal card with cover thumbnail (80x60), project title, student names, role chip (SV/EX), booth number, and status chip. Status chips: green check for "Dilawati", red for "Voided", grey for "Belum".
+- **Sign-in Prompt**: When not authenticated, shows centered login icon with CTA button leading to `/lecturer/sign-in`.
+- **Empty State**: Search icon with "Tiada projek ditemui" or check icon with "Semua projek telah dilawati!".
+
+### Lecturer Sign-in (`/lecturer/sign-in`)
+- **Auth Card**: Centered form card (max 400px) with lecturer name badge, email/password fields, and "Log Masuk" primary button. Error messages in Malay.
+
+### Lecturer Visit Detail (`/lecturer/visits/:projectId`)
+- **Project Info Card**: Cover image (180px), title, students, programme, booth number.
+- **Visit Section**: Per-role (SV/EX) card showing:
+  - Status chip (Dilawati/Voided/Belum Dilawati)
+  - Visit timestamp and note (if visited)
+  - "Tanda sebagai Dilawati" primary button (if unvisited)
+  - "Batal Lawatan" outline error button with 30-min undo window
+- **Mark as Visited Dialog**: Bottom sheet with project info, role, optional note field, confirm button.
+- **Undo Dialog**: Alert with mandatory reason field.
+
+### Admin Visit Page (`/admin/visits`)
+- **Summary Cards**: Row of stat cards showing total, completed, pending, percentage, SV/EX breakdown, today's visits, and voided count. Responsive: 4 per row on desktop, 2 per row on mobile.
+- **Tabs**: Overview (data table), By Lecturer (grouped list), By Project (grouped list), Visit Log (chronological feed).
+- **Data Table**: Desktop uses `DataTable` with columns: Pensyarah, Peranan, Pelajar, Projek, Booth, Status, Masa, Tindakan. Mobile uses card list.
+- **Filters**: Role filter, status filter, search field, export CSV button.
+- **Void Dialog**: Admin-only void action with mandatory reason.
+
+### Status Chips (Visit-specific)
+- **Dilawati (Completed)**: Teal container with check icon, `#3DA2A1` text.
+- **Voided**: Error container with red text, `#93000A`.
+- **Belum (Pending)**: Grey container with muted text, `#44474E`.
+
+## 6. Documented UI Extensions (Responsive & Missing States)
 - **Awards Page (`/awards`):** Recreates the standard Project Card grid with a modified "Winner" gold badge in `#fed65b` showing the category name and a trophy icon.
 - **Sign-in Page (`/admin/sign-in`):** Uses a centered, card-based login modal matching the typography and color scheme (Deep Navy primary button, Montserrat title, 8px rounded container).
 - **Error/Empty States:** Illustrated using thin-line icons (stroke 2px) in muted `#44474e`, labeled in Bahasa Melayu and English using `body-md` and `body-sm`.

@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../core/firebase/firebase_providers.dart';
+import '../core/state/state_providers.dart';
 import '../features/admin_announcements/presentation/pages/admin_announcements_page.dart';
 import '../features/admin_auth/presentation/pages/sign_in_page.dart';
 import '../features/admin_awards/presentation/pages/admin_awards_page.dart';
@@ -13,10 +14,14 @@ import '../features/admin_imports/presentation/pages/import_detail_page.dart';
 import '../features/admin_projects/presentation/pages/admin_projects_page.dart';
 import '../features/admin_schedule/presentation/pages/admin_schedule_page.dart';
 import '../features/admin_settings/presentation/pages/admin_settings_page.dart';
+import '../features/admin_visits/presentation/pages/admin_visits_page.dart';
 import '../features/exhibition_info/presentation/pages/info_page.dart';
 import '../features/faq_privacy/presentation/pages/faq_privacy_page.dart';
 import '../features/public_announcements/presentation/pages/announcements_page.dart';
 import '../features/public_lecturer/presentation/pages/lecturer_page.dart';
+import '../features/lecturer_auth/presentation/pages/lecturer_sign_in_page.dart';
+import '../features/lecturer_visits/presentation/pages/lecturer_visits_page.dart';
+import '../features/lecturer_visits/presentation/pages/lecturer_visit_detail_page.dart';
 import '../features/public_awards/presentation/pages/awards_page.dart';
 import '../features/public_booths/presentation/pages/booths_page.dart';
 import '../features/public_home/presentation/pages/home_page.dart';
@@ -61,6 +66,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         final isAdmin = await ref.read(isAdminProvider.future);
         if (isAdmin) {
           return '/admin';
+        }
+        final lecturer = ref.read(lecturerAuthProvider);
+        if (lecturer != null) {
+          return '/lecturer/visits';
         }
       }
 
@@ -115,6 +124,26 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const LecturerPage(),
           ),
           GoRoute(
+            path: '/lecturer/sign-in',
+            builder: (context, state) {
+              final name = state.uri.queryParameters['name'] ?? '';
+              return LecturerSignInPage(displayName: name);
+            },
+          ),
+          GoRoute(
+            path: '/lecturer/visits',
+            builder: (context, state) => const LecturerVisitsPage(),
+            routes: [
+              GoRoute(
+                path: ':projectId',
+                builder: (context, state) {
+                  final projectId = state.pathParameters['projectId'] ?? '';
+                  return LecturerVisitDetailPage(projectId: projectId);
+                },
+              ),
+            ],
+          ),
+          GoRoute(
             path: '/faq',
             builder: (context, state) => const FaqPrivacyPage(showPrivacyOnly: false),
           ),
@@ -166,6 +195,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/admin/awards',
             builder: (context, state) => const AdminAwardsPage(),
+          ),
+          GoRoute(
+            path: '/admin/visits',
+            builder: (context, state) => const AdminVisitsPage(),
           ),
           GoRoute(
             path: '/admin/imports',

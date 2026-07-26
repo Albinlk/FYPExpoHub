@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/firebase/firebase_providers.dart';
+import '../../../../core/state/state_providers.dart';
 
 void _goToMainSite() {
   final location = globalContext['location'] as JSObject;
@@ -47,27 +48,30 @@ class _SignInPageState extends ConsumerState<SignInPage> {
         password: _passwordController.text.trim(),
       );
 
-      // Force refresh token and check admin claim directly
       final user = auth.currentUser;
-      bool isAdmin = false;
-      if (user != null) {
-        final idTokenResult = await user.getIdTokenResult(true);
-        isAdmin = idTokenResult.claims?['admin'] == true;
-      }
+      if (user == null) throw Exception('Sign-in failed');
+
+      final idTokenResult = await user.getIdTokenResult(true);
+      final isAdmin = idTokenResult.claims?['admin'] == true;
 
       if (mounted) {
         if (isAdmin) {
           ref.invalidate(isAdminProvider);
-          // Small delay to allow auth state to propagate through StreamProvider
           await Future.delayed(const Duration(milliseconds: 300));
           if (mounted) context.go('/admin');
-        } else {
-          // Sign out if not an admin
-          await auth.signOut();
-          setState(() {
-            _errorMessage = 'Ralat: Akaun ini tidak mempunyai akses pentadbir (Admin claim).';
-          });
+          return;
         }
+
+        final lecturer = ref.read(lecturerAuthProvider);
+        if (lecturer != null) {
+          if (mounted) context.go('/lecturer/visits');
+          return;
+        }
+
+        await auth.signOut();
+        setState(() {
+          _errorMessage = 'Akaun ini tidak mempunyai akses. Sila gunakan emel UiTM yang berdaftar.';
+        });
       }
     } catch (e) {
       final msg = e.toString();
@@ -86,7 +90,6 @@ class _SignInPageState extends ConsumerState<SignInPage> {
       setState(() {
         _errorMessage = userMsg;
       });
-      print('Firebase Auth error: $e');
     } finally {
       if (mounted) {
         setState(() {
@@ -125,7 +128,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                       const SizedBox(height: 8),
                       Center(
                         child: Text(
-                          'Log Masuk Pentadbir CMS',
+                          'Log Masuk',
                           style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant),
                         ),
                       ),
@@ -196,7 +199,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                                   height: 20,
                                   child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                                 )
-                              : Text('Log Masuk Portal', style: DesignSystem.button),
+                              : Text('Log Masuk', style: DesignSystem.button),
                         ),
                       ),
                       const SizedBox(height: 16),

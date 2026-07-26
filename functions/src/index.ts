@@ -5,6 +5,8 @@ import * as XLSX from 'xlsx';
 admin.initializeApp();
 const db = admin.firestore();
 
+export { markStudentProjectVisited, undoStudentProjectVisit } from './visits';
+
 // -----------------------------------------------------------------
 // Helper Functions for Data Parsing and Normalisation
 // -----------------------------------------------------------------
