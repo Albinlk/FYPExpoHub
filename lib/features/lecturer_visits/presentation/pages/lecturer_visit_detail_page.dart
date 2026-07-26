@@ -206,18 +206,47 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
           children: [
             Card(
               clipBehavior: Clip.antiAlias,
+              color: project.calonIndustri ? DesignSystem.tertiaryContainer.withValues(alpha: 0.15) : null,
+              surfaceTintColor: project.calonIndustri ? DesignSystem.tertiary : null,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SizedBox(
-                    height: 180,
-                    width: double.infinity,
-                    child: ProjectCoverImage(
-                      title: project.title,
-                      category: project.category,
-                      imageUrl: project.coverImageUrl,
-                      fit: BoxFit.cover,
-                    ),
+                  Stack(
+                    children: [
+                      SizedBox(
+                        height: 180,
+                        width: double.infinity,
+                        child: ProjectCoverImage(
+                          title: project.title,
+                          category: project.category,
+                          imageUrl: project.coverImageUrl,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      if (project.calonIndustri)
+                        Positioned(
+                          top: 8,
+                          left: 8,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: DesignSystem.tertiary,
+                              borderRadius: DesignSystem.radiusSm,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.workspace_premium, size: 13, color: Colors.white),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Calon Industri',
+                                  style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                   Padding(
                     padding: const EdgeInsets.all(DesignSystem.spaceMd),

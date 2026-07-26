@@ -270,6 +270,8 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
 
     return Card(
       clipBehavior: Clip.antiAlias,
+      color: project.calonIndustri ? DesignSystem.tertiaryContainer.withValues(alpha: 0.15) : null,
+      surfaceTintColor: project.calonIndustri ? DesignSystem.tertiary : null,
       margin: const EdgeInsets.only(bottom: DesignSystem.spaceSm),
       child: InkWell(
         onTap: () => context.push('/lecturer/visits/${project.id}'),
@@ -278,15 +280,32 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(
-                width: 80,
-                height: 60,
-                child: ProjectCoverImage(
-                  title: project.title,
-                  category: project.category,
-                  imageUrl: project.coverImageUrl,
-                  fit: BoxFit.cover,
-                ),
+              Stack(
+                children: [
+                  SizedBox(
+                    width: 80,
+                    height: 60,
+                    child: ProjectCoverImage(
+                      title: project.title,
+                      category: project.category,
+                      imageUrl: project.coverImageUrl,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  if (project.calonIndustri)
+                    Positioned(
+                      top: 2,
+                      left: 2,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: DesignSystem.tertiary,
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                        child: Icon(Icons.workspace_premium, size: 10, color: Colors.white),
+                      ),
+                    ),
+                ],
               ),
               const SizedBox(width: DesignSystem.spaceSm),
               Expanded(
