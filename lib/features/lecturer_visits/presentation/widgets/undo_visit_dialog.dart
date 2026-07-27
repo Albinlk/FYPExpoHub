@@ -4,6 +4,7 @@ import '../../../../app/theme/theme.dart';
 Future<String?> showUndoVisitDialog(BuildContext context) {
   final reasonController = TextEditingController();
   bool isSubmitting = false;
+  String? validationError;
 
   return showDialog<String>(
     context: context,
@@ -25,10 +26,16 @@ Future<String?> showUndoVisitDialog(BuildContext context) {
                 TextField(
                   controller: reasonController,
                   maxLines: 3,
-                  decoration: const InputDecoration(
+                  onChanged: (_) {
+                    if (validationError != null) {
+                      setDialogState(() => validationError = null);
+                    }
+                  },
+                  decoration: InputDecoration(
                     labelText: 'Sebab pembatalan *',
                     hintText: 'Contoh: Pelajar tiada di booth',
                     alignLabelWithHint: true,
+                    errorText: validationError,
                   ),
                 ),
               ],
@@ -43,7 +50,10 @@ Future<String?> showUndoVisitDialog(BuildContext context) {
                     ? null
                     : () {
                         final reason = reasonController.text.trim();
-                        if (reason.isEmpty) return;
+                        if (reason.isEmpty) {
+                          setDialogState(() => validationError = 'Sebab pembatalan diperlukan');
+                          return;
+                        }
                         setDialogState(() => isSubmitting = true);
                         Navigator.pop(ctx, reason);
                       },
