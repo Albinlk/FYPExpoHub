@@ -162,8 +162,6 @@ service cloud.firestore {
 
       allow update: if isAuthenticated()
         && request.resource.data.status == 'voided'
-        && request.resource.data.voidReason is string
-        && request.resource.data.voidReason != ''
         && (isAdmin()
             || (request.auth.uid == resource.data.lecturerId
                 && request.time - resource.data.visitedAt < duration.value(30, 'm')));
