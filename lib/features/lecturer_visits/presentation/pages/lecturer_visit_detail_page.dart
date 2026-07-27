@@ -115,46 +115,23 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
       if (user == null) throw Exception('Not authenticated');
 
       final db = FirebaseFirestore.instance;
-      final now = FieldValue.serverTimestamp();
 
-      await db.collection('studentProjectVisits').doc(visit.id).update({
-        'status': 'voided',
-        'voidedAt': now,
-        'voidedBy': user.uid,
-        'voidReason': reason,
-        'updatedAt': now,
-      });
-
-      await db.collection('auditLogs').add({
-        'actorUid': user.uid,
-        'action': 'visit_voided',
-        'targetType': 'studentProjectVisits',
-        'targetId': visit.id,
-        'eventId': visit.eventId,
-        'metadataSafe': {
-          'projectId': visit.projectId,
-          'reason': reason,
-          'voidedByRole': 'lecturer',
-        },
-        'createdAt': now,
-      });
+      await db.collection('studentProjectVisits').doc(visit.id).delete();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Lawatan telah dibatalkan.'),
-            backgroundColor: DesignSystem.error,
+            content: Text('Lawatan telah dibatalkan. Pelajar boleh dilawati semula.'),
+            backgroundColor: DesignSystem.tertiary,
           ),
         );
         setState(() => _isUndoing = false);
       }
     } on FirebaseException catch (e) {
       setState(() => _isUndoing = false);
-      final msg = e.code == 'failed-precondition'
-          ? 'Tempoh 30 minit untuk membatalkan lawatan telah tamat.'
-          : e.code == 'permission-denied'
-              ? 'Anda tidak dibenarkan membatalkan lawatan ini.'
-              : 'Ralat: ${e.message}';
+      final msg = e.code == 'permission-denied'
+          ? 'Anda tidak dibenarkan membatalkan lawatan ini.'
+          : 'Ralat: ${e.message}';
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(msg), backgroundColor: DesignSystem.error),

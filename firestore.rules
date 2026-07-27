@@ -161,12 +161,14 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/projectLecturerAssignments/$(request.resource.data.assignmentId)).data.lecturerId == request.auth.uid;
 
       allow update: if isAuthenticated()
-        && request.resource.data.status == 'voided'
         && (isAdmin()
             || (request.auth.uid == resource.data.lecturerId
                 && request.time - resource.data.visitedAt < duration.value(30, 'm')));
 
-      allow delete: if false;
+      allow delete: if isAuthenticated()
+        && (isAdmin()
+            || (request.auth.uid == resource.data.lecturerId
+                && request.time - resource.data.visitedAt < duration.value(30, 'm')));
     }
     
     // 8. Audit Logs
