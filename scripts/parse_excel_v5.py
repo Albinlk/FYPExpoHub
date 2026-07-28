@@ -2,7 +2,7 @@ import openpyxl
 import re
 from collections import OrderedDict
 
-EXCEL_PATH = r'D:\Downloads\(LATEST) CSP650-DewanSeminar-ListName-Layout (6).xlsx'
+EXCEL_PATH = r'D:\Downloads\(LATEST) CSP650-DewanSeminar-ListName-Layout (7).xlsx'
 OUTPUT_PATH = r'D:\MobileAppDev\FYPExpoHub\lib\core\data\excel_data.dart'
 
 COURSE_CATEGORY = {
@@ -17,7 +17,7 @@ SHEET_COURSE_MAP = OrderedDict([
     ('CS230 - List Name', 'CS230'),
     ('CS251 - List Name', 'CS251'),
     ('CS253 - List Name', 'CS253'),
-    ('LATEST CS255 - List Name', 'CS255'),
+    ('CS255 - List Name', 'CS255'),
     ('CS266 - List Name', 'CS266'),
 ])
 

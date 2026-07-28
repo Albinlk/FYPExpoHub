@@ -74,8 +74,8 @@ function extractValue(fields, key) {
 }
 
 async function setDoc(token, collection, docId, data) {
-  const url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT}/databases/(default)/documents/${collection}?documentId=${docId}`;
-  const resp = await httpsRequest(url, 'POST', {
+  const url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT}/databases/(default)/documents/${collection}/${docId}`;
+  const resp = await httpsRequest(url, 'PATCH', {
     fields: mapToFields(data),
   }, { Authorization: `Bearer ${token}` });
   if (resp.error) {

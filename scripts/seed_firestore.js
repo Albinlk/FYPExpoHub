@@ -19,7 +19,7 @@ const EVENT_ID = 'fskm-fyp-2026';
 const ADMIN_EMAIL = 'albin1841@uitm.edu.my';
 const ADMIN_PASSWORD = '***REMOVED***';
 
-const EXCEL_PATH = 'D:\\Downloads\\(LATEST) CSP650-DewanSeminar-ListName-Layout (6).xlsx';
+const EXCEL_PATH = 'D:\\Downloads\\(LATEST) CSP650-DewanSeminar-ListName-Layout (7).xlsx';
 
 const CALON_MATRICS = new Set([
   // CS230
@@ -56,7 +56,7 @@ const SHEET_COURSE_MAP = [
   ['CS230 - List Name', 'CS230'],
   ['CS251 - List Name', 'CS251'],
   ['CS253 - List Name', 'CS253'],
-  ['LATEST CS255 - List Name', 'CS255'],
+  ['CS255 - List Name', 'CS255'],
   ['CS266 - List Name', 'CS266'],
 ];
 
@@ -231,12 +231,12 @@ async function main() {
   const BASE = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT}/databases/(default)/documents`;
   const AUTH = { Authorization: `Bearer ${idToken}` };
 
-  // Helper to write a Firestore document
+  // Helper to write/update a Firestore document
   async function writeDoc(collection, docId, data) {
-    const url = `${BASE}/${collection}?documentId=${docId}`;
+    const url = `${BASE}/${collection}/${docId}`;
     const doc = buildFirestoreDoc(data);
-    const res = await httpsRequest(url, 'POST', doc, AUTH);
-    if (res.status === 200 || res.status === 201) {
+    const res = await httpsRequest(url, 'PATCH', doc, AUTH);
+    if (res.status === 200) {
       return true;
     } else {
       console.error(`  ❌ Failed to write ${collection}/${docId}:`, res.body?.error?.message || JSON.stringify(res.body).slice(0, 200));
