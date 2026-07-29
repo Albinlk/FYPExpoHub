@@ -14,14 +14,11 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Clone the stable Flutter SDK from the official repository
-# Using the stable branch ensures reliability
-RUN git clone https://github.com/flutter/flutter.git -b stable /opt/flutter
+# Pin to a specific version for reproducible builds
+RUN git clone https://github.com/flutter/flutter.git -b 3.29.3 /opt/flutter
 
 # Set up Flutter binary paths
 ENV PATH="/opt/flutter/bin:/opt/flutter/bin/cache/dart-sdk/bin:${PATH}"
-
-# Run doctor and pre-download development binaries
-RUN flutter doctor -v
 
 # Set working directory for our application
 WORKDIR /app
@@ -35,11 +32,9 @@ RUN flutter pub get
 # Copy the complete source code
 COPY . .
 
-# Clean existing generated files to force a clean full build inside Docker
-RUN find lib/ -name "*.freezed.dart" -delete && find lib/ -name "*.g.dart" -delete
-
-# Compile model generation scripts and build-runners
-RUN flutter pub run build_runner build --delete-conflicting-outputs
+# Clean existing generated files and rebuild with build_runner in a single layer
+RUN find lib/ -name "*.freezed.dart" -delete && find lib/ -name "*.g.dart" -delete \
+    && flutter pub run build_runner build --delete-conflicting-outputs
 
 # Compile the Flutter Web application for production release
 RUN flutter build web --release

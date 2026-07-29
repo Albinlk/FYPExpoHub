@@ -6,43 +6,13 @@
  * Usage: node scripts/seed_firestore.js
  */
 
-const https = require('https');
-const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const XLSX = require('xlsx');
-
-// ── Config ───────────────────────────────────────────────────────────
-const API_KEY = 'AIzaSyAaoWvZr70guv06Ab_f3NcThxawfCEChus';
-const FIREBASE_PROJECT = 'fyp-expo-hub';
-const EVENT_ID = 'fskm-fyp-2026';
-const ADMIN_EMAIL = 'albin1841@uitm.edu.my';
-const ADMIN_PASSWORD = '***REMOVED***';
+const { API_KEY, FIREBASE_PROJECT, EVENT_ID, ADMIN_EMAIL, ADMIN_PASSWORD, CALON_MATRICS } = require('./lib/config');
+const { httpsRequest, getAccessToken, authHeader, FIRESTORE_BASE } = require('./lib/firebase_api');
 
 const EXCEL_PATH = 'D:\\Downloads\\(LATEST) CSP650-DewanSeminar-ListName-Layout (7).xlsx';
-
-const CALON_MATRICS = new Set([
-  // CS230
-  '2023444376','2024699546','2024963653','2023885286',
-  '2023443658','2023214052','2024425838','2023277304',
-  '2023405938','2023217236',
-  // CS251
-  '2023298712','2023851666','2023867346','2023884362',
-  '2023601134','2023600384','2023479866','2024857584',
-  '2023899266','2023217904',
-  // CS253
-  '2024350455','2024963455','2024556797','2023414808',
-  '2024905321','2023116081','2023261412','2023436416',
-  '2024905819','2023415054',
-  // CS255
-  '2023414614','2023260244','2023240232','2023436724',
-  '2023240168','2023239276','2023820446','2023699244',
-  '2023674486','2023260928',
-  // CS266
-  '2023472522','2022622854','2023218022','2024235476',
-  '2024692246','2023899996','2023239802','2023660422',
-  '2023436396','2023410826',
-]);
 
 const COURSE_CATEGORY = {
   CS230: { category: 'Computer Science', progPrefix: 'CS230' },
@@ -59,34 +29,6 @@ const SHEET_COURSE_MAP = [
   ['CS255 - List Name', 'CS255'],
   ['CS266 - List Name', 'CS266'],
 ];
-
-// ── HTTP Helpers ─────────────────────────────────────────────────────
-function httpsRequest(url, method, body, headers = {}) {
-  return new Promise((resolve, reject) => {
-    const urlObj = new URL(url);
-    const mod = urlObj.protocol === 'https:' ? https : http;
-    const options = {
-      hostname: urlObj.hostname,
-      path: urlObj.pathname + urlObj.search,
-      method,
-      headers: { 'Content-Type': 'application/json', ...headers },
-    };
-    const req = mod.request(options, (res) => {
-      let data = '';
-      res.on('data', (chunk) => (data += chunk));
-      res.on('end', () => {
-        try {
-          resolve({ status: res.statusCode, body: JSON.parse(data) });
-        } catch {
-          resolve({ status: res.statusCode, body: data });
-        }
-      });
-    });
-    req.on('error', reject);
-    if (body) req.write(JSON.stringify(body));
-    req.end();
-  });
-}
 
 // ── Excel Parsing (same logic as parse_excel_v5.py) ──────────────────
 function cleanMatric(val) {
@@ -211,29 +153,12 @@ async function main() {
 
   // 2. Sign in with admin credentials
   console.log('\nSigning in as admin...');
-  const signInUrl = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${API_KEY}`;
-  const signInRes = await httpsRequest(signInUrl, 'POST', {
-    email: ADMIN_EMAIL,
-    password: ADMIN_PASSWORD,
-    returnSecureToken: true,
-  });
-
-  if (signInRes.status !== 200) {
-    console.error('  Sign-in failed:', signInRes.body?.error?.message || signInRes.body);
-    process.exit(1);
-  }
-
-  const idToken = signInRes.body.idToken;
-  const refreshToken = signInRes.body.refreshToken;
-  console.log('  Signed in as:', signInRes.body.email);
-  console.log('  Local ID:', signInRes.body.localId);
-
-  const BASE = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT}/databases/(default)/documents`;
-  const AUTH = { Authorization: `Bearer ${idToken}` };
+  const idToken = await getAccessToken();
+  const AUTH = authHeader(idToken);
 
   // Helper to write/update a Firestore document
   async function writeDoc(collection, docId, data) {
-    const url = `${BASE}/${collection}/${docId}`;
+    const url = `${FIRESTORE_BASE}/${collection}/${docId}`;
     const doc = buildFirestoreDoc(data);
     const res = await httpsRequest(url, 'PATCH', doc, AUTH);
     if (res.status === 200) {

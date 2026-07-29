@@ -61,7 +61,9 @@ export const markStudentProjectVisited = functions.https.onCall(async (data, con
   const visitRef = db.collection('studentProjectVisits').doc();
   const visitId = visitRef.id;
 
-  await visitRef.set({
+  // Batch visit + audit log atomically
+  const batch = db.batch();
+  batch.set(visitRef, {
     id: visitId,
     eventId,
     projectId,
@@ -78,8 +80,7 @@ export const markStudentProjectVisited = functions.https.onCall(async (data, con
     source: 'lecturer',
   });
 
-  // Audit log
-  await db.collection('auditLogs').add({
+  batch.set(db.collection('auditLogs').doc(), {
     actorUid: uid,
     action: 'visit_marked',
     targetType: 'studentProjectVisits',
@@ -92,6 +93,8 @@ export const markStudentProjectVisited = functions.https.onCall(async (data, con
     },
     createdAt: now,
   });
+
+  await batch.commit();
 
   return { visitId, status: 'completed' };
 });
@@ -155,7 +158,9 @@ export const undoStudentProjectVisit = functions.https.onCall(async (data, conte
 
   const now = admin.firestore.FieldValue.serverTimestamp();
 
-  await visitSnap.ref.update({
+  // Batch visit update + audit log atomically
+  const batch = db.batch();
+  batch.update(visitSnap.ref, {
     status: 'voided',
     voidedAt: now,
     voidedBy: uid,
@@ -163,8 +168,7 @@ export const undoStudentProjectVisit = functions.https.onCall(async (data, conte
     updatedAt: now,
   });
 
-  // Audit log
-  await db.collection('auditLogs').add({
+  batch.set(db.collection('auditLogs').doc(), {
     actorUid: uid,
     action: 'visit_voided',
     targetType: 'studentProjectVisits',
@@ -177,6 +181,8 @@ export const undoStudentProjectVisit = functions.https.onCall(async (data, conte
     },
     createdAt: now,
   });
+
+  await batch.commit();
 
   return { visitId, status: 'voided' };
 });

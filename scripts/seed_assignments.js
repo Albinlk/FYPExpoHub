@@ -6,101 +6,21 @@
  * Usage: node scripts/seed_assignments.js
  */
 
-const https = require('https');
-const http = require('http');
-
-const API_KEY = 'AIzaSyAaoWvZr70guv06Ab_f3NcThxawfCEChus';
-const FIREBASE_PROJECT = 'fyp-expo-hub';
-const EVENT_ID = 'fskm-fyp-2026';
-const ADMIN_EMAIL = 'albin1841@uitm.edu.my';
-const ADMIN_PASSWORD = '***REMOVED***';
-
-function httpsRequest(url, method, body, headers = {}) {
-  return new Promise((resolve, reject) => {
-    const urlObj = new URL(url);
-    const mod = urlObj.protocol === 'https:' ? https : http;
-    const req = mod.request(url, {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-        ...headers,
-      },
-    }, (res) => {
-      let data = '';
-      res.on('data', chunk => data += chunk);
-      res.on('end', () => {
-        try { resolve(JSON.parse(data)); }
-        catch { resolve(data); }
-      });
-    });
-    req.on('error', reject);
-    if (body) req.write(JSON.stringify(body));
-    req.end();
-  });
-}
-
-async function getAccessToken() {
-  const resp = await httpsRequest(
-    `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${API_KEY}`,
-    'POST',
-    { email: ADMIN_EMAIL, password: ADMIN_PASSWORD, returnSecureToken: true }
-  );
-  if (resp.error) throw new Error(`Auth failed: ${resp.error.message}`);
-  console.log(`Authenticated as ${resp.email}`);
-  return resp.idToken;
-}
+const { EVENT_ID } = require('./lib/config');
+const { httpsRequest, getAccessToken, authHeader, fetchAllDocs, parseDocFields, mapToFields, setDoc, FIRESTORE_BASE } = require('./lib/firebase_api');
 
 async function fetchAllProjects(token) {
-  let allDocs = [];
-  let pageToken = '';
-  do {
-    let url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT}/databases/(default)/documents/publicProjects?pageSize=300`;
-    if (pageToken) url += `&pageToken=${pageToken}`;
-    const resp = await httpsRequest(url, 'GET', null, { Authorization: `Bearer ${token}` });
-    if (resp.documents) {
-      allDocs = allDocs.concat(resp.documents);
-    }
-    pageToken = resp.nextPageToken || '';
-  } while (pageToken);
-
-  console.log(`Fetched ${allDocs.length} projects`);
-  return allDocs;
-}
-
-function extractValue(fields, key) {
-  if (!fields || !fields[key]) return null;
-  const val = fields[key];
-  return val.stringValue ?? val.integerValue ?? val.booleanValue ?? null;
-}
-
-async function setDoc(token, collection, docId, data) {
-  const url = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT}/databases/(default)/documents/${collection}/${docId}`;
-  const resp = await httpsRequest(url, 'PATCH', {
-    fields: mapToFields(data),
-  }, { Authorization: `Bearer ${token}` });
-  if (resp.error) {
-    console.error(`  FAILED ${collection}/${docId}: ${resp.error.message}`);
-    return false;
-  }
-  return true;
-}
-
-function mapToFields(data) {
-  const fields = {};
-  for (const [key, value] of Object.entries(data)) {
-    if (value === null || value === undefined) continue;
-    if (typeof value === 'string') fields[key] = { stringValue: value };
-    else if (typeof value === 'boolean') fields[key] = { booleanValue: value };
-    else if (typeof value === 'number') fields[key] = { integerValue: String(value) };
-    else if (value instanceof Date) fields[key] = { timestampValue: value.toISOString() };
-    else if (Array.isArray(value)) fields[key] = { arrayValue: { values: value.map(v => ({ stringValue: String(v) })) } };
-    else if (typeof value === 'object') fields[key] = { mapValue: { fields: mapToFields(value) } };
-  }
-  return fields;
+  const docs = await fetchAllDocs('publicProjects', token);
+  console.log(`Fetched ${docs.length} projects`);
+  return docs;
 }
 
 function cleanName(name) {
   return name?.trim().replace(/\s+/g, ' ') || '';
+}
+
+function normaliseName(name) {
+  return name.trim().replace(/\s+/g, ' ').toLowerCase();
 }
 
 async function main() {
@@ -109,15 +29,30 @@ async function main() {
   const token = await getAccessToken();
   const projects = await fetchAllProjects(token);
 
+  // Build lecturer lookup map from Firestore
+  const lecturerDocs = await fetchAllDocs('lecturers', token);
+  const lecturerMap = {};
+  for (const doc of lecturerDocs) {
+    const parsed = parseDocFields(doc);
+    const displayName = cleanName(parsed.displayName);
+    const email = parsed.email || '';
+    const uid = doc.name.split('/').pop();
+    if (displayName) {
+      lecturerMap[normaliseName(displayName)] = { uid, email, displayName };
+    }
+  }
+  console.log(`Loaded ${lecturerDocs.length} lecturers from Firestore`);
+
   let created = 0;
   let skipped = 0;
+  let unmatched = [];
 
   for (const doc of projects) {
-    const fields = doc.fields || {};
+    const parsed = parseDocFields(doc);
     const projectId = doc.name.split('/').pop();
-    const supervisor = cleanName(extractValue(fields, 'supervisorDisplayName'));
-    const examiner = cleanName(extractValue(fields, 'examinerDisplayName'));
-    const status = extractValue(fields, 'publicationStatus');
+    const supervisor = cleanName(parsed.supervisorDisplayName);
+    const examiner = cleanName(parsed.examinerDisplayName);
+    const status = parsed.publicationStatus;
 
     if (status !== 'published') {
       skipped++;
@@ -125,6 +60,15 @@ async function main() {
     }
 
     const now = new Date().toISOString();
+
+    // Look up lecturer IDs
+    const svKey = normaliseName(supervisor || '');
+    const exKey = normaliseName(examiner || '');
+    const svLecturer = lecturerMap[svKey];
+    const exLecturer = lecturerMap[exKey];
+
+    if (supervisor && !svLecturer) unmatched.push(`SV: ${supervisor}`);
+    if (examiner && !exLecturer) unmatched.push(`EX: ${examiner}`);
 
     // Create supervisor assignment
     if (supervisor) {
@@ -134,12 +78,14 @@ async function main() {
         eventId: EVENT_ID,
         projectId,
         lecturerDisplayName: supervisor,
+        lecturerId: svLecturer ? svLecturer.uid : null,
+        lecturerEmail: svLecturer ? svLecturer.email : null,
         role: 'supervisor',
         status: 'active',
         assignedAt: now,
         updatedAt: now,
       };
-      const ok = await setDoc(token, 'projectLecturerAssignments', svId, svData);
+      const ok = await setDoc('projectLecturerAssignments', svId, svData, token);
       if (ok) created++;
     }
 
@@ -151,17 +97,24 @@ async function main() {
         eventId: EVENT_ID,
         projectId,
         lecturerDisplayName: examiner,
+        lecturerId: exLecturer ? exLecturer.uid : null,
+        lecturerEmail: exLecturer ? exLecturer.email : null,
         role: 'examiner',
         status: 'active',
         assignedAt: now,
         updatedAt: now,
       };
-      const ok = await setDoc(token, 'projectLecturerAssignments', exId, exData);
+      const ok = await setDoc('projectLecturerAssignments', exId, exData, token);
       if (ok) created++;
     }
   }
 
   console.log(`\nDone. Created ${created} assignments, skipped ${skipped} non-published projects.`);
+  if (unmatched.length > 0) {
+    console.log(`\nWarning: ${unmatched.length} lecturer names not found in Firestore:`);
+    unmatched.forEach(n => console.log(`  - ${n}`));
+    console.log('Run "Pengurusan Pensyarah" -> "Backfill Lecturer IDs" after adding these lecturers.');
+  }
 }
 
 main().catch(console.error);

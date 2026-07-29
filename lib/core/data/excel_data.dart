@@ -6,7 +6,7 @@ class ExcelData {
   static const String eventId = "fskm-fyp-2026";
 
   static const int projectCount = 387;
-  static List<Map<String, dynamic>> get allProjects => [
+  static final List<Map<String, dynamic>> allProjects = [
     {
       "id": 'proj-cs230-001',
       "event_id": 'fskm-fyp-2026',
@@ -11232,7 +11232,7 @@ class ExcelData {
     },  ];
 
   static const int boothCount = 221;
-  static List<Map<String, dynamic>> get allBooths => [
+  static final List<Map<String, dynamic>> allBooths = [
     {
       "id": 'booth-DS5-01',
       "event_id": 'fskm-fyp-2026',
@@ -14108,7 +14108,7 @@ class ExcelData {
     },  ];
 
   static const int scheduleCount = 6;
-  static List<Map<String, dynamic>> get allScheduleItems => [
+  static final List<Map<String, dynamic>> allScheduleItems = [
     // Day 1 (6 Aug 2026) - Session schedule
     {
       "id": 'sch-slot-1',

@@ -6,6 +6,7 @@ admin.initializeApp();
 const db = admin.firestore();
 
 export { markStudentProjectVisited, undoStudentProjectVisit } from './visits';
+export { createLecturerAccount, deleteLecturerAccount, backfillLecturerIds } from './lecturers';
 
 // -----------------------------------------------------------------
 // Helper Functions for Data Parsing and Normalisation
@@ -90,12 +91,6 @@ export const processMasterFileImport = functions.storage.object().onFinalize(asy
 
     const summary: { [key: string]: number } = {};
     const warningCounts: { [key: string]: number } = { overlap: 0, privacy: 0, format: 0 };
-    
-    // Create subcollections references
-    const scheduleCandidatesCol = importRef.collection('scheduleCandidates');
-    const awardCandidatesCol = importRef.collection('awardCandidates');
-    const privacySkipsCol = importRef.collection('privacySkips');
-    const validationIssuesCol = importRef.collection('validationIssues');
 
     // -------------------------------------------------------------
     // SHEET 1: TENTATIF
@@ -106,10 +101,24 @@ export const processMasterFileImport = functions.storage.object().onFinalize(asy
       summary['TENTATIF'] = rows.length;
 
       const scheduleItems: any[] = [];
+      let scheduleBatch = db.batch();
+      let scheduleBatchCount = 0;
+      let issueBatch = db.batch();
+      let issueBatchCount = 0;
+
+      const scheduleCandidatesCol = importRef.collection('scheduleCandidates');
+      const validationIssuesCol = importRef.collection('validationIssues');
+
+      const flushScheduleBatch = async () => {
+        if (scheduleBatchCount > 0) { await scheduleBatch.commit(); scheduleBatch = db.batch(); scheduleBatchCount = 0; }
+      };
+      const flushIssueBatch = async () => {
+        if (issueBatchCount > 0) { await issueBatch.commit(); issueBatch = db.batch(); issueBatchCount = 0; }
+      };
 
       for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
-        const rowNum = i + 2; // spreadsheet rows are 1-indexed, header is row 1
+        const rowNum = i + 2;
 
         try {
           const dateStr = row['TARIKH'] || row['Date'];
@@ -121,13 +130,15 @@ export const processMasterFileImport = functions.storage.object().onFinalize(asy
           const visibility = (row['AKSES'] || row['Visibility'] || 'public').toLowerCase().trim();
 
           if (!dateStr || !startStr || !endStr || !title || !venue) {
-            await validationIssuesCol.add({
+            const ref = validationIssuesCol.doc();
+            issueBatch.set(ref, {
               issueType: 'missing_title',
               severity: 'warning',
               message: `Baris ${rowNum}: Maklumat penting kosong.`,
               worksheetName: 'TENTATIF',
               rowNumber: rowNum
             });
+            issueBatchCount++;
             continue;
           }
 
@@ -135,7 +146,6 @@ export const processMasterFileImport = functions.storage.object().onFinalize(asy
           const startMin = timeToMinutes(startStr);
           const endMin = timeToMinutes(endStr);
 
-          // Build candidate object
           const candidate = {
             id: `sch_${importId}_${rowNum}`,
             date: admin.firestore.Timestamp.fromDate(parsedDate),
@@ -150,7 +160,6 @@ export const processMasterFileImport = functions.storage.object().onFinalize(asy
             isOverlapping: false
           };
 
-          // Basic overlap check inside uploaded items
           for (const other of scheduleItems) {
             if (other.date.toDate().toDateString() === parsedDate.toDateString()) {
               const otherStart = timeToMinutes(other.startAt);
@@ -158,31 +167,42 @@ export const processMasterFileImport = functions.storage.object().onFinalize(asy
               if (startMin < otherEnd && endMin > otherStart) {
                 candidate.isOverlapping = true;
                 warningCounts.overlap++;
-                await validationIssuesCol.add({
+                const ref = validationIssuesCol.doc();
+                issueBatch.set(ref, {
                   issueType: 'overlap',
                   severity: 'warning',
                   message: `Baris ${rowNum}: Waktu bertindih dengan "${other.title}".`,
                   worksheetName: 'TENTATIF',
                   rowNumber: rowNum
                 });
+                issueBatchCount++;
               }
             }
           }
 
           scheduleItems.push(candidate);
-          await scheduleCandidatesCol.doc(candidate.id).set(candidate);
+          scheduleBatch.set(scheduleCandidatesCol.doc(candidate.id), candidate);
+          scheduleBatchCount++;
+
+          if (scheduleBatchCount >= 500) await flushScheduleBatch();
+          if (issueBatchCount >= 500) await flushIssueBatch();
 
         } catch (err: any) {
           warningCounts.format++;
-          await validationIssuesCol.add({
+          const ref = validationIssuesCol.doc();
+          issueBatch.set(ref, {
             issueType: 'invalid_time',
             severity: 'error',
             message: `Baris ${rowNum}: Ralat memproses - ${err.message}`,
             worksheetName: 'TENTATIF',
             rowNumber: rowNum
           });
+          issueBatchCount++;
         }
       }
+
+      await flushScheduleBatch();
+      await flushIssueBatch();
     }
 
     // -------------------------------------------------------------
@@ -196,6 +216,11 @@ export const processMasterFileImport = functions.storage.object().onFinalize(asy
       let emailSkipCount = 0;
       let phoneSkipCount = 0;
 
+      const awardCandidatesCol = importRef.collection('awardCandidates');
+      const privacySkipsCol = importRef.collection('privacySkips');
+      let awardBatch = db.batch();
+      let awardBatchCount = 0;
+
       for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
         const rowNum = i + 2;
@@ -206,7 +231,6 @@ export const processMasterFileImport = functions.storage.object().onFinalize(asy
         const supervisor = row['PENYELIA'] || row['Supervisor'];
         const code = row['KOD_PROGRAM'] || row['Programme'];
 
-        // PDPA Privacy: skip personal student identifiers
         if (row['STUDENT_ID'] || row['MATRIK'] || row['NO_TEL'] || row['EMAIL']) {
           if (row['STUDENT_ID'] || row['MATRIK']) emailSkipCount++;
           if (row['NO_TEL'] || row['EMAIL']) phoneSkipCount++;
@@ -224,11 +248,16 @@ export const processMasterFileImport = functions.storage.object().onFinalize(asy
           isSkip: false
         };
 
-        await awardCandidatesCol.doc(candidate.id).set(candidate);
+        awardBatch.set(awardCandidatesCol.doc(candidate.id), candidate);
+        awardBatchCount++;
+        if (awardBatchCount >= 500) { await awardBatch.commit(); awardBatch = db.batch(); awardBatchCount = 0; }
       }
 
+      if (awardBatchCount > 0) await awardBatch.commit();
+
+      const privacyBatch = db.batch();
       if (emailSkipCount > 0) {
-        await privacySkipsCol.add({
+        privacyBatch.set(privacySkipsCol.doc(), {
           skipType: 'Student ID / Matrik',
           count: emailSkipCount,
           reason: 'Isolasi perlindungan maklumat peribadi PDPA.',
@@ -239,7 +268,7 @@ export const processMasterFileImport = functions.storage.object().onFinalize(asy
       }
 
       if (phoneSkipCount > 0) {
-        await privacySkipsCol.add({
+        privacyBatch.set(privacySkipsCol.doc(), {
           skipType: 'No Tel / E-mel Peribadi',
           count: phoneSkipCount,
           reason: 'Isolasi perlindungan maklumat peribadi PDPA.',
@@ -248,6 +277,8 @@ export const processMasterFileImport = functions.storage.object().onFinalize(asy
         });
         warningCounts.privacy += phoneSkipCount;
       }
+
+      if (emailSkipCount > 0 || phoneSkipCount > 0) await privacyBatch.commit();
     }
 
     // Update Import log record with completion status

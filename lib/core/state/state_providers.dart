@@ -176,6 +176,11 @@ final featuredProjectsProvider = Provider<List<Project>>((ref) {
   return ref.watch(projectsProvider).where((p) => p.featured).toList();
 });
 
+/// O(1) project lookup by ID — use this instead of linear scans.
+final projectsMapProvider = Provider<Map<String, Project>>((ref) {
+  return Map.fromEntries(ref.watch(projectsProvider).map((p) => MapEntry(p.id, p)));
+});
+
 // ==========================================
 // 2b. PROJECT VISIT TRACKING
 // ==========================================
@@ -486,40 +491,60 @@ final validationIssuesProvider = StreamProvider.family<List<ValidationIssue>, St
 // 8. LECTURER CONFIG & AUTH STATE
 // ==========================================
 
-/// Maps lecturer email -> display name as stored in project data.
-const _lecturerConfig = <String, String>{
+/// Hardcoded fallback lecturer config (used when Firestore is unavailable).
+const hardcodedLecturerConfig = <String, String>{
   'albin1841@uitm.edu.my': 'ALBIN LEMUEL KUSHAN',
 };
+
+/// Streams all lecturer documents from Firestore.
+final allLecturersProvider = StreamProvider<List<Map<String, dynamic>>>((ref) {
+  return _fs.lecturersStream();
+});
+
+/// Combined lecturer config: Firestore + hardcoded fallback (email -> displayName).
+final lecturerConfigProvider = Provider<Map<String, String>>((ref) {
+  final all = ref.watch(allLecturersProvider);
+  final result = <String, String>{};
+  final list = all.valueOrNull ?? [];
+  for (final doc in list) {
+    final email = doc['email'] as String?;
+    final name = doc['displayName'] as String?;
+    if (email != null && name != null) {
+      result[email.toLowerCase()] = name;
+    }
+  }
+  result.addAll(hardcodedLecturerConfig);
+  return result;
+});
 
 final lecturerAuthProvider = NotifierProvider<LecturerAuthNotifier, Lecturer?>(LecturerAuthNotifier.new);
 
 class LecturerAuthNotifier extends Notifier<Lecturer?> {
-  StreamSubscription? _authSub;
-
   @override
   Lecturer? build() {
-    _listenToAuthChanges();
+    ref.listen(lecturerConfigProvider, (_, __) => _reevaluate());
+    ref.listen(authStateChangesProvider, (_, __) => _reevaluate());
+    _reevaluate();
     return null;
   }
 
-  void _listenToAuthChanges() {
-    final auth = ref.read(firebaseAuthProvider);
-    _authSub = auth.authStateChanges().listen((user) {
-      if (user != null && user.email != null && _lecturerConfig.containsKey(user.email!.toLowerCase())) {
-        final displayName = _lecturerConfig[user.email!.toLowerCase()]!;
-        state = Lecturer(
-          id: user.uid,
-          uid: user.uid,
-          displayName: displayName,
-          email: user.email,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        );
-      } else {
-        state = null;
-      }
-    });
-    ref.onDispose(() => _authSub?.cancel());
+  void _reevaluate() {
+    final config = ref.read(lecturerConfigProvider);
+    final auth = ref.read(authStateChangesProvider);
+    final user = auth.valueOrNull;
+    if (user != null && user.email != null && config.containsKey(user.email!.toLowerCase())) {
+      final displayName = config[user.email!.toLowerCase()]!;
+      state = Lecturer(
+        id: user.uid,
+        uid: user.uid,
+        displayName: displayName,
+        email: user.email,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+    } else {
+      state = null;
+    }
   }
 
   void signOut() {
@@ -550,8 +575,10 @@ final lecturerAssignmentsProvider = Provider<List<ProjectLecturerAssignment>>((r
   if (lecturer == null) return [];
   final allList = all.asData?.value ?? [];
   return allList.where((a) =>
-    a.lecturerDisplayName.toLowerCase().contains(lecturer.displayName.toLowerCase()) &&
-    a.status == 'active'
+    a.status == 'active' && (
+      (a.lecturerId != null && a.lecturerId == lecturer.uid) ||
+      (a.lecturerId == null && a.lecturerDisplayName.toLowerCase().contains(lecturer.displayName.toLowerCase()))
+    )
   ).toList();
 });
 

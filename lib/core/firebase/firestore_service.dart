@@ -176,6 +176,12 @@ class FirestoreService {
   // ---------------------------------------------------
   // LECTURERS
   // ---------------------------------------------------
+  Stream<List<Map<String, dynamic>>> lecturersStream() {
+    return _db.collection('lecturers').snapshots().map((snap) {
+      return snap.docs.map((doc) => _convertTimestamps(doc.data())).toList();
+    });
+  }
+
   Future<Map<String, dynamic>?> getLecturer(String uid) async {
     final doc = await _db.collection('lecturers').doc(uid).get();
     if (!doc.exists) return null;
@@ -186,11 +192,17 @@ class FirestoreService {
     await _db.collection('lecturers').doc(uid).set(data);
   }
 
+  Future<void> deleteLecturer(String uid) async {
+    await _db.collection('lecturers').doc(uid).delete();
+  }
+
   // ---------------------------------------------------
   // PROJECT LECTURER ASSIGNMENTS
   // ---------------------------------------------------
   Stream<List<Map<String, dynamic>>> assignmentsStream() {
-    return _db.collection('projectLecturerAssignments').snapshots().map((snap) {
+    return _db.collection('projectLecturerAssignments')
+      .orderBy('createdAt', descending: true)
+      .snapshots().map((snap) {
       return snap.docs.map((doc) => _convertTimestamps(doc.data())).toList();
     });
   }
@@ -209,7 +221,10 @@ class FirestoreService {
   // STUDENT PROJECT VISITS
   // ---------------------------------------------------
   Stream<List<Map<String, dynamic>>> visitsStream() {
-    return _db.collection('studentProjectVisits').snapshots().map((snap) {
+    return _db.collection('studentProjectVisits')
+      .orderBy('createdAt', descending: true)
+      .limit(500)
+      .snapshots().map((snap) {
       return snap.docs.map((doc) => _convertTimestamps(doc.data())).toList();
     });
   }
@@ -228,7 +243,7 @@ class FirestoreService {
   // AUDIT LOGS
   // ---------------------------------------------------
   Stream<List<Map<String, dynamic>>> auditLogsStream() {
-    return _db.collection('auditLogs').orderBy('createdAt', descending: true).snapshots().map((snap) {
+    return _db.collection('auditLogs').orderBy('createdAt', descending: true).limit(200).snapshots().map((snap) {
       return snap.docs.map((doc) => _convertTimestamps(doc.data())).toList();
     });
   }

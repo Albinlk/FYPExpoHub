@@ -18,8 +18,8 @@ final isAdminProvider = FutureProvider<bool>((ref) async {
   final user = ref.watch(firebaseAuthProvider).currentUser;
   if (user == null) return false;
   
-  // Force refresh token to fetch latest custom claims
-  final idTokenResult = await user.getIdTokenResult(true);
+  // Check cached token first (no forced refresh to avoid network round-trip on every navigation)
+  final idTokenResult = await user.getIdTokenResult();
   final claims = idTokenResult.claims;
   
   if (claims != null && claims['admin'] == true) {

@@ -15,38 +15,12 @@ class HomePage extends ConsumerStatefulWidget {
 }
 
 class _HomePageState extends ConsumerState<HomePage> {
-  late Timer _timer;
-  Duration _timeRemaining = const Duration();
-  final DateTime _eventDate = DateTime(2026, 8, 6, 9, 0);
   final TextEditingController _searchController = TextEditingController();
 
   @override
-  void initState() {
-    super.initState();
-    _calculateTimeRemaining();
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      _calculateTimeRemaining();
-    });
-  }
-
-  @override
   void dispose() {
-    _timer.cancel();
     _searchController.dispose();
     super.dispose();
-  }
-
-  void _calculateTimeRemaining() {
-    final now = DateTime.now();
-    if (_eventDate.isAfter(now)) {
-      setState(() {
-        _timeRemaining = _eventDate.difference(now);
-      });
-    } else {
-      setState(() {
-        _timeRemaining = Duration.zero;
-      });
-    }
   }
 
   @override
@@ -109,7 +83,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                   const SizedBox(height: DesignSystem.spaceLg),
 
                   // COUNTDOWN TIMER
-                  _buildCountdown(isDesktop),
+                  const _CountdownTimer(),
 
                   const SizedBox(height: DesignSystem.spaceXl),
 
@@ -405,51 +379,6 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
-  Widget _buildCountdown(bool isDesktop) {
-    final days = _timeRemaining.inDays;
-    final hours = _timeRemaining.inHours % 24;
-    final minutes = _timeRemaining.inMinutes % 60;
-    final seconds = _timeRemaining.inSeconds % 60;
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _buildCountdownItem(days.toString().padLeft(2, '0'), 'Days'),
-        _buildCountdownDivider(),
-        _buildCountdownItem(hours.toString().padLeft(2, '0'), 'Hours'),
-        _buildCountdownDivider(),
-        _buildCountdownItem(minutes.toString().padLeft(2, '0'), 'Mins'),
-        _buildCountdownDivider(),
-        _buildCountdownItem(seconds.toString().padLeft(2, '0'), 'Secs'),
-      ],
-    );
-  }
-
-  Widget _buildCountdownItem(String value, String label) {
-    return Container(
-      constraints: const BoxConstraints(minWidth: 60, maxWidth: 80),
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: DesignSystem.spaceSm),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.08),
-        borderRadius: DesignSystem.radiusLg,
-        border: Border.all(color: Colors.white10),
-      ),
-      child: Column(
-        children: [
-          Text(
-            value,
-            style: (isDesktop ? DesignSystem.h3 : DesignSystem.h3Mobile).copyWith(color: Colors.white, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: DesignSystem.labelCaps.copyWith(color: Colors.white60, fontSize: 10),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildCountdownDivider() {
     return const Padding(
       padding: EdgeInsets.symmetric(horizontal: 8.0),
@@ -592,6 +521,106 @@ class _HomePageState extends ConsumerState<HomePage> {
           const SizedBox(height: DesignSystem.spaceXs),
           Text(value, style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold, color: DesignSystem.primary), textAlign: TextAlign.center, softWrap: true),
         ],
+      ),
+    );
+  }
+}
+
+/// Isolated countdown timer widget — only this rebuilds every second,
+/// not the entire HomePage.
+class _CountdownTimer extends StatefulWidget {
+  const _CountdownTimer();
+
+  @override
+  State<_CountdownTimer> createState() => _CountdownTimerState();
+}
+
+class _CountdownTimerState extends State<_CountdownTimer> {
+  late Timer _timer;
+  Duration _timeRemaining = const Duration();
+  final DateTime _eventDate = DateTime(2026, 8, 6, 9, 0);
+
+  @override
+  void initState() {
+    super.initState();
+    _calculateTimeRemaining();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      _calculateTimeRemaining();
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  void _calculateTimeRemaining() {
+    final now = DateTime.now();
+    if (_eventDate.isAfter(now)) {
+      setState(() {
+        _timeRemaining = _eventDate.difference(now);
+      });
+    } else {
+      setState(() {
+        _timeRemaining = Duration.zero;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final days = _timeRemaining.inDays;
+    final hours = _timeRemaining.inHours % 24;
+    final minutes = _timeRemaining.inMinutes % 60;
+    final seconds = _timeRemaining.inSeconds % 60;
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _buildCountdownItem(days.toString().padLeft(2, '0'), 'Days', isDesktop),
+        _buildCountdownDivider(),
+        _buildCountdownItem(hours.toString().padLeft(2, '0'), 'Hours', isDesktop),
+        _buildCountdownDivider(),
+        _buildCountdownItem(minutes.toString().padLeft(2, '0'), 'Mins', isDesktop),
+        _buildCountdownDivider(),
+        _buildCountdownItem(seconds.toString().padLeft(2, '0'), 'Secs', isDesktop),
+      ],
+    );
+  }
+
+  Widget _buildCountdownItem(String value, String label, bool isDesktop) {
+    return Container(
+      constraints: const BoxConstraints(minWidth: 60, maxWidth: 80),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: DesignSystem.spaceSm),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.08),
+        borderRadius: DesignSystem.radiusLg,
+        border: Border.all(color: Colors.white10),
+      ),
+      child: Column(
+        children: [
+          Text(
+            value,
+            style: (isDesktop ? DesignSystem.h3 : DesignSystem.h3Mobile).copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: DesignSystem.labelCaps.copyWith(color: Colors.white60, fontSize: 10),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCountdownDivider() {
+    return const Padding(
+      padding: EdgeInsets.symmetric(horizontal: 8.0),
+      child: Text(
+        ':',
+        style: TextStyle(color: Colors.white30, fontSize: 24, fontWeight: FontWeight.bold),
       ),
     );
   }
