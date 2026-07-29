@@ -114,14 +114,14 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
                     children: [
                       Expanded(flex: 3, child: _buildBoothsList(filteredBooths, projects)),
                       const SizedBox(width: DesignSystem.spaceLg),
-                      Expanded(flex: 2, child: _buildHallLayoutPlan()),
+                      Expanded(flex: 2, child: _buildHallLayoutPlan(isDesktop)),
                     ],
                   )
                 : Column(
                     children: [
                       _buildBoothsList(filteredBooths, projects),
                       const SizedBox(height: DesignSystem.spaceLg),
-                      _buildHallLayoutPlan(),
+                      _buildHallLayoutPlan(isDesktop),
                     ],
                   ),
           ],
@@ -178,7 +178,7 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
     );
   }
 
-  Widget _buildHallLayoutPlan() {
+  Widget _buildHallLayoutPlan(bool isDesktop) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(DesignSystem.spaceLg),

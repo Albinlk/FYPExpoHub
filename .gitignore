@@ -51,6 +51,9 @@ agent/
 skills-lock.json
 web/flutter_bootstrap.js
 
+# Scripts
+scripts/node_modules/
+
 # Functions
 functions/node_modules/
 functions/lib/

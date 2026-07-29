@@ -158,16 +158,16 @@ class ProjectDetailPage extends ConsumerWidget {
                 ? Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(flex: 3, child: _buildProjectMainDetails(project)),
+                      Expanded(flex: 3, child: _buildProjectMainDetails(project, isDesktop)),
                       const SizedBox(width: DesignSystem.spaceLg),
-                      Expanded(flex: 2, child: _buildProjectSidebar(context, project)),
+                      Expanded(flex: 2, child: _buildProjectSidebar(context, project, isDesktop)),
                     ],
                   )
                 : Column(
                     children: [
-                      _buildProjectMainDetails(project),
+                      _buildProjectMainDetails(project, isDesktop),
                       const SizedBox(height: DesignSystem.spaceLg),
-                      _buildProjectSidebar(context, project),
+                      _buildProjectSidebar(context, project, isDesktop),
                     ],
                   ),
           ],
@@ -176,7 +176,7 @@ class ProjectDetailPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildProjectMainDetails(Project project) {
+  Widget _buildProjectMainDetails(Project project, bool isDesktop) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -216,7 +216,7 @@ class ProjectDetailPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildProjectSidebar(BuildContext context, Project project) {
+  Widget _buildProjectSidebar(BuildContext context, Project project, bool isDesktop) {
     return Column(
       children: [
         // Team details card

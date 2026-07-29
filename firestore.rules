@@ -157,9 +157,8 @@ service cloud.firestore {
         && request.resource.data.assignmentId is string
         && request.resource.data.projectId is string
         && request.resource.data.visitRole in ['supervisor', 'examiner']
-        && let assignment = get(/databases/$(database)/documents/projectLecturerAssignments/$(request.resource.data.assignmentId)).data
-        && assignment.status == 'active'
-        && assignment.lecturerId == request.auth.uid;
+        && get(/databases/$(database)/documents/projectLecturerAssignments/$(request.resource.data.assignmentId)).data.status == 'active'
+        && get(/databases/$(database)/documents/projectLecturerAssignments/$(request.resource.data.assignmentId)).data.lecturerId == request.auth.uid;
 
       allow update: if isAuthenticated()
         && (isAdmin()

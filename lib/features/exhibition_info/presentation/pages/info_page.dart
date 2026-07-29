@@ -33,16 +33,16 @@ class InfoPage extends ConsumerWidget {
                 ? Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(flex: 3, child: _buildInfoDetails(event)),
+                      Expanded(flex: 3, child: _buildInfoDetails(event, isDesktop)),
                       const SizedBox(width: DesignSystem.spaceXl),
-                      Expanded(flex: 2, child: _buildLocationMap(event)),
+                      Expanded(flex: 2, child: _buildLocationMap(event, isDesktop)),
                     ],
                   )
                 : Column(
                     children: [
-                      _buildInfoDetails(event),
+                      _buildInfoDetails(event, isDesktop),
                       const SizedBox(height: DesignSystem.spaceXl),
-                      _buildLocationMap(event),
+                      _buildLocationMap(event, isDesktop),
                     ],
                   ),
           ],
@@ -51,29 +51,24 @@ class InfoPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildInfoDetails(Event event) {
+  Widget _buildInfoDetails(Event event, bool isDesktop) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionCard(
-          'Background',
-          event.description,
-        ),
+        _buildSectionCard('Background', event.description, isDesktop),
         const SizedBox(height: DesignSystem.spaceMd),
-        _buildSectionCard(
-          'Main Objectives',
-          event.objectives.map((o) => '• $o').join('\n'),
-        ),
+        _buildSectionCard('Main Objectives', event.objectives.map((o) => '• $o').join('\n'), isDesktop),
         const SizedBox(height: DesignSystem.spaceMd),
         _buildSectionCard(
           'Competition Categories',
           '1. Computer Science & Software Development\n2. Networking & Cyber Security\n3. Mathematics & Actuarial Sciences\n4. Artificial Intelligence & Data Analytics',
+          isDesktop,
         ),
       ],
     );
   }
 
-  Widget _buildSectionCard(String title, String content) {
+  Widget _buildSectionCard(String title, String content, bool isDesktop) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(DesignSystem.spaceLg),
@@ -89,7 +84,7 @@ class InfoPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildLocationMap(Event event) {
+  Widget _buildLocationMap(Event event, bool isDesktop) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(DesignSystem.spaceLg),

@@ -1,7 +1,9 @@
-import 'package:cloud_functions/cloud_functions.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:uuid/uuid.dart';
 import '../../../../app/theme/theme.dart';
+import '../../../../core/firebase/firestore_service.dart';
 import '../../../../core/state/state_providers.dart';
 
 class AdminLecturersPage extends ConsumerWidget {
@@ -82,28 +84,23 @@ class AdminLecturersPage extends ConsumerWidget {
                           setState(() => creating = true);
 
                           try {
-                            final functions = FirebaseFunctions.instance;
-                            final result = await functions.httpsCallable('createLecturerAccount').call({
+                            final uid = const Uuid().v4();
+                            await FirestoreService.instance.setLecturer(uid, {
+                              'uid': uid,
                               'email': email,
                               'displayName': name,
-                              'password': password,
+                              'createdAt': FieldValue.serverTimestamp(),
                             });
 
                             if (dialogContext.mounted) Navigator.of(dialogContext).pop();
 
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Pensyarah ${result.data['displayName']} berjaya ditambah!')),
+                              SnackBar(content: Text('Pensyarah $name berjaya ditambah!')),
                             );
-                          } on FirebaseFunctionsException catch (e) {
-                            setState(() => creating = false);
-                            final msg = e.code == 'already-exists'
-                                ? 'Emel ini sudah wujud dalam sistem.'
-                                : e.message ?? 'Ralat tidak dijangka.';
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
                           } catch (e) {
                             setState(() => creating = false);
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Ralat: Gagal menyambung ke pelayan.')),
+                              SnackBar(content: Text('Ralat: ${e.toString()}')),
                             );
                           }
                         },
@@ -140,25 +137,16 @@ class AdminLecturersPage extends ConsumerWidget {
               onPressed: () async {
                 Navigator.of(dialogContext).pop();
                 try {
-                  final functions = FirebaseFunctions.instance;
-                  await functions.httpsCallable('deleteLecturerAccount').call({
-                    'lecturerUid': uid,
-                  });
+                  await FirestoreService.instance.deleteLecturer(uid);
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('$name berjaya dipadam.')),
                     );
                   }
-                } on FirebaseFunctionsException catch (e) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(e.message ?? 'Ralat memadam pensyarah.')),
-                    );
-                  }
                 } catch (e) {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Ralat: Gagal menyambung ke pelayan.')),
+                      SnackBar(content: Text('Ralat: ${e.toString()}')),
                     );
                   }
                 }
@@ -175,31 +163,60 @@ class AdminLecturersPage extends ConsumerWidget {
     );
   }
 
-  void _backfillLecturerIds(BuildContext context) async {
-    final functions = FirebaseFunctions.instance;
+  Future<void> _backfillLecturerIds(BuildContext context) async {
+    final db = FirebaseFirestore.instance;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Mengemas kini ID pensyarah dalam tugasan...')),
     );
     try {
-      final result = await functions.httpsCallable('backfillLecturerIds').call();
-      final data = result.data as Map<String, dynamic>;
-      final patched = data['patched'] ?? 0;
-      final skipped = data['skipped'] ?? 0;
+      final lecturersSnap = await db.collection('lecturers').get();
+      final lecturers = <String, String>{};
+      for (final doc in lecturersSnap.docs) {
+        final data = doc.data();
+        final name = (data['displayName'] as String? ?? '').trim().toUpperCase();
+        final uid = data['uid'] as String? ?? '';
+        if (name.isNotEmpty && uid.isNotEmpty) {
+          lecturers[name] = uid;
+        }
+      }
+
+      final assignmentsSnap = await db.collection('projectLecturerAssignments').get();
+      int patched = 0;
+      int skipped = 0;
+
+      for (final doc in assignmentsSnap.docs) {
+        final data = doc.data();
+        final lecturerId = data['lecturerId'] as String? ?? '';
+        final lecturerName = (data['lecturerDisplayName'] as String? ?? '').trim().toUpperCase();
+
+        if (lecturerName.isEmpty) {
+          skipped++;
+          continue;
+        }
+
+        if (lecturerId.isNotEmpty) {
+          skipped++;
+          continue;
+        }
+
+        final matchedUid = lecturers[lecturerName];
+        if (matchedUid != null) {
+          await doc.reference.update({'lecturerId': matchedUid});
+          patched++;
+        } else {
+          skipped++;
+        }
+      }
+
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Selesai! $patched tugasan dikemas kini, $skipped dilangkau.')),
         );
       }
-    } on FirebaseFunctionsException catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.message ?? 'Ralat semasa backfill.')),
-        );
-      }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Ralat: Gagal menyambung ke pelayan.')),
+          SnackBar(content: Text('Ralat: ${e.toString()}')),
         );
       }
     }

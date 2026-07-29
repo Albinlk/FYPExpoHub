@@ -51,16 +51,16 @@ class DashboardPage extends ConsumerWidget {
                 ? Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(flex: 3, child: _buildRecentImports(context, ref)),
+                      Expanded(flex: 3, child: _buildRecentImports(context, ref, isDesktop)),
                       const SizedBox(width: DesignSystem.spaceLg),
-                      Expanded(flex: 2, child: _buildQuickActions(context)),
+                      Expanded(flex: 2, child: _buildQuickActions(context, isDesktop)),
                     ],
                   )
                 : Column(
                     children: [
-                      _buildQuickActions(context),
+                      _buildQuickActions(context, isDesktop),
                       const SizedBox(height: DesignSystem.spaceLg),
-                      _buildRecentImports(context, ref),
+                      _buildRecentImports(context, ref, isDesktop),
                     ],
                   ),
           ],
@@ -92,7 +92,7 @@ class DashboardPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildQuickActions(BuildContext context) {
+  Widget _buildQuickActions(BuildContext context, bool isDesktop) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(DesignSystem.spaceLg),
@@ -132,7 +132,7 @@ class DashboardPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildRecentImports(BuildContext context, WidgetRef ref) {
+  Widget _buildRecentImports(BuildContext context, WidgetRef ref, bool isDesktop) {
     final imports = ref.watch(importsProvider);
 
     return Card(

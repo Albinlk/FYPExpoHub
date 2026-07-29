@@ -82,7 +82,7 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
 
             // Main Projects Grid
             filteredProjects.isEmpty
-                ? _buildEmptyState()
+                ? _buildEmptyState(isDesktop)
                 : GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -419,7 +419,7 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(bool isDesktop) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 40.0),

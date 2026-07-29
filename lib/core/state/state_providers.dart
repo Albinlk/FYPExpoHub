@@ -505,7 +505,7 @@ final allLecturersProvider = StreamProvider<List<Map<String, dynamic>>>((ref) {
 final lecturerConfigProvider = Provider<Map<String, String>>((ref) {
   final all = ref.watch(allLecturersProvider);
   final result = <String, String>{};
-  final list = all.valueOrNull ?? [];
+  final list = all.asData?.value ?? [];
   for (final doc in list) {
     final email = doc['email'] as String?;
     final name = doc['displayName'] as String?;
@@ -531,7 +531,7 @@ class LecturerAuthNotifier extends Notifier<Lecturer?> {
   void _reevaluate() {
     final config = ref.read(lecturerConfigProvider);
     final auth = ref.read(authStateChangesProvider);
-    final user = auth.valueOrNull;
+    final user = auth.asData?.value;
     if (user != null && user.email != null && config.containsKey(user.email!.toLowerCase())) {
       final displayName = config[user.email!.toLowerCase()]!;
       state = Lecturer(

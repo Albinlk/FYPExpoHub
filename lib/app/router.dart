@@ -11,6 +11,7 @@ import '../features/admin_dashboard/presentation/pages/dashboard_page.dart';
 import '../features/admin_event/presentation/pages/admin_event_page.dart';
 import '../features/admin_imports/presentation/pages/admin_imports_page.dart';
 import '../features/admin_imports/presentation/pages/import_detail_page.dart';
+import '../features/admin_lecturers/presentation/pages/admin_lecturers_page.dart';
 import '../features/admin_projects/presentation/pages/admin_projects_page.dart';
 import '../features/admin_schedule/presentation/pages/admin_schedule_page.dart';
 import '../features/admin_settings/presentation/pages/admin_settings_page.dart';
@@ -212,6 +213,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                 },
               ),
             ],
+          ),
+          GoRoute(
+            path: '/admin/lecturers',
+            builder: (context, state) => const AdminLecturersPage(),
           ),
           GoRoute(
             path: '/admin/settings',
