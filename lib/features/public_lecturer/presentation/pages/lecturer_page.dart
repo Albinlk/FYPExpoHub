@@ -120,7 +120,7 @@ class _LecturerPageState extends ConsumerState<LecturerPage> {
                             color: _calonIndustriOnly ? Colors.white : DesignSystem.tertiary,
                           ),
                           label: Text(
-                            'Calon Industri',
+                               'Industry Candidate',
                             style: DesignSystem.bodySm.copyWith(
                               color: _calonIndustriOnly ? Colors.white : DesignSystem.onSurfaceVariant,
                             ),
@@ -234,7 +234,7 @@ class _LecturerPageState extends ConsumerState<LecturerPage> {
                             Icon(Icons.workspace_premium, size: 11, color: Colors.white),
                             const SizedBox(width: 3),
                             Text(
-                              'Calon Industri',
+                            'Industry Candidate',
                               style: DesignSystem.labelCaps.copyWith(color: Colors.white, fontSize: 8),
                             ),
                           ],

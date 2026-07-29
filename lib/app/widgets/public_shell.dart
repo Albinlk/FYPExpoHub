@@ -98,7 +98,7 @@ class _DesktopNavBar extends StatelessWidget {
               _buildNavLink(context, 'Lecturer Portal', '/lecturer'),
               if (lecturerSignedIn) ...[
                 const SizedBox(width: DesignSystem.spaceLg),
-                _buildNavLink(context, 'Lawatan Saya', '/lecturer/visits'),
+                _buildNavLink(context, 'My Visits', '/lecturer/visits'),
               ],
             ],
           ),
@@ -120,7 +120,7 @@ class _DesktopNavBar extends StatelessWidget {
                 ),
               ),
               child: Text(
-                'Log Masuk',
+                'Sign In',
                 style: DesignSystem.button.copyWith(fontSize: 14),
               ),
             ),
@@ -207,14 +207,14 @@ class _MobileBottomNavBar extends StatelessWidget {
                 _buildMenuItem(context, 'Announcements', Icons.campaign, '/announcements'),
                 _buildMenuItem(context, 'Award Winners', Icons.emoji_events, '/awards'),
                 if (lecturerSignedIn)
-                  _buildMenuItem(context, 'Lawatan Saya', Icons.visibility, '/lecturer/visits'),
+                  _buildMenuItem(context, 'My Visits', Icons.visibility, '/lecturer/visits'),
 
                 _buildMenuItem(context, 'Exhibition Info', Icons.info, '/info'),
                 _buildMenuItem(context, 'Frequently Asked Questions', Icons.help_outline, '/faq'),
                 _buildMenuItem(context, 'Privacy Policy', Icons.privacy_tip_outlined, '/privacy'),
                 const Divider(),
-                if (!lecturerSignedIn)
-                  _buildMenuItemExternal(context, 'Log Masuk', Icons.login),
+if (!lecturerSignedIn)
+    _buildMenuItemExternal(context, 'Sign In', Icons.login),
               ],
             ),
           ),

@@ -27,7 +27,7 @@ class EventNotifier extends Notifier<Event> {
     return Event(
       id: 'fskm-fyp-2026',
       title: 'FSKM FYP Expo Hub 2026',
-      sessionLabel: 'Semester Mac - Ogos 2026',
+      sessionLabel: 'Semester March - August 2026',
       startAt: DateTime(2026, 8, 6, 9, 0),
       endAt: DateTime(2026, 8, 7, 17, 0),
       dailyHours: '9:00 AM - 5:00 PM',

@@ -77,7 +77,7 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Pelajar telah ditanda sebagai dilawati.'),
+            content: Text('Student has been marked as visited.'),
             backgroundColor: DesignSystem.tertiary,
           ),
         );
@@ -86,10 +86,10 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
     } on FirebaseException catch (e) {
       setState(() => _isMarking = false);
       final msg = e.code == 'already-exists'
-          ? 'Lawatan telah pun direkodkan.'
+          ? 'Visit has already been recorded.'
           : e.code == 'permission-denied'
-              ? 'Anda tidak dibenarkan menanda lawatan ini.'
-              : 'Ralat: ${e.message}';
+              ? 'You are not allowed to mark this visit.'
+              : 'Error: ${e.message}';
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(msg), backgroundColor: DesignSystem.error),
@@ -99,7 +99,7 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
       setState(() => _isMarking = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ralat: ${e.toString()}'), backgroundColor: DesignSystem.error),
+          SnackBar(content: Text('Error: ${e.toString()}'), backgroundColor: DesignSystem.error),
         );
       }
     }
@@ -121,7 +121,7 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Lawatan telah dibatalkan. Pelajar boleh dilawati semula.'),
+            content: Text('Visit has been cancelled. Student can be revisited.'),
             backgroundColor: DesignSystem.tertiary,
           ),
         );
@@ -130,8 +130,8 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
     } on FirebaseException catch (e) {
       setState(() => _isUndoing = false);
       final msg = e.code == 'permission-denied'
-          ? 'Anda tidak dibenarkan membatalkan lawatan ini.'
-          : 'Ralat: ${e.message}';
+          ? 'You are not allowed to cancel this visit.'
+          : 'Error: ${e.message}';
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(msg), backgroundColor: DesignSystem.error),
@@ -141,7 +141,7 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
       setState(() => _isUndoing = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ralat: ${e.toString()}'), backgroundColor: DesignSystem.error),
+          SnackBar(content: Text('Error: ${e.toString()}'), backgroundColor: DesignSystem.error),
         );
       }
     }
@@ -158,8 +158,8 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
 
     if (project == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Projek tidak dijumpai')),
-        body: const Center(child: Text('Projek tidak dijumpai.')),
+        appBar: AppBar(title: const Text('Project Not Found')),
+        body: const Center(child: Text('Project not found.')),
       );
     }
 
@@ -215,8 +215,8 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
                               children: [
                                 Icon(Icons.workspace_premium, size: 13, color: Colors.white),
                                 const SizedBox(width: 4),
-                                Text(
-                                  'Calon Industri',
+                                  Text(
+                                    'Industry Candidate',
                                   style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600),
                                 ),
                               ],
@@ -252,9 +252,9 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
               ),
             ),
             const SizedBox(height: DesignSystem.spaceMd),
-            _buildVisitSection('Penyelia (SV)', svAssignment, svVisit, project, _isMarking, _isUndoing),
+            _buildVisitSection('Supervisor (SV)', svAssignment, svVisit, project, _isMarking, _isUndoing),
             const SizedBox(height: DesignSystem.spaceSm),
-            _buildVisitSection('Pemeriksa (EX)', exAssignment, exVisit, project, _isMarking, _isUndoing),
+            _buildVisitSection('Examiner (EX)', exAssignment, exVisit, project, _isMarking, _isUndoing),
           ],
         ),
       ),
@@ -306,7 +306,7 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
                       children: [
                         Icon(Icons.check_circle, size: 14, color: DesignSystem.onTertiaryContainer),
                         const SizedBox(width: 4),
-                        Text('Dilawati', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onTertiaryContainer)),
+                        Text('Visited', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onTertiaryContainer)),
                       ],
                     ),
                   )
@@ -326,15 +326,15 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
                       color: DesignSystem.surfaceContainerHighest,
                       borderRadius: DesignSystem.radiusSm,
                     ),
-                    child: Text('Belum Dilawati', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSurfaceVariant)),
+                    child: Text('Not Visited', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSurfaceVariant)),
                   ),
               ],
             ),
             if (hasVisit && visit != null) ...[
               const SizedBox(height: DesignSystem.spaceMd),
-              _visitDetailRow('Masa Lawatan', _formatDateTime(visit.visitedAt)),
+              _visitDetailRow('Visit Time', _formatDateTime(visit.visitedAt)),
               if (visit.visitNote != null && visit.visitNote!.isNotEmpty)
-                _visitDetailRow('Catatan', visit.visitNote!),
+                _visitDetailRow('Note', visit.visitNote!),
               const SizedBox(height: DesignSystem.spaceMd),
               Row(
                 children: [
@@ -342,7 +342,7 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
                     OutlinedButton.icon(
                       onPressed: () => _undoVisit(visit),
                       icon: const Icon(Icons.undo, size: 16),
-                      label: Text('Batal Lawatan', style: DesignSystem.bodySm.copyWith(color: DesignSystem.error)),
+                      label: Text('Cancel Visit', style: DesignSystem.bodySm.copyWith(color: DesignSystem.error)),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: DesignSystem.error,
                         side: const BorderSide(color: DesignSystem.error),
@@ -362,7 +362,7 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
                   icon: isMarking
                       ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                       : const Icon(Icons.check_circle_outline, size: 18),
-                  label: Text('Tanda sebagai Dilawati', style: DesignSystem.button),
+                  label: Text('Mark as Visited', style: DesignSystem.button),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: DesignSystem.primary,
                     foregroundColor: DesignSystem.onPrimary,
@@ -373,7 +373,7 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
               ),
             ] else if (!hasAssignment) ...[
               const SizedBox(height: DesignSystem.spaceMd),
-              Text('Anda tidak ditugaskan untuk peranan ini.', style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant)),
+              Text('You are not assigned to this role.', style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant)),
             ],
           ],
         ),
@@ -400,7 +400,7 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
   }
 
   String _formatDateTime(DateTime dt) {
-    final months = ['Jan', 'Feb', 'Mac', 'Apr', 'Mei', 'Jun', 'Jul', 'Ogos', 'Sep', 'Okt', 'Nov', 'Dis'];
+    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     final day = dt.day.toString();
     final month = months[dt.month - 1];
     final year = dt.year.toString();

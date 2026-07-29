@@ -42,7 +42,7 @@ class ProjectDetailPage extends ConsumerWidget {
             icon: const Icon(Icons.arrow_back),
             onPressed: () => _goBack(context),
           ),
-          title: const Text('Projek Tidak Dijumpai'),
+          title: const Text('Project Not Found'),
         ),
         body: Center(
           child: Column(
@@ -50,11 +50,11 @@ class ProjectDetailPage extends ConsumerWidget {
             children: [
               const Icon(Icons.search_off, size: 64, color: DesignSystem.outlineVariant),
               const SizedBox(height: 16),
-              Text('Projek tidak ditemui.', style: (isDesktop ? DesignSystem.h3 : DesignSystem.h3Mobile).copyWith(color: DesignSystem.onSurfaceVariant)),
+              Text('Project not found.', style: (isDesktop ? DesignSystem.h3 : DesignSystem.h3Mobile).copyWith(color: DesignSystem.onSurfaceVariant)),
               const SizedBox(height: 8),
               ElevatedButton(
                 onPressed: () => _goBack(context),
-                child: const Text('Kembali ke Katalog'),
+                child: const Text('Back to Catalogue'),
               ),
             ],
           ),

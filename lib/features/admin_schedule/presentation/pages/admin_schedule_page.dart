@@ -26,7 +26,7 @@ class AdminSchedulePage extends ConsumerWidget {
           builder: (context, setState) {
             final isDesktop = MediaQuery.of(context).size.width >= 768;
             return AlertDialog(
-              title: Text(item == null ? 'Tambah Slot Tentatif' : 'Kemaskini Slot Tentatif', style: (isDesktop ? DesignSystem.h3 : DesignSystem.bodyLg).copyWith(color: DesignSystem.primary)),
+              title: Text(item == null ? 'Add Tentative Slot' : 'Update Tentative Slot', style: (isDesktop ? DesignSystem.h3 : DesignSystem.bodyLg).copyWith(color: DesignSystem.primary)),
               content: SingleChildScrollView(
                 child: SizedBox(
                   width: isDesktop ? 500 : MediaQuery.of(context).size.width * 0.85,
@@ -35,47 +35,47 @@ class AdminSchedulePage extends ConsumerWidget {
                     children: [
                       TextField(
                         controller: titleController,
-                        decoration: const InputDecoration(labelText: 'Tajuk Slot (e.g. Taklimat Juri)'),
+                        decoration: const InputDecoration(labelText: 'Slot Title (e.g. Jury Briefing)'),
                       ),
                       const SizedBox(height: DesignSystem.spaceSm),
                       isDesktop
                           ? Row(
                               children: [
-                                Expanded(child: TextField(controller: startAtController, decoration: const InputDecoration(labelText: 'Mula (e.g. 09:00 AM)'))),
+                                Expanded(child: TextField(controller: startAtController,                         decoration: const InputDecoration(labelText: 'Start (e.g. 09:00 AM)'))),
                                 const SizedBox(width: DesignSystem.spaceMd),
-                                Expanded(child: TextField(controller: endAtController, decoration: const InputDecoration(labelText: 'Tamat (e.g. 10:00 AM)'))),
+                                Expanded(child: TextField(controller: endAtController, decoration: const InputDecoration(labelText: 'End (e.g. 10:00 AM)'))),
                               ],
                             )
                           : Column(
                               children: [
-                                TextField(controller: startAtController, decoration: const InputDecoration(labelText: 'Mula (e.g. 09:00 AM)')),
+                                TextField(controller: startAtController,                         decoration: const InputDecoration(labelText: 'Start (e.g. 09:00 AM)')),
                                 const SizedBox(height: DesignSystem.spaceSm),
-                                TextField(controller: endAtController, decoration: const InputDecoration(labelText: 'Tamat (e.g. 10:00 AM)')),
+                                TextField(controller: endAtController, decoration: const InputDecoration(labelText: 'End (e.g. 10:00 AM)')),
                               ],
                             ),
                       const SizedBox(height: DesignSystem.spaceSm),
                       TextField(
                         controller: venueController,
-                        decoration: const InputDecoration(labelText: 'Tempat (e.g. Blok Kuliah, FSKM)'),
+                        decoration: const InputDecoration(labelText: 'Venue (e.g. Blok Kuliah, FSKM)'),
                       ),
                       const SizedBox(height: DesignSystem.spaceSm),
                       TextField(
                         controller: audienceController,
-                        decoration: const InputDecoration(labelText: 'Sasaran Audien (e.g. Pelajar, Juri)'),
+                        decoration: const InputDecoration(labelText: 'Target Audience (e.g. Students, Jury)'),
                       ),
                       const SizedBox(height: DesignSystem.spaceSm),
                       TextField(
                         controller: descriptionController,
-                        decoration: const InputDecoration(labelText: 'Keterangan/Syarahan ringkas'),
+                        decoration: const InputDecoration(labelText: 'Brief Description'),
                         maxLines: 2,
                       ),
                       const SizedBox(height: DesignSystem.spaceMd),
-                      _dialogDropdown(isDesktop, 'Tarikh Acara:', DropdownButton<int>(
+                      _dialogDropdown(isDesktop, 'Event Date:', DropdownButton<int>(
                         value: selectedDate.day,
                         isExpanded: true,
                         items: const [
-                          DropdownMenuItem(value: 6, child: Text('6 Ogos 2026 (Hari 1)')),
-                          DropdownMenuItem(value: 7, child: Text('7 Ogos 2026 (Hari 2)')),
+                          DropdownMenuItem(value: 6, child: Text('6 August 2026 (Day 1)')),
+                          DropdownMenuItem(value: 7, child: Text('7 August 2026 (Day 2)')),
                         ],
                         onChanged: (val) {
                           if (val != null) {
@@ -86,12 +86,12 @@ class AdminSchedulePage extends ConsumerWidget {
                         },
                       )),
                       const SizedBox(height: DesignSystem.spaceSm),
-                      _dialogDropdown(isDesktop, 'Akses:', DropdownButton<String>(
+                      _dialogDropdown(isDesktop, 'Access:', DropdownButton<String>(
                         value: visibility,
                         isExpanded: true,
                         items: const [
-                          DropdownMenuItem(value: 'public', child: Text('Public (Awam)')),
-                          DropdownMenuItem(value: 'internal', child: Text('Internal (Urusetia/Juri)')),
+                          DropdownMenuItem(value: 'public', child: Text('Public')),
+                          DropdownMenuItem(value: 'internal', child: Text('Internal (Committee/Jury)')),
                         ],
                         onChanged: (val) {
                           if (val != null) {
@@ -102,7 +102,7 @@ class AdminSchedulePage extends ConsumerWidget {
                         },
                       )),
                       const SizedBox(height: DesignSystem.spaceSm),
-                      _dialogDropdown(isDesktop, 'Status Terbitan:', DropdownButton<String>(
+                      _dialogDropdown(isDesktop, 'Publication Status:', DropdownButton<String>(
                         value: status,
                         isExpanded: true,
                         items: const [
@@ -124,7 +124,7 @@ class AdminSchedulePage extends ConsumerWidget {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: const Text('Batal'),
+                  child: const Text('Cancel'),
                 ),
                 ElevatedButton(
                   onPressed: () {
@@ -150,12 +150,12 @@ class AdminSchedulePage extends ConsumerWidget {
                     if (item == null) {
                       ref.read(scheduleProvider.notifier).addScheduleItem(newItem);
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Slot tentatif berjaya ditambah!')),
+                        const SnackBar(content: Text('Tentative slot added successfully!')),
                       );
                     } else {
                       ref.read(scheduleProvider.notifier).updateScheduleItem(newItem);
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Slot tentatif berjaya dikemaskini!')),
+                        const SnackBar(content: Text('Tentative slot updated successfully!')),
                       );
                     }
                     Navigator.of(dialogContext).pop();
@@ -164,7 +164,7 @@ class AdminSchedulePage extends ConsumerWidget {
                     backgroundColor: DesignSystem.secondary,
                     foregroundColor: Colors.white,
                   ),
-                  child: const Text('Simpan'),
+                  child: const Text('Save'),
                 ),
               ],
             );
@@ -220,11 +220,11 @@ class AdminSchedulePage extends ConsumerWidget {
                 ? Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _buildPageTitle('Pengurusan Tentatif', 'Tambah, edit, atau padam jadual acara pameran di bawah.'),
+                      _buildPageTitle('Schedule Management', 'Add, edit, or delete the exhibition event schedule below.'),
                       ElevatedButton.icon(
                         onPressed: () => _showAddEditDialog(context, ref),
                         icon: const Icon(Icons.add),
-                        label: const Text('Tambah Slot'),
+                        label: const Text('Add Slot'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: DesignSystem.secondary,
                           foregroundColor: Colors.white,
@@ -235,14 +235,14 @@ class AdminSchedulePage extends ConsumerWidget {
                 : Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildPageTitle('Pengurusan Tentatif', 'Tambah, edit, atau padam jadual acara pameran di bawah.'),
+                      _buildPageTitle('Schedule Management', 'Add, edit, or delete the exhibition event schedule below.'),
                       const SizedBox(height: DesignSystem.spaceMd),
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton.icon(
                           onPressed: () => _showAddEditDialog(context, ref),
                           icon: const Icon(Icons.add),
-                          label: const Text('Tambah Slot'),
+                          label: const Text('Add Slot'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: DesignSystem.secondary,
                             foregroundColor: Colors.white,
@@ -259,14 +259,14 @@ class AdminSchedulePage extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Senarai Slot Sedia Ada', style: DesignSystem.h3Mobile.copyWith(color: DesignSystem.primary)),
+                    Text('Existing Slot List', style: DesignSystem.h3Mobile.copyWith(color: DesignSystem.primary)),
                     const Divider(height: 32),
 
                     if (scheduleItems.isEmpty)
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 32.0),
                         child: Center(
-                          child: Text('Tiada slot jadual ditemui. Sila tambah slot baru.', style: DesignSystem.bodyMd.copyWith(color: DesignSystem.onSurfaceVariant)),
+                          child: Text('No schedule slots found. Please add a new slot.', style: DesignSystem.bodyMd.copyWith(color: DesignSystem.onSurfaceVariant)),
                         ),
                       )
                     else
@@ -278,7 +278,7 @@ class AdminSchedulePage extends ConsumerWidget {
                         itemBuilder: (context, index) {
                           final item = scheduleItems[index];
                           final isPublished = item.publicationStatus == 'published';
-                          final dayText = item.date.day == 6 ? 'Hari 1 (6 Ogos)' : 'Hari 2 (7 Ogos)';
+                          final dayText = item.date.day == 6 ? 'Day 1 (6 August)' : 'Day 2 (7 August)';
 
                           return Padding(
                             padding: const EdgeInsets.symmetric(vertical: 4.0),
@@ -308,7 +308,7 @@ class AdminSchedulePage extends ConsumerWidget {
                                       ),
                                       const SizedBox(height: 2),
                                       Text(
-                                        'Waktu: ${item.startAt} - ${item.endAt} • Tempat: ${item.venue} • Akses: ${item.visibility.toUpperCase()}',
+                                         'Time: ${item.startAt} - ${item.endAt} • Venue: ${item.venue} • Access: ${item.visibility.toUpperCase()}',
                                         style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant),
                                       ),
                                       if (item.description != null && item.description!.isNotEmpty)
@@ -351,7 +351,7 @@ class AdminSchedulePage extends ConsumerWidget {
                                       onPressed: () {
                                         ref.read(scheduleProvider.notifier).deleteScheduleItem(item.id);
                                         ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(content: Text('Slot tentatif berjaya dipadam!')),
+                                          const SnackBar(content: Text('Tentative slot deleted successfully!')),
                                         );
                                       },
                                     ),

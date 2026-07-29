@@ -22,7 +22,7 @@ class AdminLecturersPage extends ConsumerWidget {
           builder: (context, setState) {
             final isDesktop = MediaQuery.of(context).size.width >= 768;
             return AlertDialog(
-              title: Text('Tambah Pensyarah', style: (isDesktop ? DesignSystem.h3 : DesignSystem.bodyLg)),
+              title: Text('Add Lecturer', style: (isDesktop ? DesignSystem.h3 : DesignSystem.bodyLg)),
               content: SizedBox(
                 width: isDesktop ? 400 : MediaQuery.of(context).size.width * 0.85,
                 child: Column(
@@ -31,8 +31,8 @@ class AdminLecturersPage extends ConsumerWidget {
                     TextField(
                       controller: emailController,
                       decoration: const InputDecoration(
-                        labelText: 'Emel UiTM',
-                        hintText: 'contoh@uitm.edu.my',
+                        labelText: 'UiTM Email',
+                        hintText: 'example@uitm.edu.my',
                       ),
                       keyboardType: TextInputType.emailAddress,
                     ),
@@ -40,8 +40,8 @@ class AdminLecturersPage extends ConsumerWidget {
                     TextField(
                       controller: nameController,
                       decoration: const InputDecoration(
-                        labelText: 'Nama Penuh',
-                        hintText: 'NAMA SEPERTI DALAM PROJEK',
+                        labelText: 'Full Name',
+                        hintText: 'NAME AS IN PROJECT',
                       ),
                       textCapitalization: TextCapitalization.characters,
                     ),
@@ -49,8 +49,8 @@ class AdminLecturersPage extends ConsumerWidget {
                     TextField(
                       controller: passwordController,
                       decoration: const InputDecoration(
-                        labelText: 'Kata Laluan Sementara',
-                        hintText: 'Minimum 6 aksara',
+                        labelText: 'Temporary Password',
+                        hintText: 'Minimum 6 characters',
                       ),
                       obscureText: true,
                     ),
@@ -64,7 +64,7 @@ class AdminLecturersPage extends ConsumerWidget {
               actions: [
                 TextButton(
                   onPressed: creating ? null : () => Navigator.of(dialogContext).pop(),
-                  child: const Text('Batal'),
+                  child: const Text('Cancel'),
                 ),
                 ElevatedButton(
                   onPressed: creating
@@ -76,7 +76,7 @@ class AdminLecturersPage extends ConsumerWidget {
 
                           if (email.isEmpty || name.isEmpty || password.isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Sila isi semua ruangan.')),
+                              const SnackBar(content: Text('Please fill in all fields.')),
                             );
                             return;
                           }
@@ -95,20 +95,20 @@ class AdminLecturersPage extends ConsumerWidget {
                             if (dialogContext.mounted) Navigator.of(dialogContext).pop();
 
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Pensyarah $name berjaya ditambah!')),
+                              SnackBar(content: Text('Lecturer $name added successfully!')),
                             );
                           } catch (e) {
                             setState(() => creating = false);
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Ralat: ${e.toString()}')),
+                              SnackBar(content: Text('Error: ${e.toString()}')),
                             );
                           }
                         },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: DesignSystem.secondary,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: const Text('Tambah'),
+                   style: ElevatedButton.styleFrom(
+                     backgroundColor: DesignSystem.secondary,
+                     foregroundColor: Colors.white,
+                   ),
+                   child: const Text('Add'),
                 ),
               ],
             );
@@ -126,8 +126,8 @@ class AdminLecturersPage extends ConsumerWidget {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Padam Pensyarah', style: DesignSystem.h3),
-          content: Text('Adakah anda pasti mahu memadam $name? Tindakan ini tidak boleh dibatalkan.'),
+          title: const Text('Delete Lecturer', style: DesignSystem.h3),
+          content: Text('Are you sure you want to delete $name? This action cannot be undone.'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
@@ -140,13 +140,13 @@ class AdminLecturersPage extends ConsumerWidget {
                   await FirestoreService.instance.deleteLecturer(uid);
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('$name berjaya dipadam.')),
+                      SnackBar(content: Text('$name deleted successfully.')),
                     );
                   }
                 } catch (e) {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Ralat: ${e.toString()}')),
+                      SnackBar(content: Text('Error: ${e.toString()}')),
                     );
                   }
                 }
@@ -155,7 +155,7 @@ class AdminLecturersPage extends ConsumerWidget {
                 backgroundColor: DesignSystem.error,
                 foregroundColor: Colors.white,
               ),
-              child: const Text('Padam'),
+              child: const Text('Delete'),
             ),
           ],
         );
@@ -166,7 +166,7 @@ class AdminLecturersPage extends ConsumerWidget {
   Future<void> _backfillLecturerIds(BuildContext context) async {
     final db = FirebaseFirestore.instance;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Mengemas kini ID pensyarah dalam tugasan...')),
+      const SnackBar(content: Text('Updating lecturer IDs in assignments...')),
     );
     try {
       final lecturersSnap = await db.collection('lecturers').get();
@@ -210,13 +210,13 @@ class AdminLecturersPage extends ConsumerWidget {
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Selesai! $patched tugasan dikemas kini, $skipped dilangkau.')),
+          SnackBar(content: Text('Done! $patched assignments updated, $skipped skipped.')),
         );
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ralat: ${e.toString()}')),
+          SnackBar(content: Text('Error: ${e.toString()}')),
         );
       }
     }
@@ -249,14 +249,14 @@ class AdminLecturersPage extends ConsumerWidget {
                 ? Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _buildPageTitle('Pengurusan Pensyarah', 'Daftar pensyarah untuk akses mod Lawatan Saya.'),
+                      _buildPageTitle('Lecturer Management', 'Register lecturers for My Visits mode access.'),
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           ElevatedButton.icon(
                             onPressed: () => _showAddLecturerDialog(context, ref),
                             icon: const Icon(Icons.person_add),
-                            label: const Text('Tambah Pensyarah'),
+                            label: const Text('Add Lecturer'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: DesignSystem.secondary,
                               foregroundColor: Colors.white,
@@ -278,14 +278,14 @@ class AdminLecturersPage extends ConsumerWidget {
                 : Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildPageTitle('Pengurusan Pensyarah', 'Daftar pensyarah untuk akses mod Lawatan Saya.'),
+                      _buildPageTitle('Lecturer Management', 'Register lecturers for My Visits mode access.'),
                       const SizedBox(height: DesignSystem.spaceMd),
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton.icon(
                           onPressed: () => _showAddLecturerDialog(context, ref),
                           icon: const Icon(Icons.person_add),
-                          label: const Text('Tambah Pensyarah'),
+                          label: const Text('Add Lecturer'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: DesignSystem.secondary,
                             foregroundColor: Colors.white,
@@ -315,7 +315,7 @@ class AdminLecturersPage extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Pensyarah Berdaftar', style: DesignSystem.h3Mobile.copyWith(color: DesignSystem.primary)),
+                    Text('Registered Lecturers', style: DesignSystem.h3Mobile.copyWith(color: DesignSystem.primary)),
                     const Divider(height: 32),
 
                     lecturersAsync.when(
@@ -324,7 +324,7 @@ class AdminLecturersPage extends ConsumerWidget {
                           return const Padding(
                             padding: EdgeInsets.symmetric(vertical: 32),
                             child: Center(
-                              child: Text('Tiada pensyarah berdaftar.', style: DesignSystem.bodyMd),
+                              child: Text('No registered lecturers.', style: DesignSystem.bodyMd),
                             ),
                           );
                         }
@@ -364,7 +364,7 @@ class AdminLecturersPage extends ConsumerWidget {
                             Padding(
                               padding: const EdgeInsets.all(16),
                               child: Text(
-                                'Firestore tidak tersedia. Hanya pensyarah lalai dipaparkan.',
+                                 'Firestore unavailable. Only default lecturers shown.',
                                 style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant),
                               ),
                             ),
@@ -393,17 +393,16 @@ class AdminLecturersPage extends ConsumerWidget {
                         TextSpan(
                           children: [
                             const TextSpan(
-                              text: 'Pensyarah boleh log masuk menggunakan emel UiTM dan kata laluan yang telah ditetapkan. '
-                                  'Pastikan pensyarah mempunyai projek yang ditugaskan (SV/EX) untuk menggunakan mod Lawatan Saya.\n\n',
+                              text: 'Lecturers can sign in using their UiTM email and the password set. '
+                                  'Ensure lecturers have projects assigned (SV/EX) to use the My Visits mode.\n\n',
                             ),
                             TextSpan(
                               text: 'Backfill Lecturer IDs: ',
                               style: DesignSystem.bodySm.copyWith(fontWeight: FontWeight.bold),
                             ),
                             const TextSpan(
-                              text: 'Gunakan butang ini selepas menambah pensyarah baharu untuk '
-                                  'memautkan ID pensyarah ke tugasan projek sedia ada (bagi memastikan '
-                                  'pensyarah hanya melihat projek mereka sendiri).',
+                              text: 'Use this button after adding new lecturers to link lecturer IDs to existing project assignments '
+                                  '(ensuring lecturers only see their own projects).',
                             ),
                           ],
                         ),
@@ -475,7 +474,7 @@ class AdminLecturersPage extends ConsumerWidget {
                 borderRadius: DesignSystem.radiusSm,
               ),
               child: Text(
-                'LALAI',
+                 'DEFAULT',
                 style: DesignSystem.labelCaps.copyWith(
                   color: DesignSystem.onSurfaceVariant,
                   fontSize: 10,
@@ -486,7 +485,7 @@ class AdminLecturersPage extends ConsumerWidget {
             const SizedBox(width: 8),
             IconButton(
               icon: const Icon(Icons.delete, size: 18, color: DesignSystem.error),
-              tooltip: 'Padam pensyarah',
+              tooltip: 'Delete lecturer',
               onPressed: () {
                 _confirmDeleteLecturer(context, ref, {
                   'displayName': name,

@@ -14,7 +14,7 @@ class SchedulePage extends ConsumerStatefulWidget {
 class _SchedulePageState extends ConsumerState<SchedulePage> with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
-  final List<String> _days = ['Day 1 (6 Ogos)', 'Day 2 (7 Ogos)'];
+  final List<String> _days = ['Day 1 (6 August)', 'Day 2 (7 August)'];
 
   @override
   void initState() {

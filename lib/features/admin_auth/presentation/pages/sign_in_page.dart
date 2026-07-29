@@ -70,22 +70,22 @@ class _SignInPageState extends ConsumerState<SignInPage> {
 
         await auth.signOut();
         setState(() {
-          _errorMessage = 'Akaun ini tidak mempunyai akses. Sila gunakan emel UiTM yang berdaftar.';
+          _errorMessage = 'This account does not have access. Please use a registered UiTM email.';
         });
       }
     } catch (e) {
       final msg = e.toString();
-      String userMsg = 'Gagal log masuk. Sila periksa e-mel dan kata laluan anda.';
+      String userMsg = 'Sign in failed. Please check your email and password.';
       if (msg.contains('invalid-login-credentials') || msg.contains('INVALID_LOGIN_CREDENTIALS')) {
-        userMsg = 'E-mel atau kata laluan tidak sah. Sila cuba lagi.';
+        userMsg = 'Invalid email or password. Please try again.';
       } else if (msg.contains('invalid-email')) {
-        userMsg = 'Format e-mel tidak sah.';
+        userMsg = 'Invalid email format.';
       } else if (msg.contains('user-disabled')) {
-        userMsg = 'Akaun ini telah dilumpuhkan.';
+        userMsg = 'This account has been disabled.';
       } else if (msg.contains('too-many-requests')) {
-        userMsg = 'Terlalu banyak percubaan. Sila cuba sebentar lagi.';
+        userMsg = 'Too many attempts. Please try again later.';
       } else if (msg.contains('network-request-failed')) {
-        userMsg = 'Ralat rangkaian. Sila periksa sambungan internet anda.';
+        userMsg = 'Network error. Please check your internet connection.';
       }
       setState(() {
         _errorMessage = userMsg;
@@ -128,7 +128,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                       const SizedBox(height: 8),
                       Center(
                         child: Text(
-                          'Log Masuk',
+                          'Sign In',
                           style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant),
                         ),
                       ),
@@ -149,7 +149,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                         const SizedBox(height: 16),
                       ],
 
-                      Text('E-mel Rasmi', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.primary)),
+                      Text('Official Email', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.primary)),
                       const SizedBox(height: 6),
                       TextFormField(
                         controller: _emailController,
@@ -159,25 +159,25 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                           prefixIcon: Icon(Icons.email_outlined),
                         ),
                         validator: (value) {
-                          if (value == null || value.isEmpty) return 'E-mel wajib diisi';
-                          if (!value.contains('@')) return 'Format e-mel tidak sah';
+                          if (value == null || value.isEmpty) return 'Email is required';
+                          if (!value.contains('@')) return 'Invalid email format';
                           return null;
                         },
                       ),
                       const SizedBox(height: 16),
 
-                      Text('Kata Laluan', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.primary)),
+                      Text('Password', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.primary)),
                       const SizedBox(height: 6),
                       TextFormField(
                         controller: _passwordController,
                         obscureText: true,
                         decoration: const InputDecoration(
-                          hintText: 'Masukkan kata laluan anda',
+                          hintText: 'Enter your password',
                           prefixIcon: Icon(Icons.lock_outline),
                         ),
                         validator: (value) {
-                          if (value == null || value.isEmpty) return 'Kata laluan wajib diisi';
-                          if (value.length < 6) return 'Sila masukkan sekurang-kurangnya 6 aksara';
+                          if (value == null || value.isEmpty) return 'Password is required';
+                          if (value.length < 6) return 'Please enter at least 6 characters';
                           return null;
                         },
                       ),
@@ -199,7 +199,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                                   height: 20,
                                   child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                                 )
-                              : Text('Log Masuk', style: DesignSystem.button),
+                              :                           Text('Sign In', style: DesignSystem.button),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -207,7 +207,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                         child: TextButton(
                           onPressed: _goToMainSite,
                           child: Text(
-                            'Kembali ke Laman Utama',
+                             'Back to Homepage',
                             style: DesignSystem.bodySm.copyWith(color: DesignSystem.secondary, fontWeight: FontWeight.bold),
                           ),
                         ),

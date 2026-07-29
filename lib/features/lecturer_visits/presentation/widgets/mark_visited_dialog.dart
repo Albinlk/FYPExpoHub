@@ -18,14 +18,14 @@ Future<Map<String, String>?> showMarkVisitedDialog(
         builder: (context, setDialogState) {
           return AlertDialog(
             shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusXl),
-            title: Text('Tanda sebagai Dilawati', style: DesignSystem.h3.copyWith(color: DesignSystem.primary)),
+            title: Text('Mark as Visited', style: DesignSystem.h3.copyWith(color: DesignSystem.primary)),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _infoRow('Projek', project.title),
+                _infoRow('Project', project.title),
                 const SizedBox(height: DesignSystem.spaceSm),
-                _infoRow('Pelajar', project.teamDisplayNames.join(', ')),
+                _infoRow('Student', project.teamDisplayNames.join(', ')),
                 const SizedBox(height: DesignSystem.spaceSm),
                 if (project.boothNumber != null) _infoRow('Booth', project.boothNumber!),
                 const SizedBox(height: DesignSystem.spaceSm),
@@ -36,7 +36,7 @@ Future<Map<String, String>?> showMarkVisitedDialog(
                     borderRadius: DesignSystem.radiusSm,
                   ),
                   child: Text(
-                    role == 'supervisor' ? 'Peranan: Penyelia (SV)' : 'Peranan: Pemeriksa (EX)',
+                    role == 'supervisor' ? 'Role: Supervisor (SV)' : 'Role: Examiner (EX)',
                     style: DesignSystem.labelCaps.copyWith(
                       color: role == 'supervisor' ? DesignSystem.primary : DesignSystem.tertiary,
                     ),
@@ -47,7 +47,7 @@ Future<Map<String, String>?> showMarkVisitedDialog(
                   controller: noteController,
                   maxLines: 3,
                   decoration: const InputDecoration(
-                    hintText: 'Catatan (pilihan)',
+                    hintText: 'Note (optional)',
                     alignLabelWithHint: true,
                   ),
                 ),
@@ -56,7 +56,7 @@ Future<Map<String, String>?> showMarkVisitedDialog(
             actions: [
               TextButton(
                 onPressed: isSubmitting ? null : () => Navigator.pop(ctx),
-                child: Text('Batal', style: DesignSystem.bodyMd.copyWith(color: DesignSystem.onSurfaceVariant)),
+                child: Text('Cancel', style: DesignSystem.bodyMd.copyWith(color: DesignSystem.onSurfaceVariant)),
               ),
               ElevatedButton(
                 onPressed: isSubmitting
@@ -74,7 +74,7 @@ Future<Map<String, String>?> showMarkVisitedDialog(
                 ),
                 child: isSubmitting
                     ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : Text('Sahkan Lawatan', style: DesignSystem.button),
+                    : Text('Confirm Visit', style: DesignSystem.button),
               ),
             ],
           );

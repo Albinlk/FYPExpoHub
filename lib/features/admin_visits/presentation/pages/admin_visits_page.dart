@@ -22,8 +22,8 @@ class AdminVisitsPage extends ConsumerStatefulWidget {
 
 class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
   String _currentTab = 'Overview';
-  String _roleFilter = 'Semua';
-  String _statusFilter = 'Semua';
+  String _roleFilter = 'All';
+  String _statusFilter = 'All';
   final _searchController = TextEditingController();
 
   @override
@@ -38,21 +38,21 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusXl),
-        title: Text('Void Lawatan', style: DesignSystem.h3.copyWith(color: DesignSystem.error)),
+        title: Text('Void Visit', style: DesignSystem.h3.copyWith(color: DesignSystem.error)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Anda akan membatalkan lawatan ini. Tindakan ini tidak boleh dipulihkan.', style: DesignSystem.bodyMd),
+            Text('You are about to void this visit. This action cannot be undone.', style: DesignSystem.bodyMd),
             const SizedBox(height: DesignSystem.spaceMd),
             TextField(
               controller: reasonController,
               maxLines: 3,
-              decoration: const InputDecoration(labelText: 'Sebab *'),
+              decoration: const InputDecoration(labelText: 'Reason *'),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Batal')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () {
               final r = reasonController.text.trim();
@@ -99,12 +99,12 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lawatan telah dibatalkan.'), backgroundColor: DesignSystem.error),
+          SnackBar(content: Text('Visit has been voided.'), backgroundColor: DesignSystem.error),
         );
       }
     } on FirebaseException catch (e) {
       if (mounted) {
-        final msg = e.code == 'permission-denied' ? 'Anda tidak dibenarkan.' : 'Ralat: ${e.message}';
+        final msg = e.code == 'permission-denied' ? 'You are not allowed.' : 'Error: ${e.message}';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(msg), backgroundColor: DesignSystem.error),
         );
@@ -112,7 +112,7 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ralat: ${e.toString()}'), backgroundColor: DesignSystem.error),
+          SnackBar(content: Text('Error: ${e.toString()}'), backgroundColor: DesignSystem.error),
         );
       }
     }
@@ -131,7 +131,7 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
     final document = globalContext['document'] as JSObject;
     final anchor = document.callMethod('createElement'.toJS, ['a'.toJS].toJS) as JSObject;
     anchor['href'] = href.toJS;
-    anchor['download'] = 'lawatan_pelajar.csv'.toJS;
+    anchor['download'] = 'student_visits.csv'.toJS;
     anchor.callMethod('click'.toJS, null);
   }
 
@@ -164,10 +164,10 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
       if (_roleFilter == 'SV' && a.role != 'supervisor') return false;
       if (_roleFilter == 'EX' && a.role != 'examiner') return false;
       final visit = visits.where((v) => v.projectId == a.projectId && v.visitRole == a.role).firstOrNull;
-      if (_statusFilter == 'Dilawati' && (visit == null || visit.status != 'completed')) return false;
-      if (_statusFilter == 'Belum' && visit != null && visit.status == 'completed') return false;
+      if (_statusFilter == 'Visited' && (visit == null || visit.status != 'completed')) return false;
+      if (_statusFilter == 'Not Yet' && visit != null && visit.status == 'completed') return false;
       if (_statusFilter == 'Voided' && (visit == null || visit.status != 'voided')) return false;
-      if (_statusFilter == 'Dilawati' && visit == null) return false;
+      if (_statusFilter == 'Visited' && visit == null) return false;
 
       final query = _searchController.text.toLowerCase().trim();
       if (query.isEmpty) return true;
@@ -187,9 +187,9 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Pemantauan Lawatan Pelajar', style: DesignSystem.h1.copyWith(color: DesignSystem.primary)),
+            Text('Student Visit Monitoring', style: DesignSystem.h1.copyWith(color: DesignSystem.primary)),
             const SizedBox(height: DesignSystem.spaceSm),
-            Text('Ringkasan lawatan pelajar oleh pensyarah', style: DesignSystem.bodyLg.copyWith(color: DesignSystem.onSurfaceVariant)),
+            Text('Summary of student visits by lecturer', style: DesignSystem.bodyLg.copyWith(color: DesignSystem.onSurfaceVariant)),
             const SizedBox(height: DesignSystem.spaceLg),
             SummaryCardsRow(
               totalRequired: totalRequired,
@@ -212,7 +212,7 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
                       controller: _searchController,
                       onChanged: (_) => setState(() {}),
                       decoration: const InputDecoration(
-                        hintText: 'Cari pensyarah, projek, pelajar, booth...',
+                        hintText: 'Search lecturers, projects, students, booths...',
                         prefixIcon: Icon(Icons.search, color: DesignSystem.primary),
                       ),
                     ),
@@ -221,9 +221,9 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
                       scrollDirection: Axis.horizontal,
                       child: Row(
                         children: [
-                          _filterChip('Peranan', _roleFilter, ['Semua', 'SV', 'EX']),
+                          _filterChip('Role', _roleFilter, ['All', 'SV', 'EX']),
                           const SizedBox(width: DesignSystem.spaceSm),
-                          _filterChip('Status', _statusFilter, ['Semua', 'Dilawati', 'Belum', 'Voided']),
+                          _filterChip('Status', _statusFilter, ['All', 'Visited', 'Not Yet', 'Voided']),
                           const SizedBox(width: DesignSystem.spaceSm),
                           ElevatedButton.icon(
                             onPressed: () => _exportCsv(filteredAssignments, visits, projects),
@@ -320,7 +320,7 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
                   child: Text(e.key[0].toUpperCase(), style: const TextStyle(color: Colors.white)),
                 ),
                 title: Text(e.key, style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold)),
-                subtitle: Text('${e.value.length} tugasan, $completedCount dilawati', style: DesignSystem.bodySm),
+                subtitle: Text('${e.value.length} assignments, $completedCount visited', style: DesignSystem.bodySm),
                 trailing: Text('${completedCount}/${e.value.length}', style: DesignSystem.h3.copyWith(color: DesignSystem.primary)),
               ),
             );
@@ -341,7 +341,7 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
               margin: const EdgeInsets.only(bottom: DesignSystem.spaceSm),
               child: ListTile(
                 title: Text(project?.title ?? e.key, style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold)),
-                subtitle: Text('${e.value.length} pensyarah, $completedCount lawatan', style: DesignSystem.bodySm),
+                subtitle: Text('${e.value.length} lecturers, $completedCount visits', style: DesignSystem.bodySm),
                 trailing: Text('$completedCount/${e.value.length}', style: DesignSystem.h3.copyWith(color: DesignSystem.primary)),
               ),
             );
@@ -401,7 +401,7 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
               label: Text(opt, style: TextStyle(fontSize: 11, color: selected ? Colors.white : DesignSystem.onSurfaceVariant)),
               selected: selected,
               onSelected: (_) => setState(() {
-                if (label == 'Peranan') _roleFilter = opt;
+                if (label == 'Role') _roleFilter = opt;
                 else _statusFilter = opt;
               }),
               selectedColor: DesignSystem.primary,
@@ -414,7 +414,7 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
   }
 
   String _formatVisitTime(StudentVisit v) {
-    final months = ['Jan', 'Feb', 'Mac', 'Apr', 'Mei', 'Jun', 'Jul', 'Ogos', 'Sep', 'Okt', 'Nov', 'Dis'];
+    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     final dt = v.visitedAt;
     return '${dt.day} ${months[dt.month - 1]} ${dt.year}, ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
   }

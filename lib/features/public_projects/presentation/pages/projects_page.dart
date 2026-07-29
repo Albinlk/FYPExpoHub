@@ -233,7 +233,7 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Calon Industri', style: DesignSystem.labelCaps),
+        const Text('Industry Candidate', style: DesignSystem.labelCaps),
         const SizedBox(height: 6),
         FilterChip(
           selected: _calonIndustriOnly,
@@ -292,7 +292,7 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
                             Icon(Icons.workspace_premium, size: 13, color: Colors.white),
                             const SizedBox(width: 4),
                             Text(
-                              'Calon Industri',
+                              'Industry Candidate',
                               style: DesignSystem.labelCaps.copyWith(color: Colors.white, fontSize: 10),
                             ),
                           ],

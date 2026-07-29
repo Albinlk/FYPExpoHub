@@ -17,7 +17,7 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
   final TextEditingController _searchController = TextEditingController();
   String _selectedZone = 'All';
 
-  final List<String> _zones = ['All', 'Zon A', 'Zon B', 'Zon C'];
+  final List<String> _zones = ['All', 'Zone A', 'Zone B', 'Zone C'];
 
   @override
   void dispose() {
@@ -207,9 +207,9 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
                       runSpacing: DesignSystem.spaceSm,
                       alignment: WrapAlignment.center,
                       children: [
-                        _buildBoothMapNode('Zon A (CS)', Colors.blue.shade100, Colors.blue.shade900),
-                        _buildBoothMapNode('Zon B (Software)', Colors.amber.shade100, Colors.amber.shade900),
-                        _buildBoothMapNode('Zon C (NetSec)', Colors.teal.shade100, Colors.teal.shade900),
+                        _buildBoothMapNode('Zone A (CS)', Colors.blue.shade100, Colors.blue.shade900),
+                        _buildBoothMapNode('Zone B (Software)', Colors.amber.shade100, Colors.amber.shade900),
+                        _buildBoothMapNode('Zone C (NetSec)', Colors.teal.shade100, Colors.teal.shade900),
                         _buildBoothMapNode('Stage / Main Hall', Colors.purple.shade100, Colors.purple.shade900),
                       ],
                     ),

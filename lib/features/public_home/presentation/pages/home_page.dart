@@ -242,14 +242,14 @@ class _HomePageState extends ConsumerState<HomePage> {
                       ? Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            _buildInfoTile(Icons.calendar_month, 'Exhibition Dates', '06 - 07 Ogos 2026'),
+                            _buildInfoTile(Icons.calendar_month, 'Exhibition Dates', '06 - 07 August 2026'),
                             _buildInfoTile(Icons.location_on, 'Main Venue', 'Blok Kuliah, FSKM'),
                             _buildInfoTile(Icons.hourglass_top, 'Visiting Hours', '9:00 AM - 5:00 PM'),
                           ],
                         )
                       : Column(
                           children: [
-                            _buildInfoTile(Icons.calendar_month, 'Exhibition Dates', '06 - 07 Ogos 2026'),
+                            _buildInfoTile(Icons.calendar_month, 'Exhibition Dates', '06 - 07 August 2026'),
                             const SizedBox(height: DesignSystem.spaceMd),
                             _buildInfoTile(Icons.location_on, 'Main Venue', 'Blok Kuliah, FSKM'),
                             const SizedBox(height: DesignSystem.spaceMd),
@@ -270,7 +270,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       _buildExhibitionDetailItem(
         Icons.calendar_month_rounded,
         'Date',
-        '06 - 07 Ogos 2026',
+        '06 - 07 August 2026',
       ),
       _buildExhibitionDetailItem(
         Icons.access_time_rounded,
@@ -429,7 +429,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                             Icon(Icons.workspace_premium, size: 13, color: Colors.white),
                             const SizedBox(width: 4),
                             Text(
-                              'Calon Industri',
+                               'Industry Candidate',
                               style: DesignSystem.labelCaps.copyWith(color: Colors.white, fontSize: 10),
                             ),
                           ],

@@ -32,14 +32,14 @@ class VisitDataTable extends StatelessWidget {
           columnSpacing: 24,
           headingRowColor: WidgetStatePropertyAll(DesignSystem.surfaceContainerLow),
           columns: const [
-            DataColumn(label: Text('Pensyarah', style: TextStyle(fontWeight: FontWeight.bold))),
-            DataColumn(label: Text('Peranan', style: TextStyle(fontWeight: FontWeight.bold))),
-            DataColumn(label: Text('Pelajar', style: TextStyle(fontWeight: FontWeight.bold))),
-            DataColumn(label: Text('Projek', style: TextStyle(fontWeight: FontWeight.bold))),
+            DataColumn(label: Text('Lecturer', style: TextStyle(fontWeight: FontWeight.bold))),
+            DataColumn(label: Text('Role', style: TextStyle(fontWeight: FontWeight.bold))),
+            DataColumn(label: Text('Student', style: TextStyle(fontWeight: FontWeight.bold))),
+            DataColumn(label: Text('Project', style: TextStyle(fontWeight: FontWeight.bold))),
             DataColumn(label: Text('Booth', style: TextStyle(fontWeight: FontWeight.bold))),
             DataColumn(label: Text('Status', style: TextStyle(fontWeight: FontWeight.bold))),
-            DataColumn(label: Text('Masa', style: TextStyle(fontWeight: FontWeight.bold))),
-            DataColumn(label: Text('Tindakan', style: TextStyle(fontWeight: FontWeight.bold))),
+            DataColumn(label: Text('Time', style: TextStyle(fontWeight: FontWeight.bold))),
+            DataColumn(label: Text('Action', style: TextStyle(fontWeight: FontWeight.bold))),
           ],
           rows: assignments.map((a) {
             final project = projects.where((p) => p.id == a.projectId).firstOrNull;
@@ -83,8 +83,8 @@ class VisitDataTable extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 4),
-                Text('Projek: ${project?.title ?? '-'}', style: DesignSystem.bodySm),
-                Text('Pelajar: ${project?.teamDisplayNames.join(', ') ?? '-'}', style: DesignSystem.bodySm),
+                Text('Project: ${project?.title ?? '-'}', style: DesignSystem.bodySm),
+                Text('Student: ${project?.teamDisplayNames.join(', ') ?? '-'}', style: DesignSystem.bodySm),
                 Row(
                   children: [
                     Text('Booth: ${project?.boothNumber ?? '-'}', style: DesignSystem.bodySm),
@@ -94,7 +94,7 @@ class VisitDataTable extends StatelessWidget {
                 ),
                 if (visit != null && isCompleted) ...[
                   const SizedBox(height: 4),
-                  Text('Masa: ${formatVisitTime(visit)}', style: DesignSystem.bodySm),
+                  Text('Time: ${formatVisitTime(visit)}', style: DesignSystem.bodySm),
                 ],
                 if (visit != null) _buildActions(visit, isCompleted, isVoided),
               ],
@@ -137,7 +137,7 @@ class VisitDataTable extends StatelessWidget {
           children: [
             Icon(Icons.check_circle, size: 10, color: DesignSystem.onTertiaryContainer),
             const SizedBox(width: 3),
-            Text('Dilawati', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onTertiaryContainer, fontSize: 10)),
+            Text('Visited', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onTertiaryContainer, fontSize: 10)),
           ],
         ),
       );
@@ -145,7 +145,7 @@ class VisitDataTable extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(color: DesignSystem.surfaceContainerHighest, borderRadius: DesignSystem.radiusSm),
-      child: Text('Belum', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSurfaceVariant, fontSize: 10)),
+      child: Text('Not Yet', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSurfaceVariant, fontSize: 10)),
     );
   }
 
@@ -168,12 +168,12 @@ String exportVisitsCsv(
   List<Project> projects,
 ) {
   final buffer = StringBuffer();
-  buffer.writeln('Pensyarah,Peranan,Pelajar,Projek,Program,Booth,Status,Masa Lawatan,Catatan');
+  buffer.writeln('Lecturer,Role,Student,Project,Program,Booth,Status,Visit Time,Note');
 
   for (final a in assignments) {
     final project = projects.where((p) => p.id == a.projectId).firstOrNull;
     final visit = visits.where((v) => v.projectId == a.projectId && v.visitRole == a.role).firstOrNull;
-    final status = visit != null ? (visit.status == 'completed' ? 'Dilawati' : 'Voided') : 'Belum';
+    final status = visit != null ? (visit.status == 'completed' ? 'Visited' : 'Voided') : 'Not Yet';
     final timeStr = visit != null ? visit.visitedAt.toIso8601String() : '';
     final note = visit?.visitNote ?? '';
 
