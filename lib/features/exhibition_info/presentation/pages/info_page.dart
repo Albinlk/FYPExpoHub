@@ -24,7 +24,7 @@ class InfoPage extends ConsumerWidget {
             const SizedBox(height: DesignSystem.spaceSm),
             Text(
               'Discover more details about the FSKM Final Year Project Exhibition.',
-              style: DesignSystem.bodyLg.copyWith(color: DesignSystem.onSurfaceVariant),
+              style: (isDesktop ? DesignSystem.bodyLg : DesignSystem.bodyLgMobile).copyWith(color: DesignSystem.onSurfaceVariant),
               softWrap: true,
             ),
             const SizedBox(height: DesignSystem.spaceXl),
@@ -80,7 +80,7 @@ class InfoPage extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: DesignSystem.h3.copyWith(color: DesignSystem.primary, fontWeight: FontWeight.bold), softWrap: true),
+            Text(title, style: (isDesktop ? DesignSystem.h3 : DesignSystem.h3Mobile).copyWith(color: DesignSystem.primary, fontWeight: FontWeight.bold), softWrap: true),
             const SizedBox(height: DesignSystem.spaceMd),
             Text(content, style: DesignSystem.bodyMd.copyWith(height: 1.6), softWrap: true),
           ],
@@ -96,7 +96,7 @@ class InfoPage extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Exhibition Location', style: DesignSystem.h3.copyWith(color: DesignSystem.primary)),
+            Text('Exhibition Location', style: (isDesktop ? DesignSystem.h3 : DesignSystem.h3Mobile).copyWith(color: DesignSystem.primary)),
             const SizedBox(height: DesignSystem.spaceMd),
             Container(
               height: 240,

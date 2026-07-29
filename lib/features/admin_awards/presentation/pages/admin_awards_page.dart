@@ -23,13 +23,15 @@ class AdminAwardsPage extends ConsumerWidget {
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, setState) {
+            final isDesktop = MediaQuery.of(context).size.width >= 768;
             return AlertDialog(
-              title: Text(item == null ? 'Add Award Record' : 'Update Award Record', style: DesignSystem.h3.copyWith(color: DesignSystem.primary)),
+              title: Text(item == null ? 'Add Award Record' : 'Update Award Record', style: (isDesktop ? DesignSystem.h3 : DesignSystem.bodyLg).copyWith(color: DesignSystem.primary)),
               content: SingleChildScrollView(
                 child: SizedBox(
-                  width: 500,
+                  width: isDesktop ? 500 : MediaQuery.of(context).size.width * 0.85,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       TextField(
                         controller: titleController,
@@ -47,54 +49,46 @@ class AdminAwardsPage extends ConsumerWidget {
                         maxLines: 2,
                       ),
                       const SizedBox(height: DesignSystem.spaceLg),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text('Winning Project:', style: TextStyle(fontWeight: FontWeight.bold)),
-                          DropdownButton<String?>(
-                            value: selectedProjectId,
-                            hint: const Text('Select Project'),
-                            items: [
-                              const DropdownMenuItem<String?>(
-                                value: null,
-                                child: Text('Please Select a Project'),
-                              ),
-                              ...projects.map((p) {
-                                return DropdownMenuItem<String?>(
-                                  value: p.id,
-                                  child: Text(p.title.length > 30 ? '${p.title.substring(0, 30)}...' : p.title),
-                                );
-                              }),
-                            ],
-                            onChanged: (val) {
-                              setState(() {
-                                selectedProjectId = val;
-                              });
-                            },
+                      Text('Winning Project:', style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: DesignSystem.spaceSm),
+                      DropdownButtonFormField<String?>(
+                        value: selectedProjectId,
+                        decoration: const InputDecoration(contentPadding: EdgeInsets.symmetric(horizontal: 12)),
+                        hint: const Text('Select Project'),
+                        items: [
+                          const DropdownMenuItem<String?>(
+                            value: null,
+                            child: Text('Please Select a Project'),
                           ),
+                          ...projects.map((p) {
+                            return DropdownMenuItem<String?>(
+                              value: p.id,
+                              child: Text(p.title.length > 30 ? '${p.title.substring(0, 30)}...' : p.title),
+                            );
+                          }),
                         ],
+                        onChanged: (val) {
+                          setState(() {
+                            selectedProjectId = val;
+                          });
+                        },
                       ),
                       const SizedBox(height: DesignSystem.spaceLg),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text('Publication Status:', style: TextStyle(fontWeight: FontWeight.bold)),
-                          DropdownButton<String>(
-                            value: status,
-                            items: const [
-                              DropdownMenuItem(value: 'published', child: Text('Published')),
-                              DropdownMenuItem(value: 'draft', child: Text('Draft')),
-                            ],
-                            onChanged: (val) {
-                              if (val != null) {
-                                setState(() {
-                                  status = val;
-                                });
-                              }
-                            },
-                          ),
+                      _dialogDropdown(isDesktop, 'Publication Status:', DropdownButton<String>(
+                        value: status,
+                        isExpanded: true,
+                        items: const [
+                          DropdownMenuItem(value: 'published', child: Text('Published')),
+                          DropdownMenuItem(value: 'draft', child: Text('Draft')),
                         ],
-                      ),
+                        onChanged: (val) {
+                          if (val != null) {
+                            setState(() {
+                              status = val;
+                            });
+                          }
+                        },
+                      )),
                     ],
                   ),
                 ),
@@ -157,8 +151,40 @@ class AdminAwardsPage extends ConsumerWidget {
     );
   }
 
+  Widget _dialogDropdown(bool isDesktop, String label, Widget dropdown) {
+    if (isDesktop) {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold)),
+          SizedBox(width: 200, child: dropdown),
+        ],
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold)),
+        const SizedBox(height: DesignSystem.spaceSm),
+        dropdown,
+      ],
+    );
+  }
+
+  Widget _buildPageTitle(String title, String subtitle) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: DesignSystem.h2Mobile.copyWith(color: DesignSystem.primary)),
+        const SizedBox(height: 4),
+        Text(subtitle, style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant)),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isDesktop = MediaQuery.of(context).size.width >= 768;
     final awards = ref.watch(awardsProvider);
 
     return Scaffold(
@@ -167,28 +193,41 @@ class AdminAwardsPage extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Award Winners Management', style: DesignSystem.h2.copyWith(color: DesignSystem.primary)),
-                    const SizedBox(height: 4),
-                    Text('Manage special award categories and register innovation winners.', style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant)),
-                  ],
-                ),
-                ElevatedButton.icon(
-                  onPressed: () => _showAddEditDialog(context, ref),
-                  icon: const Icon(Icons.add),
-                  label: const Text('Add Record'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: DesignSystem.secondary,
-                    foregroundColor: Colors.white,
+            isDesktop
+                ? Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildPageTitle('Award Winners Management', 'Manage special award categories and register innovation winners.'),
+                      ElevatedButton.icon(
+                        onPressed: () => _showAddEditDialog(context, ref),
+                        icon: const Icon(Icons.add),
+                        label: const Text('Add Record'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: DesignSystem.secondary,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ],
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildPageTitle('Award Winners Management', 'Manage special award categories and register innovation winners.'),
+                      const SizedBox(height: DesignSystem.spaceMd),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () => _showAddEditDialog(context, ref),
+                          icon: const Icon(Icons.add),
+                          label: const Text('Add Record'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: DesignSystem.secondary,
+                            foregroundColor: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
             const SizedBox(height: DesignSystem.spaceXl),
 
             Card(
@@ -197,7 +236,7 @@ class AdminAwardsPage extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Exhibition Award & Category Listings', style: DesignSystem.h3.copyWith(color: DesignSystem.primary)),
+                    Text('Exhibition Award & Category Listings', style: DesignSystem.h3Mobile.copyWith(color: DesignSystem.primary)),
                     const Divider(height: 32),
 
                     if (awards.isEmpty)

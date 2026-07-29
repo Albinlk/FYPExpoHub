@@ -31,14 +31,15 @@ class AdminProjectsPage extends ConsumerWidget {
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, setState) {
+            final isDesktop = MediaQuery.of(context).size.width >= 768;
             return AlertDialog(
               title: Text(
                 item == null ? 'Add New Project' : 'Update Project', 
-                style: DesignSystem.h3.copyWith(color: DesignSystem.primary),
+                style: (isDesktop ? DesignSystem.h3 : DesignSystem.bodyLg).copyWith(color: DesignSystem.primary),
               ),
               content: SingleChildScrollView(
                 child: SizedBox(
-                  width: 600,
+                  width: isDesktop ? 600 : MediaQuery.of(context).size.width * 0.85,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -47,30 +48,11 @@ class AdminProjectsPage extends ConsumerWidget {
                         decoration: const InputDecoration(labelText: 'Project Title'),
                       ),
                       const SizedBox(height: DesignSystem.spaceSm),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: matricIdController,
-                              decoration: const InputDecoration(labelText: 'Matric ID'),
-                            ),
-                          ),
-                          const SizedBox(width: DesignSystem.spaceMd),
-                          Expanded(
-                            child: TextField(
-                              controller: codeController,
-                              decoration: const InputDecoration(labelText: 'Program Code (e.g., CS240)'),
-                            ),
-                          ),
-                          const SizedBox(width: DesignSystem.spaceMd),
-                          Expanded(
-                            child: TextField(
-                              controller: progNameController,
-                              decoration: const InputDecoration(labelText: 'Program Name'),
-                            ),
-                          ),
-                        ],
-                      ),
+                      _responsiveRow(isDesktop, 3, [
+                        TextField(controller: matricIdController, decoration: const InputDecoration(labelText: 'Matric ID')),
+                        TextField(controller: codeController, decoration: const InputDecoration(labelText: 'Program Code')),
+                        TextField(controller: progNameController, decoration: const InputDecoration(labelText: 'Program Name')),
+                      ]),
                       const SizedBox(height: DesignSystem.spaceSm),
                       TextField(
                         controller: descController,
@@ -78,66 +60,21 @@ class AdminProjectsPage extends ConsumerWidget {
                         maxLines: 2,
                       ),
                       const SizedBox(height: DesignSystem.spaceSm),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: categoryController,
-                              decoration: const InputDecoration(labelText: 'Project Category'),
-                            ),
-                          ),
-                          const SizedBox(width: DesignSystem.spaceMd),
-                          Expanded(
-                            child: TextField(
-                              controller: tagsController,
-                              decoration: const InputDecoration(labelText: 'Technology Tags (separated by comma)'),
-                            ),
-                          ),
-                        ],
-                      ),
+                      _responsiveRow(isDesktop, 2, [
+                        TextField(controller: categoryController, decoration: const InputDecoration(labelText: 'Project Category')),
+                        TextField(controller: tagsController, decoration: const InputDecoration(labelText: 'Technology Tags (comma-separated)')),
+                      ]),
                       const SizedBox(height: DesignSystem.spaceSm),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: studentsController,
-                              decoration: const InputDecoration(labelText: 'Student Name(s) / Team (separated by comma)'),
-                            ),
-                          ),
-                          const SizedBox(width: DesignSystem.spaceMd),
-                          Expanded(
-                            child: TextField(
-                              controller: supervisorController,
-                              decoration: const InputDecoration(labelText: 'Supervisor Name'),
-                            ),
-                          ),
-                          const SizedBox(width: DesignSystem.spaceMd),
-                          Expanded(
-                            child: TextField(
-                              controller: examinerController,
-                              decoration: const InputDecoration(labelText: 'Examiner Name'),
-                            ),
-                          ),
-                        ],
-                      ),
+                      _responsiveRow(isDesktop, 3, [
+                        TextField(controller: studentsController, decoration: const InputDecoration(labelText: 'Student Name(s) (comma-separated)')),
+                        TextField(controller: supervisorController, decoration: const InputDecoration(labelText: 'Supervisor Name')),
+                        TextField(controller: examinerController, decoration: const InputDecoration(labelText: 'Examiner Name')),
+                      ]),
                       const SizedBox(height: DesignSystem.spaceSm),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: boothNumController,
-                              decoration: const InputDecoration(labelText: 'Booth Number (e.g., A-01)'),
-                            ),
-                          ),
-                          const SizedBox(width: DesignSystem.spaceMd),
-                          Expanded(
-                            child: TextField(
-                              controller: boothZoneController,
-                              decoration: const InputDecoration(labelText: 'Booth Zone (e.g., Zone A)'),
-                            ),
-                          ),
-                        ],
-                      ),
+                      _responsiveRow(isDesktop, 2, [
+                        TextField(controller: boothNumController, decoration: const InputDecoration(labelText: 'Booth Number (e.g., A-01)')),
+                        TextField(controller: boothZoneController, decoration: const InputDecoration(labelText: 'Booth Zone (e.g., Zone A)')),
+                      ]),
                       const SizedBox(height: DesignSystem.spaceSm),
                       TextField(
                         controller: demoController,
@@ -247,8 +184,43 @@ class AdminProjectsPage extends ConsumerWidget {
     );
   }
 
+  Widget _buildPageTitle(String title, String subtitle) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: DesignSystem.h2Mobile.copyWith(color: DesignSystem.primary)),
+        const SizedBox(height: 4),
+        Text(subtitle, style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant)),
+      ],
+    );
+  }
+
+  Widget _responsiveRow(bool isDesktop, int count, List<Widget> children) {
+    if (isDesktop) {
+      return Row(
+        children: children
+            .expand((w) => [
+                  Expanded(child: w),
+                  if (children.indexOf(w) < children.length - 1)
+                    const SizedBox(width: DesignSystem.spaceMd),
+                ])
+            .toList(),
+      );
+    }
+    return Column(
+      children: children
+          .expand((w) => [
+                w,
+                if (children.indexOf(w) < children.length - 1)
+                  const SizedBox(height: DesignSystem.spaceSm),
+              ])
+          .toList(),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isDesktop = MediaQuery.of(context).size.width >= 768;
     final projects = ref.watch(projectsProvider);
 
     return Scaffold(
@@ -257,28 +229,41 @@ class AdminProjectsPage extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Project Catalog Management', style: DesignSystem.h2.copyWith(color: DesignSystem.primary)),
-                    const SizedBox(height: 4),
-                    Text('Manage the complete list of student final year projects.', style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant)),
-                  ],
-                ),
-                ElevatedButton.icon(
-                  onPressed: () => _showAddEditDialog(context, ref),
-                  icon: const Icon(Icons.add),
-                  label: const Text('Add Project'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: DesignSystem.secondary,
-                    foregroundColor: Colors.white,
+            isDesktop
+                ? Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildPageTitle('Project Catalog Management', 'Manage the complete list of student final year projects.'),
+                      ElevatedButton.icon(
+                        onPressed: () => _showAddEditDialog(context, ref),
+                        icon: const Icon(Icons.add),
+                        label: const Text('Add Project'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: DesignSystem.secondary,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ],
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildPageTitle('Project Catalog Management', 'Manage the complete list of student final year projects.'),
+                      const SizedBox(height: DesignSystem.spaceMd),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () => _showAddEditDialog(context, ref),
+                          icon: const Icon(Icons.add),
+                          label: const Text('Add Project'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: DesignSystem.secondary,
+                            foregroundColor: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
             const SizedBox(height: DesignSystem.spaceXl),
 
             Card(
@@ -287,7 +272,7 @@ class AdminProjectsPage extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Student Project Catalog', style: DesignSystem.h3.copyWith(color: DesignSystem.primary)),
+                    Text('Student Project Catalog', style: DesignSystem.h3Mobile.copyWith(color: DesignSystem.primary)),
                     const Divider(height: 32),
 
                     if (projects.isEmpty)

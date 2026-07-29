@@ -20,14 +20,15 @@ class AdminAnnouncementsPage extends ConsumerWidget {
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, setState) {
+            final isDesktop = MediaQuery.of(context).size.width >= 768;
             return AlertDialog(
               title: Text(
                 item == null ? 'Create New Announcement' : 'Update Announcement', 
-                style: DesignSystem.h3.copyWith(color: DesignSystem.primary),
+                style: (isDesktop ? DesignSystem.h3 : DesignSystem.bodyLg).copyWith(color: DesignSystem.primary),
               ),
               content: SingleChildScrollView(
                 child: SizedBox(
-                  width: 500,
+                  width: isDesktop ? 500 : MediaQuery.of(context).size.width * 0.85,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -59,26 +60,21 @@ class AdminAnnouncementsPage extends ConsumerWidget {
                         },
                       ),
                       const SizedBox(height: DesignSystem.spaceSm),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text('Publication Status:', style: TextStyle(fontWeight: FontWeight.bold)),
-                          DropdownButton<String>(
-                            value: status,
-                            items: const [
-                              DropdownMenuItem(value: 'published', child: Text('Published')),
-                              DropdownMenuItem(value: 'draft', child: Text('Draft')),
-                            ],
-                            onChanged: (val) {
-                              if (val != null) {
-                                setState(() {
-                                  status = val;
-                                });
-                              }
-                            },
-                          ),
+                      _dialogDropdown(isDesktop, 'Publication Status:', DropdownButton<String>(
+                        value: status,
+                        isExpanded: true,
+                        items: const [
+                          DropdownMenuItem(value: 'published', child: Text('Published')),
+                          DropdownMenuItem(value: 'draft', child: Text('Draft')),
                         ],
-                      ),
+                        onChanged: (val) {
+                          if (val != null) {
+                            setState(() {
+                              status = val;
+                            });
+                          }
+                        },
+                      )),
                     ],
                   ),
                 ),
@@ -133,8 +129,40 @@ class AdminAnnouncementsPage extends ConsumerWidget {
     );
   }
 
+  Widget _dialogDropdown(bool isDesktop, String label, Widget dropdown) {
+    if (isDesktop) {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold)),
+          SizedBox(width: 200, child: dropdown),
+        ],
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold)),
+        const SizedBox(height: DesignSystem.spaceSm),
+        dropdown,
+      ],
+    );
+  }
+
+  Widget _buildPageTitle(String title, String subtitle) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: DesignSystem.h2Mobile.copyWith(color: DesignSystem.primary)),
+        const SizedBox(height: 4),
+        Text(subtitle, style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant)),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isDesktop = MediaQuery.of(context).size.width >= 768;
     final announcements = ref.watch(announcementsProvider);
 
     return Scaffold(
@@ -143,28 +171,41 @@ class AdminAnnouncementsPage extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Announcements Management', style: DesignSystem.h2.copyWith(color: DesignSystem.primary)),
-                    const SizedBox(height: 4),
-                    Text('Create, modify, or publish announcements for the public portal.', style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant)),
-                  ],
-                ),
-                ElevatedButton.icon(
-                  onPressed: () => _showAddEditDialog(context, ref),
-                  icon: const Icon(Icons.add),
-                  label: const Text('Create Announcement'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: DesignSystem.secondary,
-                    foregroundColor: Colors.white,
+            isDesktop
+                ? Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildPageTitle('Announcements Management', 'Create, modify, or publish announcements for the public portal.'),
+                      ElevatedButton.icon(
+                        onPressed: () => _showAddEditDialog(context, ref),
+                        icon: const Icon(Icons.add),
+                        label: const Text('Create Announcement'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: DesignSystem.secondary,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ],
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildPageTitle('Announcements Management', 'Create, modify, or publish announcements for the public portal.'),
+                      const SizedBox(height: DesignSystem.spaceMd),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () => _showAddEditDialog(context, ref),
+                          icon: const Icon(Icons.add),
+                          label: const Text('Create Announcement'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: DesignSystem.secondary,
+                            foregroundColor: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
             const SizedBox(height: DesignSystem.spaceXl),
 
             Card(
@@ -173,7 +214,7 @@ class AdminAnnouncementsPage extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('All Announcements', style: DesignSystem.h3.copyWith(color: DesignSystem.primary)),
+                    Text('All Announcements', style: DesignSystem.h3Mobile.copyWith(color: DesignSystem.primary)),
                     const Divider(height: 32),
 
                     if (announcements.isEmpty)

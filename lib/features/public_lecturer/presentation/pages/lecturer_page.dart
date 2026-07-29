@@ -59,7 +59,7 @@ class _LecturerPageState extends ConsumerState<LecturerPage> {
             const SizedBox(height: DesignSystem.spaceSm),
             Text(
               'Search for projects assigned to you as a supervisor or examiner.',
-              style: DesignSystem.bodyLg.copyWith(color: DesignSystem.onSurfaceVariant),
+              style: (isDesktop ? DesignSystem.bodyLg : DesignSystem.bodyLgMobile).copyWith(color: DesignSystem.onSurfaceVariant),
               softWrap: true,
             ),
             const SizedBox(height: DesignSystem.spaceXl),

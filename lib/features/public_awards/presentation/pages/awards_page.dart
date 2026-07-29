@@ -45,7 +45,7 @@ class AwardsPage extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: DesignSystem.spaceSm),
-            Text('Official showcase of outstanding projects and FSKM innovation award winners.', style: DesignSystem.bodyLg.copyWith(color: DesignSystem.onSurfaceVariant), softWrap: true),
+            Text('Official showcase of outstanding projects and FSKM innovation award winners.', style: (isDesktop ? DesignSystem.bodyLg : DesignSystem.bodyLgMobile).copyWith(color: DesignSystem.onSurfaceVariant), softWrap: true),
             const SizedBox(height: DesignSystem.spaceXl),
 
             publishedAwards.isEmpty
@@ -110,7 +110,7 @@ class AwardsPage extends ConsumerWidget {
                               const SizedBox(height: DesignSystem.spaceMd),
                               Text(
                                 winningProjectTitle,
-                                style: DesignSystem.bodyLg.copyWith(fontWeight: FontWeight.bold, color: DesignSystem.primary),
+                                style: (isDesktop ? DesignSystem.bodyLg : DesignSystem.bodyLgMobile).copyWith(fontWeight: FontWeight.bold, color: DesignSystem.primary),
                                 softWrap: true,
                               ),
                               const SizedBox(height: DesignSystem.spaceSm),

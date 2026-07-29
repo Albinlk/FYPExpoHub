@@ -55,7 +55,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> with SingleTickerPr
             const SizedBox(height: DesignSystem.spaceSm),
             Text(
               'Full timeline schedule for all exhibition days.',
-              style: DesignSystem.bodyLg.copyWith(color: DesignSystem.onSurfaceVariant),
+              style: (isDesktop ? DesignSystem.bodyLg : DesignSystem.bodyLgMobile).copyWith(color: DesignSystem.onSurfaceVariant),
               softWrap: true,
             ),
             const SizedBox(height: DesignSystem.spaceXl),

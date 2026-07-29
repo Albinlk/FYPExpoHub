@@ -62,7 +62,7 @@ class _AdminSettingsPageState extends ConsumerState<AdminSettingsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Portal Settings', style: DesignSystem.h2.copyWith(color: DesignSystem.primary)),
+            Text('Portal Settings', style: DesignSystem.h2Mobile.copyWith(color: DesignSystem.primary)),
             const SizedBox(height: 4),
             Text('Configure system preferences, upload limits, and environment variables.', style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant)),
             const SizedBox(height: DesignSystem.spaceXl),
@@ -75,7 +75,7 @@ class _AdminSettingsPageState extends ConsumerState<AdminSettingsPage> {
                     : Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Excel File Parsing Settings', style: DesignSystem.h3.copyWith(color: DesignSystem.primary)),
+                          Text('Excel File Parsing Settings', style: DesignSystem.h3Mobile.copyWith(color: DesignSystem.primary)),
                           const Divider(height: 32),
 
                           Text('Maximum File Size Limit', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.primary)),

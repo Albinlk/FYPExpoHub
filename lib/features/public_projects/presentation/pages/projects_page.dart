@@ -18,6 +18,22 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
   String _selectedProgramme = 'All';
   String _selectedCategory = 'All';
   bool _calonIndustriOnly = false;
+  bool _initialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && !_initialized) {
+        _initialized = true;
+        final searchQuery = GoRouterState.of(context).uri.queryParameters['search'] ?? '';
+        if (searchQuery.isNotEmpty) {
+          _searchController.text = searchQuery;
+          setState(() {});
+        }
+      }
+    });
+  }
 
   final List<String> _programmes = ['All', 'CS230', 'CS251', 'CS253', 'CS255', 'CS266'];
   final List<String> _categories = ['All', 'Computer Science', 'Networking & Communication', 'Cybersecurity', 'Network Security & Infrastructure', 'Software Engineering & Applications'];
@@ -56,7 +72,7 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
           children: [
             Text('Project Catalog', style: DesignSystem.h1.copyWith(color: DesignSystem.primary)),
             const SizedBox(height: DesignSystem.spaceSm),
-            Text('Explore all final year projects presented by FSKM students.', style: DesignSystem.bodyLg.copyWith(color: DesignSystem.onSurfaceVariant), softWrap: true),
+            Text('Explore all final year projects presented by FSKM students.', style: (isDesktop ? DesignSystem.bodyLg : DesignSystem.bodyLgMobile).copyWith(color: DesignSystem.onSurfaceVariant), softWrap: true),
             const SizedBox(height: DesignSystem.spaceXl),
 
             // Search & Filter Panel
@@ -155,6 +171,25 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
                       }),
                       const SizedBox(height: DesignSystem.spaceMd),
                       _buildCalonChip(),
+                      const SizedBox(height: DesignSystem.spaceMd),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () => setState(() {
+                            _searchController.clear();
+                            _selectedProgramme = 'All';
+                            _selectedCategory = 'All';
+                            _calonIndustriOnly = false;
+                          }),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: DesignSystem.surfaceContainer,
+                            foregroundColor: DesignSystem.primary,
+                            shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                          ),
+                          child: const Text('Reset Filters'),
+                        ),
+                      ),
                     ],
                   ),
           ],
@@ -241,21 +276,6 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
                     imageUrl: project.coverImageUrl,
                     fit: BoxFit.cover,
                   ),
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.black54,
-                        borderRadius: DesignSystem.radiusSm,
-                      ),
-                      child: Text(
-                        project.category,
-                        style: DesignSystem.labelCaps.copyWith(color: Colors.white, fontSize: 10),
-                      ),
-                    ),
-                  ),
                   if (project.calonIndustri)
                     Positioned(
                       top: 8,
@@ -279,29 +299,48 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
                         ),
                       ),
                     ),
-                  if (project.boothNumber != null)
-                    Positioned(
-                      top: 32,
-                      right: 8,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: DesignSystem.secondaryContainer,
-                          borderRadius: DesignSystem.radiusSm,
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      direction: Axis.vertical,
+                      crossAxisAlignment: WrapCrossAlignment.end,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.black54,
+                            borderRadius: DesignSystem.radiusSm,
+                          ),
+                          child: Text(
+                            project.category,
+                            style: DesignSystem.labelCaps.copyWith(color: Colors.white, fontSize: 10),
+                          ),
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.room, size: 14, color: DesignSystem.onSecondaryContainer),
-                            const SizedBox(width: 4),
-                            Text(
-                              project.boothNumber!,
-                              style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSecondaryContainer, fontWeight: FontWeight.bold, fontSize: 11),
+                        if (project.boothNumber != null)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: DesignSystem.secondaryContainer,
+                              borderRadius: DesignSystem.radiusSm,
                             ),
-                          ],
-                        ),
-                      ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.room, size: 14, color: DesignSystem.onSecondaryContainer),
+                                const SizedBox(width: 4),
+                                Text(
+                                  project.boothNumber!,
+                                  style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSecondaryContainer, fontWeight: FontWeight.bold, fontSize: 11),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
                     ),
+                  ),
                 ],
               ),
             ),
@@ -388,7 +427,7 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
           children: [
             const Icon(Icons.folder_open_outlined, size: 64, color: DesignSystem.outlineVariant),
             const SizedBox(height: DesignSystem.spaceSm),
-            Text('No Projects Found', style: DesignSystem.h3.copyWith(color: DesignSystem.onSurfaceVariant)),
+            Text('No Projects Found', style: (isDesktop ? DesignSystem.h3 : DesignSystem.h3Mobile).copyWith(color: DesignSystem.onSurfaceVariant)),
             const SizedBox(height: 4),
             Text('Please check your search keywords or reset filters.', style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant)),
           ],

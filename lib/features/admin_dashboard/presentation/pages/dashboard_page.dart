@@ -23,7 +23,7 @@ class DashboardPage extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Overview Dashboard', style: DesignSystem.h2.copyWith(color: DesignSystem.primary)),
+            Text('Overview Dashboard', style: (isDesktop ? DesignSystem.h2 : DesignSystem.h2Mobile).copyWith(color: DesignSystem.primary)),
             const SizedBox(height: 4),
             Text('Welcome to the FYP Expo Hub administration panel.', style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant)),
             const SizedBox(height: DesignSystem.spaceXl),
@@ -99,7 +99,7 @@ class DashboardPage extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Quick Actions', style: DesignSystem.h3.copyWith(color: DesignSystem.primary)),
+            Text('Quick Actions', style: (isDesktop ? DesignSystem.h3 : DesignSystem.h3Mobile).copyWith(color: DesignSystem.primary)),
             const SizedBox(height: DesignSystem.spaceLg),
             _buildActionButton(context, 'Import New Master File', Icons.file_upload, '/admin/imports'),
             const SizedBox(height: DesignSystem.spaceSm),
@@ -141,7 +141,7 @@ class DashboardPage extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Recent Import History', style: DesignSystem.h3.copyWith(color: DesignSystem.primary)),
+            Text('Recent Import History', style: (isDesktop ? DesignSystem.h3 : DesignSystem.h3Mobile).copyWith(color: DesignSystem.primary)),
             const SizedBox(height: DesignSystem.spaceLg),
             imports.isEmpty
                 ? Padding(

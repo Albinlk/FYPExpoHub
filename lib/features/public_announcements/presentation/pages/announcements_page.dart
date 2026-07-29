@@ -29,7 +29,7 @@ class AnnouncementsPage extends ConsumerWidget {
           children: [
             Text('Announcements', style: DesignSystem.h1.copyWith(color: DesignSystem.primary)),
             const SizedBox(height: DesignSystem.spaceSm),
-            Text('Official updates and announcements from the FSKM organizing committee.', style: DesignSystem.bodyLg.copyWith(color: DesignSystem.onSurfaceVariant), softWrap: true),
+            Text('Official updates and announcements from the FSKM organizing committee.', style: (isDesktop ? DesignSystem.bodyLg : DesignSystem.bodyLgMobile).copyWith(color: DesignSystem.onSurfaceVariant), softWrap: true),
             const SizedBox(height: DesignSystem.spaceXl),
 
             publishedAnnouncements.isEmpty
@@ -99,7 +99,7 @@ class AnnouncementsPage extends ConsumerWidget {
                               const SizedBox(height: DesignSystem.spaceMd),
                               Text(
                                 ann.title,
-                                style: DesignSystem.h3.copyWith(color: DesignSystem.primary),
+                                style: (isDesktop ? DesignSystem.h3 : DesignSystem.h3Mobile).copyWith(color: DesignSystem.primary),
                                 softWrap: true,
                               ),
                               const SizedBox(height: DesignSystem.spaceSm),

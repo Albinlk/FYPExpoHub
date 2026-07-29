@@ -21,16 +21,18 @@ class AdminBoothsPage extends ConsumerWidget {
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, setState) {
+            final isDesktop = MediaQuery.of(context).size.width >= 768;
             return AlertDialog(
               title: Text(
                 item == null ? 'Register New Booth' : 'Update Booth Mapping', 
-                style: DesignSystem.h3.copyWith(color: DesignSystem.primary),
+                style: (isDesktop ? DesignSystem.h3 : DesignSystem.bodyLg).copyWith(color: DesignSystem.primary),
               ),
               content: SingleChildScrollView(
                 child: SizedBox(
-                  width: 500,
+                  width: isDesktop ? 500 : MediaQuery.of(context).size.width * 0.85,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       TextField(
                         controller: numberController,
@@ -48,32 +50,29 @@ class AdminBoothsPage extends ConsumerWidget {
                         maxLines: 2,
                       ),
                       const SizedBox(height: DesignSystem.spaceLg),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text('Allocated Project:', style: TextStyle(fontWeight: FontWeight.bold)),
-                          DropdownButton<String?>(
-                            value: selectedProjectId,
-                            hint: const Text('No Project Allocated / Vacant'),
-                            items: [
-                              const DropdownMenuItem<String?>(
-                                value: null,
-                                child: Text('No Project Allocated / Vacant'),
-                              ),
-                              ...projects.map((p) {
-                                return DropdownMenuItem<String?>(
-                                  value: p.id,
-                                  child: Text(p.title.length > 30 ? '${p.title.substring(0, 30)}...' : p.title),
-                                );
-                              }),
-                            ],
-                            onChanged: (val) {
-                              setState(() {
-                                selectedProjectId = val;
-                              });
-                            },
+                      Text('Allocated Project:', style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: DesignSystem.spaceSm),
+                      DropdownButtonFormField<String?>(
+                        value: selectedProjectId,
+                        decoration: const InputDecoration(contentPadding: EdgeInsets.symmetric(horizontal: 12)),
+                        hint: const Text('No Project Allocated / Vacant'),
+                        items: [
+                          const DropdownMenuItem<String?>(
+                            value: null,
+                            child: Text('No Project Allocated / Vacant'),
                           ),
+                          ...projects.map((p) {
+                            return DropdownMenuItem<String?>(
+                              value: p.id,
+                              child: Text(p.title.length > 30 ? '${p.title.substring(0, 30)}...' : p.title),
+                            );
+                          }),
                         ],
+                        onChanged: (val) {
+                          setState(() {
+                            selectedProjectId = val;
+                          });
+                        },
                       ),
                     ],
                   ),
@@ -141,8 +140,20 @@ class AdminBoothsPage extends ConsumerWidget {
     );
   }
 
+  Widget _buildPageTitle(String title, String subtitle) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: DesignSystem.h2Mobile.copyWith(color: DesignSystem.primary)),
+        const SizedBox(height: 4),
+        Text(subtitle, style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant)),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isDesktop = MediaQuery.of(context).size.width >= 768;
     final booths = ref.watch(boothsProvider);
     final projects = ref.watch(projectsProvider);
 
@@ -152,28 +163,41 @@ class AdminBoothsPage extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Booth Management', style: DesignSystem.h2.copyWith(color: DesignSystem.primary)),
-                    const SizedBox(height: 4),
-                    Text('Manage booth numbers, zones, and student project allocations.', style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant)),
-                  ],
-                ),
-                ElevatedButton.icon(
-                  onPressed: () => _showAddEditDialog(context, ref),
-                  icon: const Icon(Icons.add),
-                  label: const Text('Register Booth'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: DesignSystem.secondary,
-                    foregroundColor: Colors.white,
+            isDesktop
+                ? Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildPageTitle('Booth Management', 'Manage booth numbers, zones, and student project allocations.'),
+                      ElevatedButton.icon(
+                        onPressed: () => _showAddEditDialog(context, ref),
+                        icon: const Icon(Icons.add),
+                        label: const Text('Register Booth'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: DesignSystem.secondary,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ],
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildPageTitle('Booth Management', 'Manage booth numbers, zones, and student project allocations.'),
+                      const SizedBox(height: DesignSystem.spaceMd),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () => _showAddEditDialog(context, ref),
+                          icon: const Icon(Icons.add),
+                          label: const Text('Register Booth'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: DesignSystem.secondary,
+                            foregroundColor: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
             const SizedBox(height: DesignSystem.spaceXl),
 
             Card(
@@ -182,7 +206,7 @@ class AdminBoothsPage extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Booth & Project Mapping List', style: DesignSystem.h3.copyWith(color: DesignSystem.primary)),
+                    Text('Booth & Project Mapping List', style: DesignSystem.h3Mobile.copyWith(color: DesignSystem.primary)),
                     const Divider(height: 32),
 
                     if (booths.isEmpty)

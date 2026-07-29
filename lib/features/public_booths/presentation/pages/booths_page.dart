@@ -55,7 +55,7 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
           children: [
             Text('Find Exhibition Booths', style: DesignSystem.h1.copyWith(color: DesignSystem.primary)),
             const SizedBox(height: DesignSystem.spaceSm),
-            Text('Locate your selected project booth inside the main hall.', style: DesignSystem.bodyLg.copyWith(color: DesignSystem.onSurfaceVariant), softWrap: true),
+            Text('Locate your selected project booth inside the main hall.', style: (isDesktop ? DesignSystem.bodyLg : DesignSystem.bodyLgMobile).copyWith(color: DesignSystem.onSurfaceVariant), softWrap: true),
             const SizedBox(height: DesignSystem.spaceXl),
 
             // Top Search & Filter Bar
@@ -185,43 +185,36 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Hall Layout Plan', style: DesignSystem.h3.copyWith(color: DesignSystem.primary)),
+            Text('Hall Layout Plan', style: (isDesktop ? DesignSystem.h3 : DesignSystem.h3Mobile).copyWith(color: DesignSystem.primary)),
             const SizedBox(height: 4),
             Text('Level 1 Plan, Blok Kuliah, FSKM', style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant)),
             const SizedBox(height: DesignSystem.spaceMd),
             Container(
-              height: 280,
+              width: double.infinity,
               decoration: BoxDecoration(
                 color: DesignSystem.primary.withValues(alpha: 0.04),
                 borderRadius: DesignSystem.radiusLg,
                 border: Border.all(color: DesignSystem.surfaceContainer),
               ),
-              child: Stack(
-                children: [
-                  Center(
-                    child: Icon(Icons.map_outlined, size: 80, color: DesignSystem.primary.withValues(alpha: 0.15)),
-                  ),
-                  Positioned(
-                    top: 20,
-                    left: 20,
-                    child: _buildBoothMapNode('Zon A (CS)', Colors.blue.shade100, Colors.blue.shade900),
-                  ),
-                  Positioned(
-                    top: 20,
-                    right: 20,
-                    child: _buildBoothMapNode('Zon B (Software)', Colors.amber.shade100, Colors.amber.shade900),
-                  ),
-                  Positioned(
-                    bottom: 20,
-                    left: 20,
-                    child: _buildBoothMapNode('Zon C (NetSec)', Colors.teal.shade100, Colors.teal.shade900),
-                  ),
-                  Positioned(
-                    bottom: 20,
-                    right: 20,
-                    child: _buildBoothMapNode('Stage / Main Hall', Colors.purple.shade100, Colors.purple.shade900),
-                  ),
-                ],
+              child: Padding(
+                padding: const EdgeInsets.all(DesignSystem.spaceMd),
+                child: Column(
+                  children: [
+                    Icon(Icons.map_outlined, size: isDesktop ? 48 : 32, color: DesignSystem.primary.withValues(alpha: 0.15)),
+                    const SizedBox(height: DesignSystem.spaceMd),
+                    Wrap(
+                      spacing: DesignSystem.spaceSm,
+                      runSpacing: DesignSystem.spaceSm,
+                      alignment: WrapAlignment.center,
+                      children: [
+                        _buildBoothMapNode('Zon A (CS)', Colors.blue.shade100, Colors.blue.shade900),
+                        _buildBoothMapNode('Zon B (Software)', Colors.amber.shade100, Colors.amber.shade900),
+                        _buildBoothMapNode('Zon C (NetSec)', Colors.teal.shade100, Colors.teal.shade900),
+                        _buildBoothMapNode('Stage / Main Hall', Colors.purple.shade100, Colors.purple.shade900),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: DesignSystem.spaceMd),

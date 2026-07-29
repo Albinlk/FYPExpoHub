@@ -73,9 +73,23 @@ class DesignSystem {
     height: 1.3,
   );
 
+  static const TextStyle h2Mobile = TextStyle(
+    fontFamily: 'Montserrat',
+    fontSize: 24.0,
+    fontWeight: FontWeight.w600,
+    height: 1.3,
+  );
+
   static const TextStyle h3 = TextStyle(
     fontFamily: 'Montserrat',
     fontSize: 24.0,
+    fontWeight: FontWeight.w600,
+    height: 1.3,
+  );
+
+  static const TextStyle h3Mobile = TextStyle(
+    fontFamily: 'Montserrat',
+    fontSize: 20.0,
     fontWeight: FontWeight.w600,
     height: 1.3,
   );
@@ -85,6 +99,13 @@ class DesignSystem {
     fontSize: 18.0,
     fontWeight: FontWeight.normal,
     height: 1.6,
+  );
+
+  static const TextStyle bodyLgMobile = TextStyle(
+    fontFamily: 'Inter',
+    fontSize: 16.0,
+    fontWeight: FontWeight.normal,
+    height: 1.5,
   );
 
   static const TextStyle bodyMd = TextStyle(

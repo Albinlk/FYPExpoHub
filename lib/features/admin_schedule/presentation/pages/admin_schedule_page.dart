@@ -24,11 +24,12 @@ class AdminSchedulePage extends ConsumerWidget {
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, setState) {
+            final isDesktop = MediaQuery.of(context).size.width >= 768;
             return AlertDialog(
-              title: Text(item == null ? 'Tambah Slot Tentatif' : 'Kemaskini Slot Tentatif', style: DesignSystem.h3.copyWith(color: DesignSystem.primary)),
+              title: Text(item == null ? 'Tambah Slot Tentatif' : 'Kemaskini Slot Tentatif', style: (isDesktop ? DesignSystem.h3 : DesignSystem.bodyLg).copyWith(color: DesignSystem.primary)),
               content: SingleChildScrollView(
                 child: SizedBox(
-                  width: 500,
+                  width: isDesktop ? 500 : MediaQuery.of(context).size.width * 0.85,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -37,23 +38,21 @@ class AdminSchedulePage extends ConsumerWidget {
                         decoration: const InputDecoration(labelText: 'Tajuk Slot (e.g. Taklimat Juri)'),
                       ),
                       const SizedBox(height: DesignSystem.spaceSm),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: startAtController,
-                              decoration: const InputDecoration(labelText: 'Mula (e.g. 09:00 AM)'),
+                      isDesktop
+                          ? Row(
+                              children: [
+                                Expanded(child: TextField(controller: startAtController, decoration: const InputDecoration(labelText: 'Mula (e.g. 09:00 AM)'))),
+                                const SizedBox(width: DesignSystem.spaceMd),
+                                Expanded(child: TextField(controller: endAtController, decoration: const InputDecoration(labelText: 'Tamat (e.g. 10:00 AM)'))),
+                              ],
+                            )
+                          : Column(
+                              children: [
+                                TextField(controller: startAtController, decoration: const InputDecoration(labelText: 'Mula (e.g. 09:00 AM)')),
+                                const SizedBox(height: DesignSystem.spaceSm),
+                                TextField(controller: endAtController, decoration: const InputDecoration(labelText: 'Tamat (e.g. 10:00 AM)')),
+                              ],
                             ),
-                          ),
-                          const SizedBox(width: DesignSystem.spaceMd),
-                          Expanded(
-                            child: TextField(
-                              controller: endAtController,
-                              decoration: const InputDecoration(labelText: 'Tamat (e.g. 10:00 AM)'),
-                            ),
-                          ),
-                        ],
-                      ),
                       const SizedBox(height: DesignSystem.spaceSm),
                       TextField(
                         controller: venueController,
@@ -71,68 +70,53 @@ class AdminSchedulePage extends ConsumerWidget {
                         maxLines: 2,
                       ),
                       const SizedBox(height: DesignSystem.spaceMd),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('Tarikh Acara:', style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold)),
-                          DropdownButton<int>(
-                            value: selectedDate.day,
-                            items: const [
-                              DropdownMenuItem(value: 6, child: Text('6 Ogos 2026 (Hari 1)')),
-                              DropdownMenuItem(value: 7, child: Text('7 Ogos 2026 (Hari 2)')),
-                            ],
-                            onChanged: (val) {
-                              if (val != null) {
-                                setState(() {
-                                  selectedDate = DateTime(2026, 8, val);
-                                });
-                              }
-                            },
-                          ),
+                      _dialogDropdown(isDesktop, 'Tarikh Acara:', DropdownButton<int>(
+                        value: selectedDate.day,
+                        isExpanded: true,
+                        items: const [
+                          DropdownMenuItem(value: 6, child: Text('6 Ogos 2026 (Hari 1)')),
+                          DropdownMenuItem(value: 7, child: Text('7 Ogos 2026 (Hari 2)')),
                         ],
-                      ),
+                        onChanged: (val) {
+                          if (val != null) {
+                            setState(() {
+                              selectedDate = DateTime(2026, 8, val);
+                            });
+                          }
+                        },
+                      )),
                       const SizedBox(height: DesignSystem.spaceSm),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('Akses:', style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold)),
-                          DropdownButton<String>(
-                            value: visibility,
-                            items: const [
-                              DropdownMenuItem(value: 'public', child: Text('Public (Awam)')),
-                              DropdownMenuItem(value: 'internal', child: Text('Internal (Urusetia/Juri)')),
-                            ],
-                            onChanged: (val) {
-                              if (val != null) {
-                                setState(() {
-                                  visibility = val;
-                                });
-                              }
-                            },
-                          ),
+                      _dialogDropdown(isDesktop, 'Akses:', DropdownButton<String>(
+                        value: visibility,
+                        isExpanded: true,
+                        items: const [
+                          DropdownMenuItem(value: 'public', child: Text('Public (Awam)')),
+                          DropdownMenuItem(value: 'internal', child: Text('Internal (Urusetia/Juri)')),
                         ],
-                      ),
+                        onChanged: (val) {
+                          if (val != null) {
+                            setState(() {
+                              visibility = val;
+                            });
+                          }
+                        },
+                      )),
                       const SizedBox(height: DesignSystem.spaceSm),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('Status Terbitan:', style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold)),
-                          DropdownButton<String>(
-                            value: status,
-                            items: const [
-                              DropdownMenuItem(value: 'published', child: Text('Published')),
-                              DropdownMenuItem(value: 'draft', child: Text('Draft')),
-                            ],
-                            onChanged: (val) {
-                              if (val != null) {
-                                setState(() {
-                                  status = val;
-                                });
-                              }
-                            },
-                          ),
+                      _dialogDropdown(isDesktop, 'Status Terbitan:', DropdownButton<String>(
+                        value: status,
+                        isExpanded: true,
+                        items: const [
+                          DropdownMenuItem(value: 'published', child: Text('Published')),
+                          DropdownMenuItem(value: 'draft', child: Text('Draft')),
                         ],
-                      ),
+                        onChanged: (val) {
+                          if (val != null) {
+                            setState(() {
+                              status = val;
+                            });
+                          }
+                        },
+                      )),
                     ],
                   ),
                 ),
@@ -190,8 +174,40 @@ class AdminSchedulePage extends ConsumerWidget {
     );
   }
 
+  Widget _dialogDropdown(bool isDesktop, String label, Widget dropdown) {
+    if (isDesktop) {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold)),
+          SizedBox(width: 250, child: dropdown),
+        ],
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold)),
+        const SizedBox(height: DesignSystem.spaceSm),
+        dropdown,
+      ],
+    );
+  }
+
+  Widget _buildPageTitle(String title, String subtitle) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: DesignSystem.h2Mobile.copyWith(color: DesignSystem.primary)),
+        const SizedBox(height: 4),
+        Text(subtitle, style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant)),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isDesktop = MediaQuery.of(context).size.width >= 768;
     final scheduleItems = ref.watch(scheduleProvider);
 
     return Scaffold(
@@ -200,28 +216,41 @@ class AdminSchedulePage extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Pengurusan Tentatif', style: DesignSystem.h2.copyWith(color: DesignSystem.primary)),
-                    const SizedBox(height: 4),
-                    Text('Tambah, edit, atau padam jadual acara pameran di bawah.', style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant)),
-                  ],
-                ),
-                ElevatedButton.icon(
-                  onPressed: () => _showAddEditDialog(context, ref),
-                  icon: const Icon(Icons.add),
-                  label: const Text('Tambah Slot'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: DesignSystem.secondary,
-                    foregroundColor: Colors.white,
+            isDesktop
+                ? Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildPageTitle('Pengurusan Tentatif', 'Tambah, edit, atau padam jadual acara pameran di bawah.'),
+                      ElevatedButton.icon(
+                        onPressed: () => _showAddEditDialog(context, ref),
+                        icon: const Icon(Icons.add),
+                        label: const Text('Tambah Slot'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: DesignSystem.secondary,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ],
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildPageTitle('Pengurusan Tentatif', 'Tambah, edit, atau padam jadual acara pameran di bawah.'),
+                      const SizedBox(height: DesignSystem.spaceMd),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () => _showAddEditDialog(context, ref),
+                          icon: const Icon(Icons.add),
+                          label: const Text('Tambah Slot'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: DesignSystem.secondary,
+                            foregroundColor: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
             const SizedBox(height: DesignSystem.spaceXl),
 
             Card(
@@ -230,7 +259,7 @@ class AdminSchedulePage extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Senarai Slot Sedia Ada', style: DesignSystem.h3.copyWith(color: DesignSystem.primary)),
+                    Text('Senarai Slot Sedia Ada', style: DesignSystem.h3Mobile.copyWith(color: DesignSystem.primary)),
                     const Divider(height: 32),
 
                     if (scheduleItems.isEmpty)

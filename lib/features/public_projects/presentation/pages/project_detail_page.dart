@@ -50,7 +50,7 @@ class ProjectDetailPage extends ConsumerWidget {
             children: [
               const Icon(Icons.search_off, size: 64, color: DesignSystem.outlineVariant),
               const SizedBox(height: 16),
-              Text('Projek tidak ditemui.', style: DesignSystem.h3.copyWith(color: DesignSystem.onSurfaceVariant)),
+              Text('Projek tidak ditemui.', style: (isDesktop ? DesignSystem.h3 : DesignSystem.h3Mobile).copyWith(color: DesignSystem.onSurfaceVariant)),
               const SizedBox(height: 8),
               ElevatedButton(
                 onPressed: () => _goBack(context),
@@ -137,7 +137,7 @@ class ProjectDetailPage extends ConsumerWidget {
                     const SizedBox(height: DesignSystem.spaceMd),
                     Text(
                       project.title,
-                      style: DesignSystem.h2.copyWith(color: DesignSystem.primary),
+                       style: (isDesktop ? DesignSystem.h2 : DesignSystem.h2Mobile).copyWith(color: DesignSystem.primary),
                       softWrap: true,
                     ),
                     const SizedBox(height: DesignSystem.spaceSm),
@@ -186,7 +186,7 @@ class ProjectDetailPage extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Project Abstract & Description', style: DesignSystem.h3.copyWith(color: DesignSystem.primary)),
+                Text('Project Abstract & Description', style: (isDesktop ? DesignSystem.h3 : DesignSystem.h3Mobile).copyWith(color: DesignSystem.primary)),
                 const SizedBox(height: DesignSystem.spaceMd),
                 Text(
                   project.shortDescription,
@@ -194,7 +194,7 @@ class ProjectDetailPage extends ConsumerWidget {
                   softWrap: true,
                 ),
                 const SizedBox(height: DesignSystem.spaceLg),
-                Text('Key Technologies Used', style: DesignSystem.h3.copyWith(color: DesignSystem.primary)),
+                Text('Key Technologies Used', style: (isDesktop ? DesignSystem.h3 : DesignSystem.h3Mobile).copyWith(color: DesignSystem.primary)),
                 const SizedBox(height: DesignSystem.spaceMd),
                 Wrap(
                   spacing: 8,
@@ -304,7 +304,7 @@ class ProjectDetailPage extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Booth Location Details', style: DesignSystem.h3.copyWith(color: DesignSystem.primary)),
+                  Text('Booth Location Details', style: (isDesktop ? DesignSystem.h3 : DesignSystem.h3Mobile).copyWith(color: DesignSystem.primary)),
                   const SizedBox(height: DesignSystem.spaceMd),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
@@ -335,7 +335,7 @@ class ProjectDetailPage extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Links & Demos', style: DesignSystem.h3.copyWith(color: DesignSystem.primary)),
+                Text('Links & Demos', style: (isDesktop ? DesignSystem.h3 : DesignSystem.h3Mobile).copyWith(color: DesignSystem.primary)),
                 const SizedBox(height: DesignSystem.spaceMd),
                 _buildActionLinkButton(Icons.launch, 'Live Demo / Slides', project.demoUrl ?? ''),
                 const SizedBox(height: DesignSystem.spaceSm),

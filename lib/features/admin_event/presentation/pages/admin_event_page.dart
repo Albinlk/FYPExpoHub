@@ -67,7 +67,7 @@ class _AdminEventPageState extends ConsumerState<AdminEventPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Update Event Information', style: DesignSystem.h2.copyWith(color: DesignSystem.primary)),
+            Text('Update Event Information', style: DesignSystem.h2Mobile.copyWith(color: DesignSystem.primary)),
             const SizedBox(height: 4),
             Text('Modify basic details, venue, dates, and exhibition poster.', style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant)),
             const SizedBox(height: DesignSystem.spaceXl),
@@ -78,7 +78,7 @@ class _AdminEventPageState extends ConsumerState<AdminEventPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('General Information Form', style: DesignSystem.h3.copyWith(color: DesignSystem.primary)),
+                    Text('General Information Form', style: DesignSystem.h3Mobile.copyWith(color: DesignSystem.primary)),
                     const Divider(height: 32),
 
                     Text('Exhibition Title', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.primary)),

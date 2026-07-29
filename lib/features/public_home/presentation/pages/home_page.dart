@@ -18,6 +18,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   late Timer _timer;
   Duration _timeRemaining = const Duration();
   final DateTime _eventDate = DateTime(2026, 8, 6, 9, 0);
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -31,6 +32,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   void dispose() {
     _timer.cancel();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -95,7 +97,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                   const SizedBox(height: DesignSystem.spaceSm),
                   Text(
                     'Exploring Innovation, Empowering Academic Futures',
-                    style: DesignSystem.bodyLg.copyWith(color: Colors.white70),
+                    style: (isDesktop ? DesignSystem.bodyLg : DesignSystem.bodyLgMobile).copyWith(color: Colors.white70),
                     textAlign: TextAlign.center,
                     softWrap: true,
                   ),
@@ -117,6 +119,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                     child: Column(
                       children: [
                         TextField(
+                          controller: _searchController,
                           onSubmitted: (value) {
                             if (value.isNotEmpty) {
                               context.go('/projects?search=$value');
@@ -127,7 +130,12 @@ class _HomePageState extends ConsumerState<HomePage> {
                             prefixIcon: const Icon(Icons.search, color: DesignSystem.primary),
                             suffixIcon: ElevatedButton(
                               onPressed: () {
-                                context.go('/projects');
+                                final query = _searchController.text;
+                                if (query.isNotEmpty) {
+                                  context.go('/projects?search=$query');
+                                } else {
+                                  context.go('/projects');
+                                }
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: DesignSystem.secondaryContainer,
@@ -198,7 +206,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Featured Projects', style: DesignSystem.h2.copyWith(color: DesignSystem.primary)),
+                      Text('Featured Projects', style: (isDesktop ? DesignSystem.h2 : DesignSystem.h2Mobile).copyWith(color: DesignSystem.primary)),
                       TextButton(
                         onPressed: () => context.go('/projects'),
                         child: Row(
@@ -254,7 +262,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               padding: EdgeInsets.symmetric(horizontal: padding, vertical: DesignSystem.spaceXl),
               child: Column(
                 children: [
-                  Text('Exhibition Overview', style: DesignSystem.h2.copyWith(color: DesignSystem.primary)),
+                  Text('Exhibition Overview', style: (isDesktop ? DesignSystem.h2 : DesignSystem.h2Mobile).copyWith(color: DesignSystem.primary)),
                   const SizedBox(height: DesignSystem.spaceLg),
                   isDesktop
                       ? Row(
@@ -419,8 +427,8 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   Widget _buildCountdownItem(String value, String label) {
     return Container(
-      width: 70,
-      padding: const EdgeInsets.all(DesignSystem.spaceSm),
+      constraints: const BoxConstraints(minWidth: 60, maxWidth: 80),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: DesignSystem.spaceSm),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.08),
         borderRadius: DesignSystem.radiusLg,
@@ -430,7 +438,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         children: [
           Text(
             value,
-            style: DesignSystem.h3.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+            style: (isDesktop ? DesignSystem.h3 : DesignSystem.h3Mobile).copyWith(color: Colors.white, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 2),
           Text(
@@ -568,7 +576,8 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   Widget _buildInfoTile(IconData icon, String label, String value) {
     return Container(
-      width: 260,
+      width: double.infinity,
+      constraints: const BoxConstraints(maxWidth: 300),
       padding: const EdgeInsets.all(DesignSystem.spaceMd),
       decoration: BoxDecoration(
         color: DesignSystem.surfaceContainerLowest,
