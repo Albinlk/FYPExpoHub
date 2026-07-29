@@ -122,7 +122,16 @@ class _AdminSidebar extends StatelessWidget {
             ),
           ),
           const Divider(color: Colors.white10),
-          _buildSidebarItem(context, 'Kembali ke Portal Awam', Icons.arrow_back, '/'),
+          ListTile(
+            leading: const Icon(Icons.arrow_back, color: Colors.white70, size: 20),
+            title: Text(
+              'Kembali ke Portal Awam',
+              style: DesignSystem.bodySm.copyWith(color: Colors.white70),
+            ),
+            onTap: _goToMainSite,
+            shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
+            dense: true,
+          ),
           const SizedBox(height: DesignSystem.spaceMd),
         ],
       ),
@@ -195,7 +204,19 @@ class _AdminDrawer extends StatelessWidget {
               ),
             ),
             const Divider(color: Colors.white10),
-            _buildDrawerItem(context, 'Kembali ke Portal Awam', Icons.arrow_back, '/'),
+            ListTile(
+              leading: const Icon(Icons.arrow_back, color: Colors.white70, size: 20),
+              title: Text(
+                'Kembali ke Portal Awam',
+                style: DesignSystem.bodySm.copyWith(color: Colors.white70),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                _goToMainSite();
+              },
+              shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
+              dense: true,
+            ),
             const SizedBox(height: DesignSystem.spaceMd),
           ],
         ),
