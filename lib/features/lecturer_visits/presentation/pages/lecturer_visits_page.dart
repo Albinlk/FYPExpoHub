@@ -5,6 +5,7 @@ import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/project.dart';
 import '../../../../core/domain/models/project_lecturer_assignment.dart';
 import '../../../../core/domain/models/student_visit.dart';
+import '../../../../core/firebase/firebase_providers.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/widgets/project_cover_image.dart';
 import '../../../lecturer_auth/presentation/pages/lecturer_sign_in_page.dart';
@@ -37,6 +38,7 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
     final assignments = ref.watch(lecturerAssignmentsProvider);
     final visits = ref.watch(lecturerVisitsProvider);
     final projects = ref.watch(projectsProvider);
+    final adminUser = ref.watch(authStateChangesProvider).asData?.value;
 
     if (lecturer == null) {
       return _buildSignInPrompt(context, padding);
@@ -93,6 +95,12 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
                     ),
                   ],
                 ),
+                if (adminUser != null)
+                  TextButton.icon(
+                    onPressed: () => context.go('/admin'),
+                    icon: const Icon(Icons.admin_panel_settings, size: 16),
+                    label: Text('Panel Admin', style: DesignSystem.bodySm.copyWith(color: DesignSystem.primary)),
+                  ),
                 TextButton.icon(
                   onPressed: () {
                     ref.read(lecturerAuthProvider.notifier).signOut();
