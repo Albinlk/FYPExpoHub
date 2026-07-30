@@ -248,7 +248,7 @@ final mostVisitedProjectsProvider = Provider<List<Project>>((ref) {
 });
 
 // ==========================================
-// 3. DAILY SCHEDULE (TENTATIF) STATE
+// 3. DAILY SCHEDULE STATE
 // ==========================================
 class ScheduleNotifier extends Notifier<List<ScheduleItem>> {
   StreamSubscription? _sub;

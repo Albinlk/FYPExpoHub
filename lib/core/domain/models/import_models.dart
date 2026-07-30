@@ -15,7 +15,7 @@ abstract class ImportRecord with _$ImportRecord {
     required DateTime uploadedAt,
     required String parserVersion,
     required String status, // 'processing', 'pending_review', 'completed', 'error', 'cancelled'
-    required Map<String, int> summary, // e.g., {'tentatif': 12, 'pemenang': 4}
+    required Map<String, int> summary, // e.g., {'schedule': 12, 'winners': 4}
     required Map<String, int> warningCounts, // e.g., {'overlap': 1, 'privacy': 3}
     String? errorSummary,
     DateTime? completedAt,

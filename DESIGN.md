@@ -24,7 +24,7 @@ Based on the Google Stitch UI project "FYP Expo Hub", this document defines the 
 | **on-secondary-container**| `#745c00` | `Color(0xFF745C00)` | Text on gold badges |
 | **tertiary** | `#001b1b` | `Color(0xFF001B1B)` | Deep Teal (Interactive states, technical badges) |
 | **tertiary-container** | `#003232` | `Color(0xFF003232)` | Teal Container |
-| **on-tertiary-container**| `#3da2a1` | `Color(0xFF3DA2A1)` | Medium Teal (Status text "Sedang Berlangsung") |
+| **on-tertiary-container**| `#3da2a1` | `Color(0xFF3DA2A1)` | Medium Teal (Status text "Ongoing") |
 | **background** | `#f6fafe` | `Color(0xFFF6FAFE)` | Warm Off-White (Canvas background) |
 | **on-background** | `#171c1f` | `Color(0xFF171C1F)` | Primary text color |
 | **surface** | `#f6fafe` | `Color(0xFFF6FAFE)` | Standard surfaces |
@@ -76,25 +76,25 @@ Based on the Google Stitch UI project "FYP Expo Hub", this document defines the 
 
 | Screen ID | Title in Stitch | Flutter Web Route | Viewport | Notes |
 | :--- | :--- | :--- | :--- | :--- |
-| `6dca3b84b49a4fe7bdcfd4604d4df84f` | Utama | `/` | Desktop | Public homepage |
-| `41c591865ba24f838657160365a7d4fb` | Utama | `/` | Mobile | Public homepage |
-| `1bae2efeba164c2abe50d8794c4abfa0` | Maklumat Pameran | `/info` | Desktop | Exhibition detailed info |
-| `6591c7d1ad254d699702d93fed3e3e59` | Tentatif | `/schedule` | Desktop | Public schedule |
-| `4a33cffca60e43588d29ef0cb0b3252e` | Tentatif | `/schedule` | Mobile | Public schedule |
-| `da3172db56234688b1a298ea43de3ada` | Katalog Projek | `/projects` | Desktop | Projects list and directory |
-| `3902bb28115c437e9de0757773720ac8` | Katalog Projek | `/projects` | Mobile | Projects list and directory |
-| `6264ae26c2d1465e94598a9455d48295` | Maklumat Projek | `/projects/:slug` | Desktop | Detailed project page |
-| `4722e2dae7d54023ad01b4ef3774d8e5` | Maklumat Projek | `/projects/:slug` | Mobile | Detailed project page |
-| `b4f6be1cf9154951869f69a338e80ad9` | Cari Booth | `/booths` | Desktop | Booth lookup |
-| `bc18d1e840e3488cb04a503286fabd62` | Cari Booth | `/booths` | Mobile | Booth lookup |
-| `f2c389228ffd4ada8941e0428b0ac2c1` | Pengumuman | `/announcements` | Desktop | Public announcements |
-| `457163eb5a344e0293fe9560845fbeac` | Pengumuman | `/announcements` | Mobile | Public announcements |
+| `6dca3b84b49a4fe7bdcfd4604d4df84f` | Home | `/` | Desktop | Public homepage |
+| `41c591865ba24f838657160365a7d4fb` | Home | `/` | Mobile | Public homepage |
+| `1bae2efeba164c2abe50d8794c4abfa0` | Exhibition Info | `/info` | Desktop | Exhibition detailed info |
+| `6591c7d1ad254d699702d93fed3e3e59` | Schedule | `/schedule` | Desktop | Public schedule |
+| `4a33cffca60e43588d29ef0cb0b3252e` | Schedule | `/schedule` | Mobile | Public schedule |
+| `da3172db56234688b1a298ea43de3ada` | Project Catalogue | `/projects` | Desktop | Projects list and directory |
+| `3902bb28115c437e9de0757773720ac8` | Project Catalogue | `/projects` | Mobile | Projects list and directory |
+| `6264ae26c2d1465e94598a9455d48295` | Project Details | `/projects/:slug` | Desktop | Detailed project page |
+| `4722e2dae7d54023ad01b4ef3774d8e5` | Project Details | `/projects/:slug` | Mobile | Detailed project page |
+| `b4f6be1cf9154951869f69a338e80ad9` | Find Booth | `/booths` | Desktop | Booth lookup |
+| `bc18d1e840e3488cb04a503286fabd62` | Find Booth | `/booths` | Mobile | Booth lookup |
+| `f2c389228ffd4ada8941e0428b0ac2c1` | Announcements | `/announcements` | Desktop | Public announcements |
+| `457163eb5a344e0293fe9560845fbeac` | Announcements | `/announcements` | Mobile | Public announcements |
 | `95b41ae033f448f4b6deb5fe3c5d4dd0` | Overview | `/admin` | Desktop | Admin CMS home / statistics |
 | `d30387703e6446c7977bd85d676df8a4` | Overview | `/admin` | Mobile | Admin CMS home / statistics |
-| `de958c7fc8af4c8fa67bb9812214e240` | Kemaskini Maklumat | `/admin/event` | Desktop | Event information editor |
-| `86d9205b43994d32a97e15ec1d617c99` | Pengurusan Tentatif| `/admin/schedule` | Desktop | Schedule timeline manager |
-| `bf0b04e366884ea5964a28f7a36b4dda` | Import Master File| `/admin/imports` | Desktop | Secure XLSX file import landing |
-| `910da16e09d242bfb0266ed4edb9bde8` | Padanan Data | `/admin/imports/:id` | Desktop | Excel parsing staging & review dashboard |
+| `de958c7fc8af4c8fa67bb9812214e240` | Update Information | `/admin/event` | Desktop | Event information editor |
+| `86d9205b43994d32a97e15ec1d617c99` | Schedule Management | `/admin/schedule` | Desktop | Schedule timeline manager |
+| `bf0b04e366884ea5964a28f7a36b4dda` | Import Master File | `/admin/imports` | Desktop | Secure XLSX file import landing |
+| `910da16e09d242bfb0266ed4edb9bde8` | Data Matching | `/admin/imports/:id` | Desktop | Excel parsing staging & review dashboard |
 
 *Note: For routes with missing dedicated Stitch screens (like `/awards`, `/admin/awards`, `/admin/projects`, etc.), closest available Stitch components and page layouts will be extended as documented below.*
 
@@ -103,14 +103,14 @@ Based on the Google Stitch UI project "FYP Expo Hub", this document defines the 
 ## 4. UI Patterns & Guidelines
 
 ### Public Navigation Layout
-- **Desktop Navbar:** Top fixed 64px bar, background `#f6fafe`, left-aligned Bold "FYP Expo Hub" text, middle-aligned links (Utama, Tentatif, Projek, Booth) with hover states, right-aligned accent action button ("Daftar" or similar).
-- **Mobile Navbar:** Top fixed 64px header + bottom navigation bar (height 56px, rounded top corners `12px`, subtle shadow), containing bottom tabs for quick access (Utama, Projek, Booth, Menu).
+- **Desktop Navbar:** Top fixed 64px bar, background `#f6fafe`, left-aligned Bold "FYP Expo Hub" text, middle-aligned links (Home, Schedule, Projects, Booths) with hover states, right-aligned accent action button ("Register" or similar).
+- **Mobile Navbar:** Top fixed 64px header + bottom navigation bar (height 56px, rounded top corners `12px`, subtle shadow), containing bottom tabs for quick access (Home, Projects, Booths, Menu).
 
 ### Admin Portal Shell
 - Split layout: Fixed left sidebar (`260px` wide) using Deep Navy (`#031636`) for structural navigation, and a fluid main canvas utilizing White (`#ffffff`) surfaces on top of a Warm Off-White (`#f6fafe`) background.
 - Clean typography and data-focused layout with standard 1px borders in `#eaeef2`.
 
-### Master File Import Review & Staging Area (Padanan Data)
+### Master File Import Review & Staging Area (Data Matching)
 - Layout uses a Multi-Tab view:
   1. **Event Info** - Form-style fields comparing candidate values with option to accept/edit/skip.
   2. **Schedule** - Data table showing candidates with classification labels (publicCandidate, internal, needsReview, invalid). Includes actionable buttons per row (Publish, Save Draft, Mark Internal, Skip).
@@ -125,37 +125,37 @@ Based on the Google Stitch UI project "FYP Expo Hub", this document defines the 
 
 ### Lecturer Visit Page (`/lecturer/visits`)
 - **Progress Cards**: Two side-by-side cards showing SV and EX completion counts with progress bars. SV uses Deep Navy (`#031636`), EX uses Deep Teal (`#001B1B`).
-- **Filter Bar**: Role filter (Semua/SV/EX) and status filter (Semua/Belum Dilawati/Telah Dilawati/Voided) using `ChoiceChip`. Search field with prefix icon.
-- **Visit Project Cards**: Compact horizontal card with cover thumbnail (80x60), project title, student names, role chip (SV/EX), booth number, and status chip. Status chips: green check for "Dilawati", red for "Voided", grey for "Belum".
+- **Filter Bar**: Role filter (All/SV/EX) and status filter (All/Not Yet Visited/Visited/Voided) using `ChoiceChip`. Search field with prefix icon.
+- **Visit Project Cards**: Compact horizontal card with cover thumbnail (80x60), project title, student names, role chip (SV/EX), booth number, and status chip. Status chips: green check for "Visited", red for "Voided", grey for "Not Yet".
 - **Sign-in Prompt**: When not authenticated, shows centered login icon with CTA button leading to `/lecturer/sign-in`.
-- **Empty State**: Search icon with "Tiada projek ditemui" or check icon with "Semua projek telah dilawati!".
+- **Empty State**: Search icon with "No projects found" or check icon with "All projects have been visited!".
 
 ### Lecturer Sign-in (`/lecturer/sign-in`)
-- **Auth Card**: Centered form card (max 400px) with lecturer name badge, email/password fields, and "Log Masuk" primary button. Error messages in Malay.
+- **Auth Card**: Centered form card (max 400px) with lecturer name badge, email/password fields, and "Sign In" primary button.
 
 ### Lecturer Visit Detail (`/lecturer/visits/:projectId`)
 - **Project Info Card**: Cover image (180px), title, students, programme, booth number.
 - **Visit Section**: Per-role (SV/EX) card showing:
-  - Status chip (Dilawati/Voided/Belum Dilawati)
+  - Status chip (Visited/Voided/Not Yet Visited)
   - Visit timestamp and note (if visited)
-  - "Tanda sebagai Dilawati" primary button (if unvisited)
-  - "Batal Lawatan" outline error button with 30-min undo window
+  - "Mark as Visited" primary button (if unvisited)
+  - "Cancel Visit" outline error button with 30-min undo window
 - **Mark as Visited Dialog**: Bottom sheet with project info, role, optional note field, confirm button.
 - **Undo Dialog**: Alert with mandatory reason field.
 
 ### Admin Visit Page (`/admin/visits`)
 - **Summary Cards**: Row of stat cards showing total, completed, pending, percentage, SV/EX breakdown, today's visits, and voided count. Responsive: 4 per row on desktop, 2 per row on mobile.
 - **Tabs**: Overview (data table), By Lecturer (grouped list), By Project (grouped list), Visit Log (chronological feed).
-- **Data Table**: Desktop uses `DataTable` with columns: Pensyarah, Peranan, Pelajar, Projek, Booth, Status, Masa, Tindakan. Mobile uses card list.
+- **Data Table**: Desktop uses `DataTable` with columns: Lecturer, Role, Student, Project, Booth, Status, Time, Actions. Mobile uses card list.
 - **Filters**: Role filter, status filter, search field, export CSV button.
 - **Void Dialog**: Admin-only void action with mandatory reason.
 
 ### Status Chips (Visit-specific)
-- **Dilawati (Completed)**: Teal container with check icon, `#3DA2A1` text.
+- **Visited (Completed)**: Teal container with check icon, `#3DA2A1` text.
 - **Voided**: Error container with red text, `#93000A`.
-- **Belum (Pending)**: Grey container with muted text, `#44474E`.
+- **Not Yet (Pending)**: Grey container with muted text, `#44474E`.
 
 ## 6. Documented UI Extensions (Responsive & Missing States)
 - **Awards Page (`/awards`):** Recreates the standard Project Card grid with a modified "Winner" gold badge in `#fed65b` showing the category name and a trophy icon.
 - **Sign-in Page (`/admin/sign-in`):** Uses a centered, card-based login modal matching the typography and color scheme (Deep Navy primary button, Montserrat title, 8px rounded container).
-- **Error/Empty States:** Illustrated using thin-line icons (stroke 2px) in muted `#44474e`, labeled in Bahasa Melayu and English using `body-md` and `body-sm`.
+- **Error/Empty States:** Illustrated using thin-line icons (stroke 2px) in muted `#44474e`, labelled in English using `body-md` and `body-sm`.
