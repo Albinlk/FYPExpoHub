@@ -15,7 +15,10 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ImportRecord {
 
- String get id; String? get eventId; String get sourceFilePath; String get sourceFileName; String get sourceFileHash; String get uploadedBy; DateTime get uploadedAt; String get parserVersion; String get status; Map<String, int> get summary; Map<String, int> get warningCounts; String? get errorSummary; DateTime? get completedAt; DateTime? get publishedAt;
+ String get id; String? get eventId; String get sourceFilePath; String get sourceFileName; String get sourceFileHash; String get uploadedBy; DateTime get uploadedAt; String get parserVersion; String get status;// 'processing', 'pending_review', 'completed', 'error', 'cancelled'
+ Map<String, int> get summary;// e.g., {'schedule': 12, 'winners': 4}
+ Map<String, int> get warningCounts;// e.g., {'overlap': 1, 'privacy': 3}
+ String? get errorSummary; DateTime? get completedAt; DateTime? get publishedAt;
 /// Create a copy of ImportRecord
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -234,20 +237,25 @@ class _ImportRecord implements ImportRecord {
 @override final  DateTime uploadedAt;
 @override final  String parserVersion;
 @override final  String status;
+// 'processing', 'pending_review', 'completed', 'error', 'cancelled'
  final  Map<String, int> _summary;
+// 'processing', 'pending_review', 'completed', 'error', 'cancelled'
 @override Map<String, int> get summary {
   if (_summary is EqualUnmodifiableMapView) return _summary;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableMapView(_summary);
 }
 
+// e.g., {'schedule': 12, 'winners': 4}
  final  Map<String, int> _warningCounts;
+// e.g., {'schedule': 12, 'winners': 4}
 @override Map<String, int> get warningCounts {
   if (_warningCounts is EqualUnmodifiableMapView) return _warningCounts;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableMapView(_warningCounts);
 }
 
+// e.g., {'overlap': 1, 'privacy': 3}
 @override final  String? errorSummary;
 @override final  DateTime? completedAt;
 @override final  DateTime? publishedAt;
@@ -601,7 +609,9 @@ as String,
 /// @nodoc
 mixin _$ScheduleCandidate {
 
- String get id; DateTime get date; String get startAt; String get endAt; String get title; String get venue; String get audience; String get classification; String get comparisonStatus; bool get isDuplicate; bool get isOverlapping;
+ String get id; DateTime get date; String get startAt; String get endAt; String get title; String get venue; String get audience; String get classification;// 'publicCandidate', 'internal', 'needsReview', 'invalid', 'duplicateCandidate'
+ String get comparisonStatus;// 'new', 'updated', 'unchanged', 'duplicateCandidate', 'invalid', 'skippedForPrivacy'
+ bool get isDuplicate; bool get isOverlapping;
 /// Create a copy of ScheduleCandidate
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -816,7 +826,9 @@ class _ScheduleCandidate implements ScheduleCandidate {
 @override final  String venue;
 @override final  String audience;
 @override final  String classification;
+// 'publicCandidate', 'internal', 'needsReview', 'invalid', 'duplicateCandidate'
 @override final  String comparisonStatus;
+// 'new', 'updated', 'unchanged', 'duplicateCandidate', 'invalid', 'skippedForPrivacy'
 @override final  bool isDuplicate;
 @override final  bool isOverlapping;
 
@@ -1453,7 +1465,9 @@ as DateTime,
 /// @nodoc
 mixin _$ValidationIssue {
 
- String get id; String get issueType; String get severity; String get message; String get worksheetName; int? get rowNumber;
+ String get id; String get issueType;// 'date_conflict', 'unrecognized_worksheet', 'invalid_time', 'missing_title', 'duplicate', 'overlap', 'blank_row'
+ String get severity;// 'warning', 'error'
+ String get message; String get worksheetName; int? get rowNumber;
 /// Create a copy of ValidationIssue
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1657,7 +1671,9 @@ class _ValidationIssue implements ValidationIssue {
 
 @override final  String id;
 @override final  String issueType;
+// 'date_conflict', 'unrecognized_worksheet', 'invalid_time', 'missing_title', 'duplicate', 'overlap', 'blank_row'
 @override final  String severity;
+// 'warning', 'error'
 @override final  String message;
 @override final  String worksheetName;
 @override final  int? rowNumber;
@@ -1731,7 +1747,10 @@ as int?,
 /// @nodoc
 mixin _$ReviewDecision {
 
- String get id; String get candidateType; String get decision; DateTime get updatedAt; String get updatedBy; Map<String, dynamic>? get editedData;
+ String get id;// Matches candidate's ID
+ String get candidateType;// 'event', 'schedule', 'award'
+ String get decision;// 'publish', 'draft', 'mark_internal', 'skip', 'retain_current', 'replace_current'
+ DateTime get updatedAt; String get updatedBy; Map<String, dynamic>? get editedData;
 /// Create a copy of ReviewDecision
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1934,8 +1953,11 @@ class _ReviewDecision implements ReviewDecision {
   factory _ReviewDecision.fromJson(Map<String, dynamic> json) => _$ReviewDecisionFromJson(json);
 
 @override final  String id;
+// Matches candidate's ID
 @override final  String candidateType;
+// 'event', 'schedule', 'award'
 @override final  String decision;
+// 'publish', 'draft', 'mark_internal', 'skip', 'retain_current', 'replace_current'
 @override final  DateTime updatedAt;
 @override final  String updatedBy;
  final  Map<String, dynamic>? _editedData;

@@ -15,7 +15,8 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Announcement {
 
- String get id; String get eventId; String get title; String get body; String get category; bool get pinned; String get publicationStatus; DateTime get publishedAt; DateTime? get expiresAt; DateTime get createdAt; DateTime get updatedAt;
+ String get id; String get eventId; String get title; String get body; String get category; bool get pinned; String get publicationStatus;// 'draft', 'published', 'archived'
+ DateTime get publishedAt; DateTime? get expiresAt; DateTime get createdAt; DateTime get updatedAt;
 /// Create a copy of Announcement
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -229,6 +230,7 @@ class _Announcement implements Announcement {
 @override final  String category;
 @override final  bool pinned;
 @override final  String publicationStatus;
+// 'draft', 'published', 'archived'
 @override final  DateTime publishedAt;
 @override final  DateTime? expiresAt;
 @override final  DateTime createdAt;

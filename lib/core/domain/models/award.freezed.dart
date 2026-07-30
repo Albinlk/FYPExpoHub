@@ -15,7 +15,8 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$AwardCategory {
 
- String get id; String get eventId; String get name; String get description; String get publicationStatus; DateTime get createdAt; DateTime get updatedAt; DateTime? get publishedAt;
+ String get id; String get eventId; String get name; String get description; String get publicationStatus;// 'draft', 'published', 'archived'
+ DateTime get createdAt; DateTime get updatedAt; DateTime? get publishedAt;
 /// Create a copy of AwardCategory
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -224,6 +225,7 @@ class _AwardCategory implements AwardCategory {
 @override final  String name;
 @override final  String description;
 @override final  String publicationStatus;
+// 'draft', 'published', 'archived'
 @override final  DateTime createdAt;
 @override final  DateTime updatedAt;
 @override final  DateTime? publishedAt;
@@ -299,7 +301,8 @@ as DateTime?,
 /// @nodoc
 mixin _$PublishedAwardWinner {
 
- String get id; String get eventId; String get awardCategoryId; String? get projectId; String get projectTitle; String? get programmeCode; String? get teamDisplayName; String? get supervisorDisplayName; String get publicationStatus; String? get sourceImportId; DateTime get createdAt; DateTime get updatedAt; DateTime? get publishedAt;
+ String get id; String get eventId; String get awardCategoryId; String? get projectId; String get projectTitle; String? get programmeCode; String? get teamDisplayName; String? get supervisorDisplayName; String get publicationStatus;// 'draft', 'published', 'archived'
+ String? get sourceImportId; DateTime get createdAt; DateTime get updatedAt; DateTime? get publishedAt;
 /// Create a copy of PublishedAwardWinner
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -517,6 +520,7 @@ class _PublishedAwardWinner implements PublishedAwardWinner {
 @override final  String? teamDisplayName;
 @override final  String? supervisorDisplayName;
 @override final  String publicationStatus;
+// 'draft', 'published', 'archived'
 @override final  String? sourceImportId;
 @override final  DateTime createdAt;
 @override final  DateTime updatedAt;

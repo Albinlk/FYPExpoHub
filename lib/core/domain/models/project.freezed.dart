@@ -15,7 +15,8 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Project {
 
- String get id; String get eventId; String get slug; String get title; String? get matricId; String get programmeCode; String get programmeName; String get shortDescription; String get category; List<String> get technologyTags; String? get boothId; String? get boothNumber; String? get boothZone; String get coverImageUrl; String? get posterUrl; List<String> get teamDisplayNames; String get supervisorDisplayName; String? get examinerDisplayName; String? get demoUrl; String? get videoUrl; String? get repositoryUrl; bool get featured; bool get calonIndustri; String get publicationStatus; DateTime get createdAt; DateTime get updatedAt; DateTime? get publishedAt;
+ String get id; String get eventId; String get slug; String get title; String? get matricId; String get programmeCode; String get programmeName; String get shortDescription; String get category; List<String> get technologyTags; String? get boothId; String? get boothNumber; String? get boothZone; String get coverImageUrl; String? get posterUrl; List<String> get teamDisplayNames; String get supervisorDisplayName; String? get examinerDisplayName; String? get demoUrl; String? get videoUrl; String? get repositoryUrl; bool get featured; bool get calonIndustri; String get publicationStatus;// 'draft', 'published', 'archived'
+ DateTime get createdAt; DateTime get updatedAt; DateTime? get publishedAt;
 /// Create a copy of Project
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -274,6 +275,7 @@ class _Project implements Project {
 @override final  bool featured;
 @override@JsonKey() final  bool calonIndustri;
 @override final  String publicationStatus;
+// 'draft', 'published', 'archived'
 @override final  DateTime createdAt;
 @override final  DateTime updatedAt;
 @override final  DateTime? publishedAt;

@@ -15,7 +15,8 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Booth {
 
- String get id; String get eventId; String get boothNumber; String get zone; String get locationNote; String? get staticFloorPlanUrl; String? get projectId; String get publicationStatus; DateTime get createdAt; DateTime get updatedAt; DateTime? get publishedAt;
+ String get id; String get eventId; String get boothNumber; String get zone; String get locationNote; String? get staticFloorPlanUrl; String? get projectId; String get publicationStatus;// 'draft', 'published', 'archived'
+ DateTime get createdAt; DateTime get updatedAt; DateTime? get publishedAt;
 /// Create a copy of Booth
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -230,6 +231,7 @@ class _Booth implements Booth {
 @override final  String? staticFloorPlanUrl;
 @override final  String? projectId;
 @override final  String publicationStatus;
+// 'draft', 'published', 'archived'
 @override final  DateTime createdAt;
 @override final  DateTime updatedAt;
 @override final  DateTime? publishedAt;

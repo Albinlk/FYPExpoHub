@@ -15,7 +15,9 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ScheduleItem {
 
- String get id; String get eventId; DateTime get date; String get startAt; String get endAt; String get title; String get venue; String get audience; String? get description; String get visibility; String get publicationStatus; String? get sourceImportId; String? get sourceStagingId; DateTime get createdAt; DateTime get updatedAt; DateTime? get publishedAt;
+ String get id; String get eventId; DateTime get date; String get startAt; String get endAt; String get title; String get venue; String get audience; String? get description; String get visibility;// 'public' or 'internal'
+ String get publicationStatus;// 'draft', 'published', 'archived'
+ String? get sourceImportId; String? get sourceStagingId; DateTime get createdAt; DateTime get updatedAt; DateTime? get publishedAt;
 /// Create a copy of ScheduleItem
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -237,7 +239,9 @@ class _ScheduleItem implements ScheduleItem {
 @override final  String audience;
 @override final  String? description;
 @override final  String visibility;
+// 'public' or 'internal'
 @override final  String publicationStatus;
+// 'draft', 'published', 'archived'
 @override final  String? sourceImportId;
 @override final  String? sourceStagingId;
 @override final  DateTime createdAt;
