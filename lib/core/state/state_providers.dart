@@ -31,9 +31,9 @@ class EventNotifier extends Notifier<Event> {
       startAt: DateTime(2026, 8, 6, 9, 0),
       endAt: DateTime(2026, 8, 7, 17, 0),
       dailyHours: '9:00 AM - 5:00 PM',
-      venue: 'Blok Kuliah, FSKM',
+      venue: 'Lecture Block, FSKM',
       locationDetails:
-          'Dewan Seminar & Bilik Kuliah, Fakulti Sains Komputer dan Matematik (FSKM)',
+          'Seminar Hall & Lecture Rooms, Faculty of Computer and Mathematical Sciences (FSKM)',
       mapUrl: 'https://maps.google.com/?q=FSKM+UiTM',
       description:
           'The Final Year Project Exhibition (FYP Expo) FSKM is a bi-annual event showcasing the dedication, innovation, and technical expertise developed by final-semester students of the Faculty of Computer and Mathematical Sciences (FSKM). This exhibition serves as a vital bridge connecting academic research with industry partners.',

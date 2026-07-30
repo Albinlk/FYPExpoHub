@@ -20,8 +20,8 @@ class LecturerVisitsPage extends ConsumerStatefulWidget {
 }
 
 class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
-  String _roleFilter = 'Semua';
-  String _statusFilter = 'Semua';
+  String _roleFilter = 'All';
+  String _statusFilter = 'All';
   final _searchController = TextEditingController();
 
   @override
@@ -62,8 +62,8 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
       if (_roleFilter == 'EX' && a.role != 'examiner') return false;
 
       final key = '${a.projectId}_${a.role}';
-      if (_statusFilter == 'Belum Dilawati' && completedSet.contains(key)) return false;
-      if (_statusFilter == 'Telah Dilawati' && !completedSet.contains(key)) return false;
+      if (_statusFilter == 'Not Yet Visited' && completedSet.contains(key)) return false;
+      if (_statusFilter == 'Visited' && !completedSet.contains(key)) return false;
       if (_statusFilter == 'Voided' && !voidedSet.contains(key)) return false;
 
       final project = projects.where((p) => p.id == a.projectId).firstOrNull;
@@ -87,10 +87,10 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Lawatan Saya', style: DesignSystem.h1.copyWith(color: DesignSystem.primary)),
+                    Text('My Visits', style: DesignSystem.h1.copyWith(color: DesignSystem.primary)),
                     const SizedBox(height: DesignSystem.spaceXs),
                     Text(
-                      'Selamat datang, ${lecturer.displayName}',
+                      'Welcome, ${lecturer.displayName}',
                       style: DesignSystem.bodyLg.copyWith(color: DesignSystem.onSurfaceVariant),
                     ),
                   ],
@@ -99,14 +99,14 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
                   TextButton.icon(
                     onPressed: () => context.go('/admin'),
                     icon: const Icon(Icons.admin_panel_settings, size: 16),
-                    label: Text('Panel Admin', style: DesignSystem.bodySm.copyWith(color: DesignSystem.primary)),
+                    label: Text('Admin Panel', style: DesignSystem.bodySm.copyWith(color: DesignSystem.primary)),
                   ),
                 TextButton.icon(
                   onPressed: () {
                     ref.read(lecturerAuthProvider.notifier).signOut();
                   },
                   icon: const Icon(Icons.logout, size: 16),
-                  label: Text('Log Keluar', style: DesignSystem.bodySm.copyWith(color: DesignSystem.error)),
+                  label: Text('Sign Out', style: DesignSystem.bodySm.copyWith(color: DesignSystem.error)),
                 ),
               ],
             ),
@@ -114,14 +114,14 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
             Row(
               children: [
                 Expanded(child: _VisitProgressCard(
-                  title: 'Penyelia (SV)',
+                  title: 'Supervisor (SV)',
                   completed: svCompleted,
                   total: svAssignments.length,
                   color: DesignSystem.primary,
                 )),
                 const SizedBox(width: DesignSystem.spaceMd),
                 Expanded(child: _VisitProgressCard(
-                  title: 'Pemeriksa (EX)',
+                  title: 'Examiner (EX)',
                   completed: exCompleted,
                   total: exAssignments.length,
                   color: DesignSystem.tertiary,
@@ -138,7 +138,7 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
                       controller: _searchController,
                       onChanged: (_) => setState(() {}),
                       decoration: const InputDecoration(
-                        hintText: 'Cari projek, pelajar, booth...',
+                        hintText: 'Search projects, students, booths...',
                         prefixIcon: Icon(Icons.search, color: DesignSystem.primary),
                       ),
                     ),
@@ -147,9 +147,9 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
                       scrollDirection: Axis.horizontal,
                       child: Row(
                         children: [
-                          _buildFilterChip('Peranan:', _roleFilter, ['Semua', 'SV', 'EX']),
+                          _buildFilterChip('Role:', _roleFilter, ['All', 'SV', 'EX']),
                           const SizedBox(width: DesignSystem.spaceSm),
-                          _buildFilterChip('Status:', _statusFilter, ['Semua', 'Belum Dilawati', 'Telah Dilawati', 'Voided']),
+                          _buildFilterChip('Status:', _statusFilter, ['All', 'Not Yet Visited', 'Visited', 'Voided']),
                         ],
                       ),
                     ),
@@ -162,7 +162,7 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
               _buildEmptyState(_searchController.text.isNotEmpty || _roleFilter != 'Semua' || _statusFilter != 'Semua')
             else ...[
               Text(
-                '${filteredAssignments.length} projek dijumpai',
+                '${filteredAssignments.length} projects found',
                 style: DesignSystem.labelCaps.copyWith(color: DesignSystem.primary),
               ),
               const SizedBox(height: DesignSystem.spaceMd),
@@ -226,7 +226,7 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
             ),
             const SizedBox(height: DesignSystem.spaceMd),
             Text(
-              hasFilters ? 'Tiada projek ditemui.' : 'Semua projek telah dilawati!',
+              hasFilters ? 'No projects found.' : 'All projects have been visited!',
               style: DesignSystem.bodyMd.copyWith(color: DesignSystem.onSurfaceVariant),
             ),
           ],
@@ -249,10 +249,10 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
               label: Text(opt, style: TextStyle(fontSize: 11, color: selected ? Colors.white : DesignSystem.onSurfaceVariant)),
               selected: selected,
               onSelected: (_) => setState(() {
-                if (label.contains('Peranan')) _roleFilter = opt;
+                if (label.contains('Role')) _roleFilter = opt;
                 else _statusFilter = opt;
               }),
-              selectedColor: label.contains('Peranan') ? DesignSystem.primary : DesignSystem.tertiary,
+              selectedColor: label.contains('Role') ? DesignSystem.primary : DesignSystem.tertiary,
               visualDensity: VisualDensity.compact,
             ),
           );
@@ -407,7 +407,7 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
         color: DesignSystem.surfaceContainerHighest,
         borderRadius: DesignSystem.radiusSm,
       ),
-      child: Text('Belum', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSurfaceVariant, fontSize: 9)),
+      child: Text('Not Yet', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSurfaceVariant, fontSize: 9)),
     );
   }
 }

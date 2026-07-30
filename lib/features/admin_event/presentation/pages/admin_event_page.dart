@@ -38,7 +38,7 @@ class _AdminEventPageState extends ConsumerState<AdminEventPage> {
   }
 
   String _monthName(int m) {
-    const months = ['Jan', 'Feb', 'Mac', 'Apr', 'Mei', 'Jun', 'Jul', 'Ogos', 'Sep', 'Okt', 'Nov', 'Dis'];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     return months[m - 1];
   }
 
