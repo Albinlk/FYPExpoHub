@@ -36,8 +36,24 @@ COPY . .
 RUN find lib/ -name "*.freezed.dart" -delete && find lib/ -name "*.g.dart" -delete \
     && flutter pub run build_runner build --delete-conflicting-outputs
 
+# Declare build-time secrets (passed via docker-compose build args or --build-arg)
+# These values are injected into the compiled Dart binary and are not stored in source code.
+ARG FIREBASE_API_KEY
+ARG FIREBASE_APP_ID
+ARG FIREBASE_MESSAGING_SENDER_ID
+ARG FIREBASE_PROJECT_ID
+ARG FIREBASE_AUTH_DOMAIN
+ARG FIREBASE_STORAGE_BUCKET
+
 # Compile the Flutter Web application for production release
-RUN flutter build web --release
+# Firebase credentials are passed via --dart-define and baked into the compiled output at build time
+RUN flutter build web --release \
+    --dart-define=FIREBASE_API_KEY=${FIREBASE_API_KEY} \
+    --dart-define=FIREBASE_APP_ID=${FIREBASE_APP_ID} \
+    --dart-define=FIREBASE_MESSAGING_SENDER_ID=${FIREBASE_MESSAGING_SENDER_ID} \
+    --dart-define=FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID} \
+    --dart-define=FIREBASE_AUTH_DOMAIN=${FIREBASE_AUTH_DOMAIN} \
+    --dart-define=FIREBASE_STORAGE_BUCKET=${FIREBASE_STORAGE_BUCKET}
 
 # ==========================================
 # STAGE 2: Serve the Static Assets with Nginx

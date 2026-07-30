@@ -22,15 +22,25 @@ void main() async {
     return;
   }
 
+  // Firebase credentials are injected at build time via --dart-define.
+  // They are never stored in source code or committed to version control.
+  // Pass them as build args in docker-compose.yml or your CI/CD pipeline.
+  const firebaseApiKey = String.fromEnvironment('FIREBASE_API_KEY');
+  const firebaseAppId = String.fromEnvironment('FIREBASE_APP_ID');
+  const firebaseMessagingSenderId = String.fromEnvironment('FIREBASE_MESSAGING_SENDER_ID');
+  const firebaseProjectId = String.fromEnvironment('FIREBASE_PROJECT_ID');
+  const firebaseAuthDomain = String.fromEnvironment('FIREBASE_AUTH_DOMAIN');
+  const firebaseStorageBucket = String.fromEnvironment('FIREBASE_STORAGE_BUCKET');
+
   try {
     await Firebase.initializeApp(
       options: const FirebaseOptions(
-        apiKey: 'AIzaSyAaoWvZr70guv06Ab_f3NcThxawfCEChus',
-        appId: '1:825089478411:web:1dcd07362fdf636d9ddc0e',
-        messagingSenderId: '825089478411',
-        projectId: 'fyp-expo-hub',
-        authDomain: 'fyp-expo-hub.firebaseapp.com',
-        storageBucket: 'fyp-expo-hub.firebasestorage.app',
+        apiKey: firebaseApiKey,
+        appId: firebaseAppId,
+        messagingSenderId: firebaseMessagingSenderId,
+        projectId: firebaseProjectId,
+        authDomain: firebaseAuthDomain,
+        storageBucket: firebaseStorageBucket,
       ),
     );
     // Enable Firestore offline persistence for faster subsequent loads
