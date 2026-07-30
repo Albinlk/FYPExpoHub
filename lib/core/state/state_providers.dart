@@ -32,23 +32,37 @@ class EventNotifier extends Notifier<Event> {
       endAt: DateTime(2026, 8, 7, 17, 0),
       dailyHours: '9:00 AM - 5:00 PM',
       venue: 'Blok Kuliah, FSKM',
-      locationDetails: 'Dewan Seminar & Bilik Kuliah, Fakulti Sains Komputer dan Matematik (FSKM)',
+      locationDetails:
+          'Dewan Seminar & Bilik Kuliah, Fakulti Sains Komputer dan Matematik (FSKM)',
       mapUrl: 'https://maps.google.com/?q=FSKM+UiTM',
-      description: 'The Final Year Project Exhibition (FYP Expo) FSKM is a bi-annual event showcasing the dedication, innovation, and technical expertise developed by final-semester students of the Faculty of Computer and Mathematical Sciences (FSKM). This exhibition serves as a vital bridge connecting academic research with industry partners.',
+      description:
+          'The Final Year Project Exhibition (FYP Expo) FSKM is a bi-annual event showcasing the dedication, innovation, and technical expertise developed by final-semester students of the Faculty of Computer and Mathematical Sciences (FSKM). This exhibition serves as a vital bridge connecting academic research with industry partners.',
       objectives: [
         'Showcase the creativity and system design innovations of FSKM students.',
         'Provide a professional platform for presenting and defending project research outcomes.',
         'Foster strong collaboration networks among students, faculty, and industry leaders.',
-        'Recognize outstanding achievements through best project award categories.'
+        'Recognize outstanding achievements through best project award categories.',
       ],
       status: 'active',
       heroImageUrl: 'assets/images/banner.jpg',
       posterUrl: 'assets/images/poster.jpg',
       publicContactEmail: 'fskmfypexpo@uitm.edu.my',
       faqItems: [
-        const FaqItem(question: 'What is FYP Expo Hub?', answer: 'It is the official web portal for the Final Year Project Exhibition of the Faculty of Computer and Mathematical Sciences (FSKM).'),
-        const FaqItem(question: 'Who can attend the exhibition?', answer: 'The exhibition is open to all UiTM students, faculty members, and external industry visitors who are interested in final year student innovations.'),
-        const FaqItem(question: 'Are there awards given to the projects?', answer: 'Projects are evaluated by a panel of industry and academic juries, and awards like Gold, Silver, Bronze, and Best Innovative Project are presented.'),
+        const FaqItem(
+          question: 'What is FYP Expo Hub?',
+          answer:
+              'It is the official web portal for the Final Year Project Exhibition of the Faculty of Computer and Mathematical Sciences (FSKM).',
+        ),
+        const FaqItem(
+          question: 'Who can attend the exhibition?',
+          answer:
+              'The exhibition is open to all UiTM students, faculty members, and external industry visitors who are interested in final year student innovations.',
+        ),
+        const FaqItem(
+          question: 'Are there awards given to the projects?',
+          answer:
+              'Projects are evaluated by a panel of industry and academic juries, and awards like Gold, Silver, Bronze, and Best Innovative Project are presented.',
+        ),
       ],
       publicationStatus: 'published',
       updatedAt: DateTime.now(),
@@ -69,7 +83,9 @@ class EventNotifier extends Notifier<Event> {
   }
 }
 
-final eventProvider = NotifierProvider<EventNotifier, Event>(() => EventNotifier());
+final eventProvider = NotifierProvider<EventNotifier, Event>(
+  () => EventNotifier(),
+);
 
 // ==========================================
 // 2. PROJECTS STATE
@@ -77,61 +93,80 @@ final eventProvider = NotifierProvider<EventNotifier, Event>(() => EventNotifier
 class ProjectsNotifier extends Notifier<List<Project>> {
   StreamSubscription? _sub;
 
+  List<Project> _parseProjects(List<Map<String, dynamic>> dataList) {
+    return dataList.map((m) {
+      final project = Project.fromJson(m);
+      if (project.coverImageUrl == 'assets/images/project_placeholder.jpg' ||
+          project.coverImageUrl.isEmpty) {
+        return project.copyWith(
+          coverImageUrl:
+              'https://placehold.co/400x250/3b82f6/ffffff?text=${Uri.encodeComponent(project.title)}',
+        );
+      }
+      return project;
+    }).toList();
+  }
+
+  void _startStream() {
+    _sub = _fs.projectsStream().listen(
+      (dataList) => state = _parseProjects(dataList),
+      onError: (e) => print('Projects stream error (Firebase unavailable): $e'),
+    );
+  }
+
   @override
   List<Project> build() {
     // Return fallback data immediately; Firestore stream updates when connected
-final fallback = ExcelData.allProjects.map((m) => Project(
-      id: m['id'] as String,
-      eventId: m['event_id'] as String,
-      slug: m['slug'] as String,
-      title: m['title'] as String,
-      matricId: m['matric_id'] as String?,
-      programmeCode: m['programme_code'] as String,
-      programmeName: m['programme_name'] as String,
-      shortDescription: m['short_description'] as String,
-      category: m['category'] as String,
-      technologyTags: (m['technology_tags'] as List).cast<String>(),
-      boothId: m['booth_id'] as String?,
-      boothNumber: m['booth_number'] as String?,
-      boothZone: m['booth_zone'] as String?,
-      coverImageUrl: 'https://placehold.co/400x250/3b82f6/ffffff?text=${Uri.encodeComponent(m['title'] as String)}',
-      posterUrl: m['poster_url'] as String?,
-      teamDisplayNames: (m['team_display_names'] as List).cast<String>(),
-      supervisorDisplayName: m['supervisor_display_name'] as String,
-      examinerDisplayName: m['examiner_display_name'] as String?,
-      demoUrl: m['demo_url'] as String?,
-      videoUrl: m['video_url'] as String?,
-      repositoryUrl: m['repository_url'] as String?,
-      featured: m['featured'] as bool,
-      calonIndustri: (m['calon_industri'] as bool?) ?? false,
-      publicationStatus: m['publication_status'] as String,
-      createdAt: m['created_at'] as DateTime,
-      updatedAt: m['updated_at'] as DateTime,
-      publishedAt: m['published_at'] as DateTime?,
-    )).toList();
+    final fallback = ExcelData.allProjects
+        .map(
+          (m) => Project(
+            id: m['id'] as String,
+            eventId: m['event_id'] as String,
+            slug: m['slug'] as String,
+            title: m['title'] as String,
+            matricId: m['matric_id'] as String?,
+            programmeCode: m['programme_code'] as String,
+            programmeName: m['programme_name'] as String,
+            shortDescription: m['short_description'] as String,
+            category: m['category'] as String,
+            technologyTags: (m['technology_tags'] as List).cast<String>(),
+            boothId: m['booth_id'] as String?,
+            boothNumber: m['booth_number'] as String?,
+            boothZone: m['booth_zone'] as String?,
+            coverImageUrl:
+                'https://placehold.co/400x250/3b82f6/ffffff?text=${Uri.encodeComponent(m['title'] as String)}',
+            posterUrl: m['poster_url'] as String?,
+            teamDisplayNames: (m['team_display_names'] as List).cast<String>(),
+            supervisorDisplayName: m['supervisor_display_name'] as String,
+            examinerDisplayName: m['examiner_display_name'] as String?,
+            demoUrl: m['demo_url'] as String?,
+            videoUrl: m['video_url'] as String?,
+            repositoryUrl: m['repository_url'] as String?,
+            featured: m['featured'] as bool,
+            calonIndustri: (m['calon_industri'] as bool?) ?? false,
+            publicationStatus: m['publication_status'] as String,
+            createdAt: m['created_at'] as DateTime,
+            updatedAt: m['updated_at'] as DateTime,
+            publishedAt: m['published_at'] as DateTime?,
+          ),
+        )
+        .toList();
 
     try {
-      _sub = _fs.projectsStream().listen(
-        (dataList) {
-          state = dataList.map((m) {
-            final project = Project.fromJson(m);
-            if (project.coverImageUrl == 'assets/images/project_placeholder.jpg' || project.coverImageUrl.isEmpty) {
-              return project.copyWith(
-                coverImageUrl: 'https://placehold.co/400x250/3b82f6/ffffff?text=${Uri.encodeComponent(project.title)}',
-              );
-            }
-            return project;
-          }).toList();
-        },
-        onError: (e) {
-          print('Projects stream error (Firebase unavailable): $e');
-        },
-      );
+      _startStream();
     } catch (e) {
       print('Firestore projects stream setup failed: $e');
     }
     ref.onDispose(() => _sub?.cancel());
     return fallback;
+  }
+
+  Future<void> refresh() async {
+    try {
+      state = _parseProjects(await _fs.getProjectsOnce());
+    } catch (e) {
+      print('Projects refresh failed (keeping current list): $e');
+    }
   }
 
   void addProject(Project project) {
@@ -143,7 +178,7 @@ final fallback = ExcelData.allProjects.map((m) => Project(
     final data = updated.copyWith(updatedAt: DateTime.now());
     state = [
       for (final p in state)
-        if (p.id == updated.id) data else p
+        if (p.id == updated.id) data else p,
     ];
     _fs.setProject(updated.id, data.toJson());
   }
@@ -158,19 +193,23 @@ final fallback = ExcelData.allProjects.map((m) => Project(
     if (idx == -1) return;
     final p = state[idx];
     final toggled = p.copyWith(
-      publicationStatus: p.publicationStatus == 'published' ? 'draft' : 'published',
+      publicationStatus: p.publicationStatus == 'published'
+          ? 'draft'
+          : 'published',
       publishedAt: p.publicationStatus != 'published' ? DateTime.now() : null,
       updatedAt: DateTime.now(),
     );
     state = [
       for (final p in state)
-        if (p.id == id) toggled else p
+        if (p.id == id) toggled else p,
     ];
     _fs.setProject(id, toggled.toJson());
   }
 }
 
-final projectsProvider = NotifierProvider<ProjectsNotifier, List<Project>>(() => ProjectsNotifier());
+final projectsProvider = NotifierProvider<ProjectsNotifier, List<Project>>(
+  () => ProjectsNotifier(),
+);
 
 final featuredProjectsProvider = Provider<List<Project>>((ref) {
   return ref.watch(projectsProvider).where((p) => p.featured).toList();
@@ -178,7 +217,9 @@ final featuredProjectsProvider = Provider<List<Project>>((ref) {
 
 /// O(1) project lookup by ID — use this instead of linear scans.
 final projectsMapProvider = Provider<Map<String, Project>>((ref) {
-  return Map.fromEntries(ref.watch(projectsProvider).map((p) => MapEntry(p.id, p)));
+  return Map.fromEntries(
+    ref.watch(projectsProvider).map((p) => MapEntry(p.id, p)),
+  );
 });
 
 // ==========================================
@@ -193,7 +234,10 @@ class ProjectVisitCountsNotifier extends Notifier<Map<String, int>> {
   }
 }
 
-final projectVisitCountsProvider = NotifierProvider<ProjectVisitCountsNotifier, Map<String, int>>(() => ProjectVisitCountsNotifier());
+final projectVisitCountsProvider =
+    NotifierProvider<ProjectVisitCountsNotifier, Map<String, int>>(
+      () => ProjectVisitCountsNotifier(),
+    );
 
 final mostVisitedProjectsProvider = Provider<List<Project>>((ref) {
   final projects = ref.watch(projectsProvider);
@@ -219,22 +263,26 @@ class ScheduleNotifier extends Notifier<List<ScheduleItem>> {
       print('Schedule stream setup failed: $e');
     }
     ref.onDispose(() => _sub?.cancel());
-    return ExcelData.allScheduleItems.map((m) => ScheduleItem(
-      id: m['id'] as String,
-      eventId: m['event_id'] as String,
-      date: m['date'] as DateTime,
-      startAt: m['start_at'] as String,
-      endAt: m['end_at'] as String,
-      title: m['title'] as String,
-      venue: m['venue'] as String,
-      audience: m['audience'] as String,
-      description: m['description'] as String?,
-      visibility: m['visibility'] as String,
-      publicationStatus: m['publication_status'] as String,
-      createdAt: m['created_at'] as DateTime,
-      updatedAt: m['updated_at'] as DateTime,
-      publishedAt: m['published_at'] as DateTime?,
-    )).toList();
+    return ExcelData.allScheduleItems
+        .map(
+          (m) => ScheduleItem(
+            id: m['id'] as String,
+            eventId: m['event_id'] as String,
+            date: m['date'] as DateTime,
+            startAt: m['start_at'] as String,
+            endAt: m['end_at'] as String,
+            title: m['title'] as String,
+            venue: m['venue'] as String,
+            audience: m['audience'] as String,
+            description: m['description'] as String?,
+            visibility: m['visibility'] as String,
+            publicationStatus: m['publication_status'] as String,
+            createdAt: m['created_at'] as DateTime,
+            updatedAt: m['updated_at'] as DateTime,
+            publishedAt: m['published_at'] as DateTime?,
+          ),
+        )
+        .toList();
   }
 
   void addScheduleItem(ScheduleItem item) {
@@ -246,7 +294,7 @@ class ScheduleNotifier extends Notifier<List<ScheduleItem>> {
     final data = updated.copyWith(updatedAt: DateTime.now());
     state = [
       for (final s in state)
-        if (s.id == updated.id) data else s
+        if (s.id == updated.id) data else s,
     ];
     _fs.setScheduleItem(updated.id, data.toJson());
   }
@@ -261,19 +309,23 @@ class ScheduleNotifier extends Notifier<List<ScheduleItem>> {
     if (idx == -1) return;
     final s = state[idx];
     final toggled = s.copyWith(
-      publicationStatus: s.publicationStatus == 'published' ? 'draft' : 'published',
+      publicationStatus: s.publicationStatus == 'published'
+          ? 'draft'
+          : 'published',
       publishedAt: s.publicationStatus != 'published' ? DateTime.now() : null,
       updatedAt: DateTime.now(),
     );
     state = [
       for (final s in state)
-        if (s.id == id) toggled else s
+        if (s.id == id) toggled else s,
     ];
     _fs.setScheduleItem(id, toggled.toJson());
   }
 }
 
-final scheduleProvider = NotifierProvider<ScheduleNotifier, List<ScheduleItem>>(() => ScheduleNotifier());
+final scheduleProvider = NotifierProvider<ScheduleNotifier, List<ScheduleItem>>(
+  () => ScheduleNotifier(),
+);
 
 // ==========================================
 // 4. PHYSICAL BOOTH ALLOCATIONS STATE
@@ -283,19 +335,23 @@ class BoothsNotifier extends Notifier<List<Booth>> {
 
   @override
   List<Booth> build() {
-    final fallback = ExcelData.allBooths.map((m) => Booth(
-      id: m['id'] as String,
-      eventId: m['event_id'] as String,
-      boothNumber: m['booth_number'] as String,
-      zone: m['zone'] as String,
-      locationNote: m['location_note'] as String,
-      staticFloorPlanUrl: m['static_floor_plan_url'] as String?,
-      projectId: m['project_id'] as String?,
-      publicationStatus: m['publication_status'] as String,
-      createdAt: m['created_at'] as DateTime,
-      updatedAt: m['updated_at'] as DateTime,
-      publishedAt: m['published_at'] as DateTime?,
-    )).toList();
+    final fallback = ExcelData.allBooths
+        .map(
+          (m) => Booth(
+            id: m['id'] as String,
+            eventId: m['event_id'] as String,
+            boothNumber: m['booth_number'] as String,
+            zone: m['zone'] as String,
+            locationNote: m['location_note'] as String,
+            staticFloorPlanUrl: m['static_floor_plan_url'] as String?,
+            projectId: m['project_id'] as String?,
+            publicationStatus: m['publication_status'] as String,
+            createdAt: m['created_at'] as DateTime,
+            updatedAt: m['updated_at'] as DateTime,
+            publishedAt: m['published_at'] as DateTime?,
+          ),
+        )
+        .toList();
 
     try {
       _sub = _fs.boothsStream().listen((dataList) {
@@ -317,7 +373,7 @@ class BoothsNotifier extends Notifier<List<Booth>> {
     final data = updated.copyWith(updatedAt: DateTime.now());
     state = [
       for (final b in state)
-        if (b.id == updated.id) data else b
+        if (b.id == updated.id) data else b,
     ];
     _fs.setBooth(updated.id, data.toJson());
   }
@@ -328,7 +384,9 @@ class BoothsNotifier extends Notifier<List<Booth>> {
   }
 }
 
-final boothsProvider = NotifierProvider<BoothsNotifier, List<Booth>>(() => BoothsNotifier());
+final boothsProvider = NotifierProvider<BoothsNotifier, List<Booth>>(
+  () => BoothsNotifier(),
+);
 
 // ==========================================
 // 5. ANNOUNCEMENTS STATE
@@ -354,7 +412,7 @@ class AnnouncementsNotifier extends Notifier<List<Announcement>> {
     final data = updated.copyWith(updatedAt: DateTime.now());
     state = [
       for (final a in state)
-        if (a.id == updated.id) data else a
+        if (a.id == updated.id) data else a,
     ];
     _fs.setAnnouncement(updated.id, data.toJson());
   }
@@ -367,10 +425,13 @@ class AnnouncementsNotifier extends Notifier<List<Announcement>> {
   void togglePinned(String id) {
     final idx = state.indexWhere((a) => a.id == id);
     if (idx == -1) return;
-    final toggled = state[idx].copyWith(pinned: !state[idx].pinned, updatedAt: DateTime.now());
+    final toggled = state[idx].copyWith(
+      pinned: !state[idx].pinned,
+      updatedAt: DateTime.now(),
+    );
     state = [
       for (final a in state)
-        if (a.id == id) toggled else a
+        if (a.id == id) toggled else a,
     ];
     _fs.setAnnouncement(id, toggled.toJson());
   }
@@ -380,19 +441,26 @@ class AnnouncementsNotifier extends Notifier<List<Announcement>> {
     if (idx == -1) return;
     final a = state[idx];
     final toggled = a.copyWith(
-      publicationStatus: a.publicationStatus == 'published' ? 'draft' : 'published',
-      publishedAt: a.publicationStatus != 'published' ? DateTime.now() : a.publishedAt,
+      publicationStatus: a.publicationStatus == 'published'
+          ? 'draft'
+          : 'published',
+      publishedAt: a.publicationStatus != 'published'
+          ? DateTime.now()
+          : a.publishedAt,
       updatedAt: DateTime.now(),
     );
     state = [
       for (final a in state)
-        if (a.id == id) toggled else a
+        if (a.id == id) toggled else a,
     ];
     _fs.setAnnouncement(id, toggled.toJson());
   }
 }
 
-final announcementsProvider = NotifierProvider<AnnouncementsNotifier, List<Announcement>>(() => AnnouncementsNotifier());
+final announcementsProvider =
+    NotifierProvider<AnnouncementsNotifier, List<Announcement>>(
+      () => AnnouncementsNotifier(),
+    );
 
 // ==========================================
 // 6. PUBLISHED AWARD WINNERS STATE
@@ -418,7 +486,7 @@ class AwardsNotifier extends Notifier<List<PublishedAwardWinner>> {
     final data = updated.copyWith(updatedAt: DateTime.now());
     state = [
       for (final w in state)
-        if (w.id == updated.id) data else w
+        if (w.id == updated.id) data else w,
     ];
     _fs.setAwardWinner(updated.id, data.toJson());
   }
@@ -429,7 +497,10 @@ class AwardsNotifier extends Notifier<List<PublishedAwardWinner>> {
   }
 }
 
-final awardsProvider = NotifierProvider<AwardsNotifier, List<PublishedAwardWinner>>(() => AwardsNotifier());
+final awardsProvider =
+    NotifierProvider<AwardsNotifier, List<PublishedAwardWinner>>(
+      () => AwardsNotifier(),
+    );
 
 // ==========================================
 // 7. EXCEL IMPORTS & STAGING WORKFLOW STATE
@@ -454,38 +525,46 @@ class ImportsNotifier extends Notifier<List<ImportRecord>> {
   void updateImport(ImportRecord updated) {
     state = [
       for (final r in state)
-        if (r.id == updated.id) updated else r
+        if (r.id == updated.id) updated else r,
     ];
     _fs.setImport(updated.id, updated.toJson());
   }
 }
 
-final importsProvider = NotifierProvider<ImportsNotifier, List<ImportRecord>>(() => ImportsNotifier());
+final importsProvider = NotifierProvider<ImportsNotifier, List<ImportRecord>>(
+  () => ImportsNotifier(),
+);
 
 // Staging candidate dictionaries (stream-based)
-final scheduleCandidatesProvider = StreamProvider.family<List<ScheduleCandidate>, String>((ref, importId) {
-  return _fs.scheduleCandidatesStream(importId).map((list) {
-    return list.map((m) => ScheduleCandidate.fromJson(m)).toList();
-  });
-});
+final scheduleCandidatesProvider =
+    StreamProvider.family<List<ScheduleCandidate>, String>((ref, importId) {
+      return _fs.scheduleCandidatesStream(importId).map((list) {
+        return list.map((m) => ScheduleCandidate.fromJson(m)).toList();
+      });
+    });
 
-final awardCandidatesProvider = StreamProvider.family<List<AwardCandidate>, String>((ref, importId) {
-  return _fs.awardCandidatesStream(importId).map((list) {
-    return list.map((m) => AwardCandidate.fromJson(m)).toList();
-  });
-});
+final awardCandidatesProvider =
+    StreamProvider.family<List<AwardCandidate>, String>((ref, importId) {
+      return _fs.awardCandidatesStream(importId).map((list) {
+        return list.map((m) => AwardCandidate.fromJson(m)).toList();
+      });
+    });
 
-final privacySkipsProvider = StreamProvider.family<List<PrivacySkip>, String>((ref, importId) {
+final privacySkipsProvider = StreamProvider.family<List<PrivacySkip>, String>((
+  ref,
+  importId,
+) {
   return _fs.privacySkipsStream(importId).map((list) {
     return list.map((m) => PrivacySkip.fromJson(m)).toList();
   });
 });
 
-final validationIssuesProvider = StreamProvider.family<List<ValidationIssue>, String>((ref, importId) {
-  return _fs.validationIssuesStream(importId).map((list) {
-    return list.map((m) => ValidationIssue.fromJson(m)).toList();
-  });
-});
+final validationIssuesProvider =
+    StreamProvider.family<List<ValidationIssue>, String>((ref, importId) {
+      return _fs.validationIssuesStream(importId).map((list) {
+        return list.map((m) => ValidationIssue.fromJson(m)).toList();
+      });
+    });
 
 // ==========================================
 // 8. LECTURER CONFIG & AUTH STATE
@@ -517,7 +596,9 @@ final lecturerConfigProvider = Provider<Map<String, String>>((ref) {
   return result;
 });
 
-final lecturerAuthProvider = NotifierProvider<LecturerAuthNotifier, Lecturer?>(LecturerAuthNotifier.new);
+final lecturerAuthProvider = NotifierProvider<LecturerAuthNotifier, Lecturer?>(
+  LecturerAuthNotifier.new,
+);
 
 class LecturerAuthNotifier extends Notifier<Lecturer?> {
   @override
@@ -532,7 +613,9 @@ class LecturerAuthNotifier extends Notifier<Lecturer?> {
     final config = ref.read(lecturerConfigProvider);
     final auth = ref.read(authStateChangesProvider);
     final user = auth.asData?.value;
-    if (user != null && user.email != null && config.containsKey(user.email!.toLowerCase())) {
+    if (user != null &&
+        user.email != null &&
+        config.containsKey(user.email!.toLowerCase())) {
       final displayName = config[user.email!.toLowerCase()]!;
       state = Lecturer(
         id: user.uid,
@@ -563,23 +646,32 @@ final lecturerUidProvider = Provider<String?>((ref) {
 // ==========================================
 // 9. PROJECT LECTURER ASSIGNMENTS STATE
 // ==========================================
-final allAssignmentsProvider = StreamProvider<List<ProjectLecturerAssignment>>((ref) {
+final allAssignmentsProvider = StreamProvider<List<ProjectLecturerAssignment>>((
+  ref,
+) {
   return _fs.assignmentsStream().map((list) {
     return list.map((m) => ProjectLecturerAssignment.fromJson(m)).toList();
   });
 });
 
-final lecturerAssignmentsProvider = Provider<List<ProjectLecturerAssignment>>((ref) {
+final lecturerAssignmentsProvider = Provider<List<ProjectLecturerAssignment>>((
+  ref,
+) {
   final lecturer = ref.watch(lecturerAuthProvider);
   final all = ref.watch(allAssignmentsProvider);
   if (lecturer == null) return [];
   final allList = all.asData?.value ?? [];
-  return allList.where((a) =>
-    a.status == 'active' && (
-      (a.lecturerId != null && a.lecturerId == lecturer.uid) ||
-      (a.lecturerId == null && a.lecturerDisplayName.toLowerCase().contains(lecturer.displayName.toLowerCase()))
-    )
-  ).toList();
+  return allList
+      .where(
+        (a) =>
+            a.status == 'active' &&
+            ((a.lecturerId != null && a.lecturerId == lecturer.uid) ||
+                (a.lecturerId == null &&
+                    a.lecturerDisplayName.toLowerCase().contains(
+                      lecturer.displayName.toLowerCase(),
+                    ))),
+      )
+      .toList();
 });
 
 // ==========================================
@@ -602,7 +694,7 @@ final lecturerVisitsProvider = Provider<List<StudentVisit>>((ref) {
 final completedVisitsProvider = Provider<Set<String>>((ref) {
   final visits = ref.watch(lecturerVisitsProvider);
   return visits
-    .where((v) => v.status == 'completed')
-    .map((v) => '${v.projectId}_${v.visitRole}')
-    .toSet();
+      .where((v) => v.status == 'completed')
+      .map((v) => '${v.projectId}_${v.visitRole}')
+      .toSet();
 });

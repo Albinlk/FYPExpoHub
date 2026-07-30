@@ -14,7 +14,13 @@ Map<String, dynamic> _convertTimestamps(Map<String, dynamic> data) {
     } else if (value is Map<String, dynamic>) {
       result[key] = _convertTimestamps(value);
     } else if (value is List) {
-      result[key] = value.map((e) => e is Map<String, dynamic> ? _convertTimestamps(e) : (e is Timestamp ? e.toDate().toIso8601String() : e)).toList();
+      result[key] = value
+          .map(
+            (e) => e is Map<String, dynamic>
+                ? _convertTimestamps(e)
+                : (e is Timestamp ? e.toDate().toIso8601String() : e),
+          )
+          .toList();
     } else {
       result[key] = value;
     }
@@ -36,6 +42,11 @@ class FirestoreService {
     return _db.collection('publicProjects').snapshots().map((snap) {
       return snap.docs.map((doc) => _convertTimestamps(doc.data())).toList();
     });
+  }
+
+  Future<List<Map<String, dynamic>>> getProjectsOnce() async {
+    final snap = await _db.collection('publicProjects').get();
+    return snap.docs.map((doc) => _convertTimestamps(doc.data())).toList();
   }
 
   Future<void> setProject(String id, Map<String, dynamic> data) async {
@@ -157,27 +168,55 @@ class FirestoreService {
   // IMPORT SUBCOLLECTIONS
   // ---------------------------------------------------
   Stream<List<Map<String, dynamic>>> scheduleCandidatesStream(String importId) {
-    return _db.collection('imports').doc(importId).collection('scheduleCandidates').snapshots().map((snap) {
-      return snap.docs.map((doc) => _convertTimestamps(doc.data())).toList();
-    });
+    return _db
+        .collection('imports')
+        .doc(importId)
+        .collection('scheduleCandidates')
+        .snapshots()
+        .map((snap) {
+          return snap.docs
+              .map((doc) => _convertTimestamps(doc.data()))
+              .toList();
+        });
   }
 
   Stream<List<Map<String, dynamic>>> awardCandidatesStream(String importId) {
-    return _db.collection('imports').doc(importId).collection('awardCandidates').snapshots().map((snap) {
-      return snap.docs.map((doc) => _convertTimestamps(doc.data())).toList();
-    });
+    return _db
+        .collection('imports')
+        .doc(importId)
+        .collection('awardCandidates')
+        .snapshots()
+        .map((snap) {
+          return snap.docs
+              .map((doc) => _convertTimestamps(doc.data()))
+              .toList();
+        });
   }
 
   Stream<List<Map<String, dynamic>>> privacySkipsStream(String importId) {
-    return _db.collection('imports').doc(importId).collection('privacySkips').snapshots().map((snap) {
-      return snap.docs.map((doc) => _convertTimestamps(doc.data())).toList();
-    });
+    return _db
+        .collection('imports')
+        .doc(importId)
+        .collection('privacySkips')
+        .snapshots()
+        .map((snap) {
+          return snap.docs
+              .map((doc) => _convertTimestamps(doc.data()))
+              .toList();
+        });
   }
 
   Stream<List<Map<String, dynamic>>> validationIssuesStream(String importId) {
-    return _db.collection('imports').doc(importId).collection('validationIssues').snapshots().map((snap) {
-      return snap.docs.map((doc) => _convertTimestamps(doc.data())).toList();
-    });
+    return _db
+        .collection('imports')
+        .doc(importId)
+        .collection('validationIssues')
+        .snapshots()
+        .map((snap) {
+          return snap.docs
+              .map((doc) => _convertTimestamps(doc.data()))
+              .toList();
+        });
   }
 
   // ---------------------------------------------------
@@ -207,15 +246,22 @@ class FirestoreService {
   // PROJECT LECTURER ASSIGNMENTS
   // ---------------------------------------------------
   Stream<List<Map<String, dynamic>>> assignmentsStream() {
-    return _db.collection('projectLecturerAssignments')
-      .orderBy('createdAt', descending: true)
-      .snapshots().map((snap) {
-      return snap.docs.map((doc) => _convertTimestamps(doc.data())).toList();
-    });
+    return _db
+        .collection('projectLecturerAssignments')
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snap) {
+          return snap.docs
+              .map((doc) => _convertTimestamps(doc.data()))
+              .toList();
+        });
   }
 
   Future<Map<String, dynamic>?> getAssignment(String id) async {
-    final doc = await _db.collection('projectLecturerAssignments').doc(id).get();
+    final doc = await _db
+        .collection('projectLecturerAssignments')
+        .doc(id)
+        .get();
     if (!doc.exists) return null;
     return _convertTimestamps(doc.data()!);
   }
@@ -228,12 +274,16 @@ class FirestoreService {
   // STUDENT PROJECT VISITS
   // ---------------------------------------------------
   Stream<List<Map<String, dynamic>>> visitsStream() {
-    return _db.collection('studentProjectVisits')
-      .orderBy('createdAt', descending: true)
-      .limit(500)
-      .snapshots().map((snap) {
-      return snap.docs.map((doc) => _convertTimestamps(doc.data())).toList();
-    });
+    return _db
+        .collection('studentProjectVisits')
+        .orderBy('createdAt', descending: true)
+        .limit(500)
+        .snapshots()
+        .map((snap) {
+          return snap.docs
+              .map((doc) => _convertTimestamps(doc.data()))
+              .toList();
+        });
   }
 
   Future<Map<String, dynamic>?> getVisit(String id) async {
@@ -250,9 +300,16 @@ class FirestoreService {
   // AUDIT LOGS
   // ---------------------------------------------------
   Stream<List<Map<String, dynamic>>> auditLogsStream() {
-    return _db.collection('auditLogs').orderBy('createdAt', descending: true).limit(200).snapshots().map((snap) {
-      return snap.docs.map((doc) => _convertTimestamps(doc.data())).toList();
-    });
+    return _db
+        .collection('auditLogs')
+        .orderBy('createdAt', descending: true)
+        .limit(200)
+        .snapshots()
+        .map((snap) {
+          return snap.docs
+              .map((doc) => _convertTimestamps(doc.data()))
+              .toList();
+        });
   }
 
   Future<void> setAuditLog(String id, Map<String, dynamic> data) async {
@@ -262,7 +319,11 @@ class FirestoreService {
   // ---------------------------------------------------
   // FILE UPLOAD (web-compatible via putData)
   // ---------------------------------------------------
-  Future<String?> uploadFile(String localPath, String destinationPath, Uint8List? bytes) async {
+  Future<String?> uploadFile(
+    String localPath,
+    String destinationPath,
+    Uint8List? bytes,
+  ) async {
     final ref = _storage.ref(destinationPath);
     final fileBytes = bytes ?? (await _readFileAsBytes(localPath));
     await ref.putData(fileBytes);

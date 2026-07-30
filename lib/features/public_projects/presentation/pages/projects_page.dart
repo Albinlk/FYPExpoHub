@@ -28,7 +28,8 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && !_initialized) {
         _initialized = true;
-        final searchQuery = GoRouterState.of(context).uri.queryParameters['search'] ?? '';
+        final searchQuery =
+            GoRouterState.of(context).uri.queryParameters['search'] ?? '';
         if (searchQuery.isNotEmpty) {
           _searchController.text = searchQuery;
           setState(() {});
@@ -46,8 +47,22 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
     });
   }
 
-  final List<String> _programmes = ['All', 'CS230', 'CS251', 'CS253', 'CS255', 'CS266'];
-  final List<String> _categories = ['All', 'Computer Science', 'Networking & Communication', 'Cybersecurity', 'Network Security & Infrastructure', 'Software Engineering & Applications'];
+  final List<String> _programmes = [
+    'All',
+    'CS230',
+    'CS251',
+    'CS253',
+    'CS255',
+    'CS266',
+  ];
+  final List<String> _categories = [
+    'All',
+    'Computer Science',
+    'Networking & Communication',
+    'Cybersecurity',
+    'Network Security & Infrastructure',
+    'Software Engineering & Applications',
+  ];
 
   @override
   void dispose() {
@@ -59,73 +74,121 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
   @override
   Widget build(BuildContext context) {
     final isDesktop = MediaQuery.of(context).size.width >= 768;
-    final padding = isDesktop ? DesignSystem.marginDesktop : DesignSystem.marginMobile;
+    final padding = isDesktop
+        ? DesignSystem.marginDesktop
+        : DesignSystem.marginMobile;
 
     final allProjects = ref.watch(projectsProvider);
-    final publishedProjects = allProjects.where((p) => p.publicationStatus == 'published').toList();
+    final publishedProjects = allProjects
+        .where((p) => p.publicationStatus == 'published')
+        .toList();
 
     // Filter projects logic
     final filteredProjects = publishedProjects.where((project) {
       final searchLower = _searchController.text.toLowerCase();
-      final matchesSearch = searchLower.isEmpty ||
+      final matchesSearch =
+          searchLower.isEmpty ||
           project.title.toLowerCase().contains(searchLower) ||
-          project.teamDisplayNames.any((name) => name.toLowerCase().contains(searchLower)) ||
+          project.teamDisplayNames.any(
+            (name) => name.toLowerCase().contains(searchLower),
+          ) ||
           project.supervisorDisplayName.toLowerCase().contains(searchLower) ||
-          (project.examinerDisplayName?.toLowerCase().contains(searchLower) ?? false);
-      final matchesProgramme = _selectedProgramme == 'All' || project.programmeCode.contains(_selectedProgramme);
-      final matchesCategory = _selectedCategory == 'All' || project.category == _selectedCategory;
+          (project.examinerDisplayName?.toLowerCase().contains(searchLower) ??
+              false);
+      final matchesProgramme =
+          _selectedProgramme == 'All' ||
+          project.programmeCode.contains(_selectedProgramme);
+      final matchesCategory =
+          _selectedCategory == 'All' || project.category == _selectedCategory;
       final matchesCalon = !_calonIndustriOnly || project.calonIndustri;
-      return matchesSearch && matchesProgramme && matchesCategory && matchesCalon;
+      return matchesSearch &&
+          matchesProgramme &&
+          matchesCategory &&
+          matchesCalon;
     }).toList();
 
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverPadding(
-            padding: EdgeInsets.symmetric(horizontal: padding, vertical: DesignSystem.spaceXl),
-            sliver: SliverToBoxAdapter(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Project Catalogue', style: DesignSystem.h1.copyWith(color: DesignSystem.primary)),
-                  const SizedBox(height: DesignSystem.spaceSm),
-                  Text('Explore all final year projects presented by FSKM students.', style: (isDesktop ? DesignSystem.bodyLg : DesignSystem.bodyLgMobile).copyWith(color: DesignSystem.onSurfaceVariant), softWrap: true),
-                  const SizedBox(height: DesignSystem.spaceXl),
+      body: RefreshIndicator(
+        onRefresh: () => ref.read(projectsProvider.notifier).refresh(),
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverPadding(
+              padding: EdgeInsets.symmetric(
+                horizontal: padding,
+                vertical: DesignSystem.spaceXl,
+              ),
+              sliver: SliverToBoxAdapter(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Project Catalogue',
+                            style: DesignSystem.h1.copyWith(
+                              color: DesignSystem.primary,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: 'Refresh projects',
+                          onPressed: () =>
+                              ref.read(projectsProvider.notifier).refresh(),
+                          icon: const Icon(
+                            Icons.refresh,
+                            color: DesignSystem.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: DesignSystem.spaceSm),
+                    Text(
+                      'Explore all final year projects presented by FSKM students.',
+                      style:
+                          (isDesktop
+                                  ? DesignSystem.bodyLg
+                                  : DesignSystem.bodyLgMobile)
+                              .copyWith(color: DesignSystem.onSurfaceVariant),
+                      softWrap: true,
+                    ),
+                    const SizedBox(height: DesignSystem.spaceXl),
 
-                  // Search & Filter Panel
-                  _buildSearchAndFilters(isDesktop),
-                ],
+                    // Search & Filter Panel
+                    _buildSearchAndFilters(isDesktop),
+                  ],
+                ),
               ),
             ),
-          ),
 
-          if (filteredProjects.isEmpty)
-            SliverPadding(
-              padding: EdgeInsets.symmetric(horizontal: padding),
-              sliver: SliverToBoxAdapter(
-                child: _buildEmptyState(isDesktop),
-              ),
-            )
-          else
-            SliverPadding(
-              padding: EdgeInsets.symmetric(horizontal: padding).copyWith(bottom: DesignSystem.spaceXl),
-              sliver: SliverGrid(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: isDesktop ? 3 : 1,
-                  crossAxisSpacing: DesignSystem.spaceMd,
-                  mainAxisSpacing: DesignSystem.spaceMd,
-                  childAspectRatio: isDesktop ? 1.55 : 1.35,
-                ),
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
+            if (filteredProjects.isEmpty)
+              SliverPadding(
+                padding: EdgeInsets.symmetric(horizontal: padding),
+                sliver: SliverToBoxAdapter(child: _buildEmptyState(isDesktop)),
+              )
+            else
+              SliverPadding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: padding,
+                ).copyWith(bottom: DesignSystem.spaceXl),
+                sliver: SliverGrid(
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: isDesktop ? 3 : 1,
+                    crossAxisSpacing: DesignSystem.spaceMd,
+                    mainAxisSpacing: DesignSystem.spaceMd,
+                    childAspectRatio: isDesktop ? 1.55 : 1.35,
+                  ),
+                  delegate: SliverChildBuilderDelegate((context, index) {
                     final project = filteredProjects[index];
                     return _buildProjectCard(project);
-                  },
-                  childCount: filteredProjects.length,
+                  }, childCount: filteredProjects.length),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -144,8 +207,12 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
                     controller: _searchController,
                     onChanged: _onSearchChanged,
                     decoration: const InputDecoration(
-                      hintText: 'Search by project title, student, or supervisor...',
-                      prefixIcon: Icon(Icons.search, color: DesignSystem.primary),
+                      hintText:
+                          'Search by project title, student, or supervisor...',
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: DesignSystem.primary,
+                      ),
                     ),
                   ),
                 ),
@@ -161,8 +228,13 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: DesignSystem.surfaceContainer,
                       foregroundColor: DesignSystem.primary,
-                      shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: DesignSystem.radiusLg,
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 16,
+                      ),
                     ),
                     child: const Text('Reset Filters'),
                   ),
@@ -175,26 +247,50 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
             isDesktop
                 ? Row(
                     children: [
-                      Expanded(child: _buildDropdownFilter('Academic Program', _selectedProgramme, _programmes, (val) {
-                        setState(() => _selectedProgramme = val!);
-                      })),
+                      Expanded(
+                        child: _buildDropdownFilter(
+                          'Academic Program',
+                          _selectedProgramme,
+                          _programmes,
+                          (val) {
+                            setState(() => _selectedProgramme = val!);
+                          },
+                        ),
+                      ),
                       const SizedBox(width: DesignSystem.spaceMd),
-                      Expanded(child: _buildDropdownFilter('Project Category', _selectedCategory, _categories, (val) {
-                        setState(() => _selectedCategory = val!);
-                      })),
+                      Expanded(
+                        child: _buildDropdownFilter(
+                          'Project Category',
+                          _selectedCategory,
+                          _categories,
+                          (val) {
+                            setState(() => _selectedCategory = val!);
+                          },
+                        ),
+                      ),
                       const SizedBox(width: DesignSystem.spaceMd),
                       _buildCalonChip(),
                     ],
                   )
                 : Column(
                     children: [
-                      _buildDropdownFilter('Academic Program', _selectedProgramme, _programmes, (val) {
-                        setState(() => _selectedProgramme = val!);
-                      }),
+                      _buildDropdownFilter(
+                        'Academic Program',
+                        _selectedProgramme,
+                        _programmes,
+                        (val) {
+                          setState(() => _selectedProgramme = val!);
+                        },
+                      ),
                       const SizedBox(height: DesignSystem.spaceMd),
-                      _buildDropdownFilter('Project Category', _selectedCategory, _categories, (val) {
-                        setState(() => _selectedCategory = val!);
-                      }),
+                      _buildDropdownFilter(
+                        'Project Category',
+                        _selectedCategory,
+                        _categories,
+                        (val) {
+                          setState(() => _selectedCategory = val!);
+                        },
+                      ),
                       const SizedBox(height: DesignSystem.spaceMd),
                       _buildCalonChip(),
                       const SizedBox(height: DesignSystem.spaceMd),
@@ -210,8 +306,13 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: DesignSystem.surfaceContainer,
                             foregroundColor: DesignSystem.primary,
-                            shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: DesignSystem.radiusLg,
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 16,
+                            ),
                           ),
                           child: const Text('Reset Filters'),
                         ),
@@ -224,11 +325,21 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
     );
   }
 
-  Widget _buildDropdownFilter(String label, String value, List<String> items, ValueChanged<String?> onChanged) {
+  Widget _buildDropdownFilter(
+    String label,
+    String value,
+    List<String> items,
+    ValueChanged<String?> onChanged,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSurfaceVariant)),
+        Text(
+          label,
+          style: DesignSystem.labelCaps.copyWith(
+            color: DesignSystem.onSurfaceVariant,
+          ),
+        ),
         const SizedBox(height: 6),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -272,7 +383,9 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
           label: Text(
             _calonIndustriOnly ? 'Showing only' : 'Show only',
             style: DesignSystem.bodySm.copyWith(
-              color: _calonIndustriOnly ? Colors.white : DesignSystem.onSurfaceVariant,
+              color: _calonIndustriOnly
+                  ? Colors.white
+                  : DesignSystem.onSurfaceVariant,
             ),
           ),
           selectedColor: DesignSystem.tertiary,
@@ -285,7 +398,9 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
   Widget _buildProjectCard(Project project) {
     return Card(
       clipBehavior: Clip.antiAlias,
-      color: project.calonIndustri ? DesignSystem.tertiaryContainer.withValues(alpha: 0.15) : null,
+      color: project.calonIndustri
+          ? DesignSystem.tertiaryContainer.withValues(alpha: 0.15)
+          : null,
       surfaceTintColor: project.calonIndustri ? DesignSystem.tertiary : null,
       child: InkWell(
         onTap: () => context.go('/projects/${project.id}'),
@@ -307,7 +422,10 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
                       top: 8,
                       left: 8,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: DesignSystem.tertiary,
                           borderRadius: DesignSystem.radiusSm,
@@ -315,11 +433,18 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.workspace_premium, size: 13, color: Colors.white),
+                            Icon(
+                              Icons.workspace_premium,
+                              size: 13,
+                              color: Colors.white,
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               'Industry Candidate',
-                              style: DesignSystem.labelCaps.copyWith(color: Colors.white, fontSize: 10),
+                              style: DesignSystem.labelCaps.copyWith(
+                                color: Colors.white,
+                                fontSize: 10,
+                              ),
                             ),
                           ],
                         ),
@@ -335,19 +460,28 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
                       crossAxisAlignment: WrapCrossAlignment.end,
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.black54,
                             borderRadius: DesignSystem.radiusSm,
                           ),
                           child: Text(
                             project.category,
-                            style: DesignSystem.labelCaps.copyWith(color: Colors.white, fontSize: 10),
+                            style: DesignSystem.labelCaps.copyWith(
+                              color: Colors.white,
+                              fontSize: 10,
+                            ),
                           ),
                         ),
                         if (project.boothNumber != null)
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
                             decoration: BoxDecoration(
                               color: DesignSystem.secondaryContainer,
                               borderRadius: DesignSystem.radiusSm,
@@ -355,11 +489,19 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.room, size: 14, color: DesignSystem.onSecondaryContainer),
+                                Icon(
+                                  Icons.room,
+                                  size: 14,
+                                  color: DesignSystem.onSecondaryContainer,
+                                ),
                                 const SizedBox(width: 4),
                                 Text(
                                   project.boothNumber!,
-                                  style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSecondaryContainer, fontWeight: FontWeight.bold, fontSize: 11),
+                                  style: DesignSystem.bodySm.copyWith(
+                                    color: DesignSystem.onSecondaryContainer,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 11,
+                                  ),
                                 ),
                               ],
                             ),
@@ -398,7 +540,11 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
                   if (project.boothNumber != null) ...[
                     Row(
                       children: [
-                        Icon(Icons.room, size: 14, color: DesignSystem.secondary),
+                        Icon(
+                          Icons.room,
+                          size: 14,
+                          color: DesignSystem.secondary,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           '${project.boothNumber}${project.boothZone != null ? ' • ${project.boothZone}' : ''}',
@@ -413,7 +559,10 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
                   ],
                   Text(
                     'Student(s): ${project.teamDisplayNames.join(', ')}',
-                    style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant, height: 1.3),
+                    style: DesignSystem.bodySm.copyWith(
+                      color: DesignSystem.onSurfaceVariant,
+                      height: 1.3,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -431,7 +580,10 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
                     const SizedBox(height: 2),
                     Text(
                       'Examiner: ${project.examinerDisplayName}',
-                      style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant, height: 1.3),
+                      style: DesignSystem.bodySm.copyWith(
+                        color: DesignSystem.onSurfaceVariant,
+                        height: 1.3,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -451,11 +603,24 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
         padding: const EdgeInsets.symmetric(vertical: 40.0),
         child: Column(
           children: [
-            const Icon(Icons.folder_open_outlined, size: 64, color: DesignSystem.outlineVariant),
+            const Icon(
+              Icons.folder_open_outlined,
+              size: 64,
+              color: DesignSystem.outlineVariant,
+            ),
             const SizedBox(height: DesignSystem.spaceSm),
-            Text('No Projects Found', style: (isDesktop ? DesignSystem.h3 : DesignSystem.h3Mobile).copyWith(color: DesignSystem.onSurfaceVariant)),
+            Text(
+              'No Projects Found',
+              style: (isDesktop ? DesignSystem.h3 : DesignSystem.h3Mobile)
+                  .copyWith(color: DesignSystem.onSurfaceVariant),
+            ),
             const SizedBox(height: 4),
-            Text('Please check your search keywords or reset filters.', style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant)),
+            Text(
+              'Please check your search keywords or reset filters.',
+              style: DesignSystem.bodySm.copyWith(
+                color: DesignSystem.onSurfaceVariant,
+              ),
+            ),
           ],
         ),
       ),
