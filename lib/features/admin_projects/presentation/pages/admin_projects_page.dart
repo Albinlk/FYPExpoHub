@@ -50,8 +50,8 @@ class AdminProjectsPage extends ConsumerWidget {
                       const SizedBox(height: DesignSystem.spaceSm),
                       _responsiveRow(isDesktop, 3, [
                         TextField(controller: matricIdController, decoration: const InputDecoration(labelText: 'Matric ID')),
-                        TextField(controller: codeController, decoration: const InputDecoration(labelText: 'Program Code')),
-                        TextField(controller: progNameController, decoration: const InputDecoration(labelText: 'Program Name')),
+                        TextField(controller: codeController, decoration: const InputDecoration(labelText: 'Programme Code')),
+                        TextField(controller: progNameController, decoration: const InputDecoration(labelText: 'Programme Name')),
                       ]),
                       const SizedBox(height: DesignSystem.spaceSm),
                       TextField(
@@ -322,7 +322,7 @@ class AdminProjectsPage extends ConsumerWidget {
                                       ),
                                       const SizedBox(height: 2),
                                       Text(
-                                        'Program: ${item.programmeCode} • Student(s): ${item.teamDisplayNames.join(', ')} • Supervisor: ${item.supervisorDisplayName}${item.examinerDisplayName != null ? ' • Examiner: ${item.examinerDisplayName}' : ''}',
+                                        'Programme: ${item.programmeCode} • Student(s): ${item.teamDisplayNames.join(', ')} • Supervisor: ${item.supervisorDisplayName}${item.examinerDisplayName != null ? ' • Examiner: ${item.examinerDisplayName}' : ''}',
                                         style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant),
                                       ),
                                       if (item.boothNumber != null)

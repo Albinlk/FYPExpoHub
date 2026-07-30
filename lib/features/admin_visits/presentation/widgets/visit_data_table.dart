@@ -168,7 +168,7 @@ String exportVisitsCsv(
   List<Project> projects,
 ) {
   final buffer = StringBuffer();
-  buffer.writeln('Lecturer,Role,Student,Project,Program,Booth,Status,Visit Time,Note');
+  buffer.writeln('Lecturer,Role,Student,Project,Programme,Booth,Status,Visit Time,Note');
 
   for (final a in assignments) {
     final project = projects.where((p) => p.id == a.projectId).firstOrNull;

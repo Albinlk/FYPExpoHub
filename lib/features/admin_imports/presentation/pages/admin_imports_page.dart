@@ -120,7 +120,7 @@ class _AdminImportsPageState extends ConsumerState<AdminImportsPage> {
                               style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold, color: DesignSystem.primary),
                             ),
                             const SizedBox(height: 4),
-                            Text('Only .xlsx files (Master Workbook) are allowed. Max size: 10MB.', style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant)),
+                            Text('Only .xlsx files (Master Workbook) are allowed. Maximum size: 10MB.', style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant)),
                           ],
                         ),
                       ),
