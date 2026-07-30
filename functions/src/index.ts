@@ -1,6 +1,6 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
-import * as XLSX from 'xlsx';
+// XLSX is dynamically imported inside processMasterFileImport to reduce cold start times for callables
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -84,6 +84,9 @@ export const processMasterFileImport = functions.storage.object().onFinalize(asy
     const bucket = admin.storage().bucket(object.bucket);
     const file = bucket.file(filePath);
     const [fileBuffer] = await file.download();
+
+    // Lazy-load sheetjs (XLSX) to prevent top-level cold-start module bloat for other cloud functions
+    const XLSX = require('xlsx');
 
     // Load workbook using sheetjs
     const workbook = XLSX.read(fileBuffer, { type: 'buffer' });

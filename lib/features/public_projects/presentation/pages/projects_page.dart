@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -19,6 +20,7 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
   String _selectedCategory = 'All';
   bool _calonIndustriOnly = false;
   bool _initialized = false;
+  Timer? _debounceTimer;
 
   @override
   void initState() {
@@ -35,11 +37,21 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
     });
   }
 
+  void _onSearchChanged(String query) {
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 250), () {
+      if (mounted) {
+        setState(() {});
+      }
+    });
+  }
+
   final List<String> _programmes = ['All', 'CS230', 'CS251', 'CS253', 'CS255', 'CS266'];
   final List<String> _categories = ['All', 'Computer Science', 'Networking & Communication', 'Cybersecurity', 'Network Security & Infrastructure', 'Software Engineering & Applications'];
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -54,10 +66,12 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
 
     // Filter projects logic
     final filteredProjects = publishedProjects.where((project) {
-      final matchesSearch = project.title.toLowerCase().contains(_searchController.text.toLowerCase()) ||
-          project.teamDisplayNames.any((name) => name.toLowerCase().contains(_searchController.text.toLowerCase())) ||
-          project.supervisorDisplayName.toLowerCase().contains(_searchController.text.toLowerCase()) ||
-          (project.examinerDisplayName?.toLowerCase().contains(_searchController.text.toLowerCase()) ?? false);
+      final searchLower = _searchController.text.toLowerCase();
+      final matchesSearch = searchLower.isEmpty ||
+          project.title.toLowerCase().contains(searchLower) ||
+          project.teamDisplayNames.any((name) => name.toLowerCase().contains(searchLower)) ||
+          project.supervisorDisplayName.toLowerCase().contains(searchLower) ||
+          (project.examinerDisplayName?.toLowerCase().contains(searchLower) ?? false);
       final matchesProgramme = _selectedProgramme == 'All' || project.programmeCode.contains(_selectedProgramme);
       final matchesCategory = _selectedCategory == 'All' || project.category == _selectedCategory;
       final matchesCalon = !_calonIndustriOnly || project.calonIndustri;
@@ -65,41 +79,53 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
     }).toList();
 
     return Scaffold(
-      body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: padding, vertical: DesignSystem.spaceXl),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Project Catalog', style: DesignSystem.h1.copyWith(color: DesignSystem.primary)),
-            const SizedBox(height: DesignSystem.spaceSm),
-            Text('Explore all final year projects presented by FSKM students.', style: (isDesktop ? DesignSystem.bodyLg : DesignSystem.bodyLgMobile).copyWith(color: DesignSystem.onSurfaceVariant), softWrap: true),
-            const SizedBox(height: DesignSystem.spaceXl),
+      body: CustomScrollView(
+        slivers: [
+          SliverPadding(
+            padding: EdgeInsets.symmetric(horizontal: padding, vertical: DesignSystem.spaceXl),
+            sliver: SliverToBoxAdapter(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Project Catalog', style: DesignSystem.h1.copyWith(color: DesignSystem.primary)),
+                  const SizedBox(height: DesignSystem.spaceSm),
+                  Text('Explore all final year projects presented by FSKM students.', style: (isDesktop ? DesignSystem.bodyLg : DesignSystem.bodyLgMobile).copyWith(color: DesignSystem.onSurfaceVariant), softWrap: true),
+                  const SizedBox(height: DesignSystem.spaceXl),
 
-            // Search & Filter Panel
-            _buildSearchAndFilters(isDesktop),
+                  // Search & Filter Panel
+                  _buildSearchAndFilters(isDesktop),
+                ],
+              ),
+            ),
+          ),
 
-            const SizedBox(height: DesignSystem.spaceXl),
-
-            // Main Projects Grid
-            filteredProjects.isEmpty
-                ? _buildEmptyState(isDesktop)
-                : GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: isDesktop ? 3 : 1,
-                      crossAxisSpacing: DesignSystem.spaceMd,
-                      mainAxisSpacing: DesignSystem.spaceMd,
-                      childAspectRatio: isDesktop ? 1.55 : 1.35,
-                    ),
-                    itemCount: filteredProjects.length,
-                    itemBuilder: (context, index) {
-                      final project = filteredProjects[index];
-                      return _buildProjectCard(project);
-                    },
-                  ),
-          ],
-        ),
+          if (filteredProjects.isEmpty)
+            SliverPadding(
+              padding: EdgeInsets.symmetric(horizontal: padding),
+              sliver: SliverToBoxAdapter(
+                child: _buildEmptyState(isDesktop),
+              ),
+            )
+          else
+            SliverPadding(
+              padding: EdgeInsets.symmetric(horizontal: padding).copyWith(bottom: DesignSystem.spaceXl),
+              sliver: SliverGrid(
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: isDesktop ? 3 : 1,
+                  crossAxisSpacing: DesignSystem.spaceMd,
+                  mainAxisSpacing: DesignSystem.spaceMd,
+                  childAspectRatio: isDesktop ? 1.55 : 1.35,
+                ),
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final project = filteredProjects[index];
+                    return _buildProjectCard(project);
+                  },
+                  childCount: filteredProjects.length,
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -116,7 +142,7 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
                 Expanded(
                   child: TextField(
                     controller: _searchController,
-                    onChanged: (val) => setState(() {}),
+                    onChanged: _onSearchChanged,
                     decoration: const InputDecoration(
                       hintText: 'Search by project title, student, or supervisor...',
                       prefixIcon: Icon(Icons.search, color: DesignSystem.primary),

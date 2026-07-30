@@ -74,8 +74,9 @@ flutter:
   # Flutter section
   uses-material-design: true
 
-  assets:
-    - web/project_images/
+  # Assets are served dynamically / hosted on CDN to reduce web bundle size
+  # assets:
+  #   - web/project_images/
 
   fonts:
     - family: Inter
