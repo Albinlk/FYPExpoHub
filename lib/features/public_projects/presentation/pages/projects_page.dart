@@ -87,7 +87,7 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Project Catalog', style: DesignSystem.h1.copyWith(color: DesignSystem.primary)),
+                  Text('Project Catalogue', style: DesignSystem.h1.copyWith(color: DesignSystem.primary)),
                   const SizedBox(height: DesignSystem.spaceSm),
                   Text('Explore all final year projects presented by FSKM students.', style: (isDesktop ? DesignSystem.bodyLg : DesignSystem.bodyLgMobile).copyWith(color: DesignSystem.onSurfaceVariant), softWrap: true),
                   const SizedBox(height: DesignSystem.spaceXl),

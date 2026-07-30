@@ -33,7 +33,7 @@ function normaliseMalayDate(dateStr: string): Date {
 
   const parsedDate = new Date(cleanStr);
   if (isNaN(parsedDate.getTime())) {
-    throw new Error(`Gagal memparsed tarikh: ${dateStr}`);
+    throw new Error(`Failed to parse date: ${dateStr}`);
   }
   return parsedDate;
 }
@@ -137,7 +137,7 @@ export const processMasterFileImport = functions.storage.object().onFinalize(asy
             issueBatch.set(ref, {
               issueType: 'missing_title',
               severity: 'warning',
-              message: `Baris ${rowNum}: Maklumat penting kosong.`,
+              message: `Row ${rowNum}: Required information is missing.`,
               worksheetName: 'TENTATIF',
               rowNumber: rowNum
             });
@@ -174,7 +174,7 @@ export const processMasterFileImport = functions.storage.object().onFinalize(asy
                 issueBatch.set(ref, {
                   issueType: 'overlap',
                   severity: 'warning',
-                  message: `Baris ${rowNum}: Waktu bertindih dengan "${other.title}".`,
+                  message: `Row ${rowNum}: Time overlaps with "${other.title}".`,
                   worksheetName: 'TENTATIF',
                   rowNumber: rowNum
                 });
@@ -196,7 +196,7 @@ export const processMasterFileImport = functions.storage.object().onFinalize(asy
           issueBatch.set(ref, {
             issueType: 'invalid_time',
             severity: 'error',
-            message: `Baris ${rowNum}: Ralat memproses - ${err.message}`,
+            message: `Row ${rowNum}: Processing error - ${err.message}`,
             worksheetName: 'TENTATIF',
             rowNumber: rowNum
           });
@@ -261,9 +261,9 @@ export const processMasterFileImport = functions.storage.object().onFinalize(asy
       const privacyBatch = db.batch();
       if (emailSkipCount > 0) {
         privacyBatch.set(privacySkipsCol.doc(), {
-          skipType: 'Student ID / Matrik',
+          skipType: 'Student ID / Matric',
           count: emailSkipCount,
-          reason: 'Isolasi perlindungan maklumat peribadi PDPA.',
+          reason: 'Personal data protection isolation under PDPA.',
           worksheetName: 'PEMENANG ANUGERAH',
           timestamp: admin.firestore.FieldValue.serverTimestamp()
         });
@@ -272,9 +272,9 @@ export const processMasterFileImport = functions.storage.object().onFinalize(asy
 
       if (phoneSkipCount > 0) {
         privacyBatch.set(privacySkipsCol.doc(), {
-          skipType: 'No Tel / E-mel Peribadi',
+          skipType: 'Phone No / Personal Email',
           count: phoneSkipCount,
-          reason: 'Isolasi perlindungan maklumat peribadi PDPA.',
+          reason: 'Personal data protection isolation under PDPA.',
           worksheetName: 'PEMENANG ANUGERAH',
           timestamp: admin.firestore.FieldValue.serverTimestamp()
         });
@@ -295,7 +295,7 @@ export const processMasterFileImport = functions.storage.object().onFinalize(asy
   } catch (error: any) {
     await importRef.update({
       status: 'error',
-      errorSummary: error.message || 'Ralat tidak dijangka berlaku semasa parsing.'
+      errorSummary: error.message || 'An unexpected error occurred during parsing.'
     });
   }
 });

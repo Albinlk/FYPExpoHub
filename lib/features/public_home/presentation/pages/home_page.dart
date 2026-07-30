@@ -140,7 +140,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                                 shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusFull),
                               ),
-                              child: Text('Explore Project Catalog', style: DesignSystem.button),
+                              child: Text('Explore Project Catalogue', style: DesignSystem.button),
                             ),
                             ElevatedButton(
                               onPressed: () => context.go('/lecturer'),

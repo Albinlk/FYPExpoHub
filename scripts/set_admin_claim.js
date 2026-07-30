@@ -15,8 +15,8 @@ const fs = require('fs');
 const serviceAccountPath = path.join(__dirname, '../serviceAccountKey.json');
 
 if (!fs.existsSync(serviceAccountPath)) {
-  console.error('\n[RALAT] Fail serviceAccountKey.json tidak dijumpai di direktori root.');
-  console.error('Sila muat turun fail kunci akaun perkhidmatan daripada Konsol Firebase:');
+  console.error('\n[ERROR] serviceAccountKey.json file not found in root directory.');
+  console.error('Please download a service account key file from Firebase Console:');
   console.error('Project Settings -> Service Accounts -> Generate New Private Key\n');
   process.exit(1);
 }
@@ -31,8 +31,8 @@ const identifier = process.argv[2];
 const adminState = process.argv[3] !== 'false'; // defaults to true unless explicitly 'false'
 
 if (!identifier) {
-  console.error('\n[PANDUAN] Sila nyatakan e-mel atau UID pengguna.');
-  console.error('Penggunaan: node scripts/set_admin_claim.js <email-atau-uid> [true|false]\n');
+  console.error('\n[USAGE] Please specify user email or UID.');
+  console.error('Usage: node scripts/set_admin_claim.js <email-or-uid> [true|false]\n');
   process.exit(1);
 }
 
@@ -45,20 +45,20 @@ async function setAdminClaim() {
       user = await admin.auth().getUser(identifier);
     }
   } catch (err) {
-    console.error(`\n[RALAT] Gagal mencari pengguna dengan identiti "${identifier}": ${err.message}\n`);
+    console.error(`\n[ERROR] Failed to find user with identity "${identifier}": ${err.message}\n`);
     process.exit(1);
   }
 
   try {
     await admin.auth().setCustomUserClaims(user.uid, { admin: adminState });
-    console.log(`\n[BERJAYA] Rekod tuntutan tersuai (custom claim) dikemaskini bagi:`);
-    console.log(`  - Nama: ${user.displayName || 'N/A'}`);
-    console.log(`  - E-mel: ${user.email}`);
+    console.log(`\n[SUCCESS] Custom user claim record updated for:`);
+    console.log(`  - Name: ${user.displayName || 'N/A'}`);
+    console.log(`  - Email: ${user.email}`);
     console.log(`  - UID: ${user.uid}`);
-    console.log(`  - Status Pentadbir (admin: true): ${adminState}\n`);
+    console.log(`  - Administrator Status (admin: true): ${adminState}\n`);
     process.exit(0);
   } catch (err) {
-    console.error(`\n[RALAT] Gagal menetapkan tuntutan pentadbir: ${err.message}\n`);
+    console.error(`\n[ERROR] Failed to set administrator claims: ${err.message}\n`);
     process.exit(1);
   }
 }

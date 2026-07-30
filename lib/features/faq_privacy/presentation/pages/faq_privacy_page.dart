@@ -95,7 +95,7 @@ class FaqPrivacyPage extends StatelessWidget {
                 Text('2. Student Data Isolation & Security', style: DesignSystem.h3.copyWith(color: DesignSystem.primary)),
                 const SizedBox(height: DesignSystem.spaceSm),
                 Text(
-                  'The FYP Expo Hub platform enforces strict data isolation policies. Sensitive details such as National ID numbers (MyKad), private emails, phone numbers, and raw grading evaluation marks are never stored in public collections and cannot be accessed by public visitors. Only authorized academic project details are presented on the public catalog.',
+                  'The FYP Expo Hub platform enforces strict data isolation policies. Sensitive details such as National ID numbers (MyKad), private emails, phone numbers, and raw grading evaluation marks are never stored in public collections and cannot be accessed by public visitors. Only authorised academic project details are presented on the public catalogue.',
                   style: DesignSystem.bodyMd.copyWith(height: 1.6),
                   softWrap: true,
                 ),

@@ -233,7 +233,7 @@ class AdminProjectsPage extends ConsumerWidget {
                 ? Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _buildPageTitle('Project Catalog Management', 'Manage the complete list of student final year projects.'),
+                      _buildPageTitle('Project Catalogue Management', 'Manage the complete list of student final year projects.'),
                       ElevatedButton.icon(
                         onPressed: () => _showAddEditDialog(context, ref),
                         icon: const Icon(Icons.add),
@@ -248,7 +248,7 @@ class AdminProjectsPage extends ConsumerWidget {
                 : Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildPageTitle('Project Catalog Management', 'Manage the complete list of student final year projects.'),
+                      _buildPageTitle('Project Catalogue Management', 'Manage the complete list of student final year projects.'),
                       const SizedBox(height: DesignSystem.spaceMd),
                       SizedBox(
                         width: double.infinity,
@@ -272,7 +272,7 @@ class AdminProjectsPage extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Student Project Catalog', style: DesignSystem.h3Mobile.copyWith(color: DesignSystem.primary)),
+                    Text('Student Project Catalogue', style: DesignSystem.h3Mobile.copyWith(color: DesignSystem.primary)),
                     const Divider(height: 32),
 
                     if (projects.isEmpty)
