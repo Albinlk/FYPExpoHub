@@ -1,8 +1,15 @@
+import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/firebase/firebase_providers.dart';
 import '../theme/theme.dart';
+
+void _goToPublicPortal() {
+  final location = globalContext['location'] as JSObject;
+  location['href'] = 'https://fskmjasinfypexhibition.site/'.toJS;
+}
 
 class AdminShell extends ConsumerWidget {
   final Widget child;
@@ -121,7 +128,7 @@ class _AdminSidebar extends StatelessWidget {
               'Back to Public Portal',
               style: DesignSystem.bodySm.copyWith(color: Colors.white70),
             ),
-            onTap: () => context.go('/'),
+            onTap: _goToPublicPortal,
             shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
             dense: true,
           ),
@@ -205,7 +212,7 @@ class _AdminDrawer extends StatelessWidget {
               ),
               onTap: () {
                 Navigator.pop(context);
-                context.go('/');
+                _goToPublicPortal();
               },
               shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
               dense: true,
