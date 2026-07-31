@@ -272,7 +272,7 @@ class FirestoreService {
   Stream<List<Map<String, dynamic>>> assignmentsStream() {
     return _db
         .collection('projectLecturerAssignments')
-        .orderBy('createdAt', descending: true)
+        .orderBy('updatedAt', descending: true)
         .snapshots()
         .map((snap) {
           return snap.docs

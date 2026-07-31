@@ -5,7 +5,6 @@ async function main() {
   const token = await getAccessToken();
   const auth = authHeader(token);
   const docs = await fetchAllDocs('projectLecturerAssignments', token, 1000);
-  const docs = res.body.documents || [];
   console.log(`Total assignments: ${docs.length}`);
   for (const doc of docs) {
     const f = doc.fields || {};
