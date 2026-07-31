@@ -29,7 +29,7 @@ class _LecturerPageState extends ConsumerState<LecturerPage> {
     final isDesktop = MediaQuery.of(context).size.width >= 768;
     final padding = isDesktop ? DesignSystem.marginDesktop : DesignSystem.marginMobile;
 
-    final allProjects = ref.watch(projectsProvider);
+    final allProjects = ref.watch(publicProjectsProvider);
     final publishedProjects = allProjects.where((p) => p.publicationStatus == 'published').toList();
 
     final filteredProjects = publishedProjects.where((project) {

@@ -37,7 +37,7 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
     final lecturer = ref.watch(lecturerAuthProvider);
     final assignments = ref.watch(lecturerAssignmentsProvider);
     final visits = ref.watch(lecturerVisitsProvider);
-    final projects = ref.watch(projectsProvider);
+    final projects = ref.watch(publicProjectsProvider);
     final adminUser = ref.watch(authStateChangesProvider).asData?.value;
 
     if (lecturer == null) {

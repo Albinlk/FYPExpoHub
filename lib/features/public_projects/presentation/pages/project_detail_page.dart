@@ -24,7 +24,7 @@ class ProjectDetailPage extends ConsumerWidget {
     final isDesktop = MediaQuery.of(context).size.width >= 768;
     final padding = isDesktop ? DesignSystem.marginDesktop : DesignSystem.marginMobile;
 
-    final allProjects = ref.watch(projectsProvider);
+    final allProjects = ref.watch(publicProjectsProvider);
     // Find project by ID or Slug
     final project = allProjects.cast<Project?>().firstWhere(
       (p) => p != null && (p.id == slug || p.slug == slug),

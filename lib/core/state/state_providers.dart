@@ -91,6 +91,13 @@ final eventProvider = NotifierProvider<EventNotifier, Event>(
 // 2. PROJECTS STATE
 // ==========================================
 class ProjectsNotifier extends Notifier<List<Project>> {
+  ProjectsNotifier({this.publishedOnly = false});
+
+  /// When true, only documents with `publicationStatus == 'published'`
+  /// are streamed (public site). When false, all documents are streamed
+  /// (admin site — requires admin read access).
+  final bool publishedOnly;
+
   StreamSubscription? _sub;
 
   List<Project> _parseProjects(List<Map<String, dynamic>> dataList) {
@@ -108,7 +115,7 @@ class ProjectsNotifier extends Notifier<List<Project>> {
   }
 
   void _startStream() {
-    _sub = _fs.projectsStream().listen(
+    _sub = _fs.projectsStream(publishedOnly: publishedOnly).listen(
       (dataList) => state = _parseProjects(dataList),
       onError: (e) => print('Projects stream error (Firebase unavailable): $e'),
     );
@@ -163,7 +170,9 @@ class ProjectsNotifier extends Notifier<List<Project>> {
 
   Future<void> refresh() async {
     try {
-      state = _parseProjects(await _fs.getProjectsOnce());
+      state = _parseProjects(
+        await _fs.getProjectsOnce(publishedOnly: publishedOnly),
+      );
     } catch (e) {
       print('Projects refresh failed (keeping current list): $e');
     }
@@ -211,14 +220,21 @@ final projectsProvider = NotifierProvider<ProjectsNotifier, List<Project>>(
   () => ProjectsNotifier(),
 );
 
+/// Public-site project catalogue: only `published` documents.
+/// Scoped with `where('publicationStatus', '==', 'published')` so Firestore
+/// rules allow anonymous visitors to read it.
+final publicProjectsProvider = NotifierProvider<ProjectsNotifier, List<Project>>(
+  () => ProjectsNotifier(publishedOnly: true),
+);
+
 final featuredProjectsProvider = Provider<List<Project>>((ref) {
-  return ref.watch(projectsProvider).where((p) => p.featured).toList();
+  return ref.watch(publicProjectsProvider).where((p) => p.featured).toList();
 });
 
 /// O(1) project lookup by ID — use this instead of linear scans.
 final projectsMapProvider = Provider<Map<String, Project>>((ref) {
   return Map.fromEntries(
-    ref.watch(projectsProvider).map((p) => MapEntry(p.id, p)),
+    ref.watch(publicProjectsProvider).map((p) => MapEntry(p.id, p)),
   );
 });
 
@@ -240,7 +256,7 @@ final projectVisitCountsProvider =
     );
 
 final mostVisitedProjectsProvider = Provider<List<Project>>((ref) {
-  final projects = ref.watch(projectsProvider);
+  final projects = ref.watch(publicProjectsProvider);
   final counts = ref.watch(projectVisitCountsProvider);
   final sorted = List<Project>.from(projects)
     ..sort((a, b) => (counts[b.id] ?? 0).compareTo(counts[a.id] ?? 0));
@@ -251,12 +267,17 @@ final mostVisitedProjectsProvider = Provider<List<Project>>((ref) {
 // 3. DAILY SCHEDULE STATE
 // ==========================================
 class ScheduleNotifier extends Notifier<List<ScheduleItem>> {
+  ScheduleNotifier({this.publishedOnly = false});
+
+  /// When true, only `published` documents are streamed (public site).
+  final bool publishedOnly;
+
   StreamSubscription? _sub;
 
   @override
   List<ScheduleItem> build() {
     try {
-      _sub = _fs.scheduleStream().listen((dataList) {
+      _sub = _fs.scheduleStream(publishedOnly: publishedOnly).listen((dataList) {
         state = dataList.map((m) => ScheduleItem.fromJson(m)).toList();
       });
     } catch (e) {
@@ -327,10 +348,20 @@ final scheduleProvider = NotifierProvider<ScheduleNotifier, List<ScheduleItem>>(
   () => ScheduleNotifier(),
 );
 
+/// Public-site schedule: only `published` documents (rules-safe query).
+final publicScheduleProvider = NotifierProvider<ScheduleNotifier, List<ScheduleItem>>(
+  () => ScheduleNotifier(publishedOnly: true),
+);
+
 // ==========================================
 // 4. PHYSICAL BOOTH ALLOCATIONS STATE
 // ==========================================
 class BoothsNotifier extends Notifier<List<Booth>> {
+  BoothsNotifier({this.publishedOnly = false});
+
+  /// When true, only `published` documents are streamed (public site).
+  final bool publishedOnly;
+
   StreamSubscription? _sub;
 
   @override
@@ -354,7 +385,7 @@ class BoothsNotifier extends Notifier<List<Booth>> {
         .toList();
 
     try {
-      _sub = _fs.boothsStream().listen((dataList) {
+      _sub = _fs.boothsStream(publishedOnly: publishedOnly).listen((dataList) {
         state = dataList.map((m) => Booth.fromJson(m)).toList();
       });
     } catch (e) {
@@ -388,15 +419,27 @@ final boothsProvider = NotifierProvider<BoothsNotifier, List<Booth>>(
   () => BoothsNotifier(),
 );
 
+/// Public-site booths: only `published` documents (rules-safe query).
+final publicBoothsProvider = NotifierProvider<BoothsNotifier, List<Booth>>(
+  () => BoothsNotifier(publishedOnly: true),
+);
+
 // ==========================================
 // 5. ANNOUNCEMENTS STATE
 // ==========================================
 class AnnouncementsNotifier extends Notifier<List<Announcement>> {
+  AnnouncementsNotifier({this.publishedOnly = false});
+
+  /// When true, only `published` documents are streamed (public site).
+  final bool publishedOnly;
+
   StreamSubscription? _sub;
 
   @override
   List<Announcement> build() {
-    _sub = _fs.announcementsStream().listen((dataList) {
+    _sub = _fs.announcementsStream(publishedOnly: publishedOnly).listen((
+      dataList,
+    ) {
       state = dataList.map((m) => Announcement.fromJson(m)).toList();
     });
     ref.onDispose(() => _sub?.cancel());
@@ -462,15 +505,28 @@ final announcementsProvider =
       () => AnnouncementsNotifier(),
     );
 
+/// Public-site announcements: only `published` documents (rules-safe query).
+final publicAnnouncementsProvider =
+    NotifierProvider<AnnouncementsNotifier, List<Announcement>>(
+      () => AnnouncementsNotifier(publishedOnly: true),
+    );
+
 // ==========================================
 // 6. PUBLISHED AWARD WINNERS STATE
 // ==========================================
 class AwardsNotifier extends Notifier<List<PublishedAwardWinner>> {
+  AwardsNotifier({this.publishedOnly = false});
+
+  /// When true, only `published` documents are streamed (public site).
+  final bool publishedOnly;
+
   StreamSubscription? _sub;
 
   @override
   List<PublishedAwardWinner> build() {
-    _sub = _fs.awardWinnersStream().listen((dataList) {
+    _sub = _fs.awardWinnersStream(publishedOnly: publishedOnly).listen((
+      dataList,
+    ) {
       state = dataList.map((m) => PublishedAwardWinner.fromJson(m)).toList();
     });
     ref.onDispose(() => _sub?.cancel());
@@ -500,6 +556,12 @@ class AwardsNotifier extends Notifier<List<PublishedAwardWinner>> {
 final awardsProvider =
     NotifierProvider<AwardsNotifier, List<PublishedAwardWinner>>(
       () => AwardsNotifier(),
+    );
+
+/// Public-site award winners: only `published` documents (rules-safe query).
+final publicAwardsProvider =
+    NotifierProvider<AwardsNotifier, List<PublishedAwardWinner>>(
+      () => AwardsNotifier(publishedOnly: true),
     );
 
 // ==========================================

@@ -33,7 +33,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> with SingleTickerPr
     final isDesktop = MediaQuery.of(context).size.width >= 768;
     final padding = isDesktop ? DesignSystem.marginDesktop : DesignSystem.marginMobile;
 
-    final allScheduleItems = ref.watch(scheduleProvider);
+    final allScheduleItems = ref.watch(publicScheduleProvider);
     final publishedItems = allScheduleItems.where((item) => item.publicationStatus == 'published').toList();
 
     // Group items by day

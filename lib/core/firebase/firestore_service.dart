@@ -38,14 +38,22 @@ class FirestoreService {
   // ---------------------------------------------------
   // PROJECTS
   // ---------------------------------------------------
-  Stream<List<Map<String, dynamic>>> projectsStream() {
-    return _db.collection('publicProjects').snapshots().map((snap) {
+  Stream<List<Map<String, dynamic>>> projectsStream({bool publishedOnly = false}) {
+    Query<Map<String, dynamic>> query = _db.collection('publicProjects');
+    if (publishedOnly) {
+      query = query.where('publicationStatus', isEqualTo: 'published');
+    }
+    return query.snapshots().map((snap) {
       return snap.docs.map((doc) => _convertTimestamps(doc.data())).toList();
     });
   }
 
-  Future<List<Map<String, dynamic>>> getProjectsOnce() async {
-    final snap = await _db.collection('publicProjects').get();
+  Future<List<Map<String, dynamic>>> getProjectsOnce({bool publishedOnly = false}) async {
+    Query<Map<String, dynamic>> query = _db.collection('publicProjects');
+    if (publishedOnly) {
+      query = query.where('publicationStatus', isEqualTo: 'published');
+    }
+    final snap = await query.get();
     return snap.docs.map((doc) => _convertTimestamps(doc.data())).toList();
   }
 
@@ -60,8 +68,12 @@ class FirestoreService {
   // ---------------------------------------------------
   // SCHEDULE ITEMS
   // ---------------------------------------------------
-  Stream<List<Map<String, dynamic>>> scheduleStream() {
-    return _db.collection('publicScheduleItems').snapshots().map((snap) {
+  Stream<List<Map<String, dynamic>>> scheduleStream({bool publishedOnly = false}) {
+    Query<Map<String, dynamic>> query = _db.collection('publicScheduleItems');
+    if (publishedOnly) {
+      query = query.where('publicationStatus', isEqualTo: 'published');
+    }
+    return query.snapshots().map((snap) {
       return snap.docs.map((doc) => _convertTimestamps(doc.data())).toList();
     });
   }
@@ -77,8 +89,12 @@ class FirestoreService {
   // ---------------------------------------------------
   // BOOTHS
   // ---------------------------------------------------
-  Stream<List<Map<String, dynamic>>> boothsStream() {
-    return _db.collection('booths').snapshots().map((snap) {
+  Stream<List<Map<String, dynamic>>> boothsStream({bool publishedOnly = false}) {
+    Query<Map<String, dynamic>> query = _db.collection('booths');
+    if (publishedOnly) {
+      query = query.where('publicationStatus', isEqualTo: 'published');
+    }
+    return query.snapshots().map((snap) {
       return snap.docs.map((doc) => _convertTimestamps(doc.data())).toList();
     });
   }
@@ -94,8 +110,12 @@ class FirestoreService {
   // ---------------------------------------------------
   // ANNOUNCEMENTS
   // ---------------------------------------------------
-  Stream<List<Map<String, dynamic>>> announcementsStream() {
-    return _db.collection('publicAnnouncements').snapshots().map((snap) {
+  Stream<List<Map<String, dynamic>>> announcementsStream({bool publishedOnly = false}) {
+    Query<Map<String, dynamic>> query = _db.collection('publicAnnouncements');
+    if (publishedOnly) {
+      query = query.where('publicationStatus', isEqualTo: 'published');
+    }
+    return query.snapshots().map((snap) {
       return snap.docs.map((doc) => _convertTimestamps(doc.data())).toList();
     });
   }
@@ -111,8 +131,12 @@ class FirestoreService {
   // ---------------------------------------------------
   // AWARD WINNERS
   // ---------------------------------------------------
-  Stream<List<Map<String, dynamic>>> awardWinnersStream() {
-    return _db.collection('publishedAwardWinners').snapshots().map((snap) {
+  Stream<List<Map<String, dynamic>>> awardWinnersStream({bool publishedOnly = false}) {
+    Query<Map<String, dynamic>> query = _db.collection('publishedAwardWinners');
+    if (publishedOnly) {
+      query = query.where('publicationStatus', isEqualTo: 'published');
+    }
+    return query.snapshots().map((snap) {
       return snap.docs.map((doc) => _convertTimestamps(doc.data())).toList();
     });
   }

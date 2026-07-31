@@ -30,8 +30,8 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
     final isDesktop = MediaQuery.of(context).size.width >= 768;
     final padding = isDesktop ? DesignSystem.marginDesktop : DesignSystem.marginMobile;
 
-    final booths = ref.watch(boothsProvider);
-    final projects = ref.watch(projectsProvider);
+    final booths = ref.watch(publicBoothsProvider);
+    final projects = ref.watch(publicProjectsProvider);
 
     final filteredBooths = booths.where((booth) {
       final associatedProj = projects.cast<Project?>().firstWhere(

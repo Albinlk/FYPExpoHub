@@ -26,10 +26,10 @@ class AwardsPage extends ConsumerWidget {
     final isDesktop = MediaQuery.of(context).size.width >= 768;
     final padding = isDesktop ? DesignSystem.marginDesktop : DesignSystem.marginMobile;
 
-    final allAwards = ref.watch(awardsProvider);
+    final allAwards = ref.watch(publicAwardsProvider);
     final publishedAwards = allAwards.where((a) => a.publicationStatus == 'published').toList();
 
-    final projects = ref.watch(projectsProvider);
+    final projects = ref.watch(publicProjectsProvider);
 
     return Scaffold(
       body: SingleChildScrollView(

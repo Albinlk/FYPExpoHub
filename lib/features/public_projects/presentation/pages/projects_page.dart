@@ -78,7 +78,7 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
         ? DesignSystem.marginDesktop
         : DesignSystem.marginMobile;
 
-    final allProjects = ref.watch(projectsProvider);
+    final allProjects = ref.watch(publicProjectsProvider);
     final publishedProjects = allProjects
         .where((p) => p.publicationStatus == 'published')
         .toList();
@@ -109,7 +109,7 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
 
     return Scaffold(
       body: RefreshIndicator(
-        onRefresh: () => ref.read(projectsProvider.notifier).refresh(),
+        onRefresh: () => ref.read(publicProjectsProvider.notifier).refresh(),
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
@@ -137,7 +137,7 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
                         IconButton(
                           tooltip: 'Refresh projects',
                           onPressed: () =>
-                              ref.read(projectsProvider.notifier).refresh(),
+                              ref.read(publicProjectsProvider.notifier).refresh(),
                           icon: const Icon(
                             Icons.refresh,
                             color: DesignSystem.primary,

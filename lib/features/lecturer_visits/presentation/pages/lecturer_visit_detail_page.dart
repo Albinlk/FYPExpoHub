@@ -151,7 +151,7 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
   Widget build(BuildContext context) {
     final isDesktop = MediaQuery.of(context).size.width >= 768;
     final padding = isDesktop ? DesignSystem.marginDesktop : DesignSystem.marginMobile;
-    final projects = ref.watch(projectsProvider);
+    final projects = ref.watch(publicProjectsProvider);
     final project = projects.where((p) => p.id == widget.projectId).firstOrNull;
     final assignments = ref.watch(lecturerAssignmentsProvider);
     final visits = ref.watch(lecturerVisitsProvider);

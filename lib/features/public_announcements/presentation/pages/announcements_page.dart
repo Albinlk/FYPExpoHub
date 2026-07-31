@@ -11,7 +11,7 @@ class AnnouncementsPage extends ConsumerWidget {
     final isDesktop = MediaQuery.of(context).size.width >= 768;
     final padding = isDesktop ? DesignSystem.marginDesktop : DesignSystem.marginMobile;
 
-    final allAnnouncements = ref.watch(announcementsProvider);
+    final allAnnouncements = ref.watch(publicAnnouncementsProvider);
     final publishedAnnouncements = allAnnouncements.where((a) => p(a)).toList();
 
     // Sort announcements: pinned ones first, then by date descending
