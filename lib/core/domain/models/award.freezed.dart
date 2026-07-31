@@ -302,7 +302,7 @@ as DateTime?,
 mixin _$PublishedAwardWinner {
 
  String get id; String get eventId; String get awardCategoryId; String? get projectId; String get projectTitle; String? get programmeCode; String? get teamDisplayName; String? get supervisorDisplayName; String get publicationStatus;// 'draft', 'published', 'archived'
- String? get sourceImportId; DateTime get createdAt; DateTime get updatedAt; DateTime? get publishedAt;
+ String? get sponsor; String? get description; String? get sourceImportId; DateTime get createdAt; DateTime get updatedAt; DateTime? get publishedAt;
 /// Create a copy of PublishedAwardWinner
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -315,16 +315,16 @@ $PublishedAwardWinnerCopyWith<PublishedAwardWinner> get copyWith => _$PublishedA
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PublishedAwardWinner&&(identical(other.id, id) || other.id == id)&&(identical(other.eventId, eventId) || other.eventId == eventId)&&(identical(other.awardCategoryId, awardCategoryId) || other.awardCategoryId == awardCategoryId)&&(identical(other.projectId, projectId) || other.projectId == projectId)&&(identical(other.projectTitle, projectTitle) || other.projectTitle == projectTitle)&&(identical(other.programmeCode, programmeCode) || other.programmeCode == programmeCode)&&(identical(other.teamDisplayName, teamDisplayName) || other.teamDisplayName == teamDisplayName)&&(identical(other.supervisorDisplayName, supervisorDisplayName) || other.supervisorDisplayName == supervisorDisplayName)&&(identical(other.publicationStatus, publicationStatus) || other.publicationStatus == publicationStatus)&&(identical(other.sourceImportId, sourceImportId) || other.sourceImportId == sourceImportId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PublishedAwardWinner&&(identical(other.id, id) || other.id == id)&&(identical(other.eventId, eventId) || other.eventId == eventId)&&(identical(other.awardCategoryId, awardCategoryId) || other.awardCategoryId == awardCategoryId)&&(identical(other.projectId, projectId) || other.projectId == projectId)&&(identical(other.projectTitle, projectTitle) || other.projectTitle == projectTitle)&&(identical(other.programmeCode, programmeCode) || other.programmeCode == programmeCode)&&(identical(other.teamDisplayName, teamDisplayName) || other.teamDisplayName == teamDisplayName)&&(identical(other.supervisorDisplayName, supervisorDisplayName) || other.supervisorDisplayName == supervisorDisplayName)&&(identical(other.publicationStatus, publicationStatus) || other.publicationStatus == publicationStatus)&&(identical(other.sponsor, sponsor) || other.sponsor == sponsor)&&(identical(other.description, description) || other.description == description)&&(identical(other.sourceImportId, sourceImportId) || other.sourceImportId == sourceImportId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,eventId,awardCategoryId,projectId,projectTitle,programmeCode,teamDisplayName,supervisorDisplayName,publicationStatus,sourceImportId,createdAt,updatedAt,publishedAt);
+int get hashCode => Object.hash(runtimeType,id,eventId,awardCategoryId,projectId,projectTitle,programmeCode,teamDisplayName,supervisorDisplayName,publicationStatus,sponsor,description,sourceImportId,createdAt,updatedAt,publishedAt);
 
 @override
 String toString() {
-  return 'PublishedAwardWinner(id: $id, eventId: $eventId, awardCategoryId: $awardCategoryId, projectId: $projectId, projectTitle: $projectTitle, programmeCode: $programmeCode, teamDisplayName: $teamDisplayName, supervisorDisplayName: $supervisorDisplayName, publicationStatus: $publicationStatus, sourceImportId: $sourceImportId, createdAt: $createdAt, updatedAt: $updatedAt, publishedAt: $publishedAt)';
+  return 'PublishedAwardWinner(id: $id, eventId: $eventId, awardCategoryId: $awardCategoryId, projectId: $projectId, projectTitle: $projectTitle, programmeCode: $programmeCode, teamDisplayName: $teamDisplayName, supervisorDisplayName: $supervisorDisplayName, publicationStatus: $publicationStatus, sponsor: $sponsor, description: $description, sourceImportId: $sourceImportId, createdAt: $createdAt, updatedAt: $updatedAt, publishedAt: $publishedAt)';
 }
 
 
@@ -335,7 +335,7 @@ abstract mixin class $PublishedAwardWinnerCopyWith<$Res>  {
   factory $PublishedAwardWinnerCopyWith(PublishedAwardWinner value, $Res Function(PublishedAwardWinner) _then) = _$PublishedAwardWinnerCopyWithImpl;
 @useResult
 $Res call({
- String id, String eventId, String awardCategoryId, String? projectId, String projectTitle, String? programmeCode, String? teamDisplayName, String? supervisorDisplayName, String publicationStatus, String? sourceImportId, DateTime createdAt, DateTime updatedAt, DateTime? publishedAt
+ String id, String eventId, String awardCategoryId, String? projectId, String projectTitle, String? programmeCode, String? teamDisplayName, String? supervisorDisplayName, String publicationStatus, String? sponsor, String? description, String? sourceImportId, DateTime createdAt, DateTime updatedAt, DateTime? publishedAt
 });
 
 
@@ -352,7 +352,7 @@ class _$PublishedAwardWinnerCopyWithImpl<$Res>
 
 /// Create a copy of PublishedAwardWinner
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? eventId = null,Object? awardCategoryId = null,Object? projectId = freezed,Object? projectTitle = null,Object? programmeCode = freezed,Object? teamDisplayName = freezed,Object? supervisorDisplayName = freezed,Object? publicationStatus = null,Object? sourceImportId = freezed,Object? createdAt = null,Object? updatedAt = null,Object? publishedAt = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? eventId = null,Object? awardCategoryId = null,Object? projectId = freezed,Object? projectTitle = null,Object? programmeCode = freezed,Object? teamDisplayName = freezed,Object? supervisorDisplayName = freezed,Object? publicationStatus = null,Object? sponsor = freezed,Object? description = freezed,Object? sourceImportId = freezed,Object? createdAt = null,Object? updatedAt = null,Object? publishedAt = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,eventId: null == eventId ? _self.eventId : eventId // ignore: cast_nullable_to_non_nullable
@@ -363,7 +363,9 @@ as String,programmeCode: freezed == programmeCode ? _self.programmeCode : progra
 as String?,teamDisplayName: freezed == teamDisplayName ? _self.teamDisplayName : teamDisplayName // ignore: cast_nullable_to_non_nullable
 as String?,supervisorDisplayName: freezed == supervisorDisplayName ? _self.supervisorDisplayName : supervisorDisplayName // ignore: cast_nullable_to_non_nullable
 as String?,publicationStatus: null == publicationStatus ? _self.publicationStatus : publicationStatus // ignore: cast_nullable_to_non_nullable
-as String,sourceImportId: freezed == sourceImportId ? _self.sourceImportId : sourceImportId // ignore: cast_nullable_to_non_nullable
+as String,sponsor: freezed == sponsor ? _self.sponsor : sponsor // ignore: cast_nullable_to_non_nullable
+as String?,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
+as String?,sourceImportId: freezed == sourceImportId ? _self.sourceImportId : sourceImportId // ignore: cast_nullable_to_non_nullable
 as String?,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,publishedAt: freezed == publishedAt ? _self.publishedAt : publishedAt // ignore: cast_nullable_to_non_nullable
@@ -452,10 +454,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String eventId,  String awardCategoryId,  String? projectId,  String projectTitle,  String? programmeCode,  String? teamDisplayName,  String? supervisorDisplayName,  String publicationStatus,  String? sourceImportId,  DateTime createdAt,  DateTime updatedAt,  DateTime? publishedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String eventId,  String awardCategoryId,  String? projectId,  String projectTitle,  String? programmeCode,  String? teamDisplayName,  String? supervisorDisplayName,  String publicationStatus,  String? sponsor,  String? description,  String? sourceImportId,  DateTime createdAt,  DateTime updatedAt,  DateTime? publishedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PublishedAwardWinner() when $default != null:
-return $default(_that.id,_that.eventId,_that.awardCategoryId,_that.projectId,_that.projectTitle,_that.programmeCode,_that.teamDisplayName,_that.supervisorDisplayName,_that.publicationStatus,_that.sourceImportId,_that.createdAt,_that.updatedAt,_that.publishedAt);case _:
+return $default(_that.id,_that.eventId,_that.awardCategoryId,_that.projectId,_that.projectTitle,_that.programmeCode,_that.teamDisplayName,_that.supervisorDisplayName,_that.publicationStatus,_that.sponsor,_that.description,_that.sourceImportId,_that.createdAt,_that.updatedAt,_that.publishedAt);case _:
   return orElse();
 
 }
@@ -473,10 +475,10 @@ return $default(_that.id,_that.eventId,_that.awardCategoryId,_that.projectId,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String eventId,  String awardCategoryId,  String? projectId,  String projectTitle,  String? programmeCode,  String? teamDisplayName,  String? supervisorDisplayName,  String publicationStatus,  String? sourceImportId,  DateTime createdAt,  DateTime updatedAt,  DateTime? publishedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String eventId,  String awardCategoryId,  String? projectId,  String projectTitle,  String? programmeCode,  String? teamDisplayName,  String? supervisorDisplayName,  String publicationStatus,  String? sponsor,  String? description,  String? sourceImportId,  DateTime createdAt,  DateTime updatedAt,  DateTime? publishedAt)  $default,) {final _that = this;
 switch (_that) {
 case _PublishedAwardWinner():
-return $default(_that.id,_that.eventId,_that.awardCategoryId,_that.projectId,_that.projectTitle,_that.programmeCode,_that.teamDisplayName,_that.supervisorDisplayName,_that.publicationStatus,_that.sourceImportId,_that.createdAt,_that.updatedAt,_that.publishedAt);case _:
+return $default(_that.id,_that.eventId,_that.awardCategoryId,_that.projectId,_that.projectTitle,_that.programmeCode,_that.teamDisplayName,_that.supervisorDisplayName,_that.publicationStatus,_that.sponsor,_that.description,_that.sourceImportId,_that.createdAt,_that.updatedAt,_that.publishedAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -493,10 +495,10 @@ return $default(_that.id,_that.eventId,_that.awardCategoryId,_that.projectId,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String eventId,  String awardCategoryId,  String? projectId,  String projectTitle,  String? programmeCode,  String? teamDisplayName,  String? supervisorDisplayName,  String publicationStatus,  String? sourceImportId,  DateTime createdAt,  DateTime updatedAt,  DateTime? publishedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String eventId,  String awardCategoryId,  String? projectId,  String projectTitle,  String? programmeCode,  String? teamDisplayName,  String? supervisorDisplayName,  String publicationStatus,  String? sponsor,  String? description,  String? sourceImportId,  DateTime createdAt,  DateTime updatedAt,  DateTime? publishedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _PublishedAwardWinner() when $default != null:
-return $default(_that.id,_that.eventId,_that.awardCategoryId,_that.projectId,_that.projectTitle,_that.programmeCode,_that.teamDisplayName,_that.supervisorDisplayName,_that.publicationStatus,_that.sourceImportId,_that.createdAt,_that.updatedAt,_that.publishedAt);case _:
+return $default(_that.id,_that.eventId,_that.awardCategoryId,_that.projectId,_that.projectTitle,_that.programmeCode,_that.teamDisplayName,_that.supervisorDisplayName,_that.publicationStatus,_that.sponsor,_that.description,_that.sourceImportId,_that.createdAt,_that.updatedAt,_that.publishedAt);case _:
   return null;
 
 }
@@ -508,7 +510,7 @@ return $default(_that.id,_that.eventId,_that.awardCategoryId,_that.projectId,_th
 @JsonSerializable()
 
 class _PublishedAwardWinner implements PublishedAwardWinner {
-  const _PublishedAwardWinner({required this.id, required this.eventId, required this.awardCategoryId, this.projectId, required this.projectTitle, this.programmeCode, this.teamDisplayName, this.supervisorDisplayName, required this.publicationStatus, this.sourceImportId, required this.createdAt, required this.updatedAt, this.publishedAt});
+  const _PublishedAwardWinner({required this.id, required this.eventId, required this.awardCategoryId, this.projectId, required this.projectTitle, this.programmeCode, this.teamDisplayName, this.supervisorDisplayName, required this.publicationStatus, this.sponsor, this.description, this.sourceImportId, required this.createdAt, required this.updatedAt, this.publishedAt});
   factory _PublishedAwardWinner.fromJson(Map<String, dynamic> json) => _$PublishedAwardWinnerFromJson(json);
 
 @override final  String id;
@@ -521,6 +523,8 @@ class _PublishedAwardWinner implements PublishedAwardWinner {
 @override final  String? supervisorDisplayName;
 @override final  String publicationStatus;
 // 'draft', 'published', 'archived'
+@override final  String? sponsor;
+@override final  String? description;
 @override final  String? sourceImportId;
 @override final  DateTime createdAt;
 @override final  DateTime updatedAt;
@@ -539,16 +543,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PublishedAwardWinner&&(identical(other.id, id) || other.id == id)&&(identical(other.eventId, eventId) || other.eventId == eventId)&&(identical(other.awardCategoryId, awardCategoryId) || other.awardCategoryId == awardCategoryId)&&(identical(other.projectId, projectId) || other.projectId == projectId)&&(identical(other.projectTitle, projectTitle) || other.projectTitle == projectTitle)&&(identical(other.programmeCode, programmeCode) || other.programmeCode == programmeCode)&&(identical(other.teamDisplayName, teamDisplayName) || other.teamDisplayName == teamDisplayName)&&(identical(other.supervisorDisplayName, supervisorDisplayName) || other.supervisorDisplayName == supervisorDisplayName)&&(identical(other.publicationStatus, publicationStatus) || other.publicationStatus == publicationStatus)&&(identical(other.sourceImportId, sourceImportId) || other.sourceImportId == sourceImportId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PublishedAwardWinner&&(identical(other.id, id) || other.id == id)&&(identical(other.eventId, eventId) || other.eventId == eventId)&&(identical(other.awardCategoryId, awardCategoryId) || other.awardCategoryId == awardCategoryId)&&(identical(other.projectId, projectId) || other.projectId == projectId)&&(identical(other.projectTitle, projectTitle) || other.projectTitle == projectTitle)&&(identical(other.programmeCode, programmeCode) || other.programmeCode == programmeCode)&&(identical(other.teamDisplayName, teamDisplayName) || other.teamDisplayName == teamDisplayName)&&(identical(other.supervisorDisplayName, supervisorDisplayName) || other.supervisorDisplayName == supervisorDisplayName)&&(identical(other.publicationStatus, publicationStatus) || other.publicationStatus == publicationStatus)&&(identical(other.sponsor, sponsor) || other.sponsor == sponsor)&&(identical(other.description, description) || other.description == description)&&(identical(other.sourceImportId, sourceImportId) || other.sourceImportId == sourceImportId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,eventId,awardCategoryId,projectId,projectTitle,programmeCode,teamDisplayName,supervisorDisplayName,publicationStatus,sourceImportId,createdAt,updatedAt,publishedAt);
+int get hashCode => Object.hash(runtimeType,id,eventId,awardCategoryId,projectId,projectTitle,programmeCode,teamDisplayName,supervisorDisplayName,publicationStatus,sponsor,description,sourceImportId,createdAt,updatedAt,publishedAt);
 
 @override
 String toString() {
-  return 'PublishedAwardWinner(id: $id, eventId: $eventId, awardCategoryId: $awardCategoryId, projectId: $projectId, projectTitle: $projectTitle, programmeCode: $programmeCode, teamDisplayName: $teamDisplayName, supervisorDisplayName: $supervisorDisplayName, publicationStatus: $publicationStatus, sourceImportId: $sourceImportId, createdAt: $createdAt, updatedAt: $updatedAt, publishedAt: $publishedAt)';
+  return 'PublishedAwardWinner(id: $id, eventId: $eventId, awardCategoryId: $awardCategoryId, projectId: $projectId, projectTitle: $projectTitle, programmeCode: $programmeCode, teamDisplayName: $teamDisplayName, supervisorDisplayName: $supervisorDisplayName, publicationStatus: $publicationStatus, sponsor: $sponsor, description: $description, sourceImportId: $sourceImportId, createdAt: $createdAt, updatedAt: $updatedAt, publishedAt: $publishedAt)';
 }
 
 
@@ -559,7 +563,7 @@ abstract mixin class _$PublishedAwardWinnerCopyWith<$Res> implements $PublishedA
   factory _$PublishedAwardWinnerCopyWith(_PublishedAwardWinner value, $Res Function(_PublishedAwardWinner) _then) = __$PublishedAwardWinnerCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String eventId, String awardCategoryId, String? projectId, String projectTitle, String? programmeCode, String? teamDisplayName, String? supervisorDisplayName, String publicationStatus, String? sourceImportId, DateTime createdAt, DateTime updatedAt, DateTime? publishedAt
+ String id, String eventId, String awardCategoryId, String? projectId, String projectTitle, String? programmeCode, String? teamDisplayName, String? supervisorDisplayName, String publicationStatus, String? sponsor, String? description, String? sourceImportId, DateTime createdAt, DateTime updatedAt, DateTime? publishedAt
 });
 
 
@@ -576,7 +580,7 @@ class __$PublishedAwardWinnerCopyWithImpl<$Res>
 
 /// Create a copy of PublishedAwardWinner
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? eventId = null,Object? awardCategoryId = null,Object? projectId = freezed,Object? projectTitle = null,Object? programmeCode = freezed,Object? teamDisplayName = freezed,Object? supervisorDisplayName = freezed,Object? publicationStatus = null,Object? sourceImportId = freezed,Object? createdAt = null,Object? updatedAt = null,Object? publishedAt = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? eventId = null,Object? awardCategoryId = null,Object? projectId = freezed,Object? projectTitle = null,Object? programmeCode = freezed,Object? teamDisplayName = freezed,Object? supervisorDisplayName = freezed,Object? publicationStatus = null,Object? sponsor = freezed,Object? description = freezed,Object? sourceImportId = freezed,Object? createdAt = null,Object? updatedAt = null,Object? publishedAt = freezed,}) {
   return _then(_PublishedAwardWinner(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,eventId: null == eventId ? _self.eventId : eventId // ignore: cast_nullable_to_non_nullable
@@ -587,7 +591,9 @@ as String,programmeCode: freezed == programmeCode ? _self.programmeCode : progra
 as String?,teamDisplayName: freezed == teamDisplayName ? _self.teamDisplayName : teamDisplayName // ignore: cast_nullable_to_non_nullable
 as String?,supervisorDisplayName: freezed == supervisorDisplayName ? _self.supervisorDisplayName : supervisorDisplayName // ignore: cast_nullable_to_non_nullable
 as String?,publicationStatus: null == publicationStatus ? _self.publicationStatus : publicationStatus // ignore: cast_nullable_to_non_nullable
-as String,sourceImportId: freezed == sourceImportId ? _self.sourceImportId : sourceImportId // ignore: cast_nullable_to_non_nullable
+as String,sponsor: freezed == sponsor ? _self.sponsor : sponsor // ignore: cast_nullable_to_non_nullable
+as String?,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
+as String?,sourceImportId: freezed == sourceImportId ? _self.sourceImportId : sourceImportId // ignore: cast_nullable_to_non_nullable
 as String?,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,publishedAt: freezed == publishedAt ? _self.publishedAt : publishedAt // ignore: cast_nullable_to_non_nullable

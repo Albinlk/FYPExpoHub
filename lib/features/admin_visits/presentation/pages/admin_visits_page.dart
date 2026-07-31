@@ -83,19 +83,23 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
         'updatedAt': now,
       });
 
-      await db.collection('auditLogs').add({
-        'actorUid': user.uid,
-        'action': 'visit_voided',
-        'targetType': 'studentProjectVisits',
-        'targetId': visit.id,
-        'eventId': visit.eventId,
-        'metadataSafe': {
-          'projectId': visit.projectId,
-          'reason': reason,
-          'voidedByRole': 'admin',
-        },
-        'createdAt': now,
-      });
+      try {
+        await db.collection('auditLogs').add({
+          'actorUid': user.uid,
+          'action': 'visit_voided',
+          'targetType': 'studentProjectVisits',
+          'targetId': visit.id,
+          'eventId': visit.eventId,
+          'metadataSafe': {
+            'projectId': visit.projectId,
+            'reason': reason,
+            'voidedByRole': 'admin',
+          },
+          'createdAt': now,
+        });
+      } catch (auditError) {
+        debugPrint('Audit log skipped for visit_voided: $auditError');
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

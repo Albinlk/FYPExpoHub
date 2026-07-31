@@ -1,5 +1,3 @@
-import 'dart:js_interop';
-import 'dart:js_interop_unsafe';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -12,15 +10,6 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   usePathUrlStrategy();
-
-  // On admin domain root, redirect to main public site
-  final host = Uri.base.host;
-  final path = Uri.base.path;
-  if (host == 'admin.fskmjasinfypexhibition.site' && (path == '/' || path.isEmpty)) {
-    final location = globalContext['location'] as JSObject;
-    location['href'] = 'https://fskmjasinfypexhibition.site/'.toJS;
-    return;
-  }
 
   // Firebase credentials are injected at build time via --dart-define.
   // They are never stored in source code or committed to version control.

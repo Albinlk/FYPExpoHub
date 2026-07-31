@@ -10,8 +10,8 @@ class AdminAwardsPage extends ConsumerWidget {
 
   void _showAddEditDialog(BuildContext context, WidgetRef ref, [PublishedAwardWinner? item]) {
     final titleController = TextEditingController(text: item?.projectTitle ?? 'Gold Innovation Award');
-    final descController = TextEditingController(text: '');
-    final sponsorController = TextEditingController(text: '');
+    final descController = TextEditingController(text: item?.description ?? '');
+    final sponsorController = TextEditingController(text: item?.sponsor ?? '');
     
     String? selectedProjectId = item?.projectId;
     String status = item?.publicationStatus ?? 'published';
@@ -117,6 +117,12 @@ class AdminAwardsPage extends ConsumerWidget {
                       teamDisplayName: associatedProj?.teamDisplayNames.join(', ') ?? 'N/A',
                       supervisorDisplayName: associatedProj?.supervisorDisplayName ?? 'N/A',
                       programmeCode: associatedProj?.programmeCode ?? 'N/A',
+                      sponsor: sponsorController.text.trim().isEmpty
+                          ? null
+                          : sponsorController.text.trim(),
+                      description: descController.text.trim().isEmpty
+                          ? null
+                          : descController.text.trim(),
                       publicationStatus: status,
                       createdAt: item?.createdAt ?? DateTime.now(),
                       updatedAt: DateTime.now(),

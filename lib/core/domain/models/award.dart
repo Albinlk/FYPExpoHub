@@ -31,6 +31,8 @@ abstract class PublishedAwardWinner with _$PublishedAwardWinner {
     String? teamDisplayName,
     String? supervisorDisplayName,
     required String publicationStatus, // 'draft', 'published', 'archived'
+    String? sponsor,
+    String? description,
     String? sourceImportId,
     required DateTime createdAt,
     required DateTime updatedAt,

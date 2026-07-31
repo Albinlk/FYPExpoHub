@@ -138,7 +138,7 @@ service cloud.firestore {
       allow read: if isAdmin() || (isAuthenticated() && request.auth.uid == uid);
       allow create: if isAuthenticated() && (request.auth.uid == uid || isAdmin());
       allow update: if isAuthenticated() && (request.auth.uid == uid || isAdmin());
-      allow delete: if false;
+      allow delete: if isAdmin();
     }
     
     // 6. Project Lecturer Assignments

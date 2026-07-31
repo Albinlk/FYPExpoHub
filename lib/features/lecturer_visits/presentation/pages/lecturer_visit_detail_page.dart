@@ -60,19 +60,23 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
         'source': 'lecturer',
       });
 
-      await db.collection('auditLogs').add({
-        'actorUid': user.uid,
-        'action': 'visit_marked',
-        'targetType': 'studentProjectVisits',
-        'targetId': visitRef.id,
-        'eventId': 'fskm-fyp-2026',
-        'metadataSafe': {
-          'projectId': project.id,
-          'assignmentId': assignmentId,
-          'visitRole': role,
-        },
-        'createdAt': now,
-      });
+      try {
+        await db.collection('auditLogs').add({
+          'actorUid': user.uid,
+          'action': 'visit_marked',
+          'targetType': 'studentProjectVisits',
+          'targetId': visitRef.id,
+          'eventId': 'fskm-fyp-2026',
+          'metadataSafe': {
+            'projectId': project.id,
+            'assignmentId': assignmentId,
+            'visitRole': role,
+          },
+          'createdAt': now,
+        });
+      } catch (auditError) {
+        debugPrint('Audit log skipped for visit_marked: $auditError');
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

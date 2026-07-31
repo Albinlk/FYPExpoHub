@@ -12,7 +12,6 @@ class AdminLecturersPage extends ConsumerWidget {
   void _showAddLecturerDialog(BuildContext context, WidgetRef ref) {
     final emailController = TextEditingController();
     final nameController = TextEditingController();
-    final passwordController = TextEditingController();
     var creating = false;
 
     showDialog(
@@ -46,13 +45,27 @@ class AdminLecturersPage extends ConsumerWidget {
                       textCapitalization: TextCapitalization.characters,
                     ),
                     const SizedBox(height: DesignSystem.spaceMd),
-                    TextField(
-                      controller: passwordController,
-                      decoration: const InputDecoration(
-                        labelText: 'Temporary Password',
-                        hintText: 'Minimum 6 characters',
+                    Container(
+                      padding: const EdgeInsets.all(DesignSystem.spaceSm),
+                      decoration: BoxDecoration(
+                        color: DesignSystem.tertiaryContainer.withValues(alpha: 0.2),
+                        borderRadius: DesignSystem.radiusLg,
                       ),
-                      obscureText: true,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(Icons.info_outline, size: 18, color: DesignSystem.tertiary),
+                          const SizedBox(width: DesignSystem.spaceXs),
+                          Expanded(
+                            child: Text(
+                              'After saving, create the sign-in account manually in Firebase Console '
+                              '(Authentication → Users → Add user) using the same email, then share the '
+                              'password with the lecturer.',
+                              style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                     if (creating) ...[
                       const SizedBox(height: DesignSystem.spaceMd),
@@ -72,9 +85,8 @@ class AdminLecturersPage extends ConsumerWidget {
                       : () async {
                           final email = emailController.text.trim();
                           final name = nameController.text.trim().toUpperCase();
-                          final password = passwordController.text;
 
-                          if (email.isEmpty || name.isEmpty || password.isEmpty) {
+                          if (email.isEmpty || name.isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('Please fill in all fields.')),
                             );
@@ -393,8 +405,9 @@ class AdminLecturersPage extends ConsumerWidget {
                         TextSpan(
                           children: [
                             const TextSpan(
-                              text: 'Lecturers can sign in using their UiTM email and the password set. '
-                                  'Ensure lecturers have projects assigned (SV/EX) to use the My Visits mode.\n\n',
+                              text: 'Lecturers sign in using their UiTM email. Create their sign-in account '
+                                  'manually in Firebase Console (Authentication → Users → Add user) using the '
+                                  'same email. Ensure lecturers have projects assigned (SV/EX) to use the My Visits mode.\n\n',
                             ),
                             TextSpan(
                               text: 'Backfill Lecturer IDs: ',
