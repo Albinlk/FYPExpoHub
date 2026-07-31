@@ -80,7 +80,7 @@ function mapToFields(obj) {
     else if (typeof v === 'number') fields[k] = Number.isInteger(v) ? { integerValue: v } : { doubleValue: v };
     else if (typeof v === 'boolean') fields[k] = { booleanValue: v };
     else if (v instanceof Date) fields[k] = { timestampValue: v.toISOString() };
-    else if (Array.isArray(v)) fields[k] = { arrayValue: { values: v.map(i => typeof i === 'string' ? { stringValue: i } : i) } };
+    else if (Array.isArray(v)) fields[k] = { arrayValue: { values: v.map(i => (typeof i === 'string' ? { stringValue: i } : typeof i === 'number' ? (Number.isInteger(i) ? { integerValue: i } : { doubleValue: i }) : typeof i === 'boolean' ? { booleanValue: i } : { mapValue: { fields: mapToFields(i) } })) } };
     else if (typeof v === 'object') fields[k] = { mapValue: { fields: mapToFields(v) } };
   }
   return fields;

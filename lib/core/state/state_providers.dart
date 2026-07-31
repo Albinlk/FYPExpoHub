@@ -71,9 +71,13 @@ class EventNotifier extends Notifier<Event> {
   }
 
   void _loadFromFirestore() async {
-    final data = await _fs.getEvent('fskm-fyp-2026');
-    if (data != null) {
-      state = Event.fromJson(data);
+    try {
+      final data = await _fs.getEvent('fskm-fyp-2026');
+      if (data != null) {
+        state = Event.fromJson(data);
+      }
+    } catch (e) {
+      print('Event load failed (using fallback): $e');
     }
   }
 
