@@ -335,7 +335,7 @@ firebase emulators:start
 
 ### Implementation notes & known constraints
 - **Credentials are build-time only** — never committed. They are passed via `--dart-define` from `.env` locally and from GitHub Actions secrets in CI. If they are missing, `main.dart` logs `Firebase init error: auth/invalid-api-key` and the app falls back to the bundled seed data.
-- **Public domain ≠ admin domain.** The public site runs on GitHub Pages (SPA deep links return 404 at the HTTP layer, mitigated by copying `index.html` → `404.html` in CI); the admin site runs on Firebase Hosting where SPA rewrites return HTTP 200. Documented options for consolidating onto Firebase Hosting live in `future.md`.
+- **Public domain ≠ admin domain.** The public site runs on GitHub Pages (SPA deep links return 404 at the HTTP layer, mitigated by copying `index.html` → `404.html` in CI); the admin site runs on Firebase Hosting where SPA rewrites return HTTP 200. Consolidating onto Firebase Hosting is a documented option in the local-only `future.md`.
 - **Lecturer accounts are two-step:** the admin panel writes the `lecturers` document only; the Firebase **Auth user** must be created manually (Console → Authentication → Add user) for the lecturer to be able to sign in.
 - **Awards `sponsor` / `description`** are persisted as nullable fields and prefilled on edit.
 - **Audit logs from the client are best-effort** (rules deny client-side writes); full audit-trail integrity requires the Cloud Function callables (Blaze plan).
@@ -355,7 +355,7 @@ firebase emulators:start
 - `firebase.json` rewrites `**` → `/index.html` so deep links like `/admin/visits` load correctly.
 - Deploy: `firebase deploy --only firestore:rules,hosting` (rules deploy is included; functions deploy is `firebase deploy --only functions`).
 
-> See `future.md` for the trade-offs between the current two-provider setup (Option A) and migrating the public domain to Firebase Hosting (Option B).
+> The trade-offs between the current two-provider setup (Option A) and migrating the public domain to Firebase Hosting (Option B) are documented in the local-only `future.md`.
 
 ---
 
@@ -369,7 +369,6 @@ firebase emulators:start
 ├── firestore.rules              # Firestore security rules
 ├── firestore.indexes.json       # Composite indexes
 ├── storage.rules                # Storage security rules
-├── future.md                    # Hosting options decision notes
 ├── pubspec.yaml                 # Flutter deps + fonts (Inter, Montserrat)
 ├── web/                         # index.html, fonts, icons, project images
 ├── functions/                   # Cloud Functions (TypeScript)

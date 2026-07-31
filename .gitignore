@@ -71,3 +71,7 @@ lib/firebase_options.dart
 *.keystore
 *.jks
 service-account*.json
+serviceAccountKey.json
+
+# Local-only docs (not in public repo)
+future.md
