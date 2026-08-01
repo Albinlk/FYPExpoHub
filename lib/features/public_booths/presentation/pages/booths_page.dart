@@ -60,13 +60,6 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
     return _prettyVenueByPrefix[prefix] ?? prefix;
   }
 
-  /// Excel-faithful venue location without spaces, e.g. "BK5-03" -> "BK5".
-  String _venueLocation(String boothNumber) {
-    final dash = boothNumber.indexOf('-');
-    if (dash == -1) return boothNumber;
-    return boothNumber.substring(0, dash);
-  }
-
   /// Per-venue background color for the booth badge.
   /// Derived from the booth-number prefix (course code).
   static final Map<String, Color> _venueBadgeColor = {
@@ -359,7 +352,6 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
               final p = venueBuckets[venue]![index];
 
                 final boothNumber = p.boothNumber ?? '—';
-                final venueLocation = _venueLocation(boothNumber);
                 final badgeColor = _badgeColorFor(boothNumber);
                 final classGroup = p.programmeCode;
                 final studentName = p.teamDisplayNames.isNotEmpty
@@ -404,7 +396,7 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
                       softWrap: true,
                     ),
                     subtitle: Text(
-                      '$venueLocation • $classGroup • $studentName',
+                      '$studentName • $classGroup',
                       style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
