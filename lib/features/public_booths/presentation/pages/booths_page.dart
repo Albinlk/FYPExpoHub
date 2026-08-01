@@ -19,10 +19,57 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
 
   final List<String> _zones = ['All', 'Zone A', 'Zone B', 'Zone C'];
 
-  @override
+   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  /// Static map from Excel booth-number prefix to a human-friendly venue label.
+  /// Source: `StudentListName.xlsx` `- List Name` sheets.
+  static const Map<String, String> _prettyVenueByPrefix = {
+    // CS230 (DS 5-6)
+    'DS5': 'DS 5',
+    'DS6': 'DS 6',
+    // CS266 (DS 7-8)
+    'DS7': 'DS 7',
+    'DS8': 'DS 8',
+    // CS255 (BILIK KULIAH 1 - 4)
+    'BK1': 'BK 1',
+    'BK2': 'BK 2',
+    'BK3': 'BK 3',
+    'BK4': 'BK 4',
+    // CS251 (BK 5 - 8)
+    'BK5': 'BK 5',
+    'BK6': 'BK 6',
+    'BK7': 'BK 7',
+    'BK8': 'BK 8',
+  };
+
+  /// Canonical venue order matching the physical hall layout (top to bottom).
+  static const List<String> _venueOrder = [
+    'BK 1', 'BK 2', 'BK 3', 'BK 4',
+    'BK 5', 'BK 6', 'BK 7', 'BK 8',
+    'DS 5', 'DS 6', 'DS 7', 'DS 8',
+  ];
+
+  /// Excel-faithful venue label, e.g. "BK5-03" -> "BK 5 - 03".
+  /// Split only on the first `-`, so booth numbers like "BK7-01" map correctly.
+  String _excelVenueLabel(String boothNumber) {
+    final dash = boothNumber.indexOf('-');
+    if (dash == -1) return boothNumber;
+    final prefix = boothNumber.substring(0, dash);
+    final suffix = boothNumber.substring(dash + 1);
+    final pretty = _prettyVenueByPrefix[prefix] ?? prefix;
+    return '$pretty - $suffix';
+  }
+
+  /// Returns the venue label for a booth number, e.g. "BK5-03" -> "BK 5".
+  String _venueLabelOf(String boothNumber) {
+    final dash = boothNumber.indexOf('-');
+    if (dash == -1) return boothNumber;
+    final prefix = boothNumber.substring(0, dash);
+    return _prettyVenueByPrefix[prefix] ?? prefix;
   }
 
   /// Returns the stable, canonical day order for grouping.
@@ -223,6 +270,28 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
       return null;
     }
 
+      // Group projects by venue (Excel-derived), then sort within each venue.
+    final Map<String, List<Project>> venueBuckets = {};
+    for (final p in projects) {
+      final venue = _venueLabelOf(p.boothNumber ?? p.boothZone ?? '—');
+      venueBuckets.putIfAbsent(venue, () => []).add(p);
+    }
+    for (final list in venueBuckets.values) {
+      list.sort((a, b) {
+        final cmp = _boothSortKey(a.boothNumber).compareTo(_boothSortKey(b.boothNumber));
+        if (cmp != 0) return cmp;
+        return a.title.compareTo(b.title);
+      });
+    }
+
+    // Order venues by the canonical hall layout order; any unmapped venue goes last.
+    final orderedVenues = <String>[
+      for (final v in _venueOrder)
+        if (venueBuckets.containsKey(v)) v,
+      for (final v in venueBuckets.keys)
+        if (!_venueOrder.contains(v)) v,
+    ];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -246,50 +315,63 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
           ),
         ),
         const SizedBox(height: DesignSystem.spaceSm),
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: projects.length,
-          itemBuilder: (context, index) {
-            final p = projects[index];
-            final booth = boothFor(p);
+        for (final venue in orderedVenues) ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: DesignSystem.spaceSm, vertical: DesignSystem.spaceXs),
+            child: Text(
+              venue,
+              style: DesignSystem.bodySm.copyWith(
+                color: DesignSystem.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+              ),
+              softWrap: true,
+            ),
+          ),
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: venueBuckets[venue]!.length,
+            itemBuilder: (context, index) {
+              final p = venueBuckets[venue]![index];
+              final booth = boothFor(p);
 
-            return Card(
-              margin: const EdgeInsets.only(bottom: DesignSystem.spaceSm),
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: DesignSystem.secondaryContainer,
-                  child: Text(
-                    p.boothNumber ?? '—',
-                    style: const TextStyle(
-                      color: DesignSystem.onSecondaryContainer,
-                      fontWeight: FontWeight.bold,
+              return Card(
+                margin: const EdgeInsets.only(bottom: DesignSystem.spaceSm),
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: DesignSystem.secondaryContainer,
+                    child: Text(
+                      p.boothNumber ?? '—',
+                      style: const TextStyle(
+                        color: DesignSystem.onSecondaryContainer,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
-                title: Text(
-                  '${p.boothNumber ?? "No Booth"} • ${p.title}',
-                  style: DesignSystem.bodyMd.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: DesignSystem.primary,
+                  title: Text(
+                    '${_excelVenueLabel(p.boothNumber ?? "—")} • ${p.title}',
+                    style: DesignSystem.bodyMd.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: DesignSystem.primary,
+                    ),
+                    softWrap: true,
                   ),
-                  softWrap: true,
+                  subtitle: Text(
+                    '${booth?.zone ?? p.boothZone ?? "—"} • ${p.supervisorDisplayName}',
+                    style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant),
+                    softWrap: true,
+                  ),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.arrow_forward_ios, size: 16, color: DesignSystem.primary),
+                    onPressed: () {
+                      context.go('/projects/${p.id}');
+                    },
+                  ),
                 ),
-                subtitle: Text(
-                  '${booth?.zone ?? p.boothZone ?? "—"} • ${p.supervisorDisplayName}',
-                  style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant),
-                  softWrap: true,
-                ),
-                trailing: IconButton(
-                  icon: const Icon(Icons.arrow_forward_ios, size: 16, color: DesignSystem.primary),
-                  onPressed: () {
-                    context.go('/projects/${p.id}');
-                  },
-                ),
-              ),
-            );
-          },
-        ),
+              );
+            },
+          ),
+        ],
         const SizedBox(height: DesignSystem.spaceLg),
       ],
     );
