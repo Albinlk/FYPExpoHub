@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../app/theme/theme.dart';
-import '../../../../core/domain/models/booth.dart';
 import '../../../../core/domain/models/project.dart';
 import '../../../../core/state/state_providers.dart';
 
@@ -15,11 +14,11 @@ class BoothsPage extends ConsumerStatefulWidget {
 
 class _BoothsPageState extends ConsumerState<BoothsPage> {
   final TextEditingController _searchController = TextEditingController();
-  String _selectedZone = 'All';
+   String _selectedDay = 'Day 1 - 06 Aug 2026';
+  String _selectedVenue = 'All';
+  String _selectedProgram = 'All';
 
-  final List<String> _zones = ['All', 'Zone A', 'Zone B', 'Zone C'];
-
-   @override
+  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
@@ -101,40 +100,41 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
     'Day 2 - 07 Aug 2026',
   ];
 
-  /// Projects that belong to a given day (and pass search/zone filters).
-  List<Project> _projectsForDay(
+  /// Projects that pass the current filters: day, venue, program, and search.
+  List<Project> _filteredProjects(
     List<Project> projects,
-    List<Booth> booths,
-    String dayLabel,
     String filterText,
-    String selectedZone,
+    String selectedDay,
+    String selectedVenue,
+    String selectedProgram,
   ) {
     final needle = filterText.toLowerCase();
     final matched = <Project>[];
-    final byId = {for (final b in booths) b.id: b};
-    final byNum = {for (final b in booths) b.boothNumber: b};
 
     for (final p in projects) {
-      if (p.presentationDay != dayLabel) continue;
-      final booth = byId[p.boothId] ?? byNum[p.boothNumber];
+      final day = p.presentationDay;
+      if (day == null || day != selectedDay) continue;
 
-      if (selectedZone != 'All' &&
-          booth != null &&
-          !booth.zone.contains(selectedZone)) {
-        continue;
+      if (selectedVenue != 'All') {
+        final venue = _venueLabelOf(p.boothNumber ?? p.boothZone ?? '');
+        if (venue != selectedVenue) continue;
       }
 
-      final titleMatch =
-          p.title.toLowerCase().contains(needle);
+      if (selectedProgram != 'All') {
+        if (p.programmeCode != selectedProgram) continue;
+      }
+
+      final titleMatch = p.title.toLowerCase().contains(needle);
       final boothMatch = p.boothNumber?.toLowerCase().contains(needle) ?? false;
-      if (needle.isNotEmpty && !(titleMatch || boothMatch)) continue;
+      final studentMatch =
+          p.teamDisplayNames.any((n) => n.toLowerCase().contains(needle));
+      if (needle.isNotEmpty && !(titleMatch || boothMatch || studentMatch)) continue;
 
       matched.add(p);
     }
+
     matched.sort((a, b) {
-      final aNo = _boothSortKey(a.boothNumber);
-      final bNo = _boothSortKey(b.boothNumber);
-      final cmp = aNo.compareTo(bNo);
+      final cmp = _boothSortKey(a.boothNumber).compareTo(_boothSortKey(b.boothNumber));
       if (cmp != 0) return cmp;
       return a.title.compareTo(b.title);
     });
@@ -150,33 +150,44 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
     final zoneVal = int.tryParse(zone, radix: 36) ?? 0;
     return zoneVal * 1000 + num;
   }
-
   @override
   Widget build(BuildContext context) {
     final isDesktop = MediaQuery.of(context).size.width >= 768;
     final padding = isDesktop ? DesignSystem.marginDesktop : DesignSystem.marginMobile;
 
-    final booths = ref.watch(publicBoothsProvider);
     final projects = ref.watch(publicProjectsProvider);
-
     final searchNeedle = _searchController.text.toLowerCase();
 
-    // Build day -> projects map (only days that have projects).
-    final Map<String, List<Project>> dayBuckets = {};
-    for (final day in _dayOrder) {
-      final dayProjects = _projectsForDay(
-        projects,
-        booths,
-        day,
-        searchNeedle,
-        _selectedZone,
-      );
-      if (dayProjects.isNotEmpty) {
-        dayBuckets[day] = dayProjects;
-      }
+    // Derive available venues for the selected day.
+    final previewProjects = _filteredProjects(
+      projects,
+      '',
+      _selectedDay,
+      'All',
+      'All',
+    );
+    final availableVenues = <String>{};
+    for (final p in previewProjects) {
+      availableVenues.add(_venueLabelOf(p.boothNumber ?? p.boothZone ?? ''));
     }
 
-    final visibleDays = dayBuckets.keys.toList();
+    // Programs: distinct set from all projects (for full coverage).
+    final allPrograms = <String>{};
+    for (final p in projects) {
+      if (p.programmeCode.isNotEmpty) allPrograms.add(p.programmeCode);
+    }
+    final sortedPrograms = allPrograms.toList()..sort();
+    final programItems = ['All', ...sortedPrograms];
+
+    final filtered = _filteredProjects(
+      projects,
+      searchNeedle,
+      _selectedDay,
+      _selectedVenue,
+      _selectedProgram,
+    );
+
+    final hasProjects = filtered.isNotEmpty;
 
     return Scaffold(
       body: SingleChildScrollView(
@@ -192,8 +203,7 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
               softWrap: true,
             ),
             const SizedBox(height: DesignSystem.spaceXl),
-
-             // Top Search & Filter Bar
+            // Top Search & Filter Bar
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(DesignSystem.spaceMd),
@@ -208,46 +218,66 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
                         prefixIcon: Icon(Icons.search, color: DesignSystem.primary),
                       ),
                     ),
-                    if (isDesktop) ...[
-                      const SizedBox(width: DesignSystem.spaceMd),
-                      SizedBox(
-                        width: 260,
-                        child: DropdownButtonFormField<String>(
-                          initialValue: _selectedZone,
-                          decoration: const InputDecoration(contentPadding: EdgeInsets.symmetric(horizontal: 12)),
-                          onChanged: (val) => setState(() => _selectedZone = val!),
-                          items: _zones.map((zone) {
-                            return DropdownMenuItem(
-                              value: zone,
-                              child: Text(zone, style: DesignSystem.bodySm, softWrap: true),
-                            );
-                          }).toList(),
+                    const SizedBox(height: DesignSystem.spaceSm),
+                    Wrap(
+                      spacing: DesignSystem.spaceSm,
+                      runSpacing: DesignSystem.spaceXs,
+                      children: [
+                        SizedBox(
+                          width: isDesktop ? 200 : double.infinity,
+                          child: DropdownButtonFormField<String>(
+                            initialValue: _selectedDay,
+                            decoration: InputDecoration(
+                              labelText: 'Day',
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                            ),
+                            onChanged: (val) => setState(() {
+                              _selectedDay = val!;
+                              _selectedVenue = 'All';
+                            }),
+                            items: _dayOrder.map((day) {
+                              return DropdownMenuItem(value: day, child: Text(day, style: DesignSystem.bodySm, softWrap: true));
+                            }).toList(),
+                          ),
                         ),
-                      ),
-                    ],
-                    if (!isDesktop) ...[
-                      const SizedBox(height: DesignSystem.spaceSm),
-                      DropdownButtonFormField<String>(
-                        initialValue: _selectedZone,
-                        decoration: const InputDecoration(contentPadding: EdgeInsets.symmetric(horizontal: 12)),
-                        onChanged: (val) => setState(() => _selectedZone = val!),
-                        items: _zones.map((zone) {
-                          return DropdownMenuItem(
-                            value: zone,
-                            child: Text(zone, style: DesignSystem.bodySm, softWrap: true),
-                          );
-                        }).toList(),
-                      ),
-                    ],
+                        SizedBox(
+                          width: isDesktop ? 200 : double.infinity,
+                          child: DropdownButtonFormField<String>(
+                            initialValue: _selectedVenue,
+                            decoration: InputDecoration(
+                              labelText: 'Venue',
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                            ),
+                            onChanged: (val) => setState(() => _selectedVenue = val!),
+                            items: ['All', ...availableVenues].map((v) {
+                              return DropdownMenuItem(value: v, child: Text(v, style: DesignSystem.bodySm, softWrap: true));
+                            }).toList(),
+                          ),
+                        ),
+                        SizedBox(
+                          width: isDesktop ? 200 : double.infinity,
+                          child: DropdownButtonFormField<String>(
+                            initialValue: _selectedProgram,
+                            decoration: InputDecoration(
+                              labelText: 'Program',
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                            ),
+                            onChanged: (val) => setState(() => _selectedProgram = val!),
+                            items: programItems.map((prog) {
+                              return DropdownMenuItem(value: prog, child: Text(prog, style: DesignSystem.bodySm, softWrap: true));
+                            }).toList(),
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
             ),
-
             const SizedBox(height: DesignSystem.spaceXl),
-
-            visibleDays.isEmpty
-                ? Center(
+            hasProjects
+                ? _buildDayGroup(_selectedDay, filtered, isDesktop)
+                : Center(
                     child: Padding(
                       padding: const EdgeInsets.all(40.0),
                       child: Text(
@@ -255,17 +285,6 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
                         style: DesignSystem.bodyMd.copyWith(color: DesignSystem.onSurfaceVariant),
                       ),
                     ),
-                  )
-                : Column(
-                    children: [
-                      for (final day in visibleDays)
-                        _buildDayGroup(
-                          day,
-                          dayBuckets[day]!,
-                          booths,
-                          isDesktop,
-                        ),
-                    ],
                   ),
           ],
         ),
@@ -273,8 +292,9 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
     );
   }
 
-  Widget _buildDayGroup(String dayLabel, List<Project> projects, List<Booth> booths, bool isDesktop) {
-      // Group projects by venue (Excel-derived), then sort within each venue.
+
+  Widget _buildDayGroup(String dayLabel, List<Project> projects, bool isDesktop) {
+    // Group projects by venue (Excel-derived), then sort within each venue.
     final Map<String, List<Project>> venueBuckets = {};
     for (final p in projects) {
       final venue = _venueLabelOf(p.boothNumber ?? p.boothZone ?? '—');
@@ -338,58 +358,56 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
             itemBuilder: (context, index) {
               final p = venueBuckets[venue]![index];
 
-              final boothLabel = p.boothNumber ?? '—';
-              final venueLocation = _venueLocation(boothLabel);
-              final badgeColor = _badgeColorFor(boothLabel);
-              final classGroup = p.programmeCode;
-              final studentName = p.teamDisplayNames.isNotEmpty
-                  ? p.teamDisplayNames.first
-                  : (p.supervisorDisplayName.isNotEmpty
-                      ? p.supervisorDisplayName
-                      : '—');
+                final boothNumber = p.boothNumber ?? '—';
+                final venueLocation = _venueLocation(boothNumber);
+                final badgeColor = _badgeColorFor(boothNumber);
+                final classGroup = p.programmeCode;
+                final studentName = p.teamDisplayNames.isNotEmpty
+                    ? p.teamDisplayNames.first
+                    : p.supervisorDisplayName;
 
-              return Card(
-                margin: EdgeInsets.only(
-                  bottom: DesignSystem.spaceSm,
-                  left: isDesktop ? 0 : DesignSystem.spaceSm,
-                  right: isDesktop ? 0 : DesignSystem.spaceSm,
-                ),
-                child: ListTile(
-                  onTap: () => context.go('/projects/${p.id}'),
-                  leading: CircleAvatar(
-                    backgroundColor: badgeColor.withValues(alpha: 0.2),
-                    child: Text(
-                      boothLabel,
-                      style: DesignSystem.bodySm.copyWith(
-                        color: badgeColor,
-                        fontWeight: FontWeight.bold,
+                return Card(
+                  margin: EdgeInsets.only(
+                    bottom: DesignSystem.spaceSm,
+                    left: isDesktop ? 0 : DesignSystem.spaceSm,
+                    right: isDesktop ? 0 : DesignSystem.spaceSm,
+                  ),
+                  child: ListTile(
+                    onTap: () => context.go('/projects/${p.id}'),
+                    leading: CircleAvatar(
+                      backgroundColor: badgeColor.withValues(alpha: 0.2),
+                      child: Text(
+                        boothNumber,
+                        style: DesignSystem.bodySm.copyWith(
+                          color: badgeColor,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                  ),
-                  title: Text(
-                    p.title,
-                    style: DesignSystem.bodyMd.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: DesignSystem.primary,
+                    title: Text(
+                      p.title,
+                      style: DesignSystem.bodyMd.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: DesignSystem.primary,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      softWrap: true,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    softWrap: true,
+                    subtitle: Text(
+                      '$venueLocation • $classGroup • $studentName',
+                      style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      softWrap: true,
+                    ),
+                    trailing: isDesktop
+                        ? const Icon(Icons.arrow_forward_ios, size: 16, color: DesignSystem.primary)
+                        : null,
                   ),
-                  subtitle: Text(
-                    '$venueLocation • $classGroup • $studentName',
-                    style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    softWrap: true,
-                  ),
-                  trailing: isDesktop
-                      ? const Icon(Icons.arrow_forward_ios, size: 16, color: DesignSystem.primary)
-                      : null,
-                ),
-              );
-            },
-          ),
+                );
+              },
+            ),
         ],
         const SizedBox(height: DesignSystem.spaceLg),
       ],
