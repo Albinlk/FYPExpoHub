@@ -100,7 +100,26 @@ def parse_booths():
     return result
 
 
-def draw_badge(booth, prog):
+# Safe text area inside the ring: keep a comfortable margin from the border.
+MAX_TEXT_W = SIZE - 2 * 48
+MAX_TEXT_H = SIZE - 2 * 56
+FONT_MIN = 40
+FONT_MAX = 130
+
+
+def fit_font(draw, booth):
+    """Largest bold font size whose bounding box fits the safe text area."""
+    for size in range(FONT_MAX, FONT_MIN - 1, -2):
+        f = try_font(size, bold=True)
+        bb = draw.textbbox((0, 0), booth, font=f)
+        w = bb[2] - bb[0]
+        h = bb[3] - bb[1]
+        if w <= MAX_TEXT_W and h <= MAX_TEXT_H:
+            return f, bb
+    return try_font(FONT_MIN, bold=True), draw.textbbox((0, 0), booth, font=try_font(FONT_MIN, bold=True))
+
+
+def draw_badge(booth):
     zone = booth.split('-')[0]
     base = hexrgb(VENUE_COLORS.get(zone, '#3B82F6'))
     dark = hexrgb(VENUE_DARK.get(zone, '#1D4ED8'))
@@ -125,23 +144,13 @@ def draw_badge(booth, prog):
         [18, 18, SIZE - 19, SIZE - 19], radius=radius - 10, outline=ring, width=3
     )
 
-    # Booth number (dominant).
-    num_size = 150
-    f_num = try_font(num_size, bold=True)
-    num_bbox = draw.textbbox((0, 0), booth, font=f_num)
-    num_w = num_bbox[2] - num_bbox[0]
-    num_h = num_bbox[3] - num_bbox[1]
-    num_x = (SIZE - num_w) / 2 - num_bbox[0]
-    num_y = (SIZE - num_h) / 2 - num_bbox[1] - 40
+    # Booth number, auto-fitted to stay well inside the border.
+    f_num, bb = fit_font(draw, booth)
+    num_w = bb[2] - bb[0]
+    num_h = bb[3] - bb[1]
+    num_x = (SIZE - num_w) / 2 - bb[0]
+    num_y = (SIZE - num_h) / 2 - bb[1]
     draw.text((num_x, num_y), booth, fill='white', font=f_num)
-
-    # Programme code underneath.
-    f_prog = try_font(48, bold=False)
-    prog_bbox = draw.textbbox((0, 0), prog, font=f_prog)
-    prog_w = prog_bbox[2] - prog_bbox[0]
-    prog_x = (SIZE - prog_w) / 2 - prog_bbox[0]
-    prog_y = num_y + num_h + 12
-    draw.text((prog_x, prog_y), prog, fill=(255, 255, 255, 210), font=f_prog)
 
     out = Image.new('RGB', (SIZE, SIZE), (255, 255, 255))
     out.paste(img, (0, 0), img)
@@ -152,8 +161,8 @@ def main():
     booths = parse_booths()
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     total = 0
-    for booth, prog in booths.items():
-        img = draw_badge(booth, prog)
+    for booth in booths:
+        img = draw_badge(booth)
         out_path = os.path.join(OUTPUT_DIR, f'booth-{booth}.png')
         img.save(out_path, quality=92, optimize=True)
         total += 1
