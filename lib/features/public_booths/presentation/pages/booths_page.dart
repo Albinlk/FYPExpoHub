@@ -114,7 +114,7 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
       }
 
       if (selectedProgram != 'All') {
-        if (p.programmeCode != selectedProgram) continue;
+        if (_stripProgram(p.programmeCode) != selectedProgram) continue;
       }
 
       final titleMatch = p.title.toLowerCase().contains(needle);
@@ -143,6 +143,27 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
     final zoneVal = int.tryParse(zone, radix: 36) ?? 0;
     return zoneVal * 1000 + num;
   }
+
+  /// Sorts venue labels by leading characters first, then the trailing number,
+  /// e.g. "BK 1", "BK 2", ..., "DS 5", "DS 6".
+  int _venueCompare(String a, String b) {
+    final regex = RegExp(r'^([A-Za-z]+)\s*(\d+)$');
+    final ma = regex.firstMatch(a);
+    final mb = regex.firstMatch(b);
+    final aChars = ma?.group(1) ?? a;
+    final bChars = mb?.group(1) ?? b;
+    final charCmp = aChars.compareTo(bChars);
+    if (charCmp != 0) return charCmp;
+    final aNum = int.tryParse(ma?.group(2) ?? '') ?? 0;
+    final bNum = int.tryParse(mb?.group(2) ?? '') ?? 0;
+    return aNum.compareTo(bNum);
+  }
+
+  /// Strips the "M3" prefix from programme codes (e.g. "M3CS2516A" -> "CS2516A").
+  String _stripProgram(String code) {
+    return code.startsWith('M3') ? code.substring(2) : code;
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDesktop = MediaQuery.of(context).size.width >= 768;
@@ -163,11 +184,12 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
     for (final p in previewProjects) {
       availableVenues.add(_venueLabelOf(p.boothNumber ?? p.boothZone ?? ''));
     }
+    final sortedVenues = availableVenues.toList()..sort(_venueCompare);
 
     // Programs: distinct set from all projects (for full coverage).
     final allPrograms = <String>{};
     for (final p in projects) {
-      if (p.programmeCode.isNotEmpty) allPrograms.add(p.programmeCode);
+      if (p.programmeCode.isNotEmpty) allPrograms.add(_stripProgram(p.programmeCode));
     }
     final sortedPrograms = allPrograms.toList()..sort();
     final programItems = ['All', ...sortedPrograms];
@@ -242,7 +264,7 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
                               contentPadding: const EdgeInsets.symmetric(horizontal: 12),
                             ),
                             onChanged: (val) => setState(() => _selectedVenue = val!),
-                            items: ['All', ...availableVenues].map((v) {
+                            items: ['All', ...sortedVenues].map((v) {
                               return DropdownMenuItem(value: v, child: Text(v, style: DesignSystem.bodySm, softWrap: true));
                             }).toList(),
                           ),
@@ -353,7 +375,7 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
 
                 final boothNumber = p.boothNumber ?? '—';
                 final badgeColor = _badgeColorFor(boothNumber);
-                final classGroup = p.programmeCode;
+                final classGroup = _stripProgram(p.programmeCode);
                 final studentName = p.teamDisplayNames.isNotEmpty
                     ? p.teamDisplayNames.first
                     : p.supervisorDisplayName;
