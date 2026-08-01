@@ -87,9 +87,9 @@ class _DesktopNavBar extends StatelessWidget {
               const SizedBox(width: DesignSystem.spaceLg),
               _buildNavLink(context, 'Schedule', '/schedule'),
               const SizedBox(width: DesignSystem.spaceLg),
-              _buildNavLink(context, 'Projects', '/projects'),
-              const SizedBox(width: DesignSystem.spaceLg),
               _buildNavLink(context, 'Booths', '/booths'),
+              const SizedBox(width: DesignSystem.spaceLg),
+              _buildNavLink(context, 'Projects', '/projects'),
               const SizedBox(width: DesignSystem.spaceLg),
               _buildNavLink(context, 'Announcements', '/announcements'),
               const SizedBox(width: DesignSystem.spaceLg),
@@ -163,7 +163,7 @@ class _MobileBottomNavBar extends StatelessWidget {
 
   int _getSelectedIndex() {
     if (currentPath == '/') return 0;
-    if (currentPath.startsWith('/projects')) return 1;
+    if (currentPath.startsWith('/booths')) return 1;
     if (currentPath.startsWith('/schedule')) return 2;
     if (currentPath.startsWith('/lecturer')) return 3;
     return 4;
@@ -175,7 +175,7 @@ class _MobileBottomNavBar extends StatelessWidget {
         context.go('/');
         break;
       case 1:
-        context.go('/projects');
+        context.go('/booths');
         break;
       case 2:
         context.go('/schedule');
@@ -203,6 +203,7 @@ class _MobileBottomNavBar extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                _buildMenuItem(context, 'Booths', Icons.location_pin, '/booths'),
                 _buildMenuItem(context, 'Schedule', Icons.event_note, '/schedule'),
                 _buildMenuItem(context, 'Announcements', Icons.campaign, '/announcements'),
                 _buildMenuItem(context, 'Award Winners', Icons.emoji_events, '/awards'),
@@ -274,9 +275,9 @@ if (!lecturerSignedIn)
             label: 'Home',
           ),
           NavigationDestination(
-            icon: Icon(Icons.folder_open_outlined),
-            selectedIcon: Icon(Icons.folder_open, color: DesignSystem.onSecondaryContainer),
-            label: 'Projects',
+            icon: Icon(Icons.location_on_outlined),
+            selectedIcon: Icon(Icons.location_on, color: DesignSystem.onSecondaryContainer),
+            label: 'Booths',
           ),
           NavigationDestination(
             icon: Icon(Icons.event_note_outlined),

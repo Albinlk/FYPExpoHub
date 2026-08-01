@@ -53,23 +53,45 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
     'DS 5', 'DS 6', 'DS 7', 'DS 8',
   ];
 
-  /// Excel-faithful venue label, e.g. "BK5-03" -> "BK 5 - 03".
-  /// Split only on the first `-`, so booth numbers like "BK7-01" map correctly.
-  String _excelVenueLabel(String boothNumber) {
-    final dash = boothNumber.indexOf('-');
-    if (dash == -1) return boothNumber;
-    final prefix = boothNumber.substring(0, dash);
-    final suffix = boothNumber.substring(dash + 1);
-    final pretty = _prettyVenueByPrefix[prefix] ?? prefix;
-    return '$pretty - $suffix';
-  }
-
   /// Returns the venue label for a booth number, e.g. "BK5-03" -> "BK 5".
   String _venueLabelOf(String boothNumber) {
     final dash = boothNumber.indexOf('-');
     if (dash == -1) return boothNumber;
     final prefix = boothNumber.substring(0, dash);
     return _prettyVenueByPrefix[prefix] ?? prefix;
+  }
+
+  /// Excel-faithful venue location without spaces, e.g. "BK5-03" -> "BK5".
+  String _venueLocation(String boothNumber) {
+    final dash = boothNumber.indexOf('-');
+    if (dash == -1) return boothNumber;
+    return boothNumber.substring(0, dash);
+  }
+
+  /// Per-venue background color for the booth badge.
+  /// Derived from the booth-number prefix (course code).
+  static final Map<String, Color> _venueBadgeColor = {
+    // CS230 (DS 5-6) and CS253 (DS6) — blueGrey
+    'DS5': Colors.blueGrey,
+    'DS6': Colors.blueGrey,
+    // CS266 (DS 7-8) — amber
+    'DS7': Colors.amber,
+    'DS8': Colors.amber,
+    // CS255 (BILIK KULIAH 1 - 4) — green
+    'BK1': Colors.green,
+    'BK2': Colors.green,
+    'BK3': Colors.green,
+    'BK4': Colors.green,
+    // CS251 (BK 5 - 8) — purple
+    'BK5': Colors.purple,
+    'BK6': Colors.purple,
+    'BK7': Colors.purple,
+    'BK8': Colors.purple,
+  };
+
+  Color _badgeColorFor(String boothNumber) {
+    final prefix = boothNumber.split('-').first;
+    return _venueBadgeColor[prefix] ?? DesignSystem.primary;
   }
 
   /// Returns the stable, canonical day order for grouping.
@@ -171,29 +193,27 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
             ),
             const SizedBox(height: DesignSystem.spaceXl),
 
-            // Top Search & Filter Bar
+             // Top Search & Filter Bar
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(DesignSystem.spaceMd),
-                child: Row(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _searchController,
-                        onChanged: (val) => setState(() {}),
-                        decoration: const InputDecoration(
-                          hintText: 'Search by booth number or project title...',
-                          prefixIcon: Icon(Icons.search, color: DesignSystem.primary),
-                        ),
+                    TextField(
+                      controller: _searchController,
+                      onChanged: (val) => setState(() {}),
+                      decoration: InputDecoration(
+                        hintText: 'Search by booth number, project title, or student name...',
+                        prefixIcon: Icon(Icons.search, color: DesignSystem.primary),
                       ),
                     ),
-                    if (isDesktop)
+                    if (isDesktop) ...[
                       const SizedBox(width: DesignSystem.spaceMd),
-                    if (isDesktop)
                       SizedBox(
                         width: 260,
                         child: DropdownButtonFormField<String>(
-                          value: _selectedZone,
+                          initialValue: _selectedZone,
                           decoration: const InputDecoration(contentPadding: EdgeInsets.symmetric(horizontal: 12)),
                           onChanged: (val) => setState(() => _selectedZone = val!),
                           items: _zones.map((zone) {
@@ -204,28 +224,25 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
                           }).toList(),
                         ),
                       ),
+                    ],
+                    if (!isDesktop) ...[
+                      const SizedBox(height: DesignSystem.spaceSm),
+                      DropdownButtonFormField<String>(
+                        initialValue: _selectedZone,
+                        decoration: const InputDecoration(contentPadding: EdgeInsets.symmetric(horizontal: 12)),
+                        onChanged: (val) => setState(() => _selectedZone = val!),
+                        items: _zones.map((zone) {
+                          return DropdownMenuItem(
+                            value: zone,
+                            child: Text(zone, style: DesignSystem.bodySm, softWrap: true),
+                          );
+                        }).toList(),
+                      ),
+                    ],
                   ],
                 ),
               ),
             ),
-
-            if (!isDesktop)
-              Column(
-                children: [
-                  const SizedBox(height: DesignSystem.spaceMd),
-                  DropdownButtonFormField<String>(
-                    value: _selectedZone,
-                    decoration: const InputDecoration(contentPadding: EdgeInsets.symmetric(horizontal: 12)),
-                    onChanged: (val) => setState(() => _selectedZone = val!),
-                    items: _zones.map((zone) {
-                      return DropdownMenuItem(
-                        value: zone,
-                        child: Text(zone, style: DesignSystem.bodySm, softWrap: true),
-                      );
-                    }).toList(),
-                  ),
-                ],
-              ),
 
             const SizedBox(height: DesignSystem.spaceXl),
 
@@ -257,19 +274,6 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
   }
 
   Widget _buildDayGroup(String dayLabel, List<Project> projects, List<Booth> booths, bool isDesktop) {
-    final boothById = <String, Booth>{};
-    final boothByNumber = <String, Booth>{};
-    for (final b in booths) {
-      boothById[b.id] = b;
-      boothByNumber[b.boothNumber] = b;
-    }
-
-    Booth? boothFor(Project p) {
-      if (p.boothId != null && boothById.containsKey(p.boothId)) return boothById[p.boothId];
-      if (p.boothNumber != null && boothByNumber.containsKey(p.boothNumber)) return boothByNumber[p.boothNumber];
-      return null;
-    }
-
       // Group projects by venue (Excel-derived), then sort within each venue.
     final Map<String, List<Project>> venueBuckets = {};
     for (final p in projects) {
@@ -333,40 +337,55 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
             itemCount: venueBuckets[venue]!.length,
             itemBuilder: (context, index) {
               final p = venueBuckets[venue]![index];
-              final booth = boothFor(p);
+
+              final boothLabel = p.boothNumber ?? '—';
+              final venueLocation = _venueLocation(boothLabel);
+              final badgeColor = _badgeColorFor(boothLabel);
+              final classGroup = p.programmeCode;
+              final studentName = p.teamDisplayNames.isNotEmpty
+                  ? p.teamDisplayNames.first
+                  : (p.supervisorDisplayName.isNotEmpty
+                      ? p.supervisorDisplayName
+                      : '—');
 
               return Card(
-                margin: const EdgeInsets.only(bottom: DesignSystem.spaceSm),
+                margin: EdgeInsets.only(
+                  bottom: DesignSystem.spaceSm,
+                  left: isDesktop ? 0 : DesignSystem.spaceSm,
+                  right: isDesktop ? 0 : DesignSystem.spaceSm,
+                ),
                 child: ListTile(
+                  onTap: () => context.go('/projects/${p.id}'),
                   leading: CircleAvatar(
-                    backgroundColor: DesignSystem.secondaryContainer,
+                    backgroundColor: badgeColor.withValues(alpha: 0.2),
                     child: Text(
-                      p.boothNumber ?? '—',
-                      style: const TextStyle(
-                        color: DesignSystem.onSecondaryContainer,
+                      boothLabel,
+                      style: DesignSystem.bodySm.copyWith(
+                        color: badgeColor,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
                   title: Text(
-                    '${_excelVenueLabel(p.boothNumber ?? "—")} • ${p.title}',
+                    p.title,
                     style: DesignSystem.bodyMd.copyWith(
                       fontWeight: FontWeight.bold,
                       color: DesignSystem.primary,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     softWrap: true,
                   ),
                   subtitle: Text(
-                    '${booth?.zone ?? p.boothZone ?? "—"} • ${p.supervisorDisplayName}',
+                    '$venueLocation • $classGroup • $studentName',
                     style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     softWrap: true,
                   ),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.arrow_forward_ios, size: 16, color: DesignSystem.primary),
-                    onPressed: () {
-                      context.go('/projects/${p.id}');
-                    },
-                  ),
+                  trailing: isDesktop
+                      ? const Icon(Icons.arrow_forward_ios, size: 16, color: DesignSystem.primary)
+                      : null,
                 ),
               );
             },
