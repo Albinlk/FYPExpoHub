@@ -374,13 +374,22 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
                   ),
                   child: ListTile(
                     onTap: () => context.go('/projects/${p.id}'),
-                    leading: CircleAvatar(
-                      backgroundColor: badgeColor.withValues(alpha: 0.2),
-                      child: Text(
-                        boothNumber,
-                        style: DesignSystem.bodySm.copyWith(
-                          color: badgeColor,
-                          fontWeight: FontWeight.bold,
+                    leading: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.network(
+                        '/booth_images/booth-$boothNumber.png',
+                        width: 44,
+                        height: 44,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => CircleAvatar(
+                          backgroundColor: badgeColor.withValues(alpha: 0.2),
+                          child: Text(
+                            boothNumber,
+                            style: DesignSystem.bodySm.copyWith(
+                              color: badgeColor,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
                       ),
                     ),
