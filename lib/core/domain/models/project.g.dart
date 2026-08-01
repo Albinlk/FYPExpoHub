@@ -22,6 +22,7 @@ _Project _$ProjectFromJson(Map<String, dynamic> json) => _Project(
   boothId: json['boothId'] as String?,
   boothNumber: json['boothNumber'] as String?,
   boothZone: json['boothZone'] as String?,
+  presentationDay: json['presentationDay'] as String?,
   coverImageUrl: json['coverImageUrl'] as String,
   posterUrl: json['posterUrl'] as String?,
   teamDisplayNames: (json['teamDisplayNames'] as List<dynamic>)
@@ -56,6 +57,7 @@ Map<String, dynamic> _$ProjectToJson(_Project instance) => <String, dynamic>{
   'boothId': instance.boothId,
   'boothNumber': instance.boothNumber,
   'boothZone': instance.boothZone,
+  'presentationDay': instance.presentationDay,
   'coverImageUrl': instance.coverImageUrl,
   'posterUrl': instance.posterUrl,
   'teamDisplayNames': instance.teamDisplayNames,

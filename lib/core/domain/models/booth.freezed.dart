@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Booth {
 
- String get id; String get eventId; String get boothNumber; String get zone; String get locationNote; String? get staticFloorPlanUrl; String? get projectId; String get publicationStatus;// 'draft', 'published', 'archived'
+ String get id; String get eventId; String get boothNumber; String get zone; String get locationNote; String? get presentationDay; String? get staticFloorPlanUrl; String? get projectId; String get publicationStatus;// 'draft', 'published', 'archived'
  DateTime get createdAt; DateTime get updatedAt; DateTime? get publishedAt;
 /// Create a copy of Booth
 /// with the given fields replaced by the non-null parameter values.
@@ -29,16 +29,16 @@ $BoothCopyWith<Booth> get copyWith => _$BoothCopyWithImpl<Booth>(this as Booth, 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Booth&&(identical(other.id, id) || other.id == id)&&(identical(other.eventId, eventId) || other.eventId == eventId)&&(identical(other.boothNumber, boothNumber) || other.boothNumber == boothNumber)&&(identical(other.zone, zone) || other.zone == zone)&&(identical(other.locationNote, locationNote) || other.locationNote == locationNote)&&(identical(other.staticFloorPlanUrl, staticFloorPlanUrl) || other.staticFloorPlanUrl == staticFloorPlanUrl)&&(identical(other.projectId, projectId) || other.projectId == projectId)&&(identical(other.publicationStatus, publicationStatus) || other.publicationStatus == publicationStatus)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Booth&&(identical(other.id, id) || other.id == id)&&(identical(other.eventId, eventId) || other.eventId == eventId)&&(identical(other.boothNumber, boothNumber) || other.boothNumber == boothNumber)&&(identical(other.zone, zone) || other.zone == zone)&&(identical(other.locationNote, locationNote) || other.locationNote == locationNote)&&(identical(other.presentationDay, presentationDay) || other.presentationDay == presentationDay)&&(identical(other.staticFloorPlanUrl, staticFloorPlanUrl) || other.staticFloorPlanUrl == staticFloorPlanUrl)&&(identical(other.projectId, projectId) || other.projectId == projectId)&&(identical(other.publicationStatus, publicationStatus) || other.publicationStatus == publicationStatus)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,eventId,boothNumber,zone,locationNote,staticFloorPlanUrl,projectId,publicationStatus,createdAt,updatedAt,publishedAt);
+int get hashCode => Object.hash(runtimeType,id,eventId,boothNumber,zone,locationNote,presentationDay,staticFloorPlanUrl,projectId,publicationStatus,createdAt,updatedAt,publishedAt);
 
 @override
 String toString() {
-  return 'Booth(id: $id, eventId: $eventId, boothNumber: $boothNumber, zone: $zone, locationNote: $locationNote, staticFloorPlanUrl: $staticFloorPlanUrl, projectId: $projectId, publicationStatus: $publicationStatus, createdAt: $createdAt, updatedAt: $updatedAt, publishedAt: $publishedAt)';
+  return 'Booth(id: $id, eventId: $eventId, boothNumber: $boothNumber, zone: $zone, locationNote: $locationNote, presentationDay: $presentationDay, staticFloorPlanUrl: $staticFloorPlanUrl, projectId: $projectId, publicationStatus: $publicationStatus, createdAt: $createdAt, updatedAt: $updatedAt, publishedAt: $publishedAt)';
 }
 
 
@@ -49,7 +49,7 @@ abstract mixin class $BoothCopyWith<$Res>  {
   factory $BoothCopyWith(Booth value, $Res Function(Booth) _then) = _$BoothCopyWithImpl;
 @useResult
 $Res call({
- String id, String eventId, String boothNumber, String zone, String locationNote, String? staticFloorPlanUrl, String? projectId, String publicationStatus, DateTime createdAt, DateTime updatedAt, DateTime? publishedAt
+ String id, String eventId, String boothNumber, String zone, String locationNote, String? presentationDay, String? staticFloorPlanUrl, String? projectId, String publicationStatus, DateTime createdAt, DateTime updatedAt, DateTime? publishedAt
 });
 
 
@@ -66,14 +66,15 @@ class _$BoothCopyWithImpl<$Res>
 
 /// Create a copy of Booth
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? eventId = null,Object? boothNumber = null,Object? zone = null,Object? locationNote = null,Object? staticFloorPlanUrl = freezed,Object? projectId = freezed,Object? publicationStatus = null,Object? createdAt = null,Object? updatedAt = null,Object? publishedAt = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? eventId = null,Object? boothNumber = null,Object? zone = null,Object? locationNote = null,Object? presentationDay = freezed,Object? staticFloorPlanUrl = freezed,Object? projectId = freezed,Object? publicationStatus = null,Object? createdAt = null,Object? updatedAt = null,Object? publishedAt = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,eventId: null == eventId ? _self.eventId : eventId // ignore: cast_nullable_to_non_nullable
 as String,boothNumber: null == boothNumber ? _self.boothNumber : boothNumber // ignore: cast_nullable_to_non_nullable
 as String,zone: null == zone ? _self.zone : zone // ignore: cast_nullable_to_non_nullable
 as String,locationNote: null == locationNote ? _self.locationNote : locationNote // ignore: cast_nullable_to_non_nullable
-as String,staticFloorPlanUrl: freezed == staticFloorPlanUrl ? _self.staticFloorPlanUrl : staticFloorPlanUrl // ignore: cast_nullable_to_non_nullable
+as String,presentationDay: freezed == presentationDay ? _self.presentationDay : presentationDay // ignore: cast_nullable_to_non_nullable
+as String?,staticFloorPlanUrl: freezed == staticFloorPlanUrl ? _self.staticFloorPlanUrl : staticFloorPlanUrl // ignore: cast_nullable_to_non_nullable
 as String?,projectId: freezed == projectId ? _self.projectId : projectId // ignore: cast_nullable_to_non_nullable
 as String?,publicationStatus: null == publicationStatus ? _self.publicationStatus : publicationStatus // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
@@ -164,10 +165,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String eventId,  String boothNumber,  String zone,  String locationNote,  String? staticFloorPlanUrl,  String? projectId,  String publicationStatus,  DateTime createdAt,  DateTime updatedAt,  DateTime? publishedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String eventId,  String boothNumber,  String zone,  String locationNote,  String? presentationDay,  String? staticFloorPlanUrl,  String? projectId,  String publicationStatus,  DateTime createdAt,  DateTime updatedAt,  DateTime? publishedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Booth() when $default != null:
-return $default(_that.id,_that.eventId,_that.boothNumber,_that.zone,_that.locationNote,_that.staticFloorPlanUrl,_that.projectId,_that.publicationStatus,_that.createdAt,_that.updatedAt,_that.publishedAt);case _:
+return $default(_that.id,_that.eventId,_that.boothNumber,_that.zone,_that.locationNote,_that.presentationDay,_that.staticFloorPlanUrl,_that.projectId,_that.publicationStatus,_that.createdAt,_that.updatedAt,_that.publishedAt);case _:
   return orElse();
 
 }
@@ -185,10 +186,10 @@ return $default(_that.id,_that.eventId,_that.boothNumber,_that.zone,_that.locati
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String eventId,  String boothNumber,  String zone,  String locationNote,  String? staticFloorPlanUrl,  String? projectId,  String publicationStatus,  DateTime createdAt,  DateTime updatedAt,  DateTime? publishedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String eventId,  String boothNumber,  String zone,  String locationNote,  String? presentationDay,  String? staticFloorPlanUrl,  String? projectId,  String publicationStatus,  DateTime createdAt,  DateTime updatedAt,  DateTime? publishedAt)  $default,) {final _that = this;
 switch (_that) {
 case _Booth():
-return $default(_that.id,_that.eventId,_that.boothNumber,_that.zone,_that.locationNote,_that.staticFloorPlanUrl,_that.projectId,_that.publicationStatus,_that.createdAt,_that.updatedAt,_that.publishedAt);case _:
+return $default(_that.id,_that.eventId,_that.boothNumber,_that.zone,_that.locationNote,_that.presentationDay,_that.staticFloorPlanUrl,_that.projectId,_that.publicationStatus,_that.createdAt,_that.updatedAt,_that.publishedAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -205,10 +206,10 @@ return $default(_that.id,_that.eventId,_that.boothNumber,_that.zone,_that.locati
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String eventId,  String boothNumber,  String zone,  String locationNote,  String? staticFloorPlanUrl,  String? projectId,  String publicationStatus,  DateTime createdAt,  DateTime updatedAt,  DateTime? publishedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String eventId,  String boothNumber,  String zone,  String locationNote,  String? presentationDay,  String? staticFloorPlanUrl,  String? projectId,  String publicationStatus,  DateTime createdAt,  DateTime updatedAt,  DateTime? publishedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _Booth() when $default != null:
-return $default(_that.id,_that.eventId,_that.boothNumber,_that.zone,_that.locationNote,_that.staticFloorPlanUrl,_that.projectId,_that.publicationStatus,_that.createdAt,_that.updatedAt,_that.publishedAt);case _:
+return $default(_that.id,_that.eventId,_that.boothNumber,_that.zone,_that.locationNote,_that.presentationDay,_that.staticFloorPlanUrl,_that.projectId,_that.publicationStatus,_that.createdAt,_that.updatedAt,_that.publishedAt);case _:
   return null;
 
 }
@@ -220,7 +221,7 @@ return $default(_that.id,_that.eventId,_that.boothNumber,_that.zone,_that.locati
 @JsonSerializable()
 
 class _Booth implements Booth {
-  const _Booth({required this.id, required this.eventId, required this.boothNumber, required this.zone, required this.locationNote, this.staticFloorPlanUrl, this.projectId, required this.publicationStatus, required this.createdAt, required this.updatedAt, this.publishedAt});
+  const _Booth({required this.id, required this.eventId, required this.boothNumber, required this.zone, required this.locationNote, this.presentationDay, this.staticFloorPlanUrl, this.projectId, required this.publicationStatus, required this.createdAt, required this.updatedAt, this.publishedAt});
   factory _Booth.fromJson(Map<String, dynamic> json) => _$BoothFromJson(json);
 
 @override final  String id;
@@ -228,6 +229,7 @@ class _Booth implements Booth {
 @override final  String boothNumber;
 @override final  String zone;
 @override final  String locationNote;
+@override final  String? presentationDay;
 @override final  String? staticFloorPlanUrl;
 @override final  String? projectId;
 @override final  String publicationStatus;
@@ -249,16 +251,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Booth&&(identical(other.id, id) || other.id == id)&&(identical(other.eventId, eventId) || other.eventId == eventId)&&(identical(other.boothNumber, boothNumber) || other.boothNumber == boothNumber)&&(identical(other.zone, zone) || other.zone == zone)&&(identical(other.locationNote, locationNote) || other.locationNote == locationNote)&&(identical(other.staticFloorPlanUrl, staticFloorPlanUrl) || other.staticFloorPlanUrl == staticFloorPlanUrl)&&(identical(other.projectId, projectId) || other.projectId == projectId)&&(identical(other.publicationStatus, publicationStatus) || other.publicationStatus == publicationStatus)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Booth&&(identical(other.id, id) || other.id == id)&&(identical(other.eventId, eventId) || other.eventId == eventId)&&(identical(other.boothNumber, boothNumber) || other.boothNumber == boothNumber)&&(identical(other.zone, zone) || other.zone == zone)&&(identical(other.locationNote, locationNote) || other.locationNote == locationNote)&&(identical(other.presentationDay, presentationDay) || other.presentationDay == presentationDay)&&(identical(other.staticFloorPlanUrl, staticFloorPlanUrl) || other.staticFloorPlanUrl == staticFloorPlanUrl)&&(identical(other.projectId, projectId) || other.projectId == projectId)&&(identical(other.publicationStatus, publicationStatus) || other.publicationStatus == publicationStatus)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,eventId,boothNumber,zone,locationNote,staticFloorPlanUrl,projectId,publicationStatus,createdAt,updatedAt,publishedAt);
+int get hashCode => Object.hash(runtimeType,id,eventId,boothNumber,zone,locationNote,presentationDay,staticFloorPlanUrl,projectId,publicationStatus,createdAt,updatedAt,publishedAt);
 
 @override
 String toString() {
-  return 'Booth(id: $id, eventId: $eventId, boothNumber: $boothNumber, zone: $zone, locationNote: $locationNote, staticFloorPlanUrl: $staticFloorPlanUrl, projectId: $projectId, publicationStatus: $publicationStatus, createdAt: $createdAt, updatedAt: $updatedAt, publishedAt: $publishedAt)';
+  return 'Booth(id: $id, eventId: $eventId, boothNumber: $boothNumber, zone: $zone, locationNote: $locationNote, presentationDay: $presentationDay, staticFloorPlanUrl: $staticFloorPlanUrl, projectId: $projectId, publicationStatus: $publicationStatus, createdAt: $createdAt, updatedAt: $updatedAt, publishedAt: $publishedAt)';
 }
 
 
@@ -269,7 +271,7 @@ abstract mixin class _$BoothCopyWith<$Res> implements $BoothCopyWith<$Res> {
   factory _$BoothCopyWith(_Booth value, $Res Function(_Booth) _then) = __$BoothCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String eventId, String boothNumber, String zone, String locationNote, String? staticFloorPlanUrl, String? projectId, String publicationStatus, DateTime createdAt, DateTime updatedAt, DateTime? publishedAt
+ String id, String eventId, String boothNumber, String zone, String locationNote, String? presentationDay, String? staticFloorPlanUrl, String? projectId, String publicationStatus, DateTime createdAt, DateTime updatedAt, DateTime? publishedAt
 });
 
 
@@ -286,14 +288,15 @@ class __$BoothCopyWithImpl<$Res>
 
 /// Create a copy of Booth
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? eventId = null,Object? boothNumber = null,Object? zone = null,Object? locationNote = null,Object? staticFloorPlanUrl = freezed,Object? projectId = freezed,Object? publicationStatus = null,Object? createdAt = null,Object? updatedAt = null,Object? publishedAt = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? eventId = null,Object? boothNumber = null,Object? zone = null,Object? locationNote = null,Object? presentationDay = freezed,Object? staticFloorPlanUrl = freezed,Object? projectId = freezed,Object? publicationStatus = null,Object? createdAt = null,Object? updatedAt = null,Object? publishedAt = freezed,}) {
   return _then(_Booth(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,eventId: null == eventId ? _self.eventId : eventId // ignore: cast_nullable_to_non_nullable
 as String,boothNumber: null == boothNumber ? _self.boothNumber : boothNumber // ignore: cast_nullable_to_non_nullable
 as String,zone: null == zone ? _self.zone : zone // ignore: cast_nullable_to_non_nullable
 as String,locationNote: null == locationNote ? _self.locationNote : locationNote // ignore: cast_nullable_to_non_nullable
-as String,staticFloorPlanUrl: freezed == staticFloorPlanUrl ? _self.staticFloorPlanUrl : staticFloorPlanUrl // ignore: cast_nullable_to_non_nullable
+as String,presentationDay: freezed == presentationDay ? _self.presentationDay : presentationDay // ignore: cast_nullable_to_non_nullable
+as String?,staticFloorPlanUrl: freezed == staticFloorPlanUrl ? _self.staticFloorPlanUrl : staticFloorPlanUrl // ignore: cast_nullable_to_non_nullable
 as String?,projectId: freezed == projectId ? _self.projectId : projectId // ignore: cast_nullable_to_non_nullable
 as String?,publicationStatus: null == publicationStatus ? _self.publicationStatus : publicationStatus // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable

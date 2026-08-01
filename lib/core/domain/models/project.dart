@@ -19,6 +19,7 @@ abstract class Project with _$Project {
     String? boothId,
     String? boothNumber,
     String? boothZone,
+    String? presentationDay,
     required String coverImageUrl,
     String? posterUrl,
     required List<String> teamDisplayNames,

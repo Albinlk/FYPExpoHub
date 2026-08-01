@@ -12,7 +12,18 @@ const XLSX = require('xlsx');
 const { API_KEY, FIREBASE_PROJECT, EVENT_ID, ADMIN_EMAIL, ADMIN_PASSWORD, CALON_MATRICS } = require('./lib/config');
 const { httpsRequest, getAccessToken, authHeader, FIRESTORE_BASE } = require('./lib/firebase_api');
 
-const EXCEL_PATH = 'D:\\Downloads\\(LATEST) CSP650-DewanSeminar-ListName-Layout (7).xlsx';
+const EXCEL_PATH = 'D:\\Downloads\\StudentListName.xlsx';
+
+const DATE_RE = /(\d{1,2})\s+(?:AUG(?:UST)?|OGOS|AGUSTUS)\s+\d{4}/i;
+
+function deriveDayFromCell(cell) {
+  const m = DATE_RE.exec(String(cell || '').trim());
+  if (!m) return null;
+  const dayNum = parseInt(m[1], 10);
+  if (dayNum === 6) return { label: 'Day 1', date: '06 Aug 2026' };
+  if (dayNum === 7) return { label: 'Day 2', date: '07 Aug 2026' };
+  return null;
+}
 
 const COURSE_CATEGORY = {
   CS230: { category: 'Computer Science', progPrefix: 'CS230' },
@@ -54,10 +65,22 @@ function parseSheet(ws, courseCode) {
   const projects = [];
   const booths = new Set();
 
+  let currentDay = 'Day 1';
+  let currentDate = '06 Aug 2026';
+
   const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
-  for (let i = 3; i < rows.length; i++) {
+  for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
-    if (!row || row.length < 8) continue;
+    if (!row || row.length < 1) continue;
+    const firstCell = String(row[0] || '').trim();
+
+    const dayMatch = deriveDayFromCell(firstCell);
+    if (dayMatch) {
+      currentDay = dayMatch.label;
+      currentDate = dayMatch.date;
+    }
+
+    if (row.length < 8) continue;
     const no = row[0];
     const boothRaw = String(row[1]).trim();
     const group = sanitize(row[2]);
@@ -91,9 +114,11 @@ function parseSheet(ws, courseCode) {
       course_code: courseCode,
       category: info.category,
       prog_prefix: info.progPrefix,
+      presentation_day: `${currentDay} - ${currentDate}`,
     });
   }
-  return { projects, booths: [...booths].sort() };
+  const boothList = [...booths].sort();
+  return { projects, booths: boothList };
 }
 
 let globalCounter = 0;
@@ -141,13 +166,22 @@ async function main() {
     const { projects, booths } = parseSheet(ws, courseCode);
     for (const b of booths) {
       const zone = b.includes('-') ? b.split('-')[0] : '';
-      boothMap.set(b, { booth_number: b, zone });
+      if (!boothMap.has(b)) {
+        boothMap.set(b, { booth_number: b, zone, presentation_day: null });
+      }
     }
     for (const p of projects) {
       p.id = generateProjectId(courseCode);
+      const bm = boothMap.get(p.booth_number);
+      if (bm && bm.presentation_day === null) {
+        bm.presentation_day = p.presentation_day;
+      }
       allProjects.push(p);
     }
-    console.log(`  ${sheetName}: ${projects.length} projects, ${booths.length} booths`);
+  }
+
+  for (const b of boothMap.values()) {
+    if (b.presentation_day === null) b.presentation_day = 'Day 1 - 06 Aug 2026';
   }
   console.log(`\nTotal: ${allProjects.length} projects, ${boothMap.size} booths`);
 
@@ -189,6 +223,7 @@ async function main() {
       boothId: `booth-${p.booth_number}`,
       boothNumber: p.booth_number,
       boothZone: p.zone,
+      presentationDay: p.presentation_day,
       coverImageUrl: 'assets/images/project_placeholder.jpg',
       posterUrl: null,
       teamDisplayNames: [p.student_name],
@@ -220,6 +255,7 @@ async function main() {
       boothNumber: boothNum,
       zone: bInfo.zone,
       locationNote: `Zon ${bInfo.zone}`,
+      presentationDay: bInfo.presentation_day,
       publicationStatus: 'published',
       createdAt: new Date(),
       updatedAt: new Date(),

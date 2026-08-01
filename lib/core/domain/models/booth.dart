@@ -11,6 +11,7 @@ abstract class Booth with _$Booth {
     required String boothNumber,
     required String zone,
     required String locationNote,
+    String? presentationDay,
     String? staticFloorPlanUrl,
     String? projectId,
     required String publicationStatus, // 'draft', 'published', 'archived'

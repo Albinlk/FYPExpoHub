@@ -144,6 +144,7 @@ class ProjectsNotifier extends Notifier<List<Project>> {
             boothId: m['booth_id'] as String?,
             boothNumber: m['booth_number'] as String?,
             boothZone: m['booth_zone'] as String?,
+            presentationDay: m['presentation_day'] as String?,
             coverImageUrl:
                 'https://placehold.co/400x250/3b82f6/ffffff?text=${Uri.encodeComponent(m['title'] as String)}',
             posterUrl: m['poster_url'] as String?,
@@ -380,6 +381,7 @@ class BoothsNotifier extends Notifier<List<Booth>> {
             locationNote: m['location_note'] as String,
             staticFloorPlanUrl: m['static_floor_plan_url'] as String?,
             projectId: m['project_id'] as String?,
+            presentationDay: m['presentation_day'] as String?,
             publicationStatus: m['publication_status'] as String,
             createdAt: m['created_at'] as DateTime,
             updatedAt: m['updated_at'] as DateTime,

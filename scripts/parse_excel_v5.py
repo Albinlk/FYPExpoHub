@@ -2,7 +2,7 @@ import openpyxl
 import re
 from collections import OrderedDict
 
-EXCEL_PATH = r'D:\Downloads\(LATEST) CSP650-DewanSeminar-ListName-Layout (7).xlsx'
+EXCEL_PATH = r'D:\Downloads\StudentListName.xlsx'
 OUTPUT_PATH = r'D:\MobileAppDev\FYPExpoHub\lib\core\data\excel_data.dart'
 
 COURSE_CATEGORY = {
@@ -31,14 +31,37 @@ def sanitize(val):
     s = ' '.join(s.split())
     return s
 
+DATE_RE = re.compile(r'(\d{1,2})\s+(?:AUG(?:UST)?|OGOS|AGUSTUS)\s+\d{4}', re.IGNORECASE)
+MONTH_MAP = {
+    'JANUARY': '01', 'FEBRUARY': '02', 'MARCH': '03', 'APRIL': '04',
+    'MAY': '05', 'JUNE': '06', 'JULY': '07', 'AUGUST': '08', 'SEPTEMBER': '09',
+    'OCTOBER': '10', 'NOVEMBER': '11', 'DECEMBER': '12',
+    'OGOS': '08', 'AGUSTUS': '08',
+}
+
+
 def parse_list_sheet(ws, course_code):
+    global current_day_label, current_date_str
     category, prog_prefix = COURSE_CATEGORY[course_code]
     projects = []
     booths = set()
 
-    rows = list(ws.iter_rows(min_row=4, values_only=True))
-    for row in rows:
-        vals = [v for v in row]
+    for row in ws.iter_rows(min_row=1, values_only=True):
+        vals = [v for v in row] if row else []
+        if not vals or len(vals) < 1:
+            continue
+        cell = str(vals[0]).strip() if vals[0] is not None else ''
+
+        m = DATE_RE.search(cell)
+        if m:
+            day_num = int(m.group(1))
+            if day_num == 6:
+                current_day_label = 'Day 1'
+                current_date_str = '06 Aug 2026'
+            elif day_num == 7:
+                current_day_label = 'Day 2'
+                current_date_str = '07 Aug 2026'
+
         if len(vals) < 8:
             continue
         no = vals[0]
@@ -81,6 +104,7 @@ def parse_list_sheet(ws, course_code):
             'course_code': course_code,
             'category': category,
             'prog_prefix': prog_prefix,
+            'presentation_day': f'{current_day_label} - {current_date_str}',
         })
 
     return projects, sorted(booths)
@@ -110,6 +134,13 @@ CALON_INDUSTRI_MATRICS = {
 }
 
 _global_counter = 0
+current_day_label = 'Day 1'
+current_date_str = '06 Aug 2026'
+
+def reset_day_state():
+    global current_day_label, current_date_str
+    current_day_label = 'Day 1'
+    current_date_str = '06 Aug 2026'
 
 def generate_project_id(course_code):
     global _global_counter
@@ -165,6 +196,7 @@ def build_projects_dart(all_projects):
         lines.append(f'      "created_at": DateTime(2026, 07, 01),')
         lines.append(f'      "updated_at": DateTime(2026, 07, 01),')
         lines.append(f'      "published_at": DateTime(2026, 07, 01),')
+        lines.append(f'      "presentation_day": \'{p["presentation_day"]}\',')
         lines.append('    },')
     return lines
 
@@ -186,6 +218,7 @@ def build_booths_dart(all_booths):
         lines.append(f'      "created_at": DateTime(2026, 07, 01),')
         lines.append(f'      "updated_at": DateTime(2026, 07, 01),')
         lines.append(f'      "published_at": DateTime(2026, 07, 01),')
+        lines.append(f'      "presentation_day": \'{b["presentation_day"]}\',')
         lines.append('    },')
     return lines
 
@@ -198,15 +231,23 @@ def main():
 
     for sheet_name, course_code in SHEET_COURSE_MAP.items():
         ws = wb[sheet_name]
+        reset_day_state()
         projs, booths = parse_list_sheet(ws, course_code)
         for b in booths:
             zone = b.split('-')[0] if '-' in b else ''
-            booth_map[b] = {'booth_number': b, 'zone': zone}
+            if b not in booth_map:
+                booth_map[b] = {'booth_number': b, 'zone': zone, 'presentation_day': None}
 
         for p in projs:
             pid = generate_project_id(course_code)
             p['id'] = pid
+            if p['booth_number'] in booth_map and booth_map[p['booth_number']]['presentation_day'] is None:
+                booth_map[p['booth_number']]['presentation_day'] = p['presentation_day']
             all_projects.append(p)
+
+    for b in booth_map.values():
+        if b['presentation_day'] is None:
+            b['presentation_day'] = 'Day 1 - 06 Aug 2026'
 
     project_count = len(all_projects)
     booth_count = len(booth_map)
@@ -327,7 +368,7 @@ def main():
     # Write Dart file
     with open(OUTPUT_PATH, 'w', encoding='utf-8') as f:
         f.write('// Auto-generated from Excel parser. Do not edit manually.\n')
-        f.write(f'// Generated from: CSP650-DewanSeminar-ListName-Layout (6).xlsx\n')
+        f.write(f'// Generated from: StudentListName.xlsx\n')
         f.write(f'// Total projects: {project_count}, Total booths: {booth_count}\n')
         f.write('\n')
         f.write('class ExcelData {\n')
@@ -343,7 +384,7 @@ def main():
         f.write('\n'.join(booth_lines))
         f.write('  ];\n')
         f.write('\n')
-        f.write('  static const int scheduleCount = 6;\n')
+        f.write(f'  static const int scheduleCount = {len(schedule_items) + len(general_schedule)};\n')
         f.write('  static List<Map<String, dynamic>> get allScheduleItems => [\n')
         f.write('    // Day 1 (6 Aug 2026) - Session schedule\n')
         for s in schedule_items:
