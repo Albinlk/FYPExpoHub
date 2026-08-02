@@ -77,19 +77,28 @@ class AdminShell extends ConsumerWidget {
           Expanded(
             child: Container(
               color: DesignSystem.background,
-              child: child,
+              child: Stack(
+                children: [
+                  child,
+                  Align(
+                    alignment: Alignment.bottomRight,
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 24.0, right: 24.0),
+                      child: FloatingActionButton.extended(
+                        onPressed: () => FeedbackFormWidget.show(context, ref),
+                        icon: const Icon(Icons.feedback_outlined, size: 20),
+                        label: const Text('Feedback'),
+                        backgroundColor: DesignSystem.secondary,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => FeedbackFormWidget.show(context, ref),
-        icon: const Icon(Icons.feedback_outlined, size: 20),
-        label: const Text('Feedback'),
-        backgroundColor: DesignSystem.secondary,
-        foregroundColor: Colors.white,
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }
