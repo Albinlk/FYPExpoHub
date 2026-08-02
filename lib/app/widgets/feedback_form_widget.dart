@@ -10,26 +10,45 @@ class FeedbackFormWidget extends ConsumerStatefulWidget {
   const FeedbackFormWidget({super.key});
 
   static void show(BuildContext context, WidgetRef ref) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: DesignSystem.surfaceContainerLowest,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (sheetContext) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
+    final isDesktop = MediaQuery.of(context).size.width >= 768;
+
+    if (isDesktop) {
+      showDialog(
+        context: context,
+        builder: (dialogContext) => Dialog(
+          backgroundColor: DesignSystem.surfaceContainerLowest,
+          shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusXl),
+          child: const FeedbackFormWidget(),
         ),
-        child: const FeedbackFormWidget(),
-      ),
-    ).then((_) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Thank you for your feedback!')),
-        );
-      }
-    });
+      ).then((_) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Thank you for your feedback!')),
+          );
+        }
+      });
+    } else {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: DesignSystem.surfaceContainerLowest,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (sheetContext) => Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
+          ),
+          child: const FeedbackFormWidget(),
+        ),
+      ).then((_) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Thank you for your feedback!')),
+          );
+        }
+      });
+    }
   }
 
   @override
