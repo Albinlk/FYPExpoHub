@@ -11,6 +11,7 @@ import '../domain/models/import_models.dart';
 import '../domain/models/lecturer.dart';
 import '../domain/models/project_lecturer_assignment.dart';
 import '../domain/models/student_visit.dart';
+import '../domain/models/feedback_entry.dart';
 import '../data/excel_data.dart';
 import '../firebase/firestore_service.dart';
 import '../firebase/firebase_providers.dart';
@@ -765,4 +766,81 @@ final completedVisitsProvider = Provider<Set<String>>((ref) {
       .where((v) => v.status == 'completed')
       .map((v) => '${v.projectId}_${v.visitRole}')
       .toSet();
+});
+
+// ==========================================
+// 11. FEEDBACK ENTRIES STATE
+// ==========================================
+class FeedbackEntriesNotifier extends Notifier<List<FeedbackEntry>> {
+  StreamSubscription? _sub;
+
+  @override
+  List<FeedbackEntry> build() {
+    _sub = _fs.feedbackEntriesStream().listen((dataList) {
+      state = dataList.map((m) => FeedbackEntry.fromJson(m)).toList();
+    });
+    ref.onDispose(() => _sub?.cancel());
+    return [];
+  }
+
+  Future<void> refresh() async {
+    try {
+      state = (await _fs.getFeedbackEntriesOnce())
+          .map((m) => FeedbackEntry.fromJson(m))
+          .toList();
+    } catch (e) {
+      print('Feedback refresh failed (keeping current list): $e');
+    }
+  }
+
+  void addFeedbackEntry(FeedbackEntry entry) {
+    state = [entry, ...state];
+    _fs.setFeedbackEntry(entry.id, entry.toJson());
+  }
+
+  void updateFeedbackEntry(FeedbackEntry updated) {
+    final data = updated.copyWith(updatedAt: DateTime.now());
+    state = [
+      for (final f in state)
+        if (f.id == updated.id) data else f,
+    ];
+    _fs.setFeedbackEntry(updated.id, data.toJson());
+  }
+
+  void deleteFeedbackEntry(String id) {
+    state = state.where((f) => f.id != id).toList();
+    _fs.deleteFeedbackEntry(id);
+  }
+
+  void setStatus(String id, String status) {
+    final idx = state.indexWhere((f) => f.id == id);
+    if (idx == -1) return;
+    final updated = state[idx].copyWith(
+      status: status,
+      updatedAt: DateTime.now(),
+    );
+    updateFeedbackEntry(updated);
+  }
+
+  void setAdminNote(String id, String note) {
+    final idx = state.indexWhere((f) => f.id == id);
+    if (idx == -1) return;
+    final updated = state[idx].copyWith(
+      adminNote: note,
+      updatedAt: DateTime.now(),
+    );
+    updateFeedbackEntry(updated);
+  }
+}
+
+final feedbackEntriesProvider =
+    NotifierProvider<FeedbackEntriesNotifier, List<FeedbackEntry>>(
+      () => FeedbackEntriesNotifier(),
+    );
+
+/// Convenience: feedback submitted by the currently signed-in user.
+final myFeedbackProvider = Provider<List<FeedbackEntry>>((ref) {
+  final uid = ref.watch(firebaseAuthProvider).currentUser?.uid;
+  if (uid == null) return const [];
+  return ref.watch(feedbackEntriesProvider).where((f) => f.userId == uid).toList();
 });

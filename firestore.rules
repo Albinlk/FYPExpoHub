@@ -130,6 +130,20 @@ service cloud.firestore {
     }
 
     // -------------------------------------------------------------
+    // FEEDBACK ENTRIES
+    // -------------------------------------------------------------
+    
+    // 8. Feedback Entries — anyone can submit (anonymous or authenticated);
+    //    only admin can read, update, or delete.
+    match /feedbackEntries/{feedbackId} {
+      allow create: if request.resource.data.keys().hasAll(['subject', 'message', 'createdAt', 'updatedAt'])
+                    && request.resource.data.subject is string
+                    && request.resource.data.subject.size() > 0
+                    && request.resource.data.message is string;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // -------------------------------------------------------------
     // VISIT TRACKER COLLECTIONS
     // -------------------------------------------------------------
     

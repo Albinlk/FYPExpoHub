@@ -9,6 +9,7 @@ import '../features/admin_awards/presentation/pages/admin_awards_page.dart';
 import '../features/admin_booths/presentation/pages/admin_booths_page.dart';
 import '../features/admin_dashboard/presentation/pages/dashboard_page.dart';
 import '../features/admin_event/presentation/pages/admin_event_page.dart';
+import '../features/admin_feedback/presentation/pages/admin_feedback_page.dart';
 import '../features/admin_imports/presentation/pages/admin_imports_page.dart';
 import '../features/admin_imports/presentation/pages/import_detail_page.dart';
 import '../features/admin_lecturers/presentation/pages/admin_lecturers_page.dart';
@@ -192,6 +193,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/admin/announcements',
             builder: (context, state) => const AdminAnnouncementsPage(),
+          ),
+          GoRoute(
+            path: '/admin/feedback',
+            builder: (context, state) => const AdminFeedbackPage(),
           ),
           GoRoute(
             path: '/admin/awards',

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/state/state_providers.dart';
 import '../theme/theme.dart';
+import 'feedback_form_widget.dart';
 
 void _openAdminPortal() {
   final location = globalContext['location'] as JSObject;
@@ -30,6 +31,13 @@ class PublicShell extends ConsumerWidget {
             )
           : null,
       body: child,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => FeedbackFormWidget.show(context, ref),
+        icon: const Icon(Icons.feedback_outlined, size: 20),
+        label: const Text('Feedback'),
+        backgroundColor: DesignSystem.secondary,
+        foregroundColor: DesignSystem.onSecondaryContainer,
+      ),
       bottomNavigationBar: !isDesktop ? _MobileBottomNavBar(currentPath: location, lecturerSignedIn: lecturer != null) : null,
     );
   }

@@ -341,6 +341,37 @@ class FirestoreService {
   }
 
   // ---------------------------------------------------
+  // FEEDBACK ENTRIES
+  // ---------------------------------------------------
+  Stream<List<Map<String, dynamic>>> feedbackEntriesStream() {
+    return _db
+        .collection('feedbackEntries')
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snap) {
+          return snap.docs
+              .map((doc) => _convertTimestamps(doc.data()))
+              .toList();
+        });
+  }
+
+  Future<List<Map<String, dynamic>>> getFeedbackEntriesOnce() async {
+    final snap = await _db
+        .collection('feedbackEntries')
+        .orderBy('createdAt', descending: true)
+        .get();
+    return snap.docs.map((doc) => _convertTimestamps(doc.data())).toList();
+  }
+
+  Future<void> setFeedbackEntry(String id, Map<String, dynamic> data) async {
+    await _db.collection('feedbackEntries').doc(id).set(data);
+  }
+
+  Future<void> deleteFeedbackEntry(String id) async {
+    await _db.collection('feedbackEntries').doc(id).delete();
+  }
+
+  // ---------------------------------------------------
   // FILE UPLOAD (web-compatible via putData)
   // ---------------------------------------------------
   Future<String?> uploadFile(

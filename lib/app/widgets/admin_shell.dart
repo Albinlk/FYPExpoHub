@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/firebase/firebase_providers.dart';
 import '../theme/theme.dart';
+import 'feedback_form_widget.dart';
 
 void _goToPublicPortal() {
   final location = globalContext['location'] as JSObject;
@@ -81,6 +82,13 @@ class AdminShell extends ConsumerWidget {
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => FeedbackFormWidget.show(context, ref),
+        icon: const Icon(Icons.feedback_outlined, size: 20),
+        label: const Text('Feedback'),
+        backgroundColor: DesignSystem.secondary,
+        foregroundColor: DesignSystem.onSecondaryContainer,
+      ),
     );
   }
 }
@@ -113,6 +121,7 @@ class _AdminSidebar extends StatelessWidget {
                 _buildSidebarItem(context, 'Booth Management', Icons.map, '/admin/booths'),
                 _buildSidebarItem(context, 'Lecturer Management', Icons.school, '/admin/lecturers'),
                 _buildSidebarItem(context, 'Announcements', Icons.campaign, '/admin/announcements'),
+                _buildSidebarItem(context, 'Feedback', Icons.feedback_outlined, '/admin/feedback'),
                 _buildSidebarItem(context, 'Student Visits', Icons.visibility, '/admin/visits'),
                 _buildSidebarItem(context, 'My Visits (Lecturer)', Icons.person_pin, '/lecturer/visits'),
                 _buildSidebarItem(context, 'Award Winners', Icons.emoji_events, '/admin/awards'),
@@ -195,6 +204,7 @@ class _AdminDrawer extends StatelessWidget {
                   _buildDrawerItem(context, 'Booth Management', Icons.map, '/admin/booths'),
                   _buildDrawerItem(context, 'Lecturer Management', Icons.school, '/admin/lecturers'),
                   _buildDrawerItem(context, 'Announcements', Icons.campaign, '/admin/announcements'),
+                  _buildDrawerItem(context, 'Feedback', Icons.feedback_outlined, '/admin/feedback'),
                   _buildDrawerItem(context, 'Student Visits', Icons.visibility, '/admin/visits'),
                   _buildDrawerItem(context, 'My Visits (Lecturer)', Icons.person_pin, '/lecturer/visits'),
                   _buildDrawerItem(context, 'Award Winners', Icons.emoji_events, '/admin/awards'),
