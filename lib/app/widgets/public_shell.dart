@@ -36,8 +36,9 @@ class PublicShell extends ConsumerWidget {
         icon: const Icon(Icons.feedback_outlined, size: 20),
         label: const Text('Feedback'),
         backgroundColor: DesignSystem.secondary,
-        foregroundColor: DesignSystem.onSecondaryContainer,
+        foregroundColor: Colors.white,
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: !isDesktop ? _MobileBottomNavBar(currentPath: location, lecturerSignedIn: lecturer != null) : null,
     );
   }
