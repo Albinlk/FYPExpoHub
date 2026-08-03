@@ -170,9 +170,8 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
       if (_roleFilter == 'EX' && a.role != 'examiner') return false;
       final visit = visits.where((v) => v.projectId == a.projectId && v.visitRole == a.role).firstOrNull;
       if (_statusFilter == 'Visited' && (visit == null || visit.status != 'completed')) return false;
-      if (_statusFilter == 'Not Yet' && visit != null && visit.status == 'completed') return false;
+      if (_statusFilter == 'Not Yet' && visit != null && (visit.status == 'completed' || visit.status == 'voided')) return false;
       if (_statusFilter == 'Voided' && (visit == null || visit.status != 'voided')) return false;
-      if (_statusFilter == 'Visited' && visit == null) return false;
 
       final query = _searchController.text.toLowerCase().trim();
       if (query.isEmpty) return true;

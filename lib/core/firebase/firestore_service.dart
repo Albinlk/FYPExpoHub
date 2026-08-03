@@ -301,7 +301,7 @@ class FirestoreService {
     return _db
         .collection('studentProjectVisits')
         .orderBy('createdAt', descending: true)
-        .limit(500)
+        .limit(1000)
         .snapshots()
         .map((snap) {
           return snap.docs

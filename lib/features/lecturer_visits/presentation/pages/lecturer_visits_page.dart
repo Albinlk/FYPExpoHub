@@ -22,6 +22,7 @@ class LecturerVisitsPage extends ConsumerStatefulWidget {
 class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
   String _roleFilter = 'All';
   String _statusFilter = 'All';
+  String _dayFilter = 'All';
   final _searchController = TextEditingController();
 
   @override
@@ -68,6 +69,9 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
 
       final project = projects.where((p) => p.id == a.projectId).firstOrNull;
       if (project == null) return false;
+
+      if (_dayFilter != 'All' && project.presentationDay != _dayFilter) return false;
+
       final query = _searchController.text.toLowerCase().trim();
       if (query.isEmpty) return true;
       return project.title.toLowerCase().contains(query) ||
@@ -150,6 +154,11 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
                           _buildFilterChip('Role:', _roleFilter, ['All', 'SV', 'EX']),
                           const SizedBox(width: DesignSystem.spaceSm),
                           _buildFilterChip('Status:', _statusFilter, ['All', 'Not Yet Visited', 'Visited', 'Voided']),
+                          const SizedBox(width: DesignSystem.spaceSm),
+                          _buildFilterChip('Day:', _dayFilter, ['All', ...{
+                            for (final a in assignments)
+                              ...projects.where((p) => p.id == a.projectId).map((p) => p.presentationDay).whereType<String>(),
+                          }]),
                         ],
                       ),
                     ),
@@ -250,9 +259,10 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
               selected: selected,
               onSelected: (_) => setState(() {
                 if (label.contains('Role')) _roleFilter = opt;
+                else if (label.contains('Day')) _dayFilter = opt;
                 else _statusFilter = opt;
               }),
-              selectedColor: label.contains('Role') ? DesignSystem.primary : DesignSystem.tertiary,
+              selectedColor: label.contains('Role') ? DesignSystem.primary : label.contains('Day') ? DesignSystem.secondary : DesignSystem.tertiary,
               visualDensity: VisualDensity.compact,
             ),
           );
@@ -356,6 +366,20 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
                             project.boothNumber!,
                             style: DesignSystem.labelCaps.copyWith(color: DesignSystem.secondary, fontSize: 9),
                           ),
+                        if (project.presentationDay != null) ...[
+                          const SizedBox(width: DesignSystem.spaceSm),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: DesignSystem.secondaryContainer,
+                              borderRadius: DesignSystem.radiusSm,
+                            ),
+                            child: Text(
+                              project.presentationDay!.split(' - ').first,
+                              style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSecondaryContainer, fontSize: 9),
+                            ),
+                          ),
+                        ],
                         const Spacer(),
                         _buildStatusChip(isCompleted, isVoided, visit),
                       ],

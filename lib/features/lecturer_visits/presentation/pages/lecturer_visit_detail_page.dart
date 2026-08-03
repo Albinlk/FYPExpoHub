@@ -43,6 +43,24 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
       if (user == null) throw Exception('Not authenticated');
 
       final db = FirebaseFirestore.instance;
+
+      final existing = await db.collection('studentProjectVisits')
+          .where('assignmentId', isEqualTo: assignmentId)
+          .where('visitRole', isEqualTo: role)
+          .where('status', isEqualTo: 'completed')
+          .limit(1)
+          .get();
+
+      if (existing.docs.isNotEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('This project has already been visited.'), backgroundColor: DesignSystem.error),
+          );
+          setState(() => _isMarking = false);
+        }
+        return;
+      }
+
       final visitRef = db.collection('studentProjectVisits').doc();
       final now = FieldValue.serverTimestamp();
 
@@ -120,8 +138,33 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
       if (user == null) throw Exception('Not authenticated');
 
       final db = FirebaseFirestore.instance;
+      final now = FieldValue.serverTimestamp();
 
-      await db.collection('studentProjectVisits').doc(visit.id).delete();
+      await db.collection('studentProjectVisits').doc(visit.id).update({
+        'status': 'voided',
+        'voidedAt': now,
+        'voidedBy': user.uid,
+        'voidReason': reason,
+        'updatedAt': now,
+      });
+
+      try {
+        await db.collection('auditLogs').add({
+          'actorUid': user.uid,
+          'action': 'visit_voided',
+          'targetType': 'studentProjectVisits',
+          'targetId': visit.id,
+          'eventId': visit.eventId,
+          'metadataSafe': {
+            'projectId': visit.projectId,
+            'reason': reason,
+            'voidedByRole': 'lecturer',
+          },
+          'createdAt': now,
+        });
+      } catch (auditError) {
+        logDebug('Audit log skipped for visit_voided: $auditError');
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -358,7 +401,7 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
                     const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2)),
                 ],
               ),
-            ] else if (hasAssignment && !isVoided) ...[
+            ] else if (hasAssignment && (!hasVisit || isVoided)) ...[
               const SizedBox(height: DesignSystem.spaceMd),
               SizedBox(
                 width: double.infinity,
