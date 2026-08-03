@@ -7,6 +7,7 @@ import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/project.dart';
 import '../../../../core/domain/models/student_visit.dart';
 import '../../../../core/state/state_providers.dart';
+import '../../../../core/utils/logger.dart';
 import '../../../../core/widgets/project_cover_image.dart';
 import '../widgets/mark_visited_dialog.dart';
 import '../widgets/undo_visit_dialog.dart';
@@ -75,7 +76,7 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
           'createdAt': now,
         });
       } catch (auditError) {
-        debugPrint('Audit log skipped for visit_marked: $auditError');
+        logDebug('Audit log skipped for visit_marked: $auditError');
       }
 
       if (mounted) {

@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/project.dart';
 import '../../../../core/domain/models/project_lecturer_assignment.dart';
+import '../../../../core/utils/logger.dart';
 import '../../../../core/domain/models/student_visit.dart';
 import '../../../../core/state/state_providers.dart';
 import '../widgets/summary_cards.dart';
@@ -98,7 +99,7 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
           'createdAt': now,
         });
       } catch (auditError) {
-        debugPrint('Audit log skipped for visit_voided: $auditError');
+        logDebug('Audit log skipped for visit_voided: $auditError');
       }
 
       if (mounted) {

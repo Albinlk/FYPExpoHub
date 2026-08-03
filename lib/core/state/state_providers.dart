@@ -15,6 +15,7 @@ import '../domain/models/feedback_entry.dart';
 import '../data/excel_data.dart';
 import '../firebase/firestore_service.dart';
 import '../firebase/firebase_providers.dart';
+import '../utils/logger.dart';
 
 final _fs = FirestoreService.instance;
 
@@ -78,7 +79,7 @@ class EventNotifier extends Notifier<Event> {
         state = Event.fromJson(data);
       }
     } catch (e) {
-      print('Event load failed (using fallback): $e');
+      logDebug('Event load failed (using fallback): $e');
     }
   }
 
@@ -122,7 +123,7 @@ class ProjectsNotifier extends Notifier<List<Project>> {
   void _startStream() {
     _sub = _fs.projectsStream(publishedOnly: publishedOnly).listen(
       (dataList) => state = _parseProjects(dataList),
-      onError: (e) => print('Projects stream error (Firebase unavailable): $e'),
+      onError: (e) => logDebug('Projects stream error (Firebase unavailable): $e'),
     );
   }
 
@@ -168,7 +169,7 @@ class ProjectsNotifier extends Notifier<List<Project>> {
     try {
       _startStream();
     } catch (e) {
-      print('Firestore projects stream setup failed: $e');
+      logDebug('Firestore projects stream setup failed: $e');
     }
     ref.onDispose(() => _sub?.cancel());
     return fallback;
@@ -180,7 +181,7 @@ class ProjectsNotifier extends Notifier<List<Project>> {
         await _fs.getProjectsOnce(publishedOnly: publishedOnly),
       );
     } catch (e) {
-      print('Projects refresh failed (keeping current list): $e');
+      logDebug('Projects refresh failed (keeping current list): $e');
     }
   }
 
@@ -287,7 +288,7 @@ class ScheduleNotifier extends Notifier<List<ScheduleItem>> {
         state = dataList.map((m) => ScheduleItem.fromJson(m)).toList();
       });
     } catch (e) {
-      print('Schedule stream setup failed: $e');
+      logDebug('Schedule stream setup failed: $e');
     }
     ref.onDispose(() => _sub?.cancel());
     return ExcelData.allScheduleItems
@@ -396,7 +397,7 @@ class BoothsNotifier extends Notifier<List<Booth>> {
         state = dataList.map((m) => Booth.fromJson(m)).toList();
       });
     } catch (e) {
-      print('Booths stream setup failed: $e');
+      logDebug('Booths stream setup failed: $e');
     }
     ref.onDispose(() => _sub?.cancel());
     return fallback;
@@ -789,7 +790,7 @@ class FeedbackEntriesNotifier extends Notifier<List<FeedbackEntry>> {
           .map((m) => FeedbackEntry.fromJson(m))
           .toList();
     } catch (e) {
-      print('Feedback refresh failed (keeping current list): $e');
+      logDebug('Feedback refresh failed (keeping current list): $e');
     }
   }
 
