@@ -15,7 +15,7 @@ class LecturerPage extends ConsumerStatefulWidget {
 
 class _LecturerPageState extends ConsumerState<LecturerPage> {
   final TextEditingController _nameController = TextEditingController();
-  String _selectedRole = 'Both';
+  String _selectedRole = 'All';
   String _selectedDay = 'All';
   bool _calonIndustriOnly = false;
 
@@ -40,11 +40,11 @@ class _LecturerPageState extends ConsumerState<LecturerPage> {
       final supervisorMatch = project.supervisorDisplayName.toLowerCase().contains(query);
       final examinerMatch = (project.examinerDisplayName?.toLowerCase().contains(query) ?? false);
 
-      final roleMatch = _selectedRole == 'Supervisor'
-          ? supervisorMatch
-          : _selectedRole == 'Examiner'
-              ? examinerMatch
-              : supervisorMatch || examinerMatch;
+      final roleMatch = _selectedRole == 'All'
+          ? supervisorMatch || examinerMatch
+          : _selectedRole == 'Supervisor'
+              ? supervisorMatch
+              : examinerMatch;
       if (!roleMatch) return false;
       if (_selectedDay != 'All') {
         final dayLabel = project.presentationDay?.split(' - ').first;
@@ -106,40 +106,26 @@ class _LecturerPageState extends ConsumerState<LecturerPage> {
                       ],
                     ),
                     const SizedBox(height: DesignSystem.spaceMd),
-                    Wrap(
-                      alignment: WrapAlignment.center,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      spacing: DesignSystem.spaceXs,
-                      children: [
-                        Text('Filter by role: ', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSurfaceVariant)),
-                        _buildRoleChip('Supervisor'),
-                        _buildRoleChip('Examiner'),
-                        _buildRoleChip('Both'),
-                        const SizedBox(width: DesignSystem.spaceMd),
-                        Text('Day: ', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSurfaceVariant)),
-                        _buildDayChip('All'),
-                        _buildDayChip('Day 1'),
-                        _buildDayChip('Day 2'),
-                        const SizedBox(width: DesignSystem.spaceMd),
-                        FilterChip(
-                          selected: _calonIndustriOnly,
-                          onSelected: (val) => setState(() => _calonIndustriOnly = val),
-                          avatar: Icon(
-                            Icons.workspace_premium,
-                            size: 14,
-                            color: _calonIndustriOnly ? Colors.white : DesignSystem.tertiary,
-                          ),
-                          label: Text(
-                               'Industry Candidate',
-                            style: DesignSystem.bodySm.copyWith(
-                              color: _calonIndustriOnly ? Colors.white : DesignSystem.onSurfaceVariant,
-                            ),
-                          ),
-                          selectedColor: DesignSystem.tertiary,
-                          checkmarkColor: Colors.white,
-                        ),
-                      ],
-                    ),
+                    if (isDesktop)
+                      Row(
+                        children: [
+                          Expanded(child: _buildDropdown('Role', _selectedRole, ['All', 'Supervisor', 'Examiner'], (val) => setState(() => _selectedRole = val!))),
+                          const SizedBox(width: DesignSystem.spaceMd),
+                          Expanded(child: _buildDropdown('Day', _selectedDay, ['All', 'Day 1', 'Day 2'], (val) => setState(() => _selectedDay = val!))),
+                          const SizedBox(width: DesignSystem.spaceMd),
+                          Expanded(child: _buildDropdown('Type', _calonIndustriOnly ? 'Industry' : 'All', ['All', 'Industry Candidate'], (val) => setState(() => _calonIndustriOnly = val == 'Industry Candidate'))),
+                        ],
+                      )
+                    else
+                      Column(
+                        children: [
+                          _buildDropdown('Role', _selectedRole, ['All', 'Supervisor', 'Examiner'], (val) => setState(() => _selectedRole = val!)),
+                          const SizedBox(height: DesignSystem.spaceSm),
+                          _buildDropdown('Day', _selectedDay, ['All', 'Day 1', 'Day 2'], (val) => setState(() => _selectedDay = val!)),
+                          const SizedBox(height: DesignSystem.spaceSm),
+                          _buildDropdown('Type', _calonIndustriOnly ? 'Industry' : 'All', ['All', 'Industry Candidate'], (val) => setState(() => _calonIndustriOnly = val == 'Industry Candidate')),
+                        ],
+                      ),
                   ],
                 ),
               ),
@@ -192,31 +178,15 @@ class _LecturerPageState extends ConsumerState<LecturerPage> {
     );
   }
 
-  Widget _buildRoleChip(String role) {
-    final isSelected = _selectedRole == role;
-    return ChoiceChip(
-      label: Text(role),
-      selected: isSelected,
-      onSelected: (val) => setState(() => _selectedRole = role),
-      selectedColor: DesignSystem.primary,
-      labelStyle: TextStyle(
-        color: isSelected ? Colors.white : DesignSystem.onSurfaceVariant,
-        fontSize: 12,
+  Widget _buildDropdown(String label, String value, List<String> options, ValueChanged<String?> onChanged) {
+    return DropdownButtonFormField<String>(
+      initialValue: value,
+      decoration: InputDecoration(
+        labelText: label,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       ),
-    );
-  }
-
-  Widget _buildDayChip(String day) {
-    final isSelected = _selectedDay == day;
-    return ChoiceChip(
-      label: Text(day),
-      selected: isSelected,
-      onSelected: (val) => setState(() => _selectedDay = day),
-      selectedColor: DesignSystem.secondary,
-      labelStyle: TextStyle(
-        color: isSelected ? Colors.white : DesignSystem.onSurfaceVariant,
-        fontSize: 12,
-      ),
+      items: options.map((opt) => DropdownMenuItem(value: opt, child: Text(opt, style: DesignSystem.bodySm))).toList(),
+      onChanged: onChanged,
     );
   }
 
