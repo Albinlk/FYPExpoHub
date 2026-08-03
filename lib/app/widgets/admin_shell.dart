@@ -84,13 +84,20 @@ class AdminShell extends ConsumerWidget {
                     alignment: Alignment.bottomRight,
                     child: Padding(
                       padding: const EdgeInsets.only(bottom: 24.0, right: 24.0),
-                      child: FloatingActionButton.extended(
-                        onPressed: () => FeedbackFormWidget.show(context, ref),
-                        icon: const Icon(Icons.feedback_outlined, size: 20),
-                        label: const Text('Feedback'),
-                        backgroundColor: DesignSystem.secondary,
-                        foregroundColor: Colors.white,
-                      ),
+                      child: isDesktop
+                          ? FloatingActionButton.extended(
+                              onPressed: () => FeedbackFormWidget.show(context, ref),
+                              icon: const Icon(Icons.feedback_outlined, size: 20),
+                              label: const Text('Feedback'),
+                              backgroundColor: DesignSystem.secondary,
+                              foregroundColor: Colors.white,
+                            )
+                          : FloatingActionButton(
+                              onPressed: () => FeedbackFormWidget.show(context, ref),
+                              backgroundColor: DesignSystem.secondary,
+                              foregroundColor: Colors.white,
+                              child: const Icon(Icons.feedback_outlined, size: 24),
+                            ),
                     ),
                   ),
                 ],
