@@ -21,6 +21,7 @@ class PublicShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final location = GoRouterState.of(context).uri.toString();
     final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final bottomInset = MediaQuery.of(context).padding.bottom;
     final lecturer = ref.watch(lecturerAuthProvider);
 
     return Scaffold(
@@ -37,7 +38,7 @@ class PublicShell extends ConsumerWidget {
             alignment: Alignment.bottomRight,
             child: Padding(
               padding: EdgeInsets.only(
-                bottom: isDesktop ? 24.0 : 80.0,
+                bottom: isDesktop ? 24.0 : 80.0 + bottomInset,
                 right: 24.0,
               ),
               child: isDesktop
@@ -220,12 +221,14 @@ class _MobileBottomNavBar extends StatelessWidget {
   void _showMobileMenu(BuildContext context) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: DesignSystem.surfaceContainerLowest,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (context) {
-        return SafeArea(
+        return SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.all(DesignSystem.spaceMd),
             child: Column(
@@ -284,44 +287,47 @@ if (!lecturerSignedIn)
         borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 12,
             offset: const Offset(0, -4),
           ),
         ],
       ),
-      child: NavigationBar(
-        selectedIndex: selectedIndex,
-        onDestinationSelected: (index) => _onItemTapped(context, index),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        indicatorColor: DesignSystem.secondaryContainer,
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home, color: DesignSystem.onSecondaryContainer),
-            label: 'Home',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.location_on_outlined),
-            selectedIcon: Icon(Icons.location_on, color: DesignSystem.onSecondaryContainer),
-            label: 'Booths',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.event_note_outlined),
-            selectedIcon: Icon(Icons.event_note, color: DesignSystem.onSecondaryContainer),
-            label: 'Schedule',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person, color: DesignSystem.onSecondaryContainer),
-            label: 'Lecturer',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.menu),
-            label: 'Menu',
-          ),
-        ],
+      child: SafeArea(
+        top: false,
+        child: NavigationBar(
+          selectedIndex: selectedIndex,
+          onDestinationSelected: (index) => _onItemTapped(context, index),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          indicatorColor: DesignSystem.secondaryContainer,
+          destinations: const [
+            NavigationDestination(
+              icon: Icon(Icons.home_outlined),
+              selectedIcon: Icon(Icons.home, color: DesignSystem.onSecondaryContainer),
+              label: 'Home',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.location_on_outlined),
+              selectedIcon: Icon(Icons.location_on, color: DesignSystem.onSecondaryContainer),
+              label: 'Booths',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.event_note_outlined),
+              selectedIcon: Icon(Icons.event_note, color: DesignSystem.onSecondaryContainer),
+              label: 'Schedule',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.person_outline),
+              selectedIcon: Icon(Icons.person, color: DesignSystem.onSecondaryContainer),
+              label: 'Lecturer',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.menu),
+              label: 'Menu',
+            ),
+          ],
+        ),
       ),
     );
   }
