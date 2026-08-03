@@ -16,6 +16,7 @@ class LecturerPage extends ConsumerStatefulWidget {
 class _LecturerPageState extends ConsumerState<LecturerPage> {
   final TextEditingController _nameController = TextEditingController();
   String _selectedRole = 'Both';
+  String _selectedDay = 'All';
   bool _calonIndustriOnly = false;
 
   @override
@@ -45,6 +46,10 @@ class _LecturerPageState extends ConsumerState<LecturerPage> {
               ? examinerMatch
               : supervisorMatch || examinerMatch;
       if (!roleMatch) return false;
+      if (_selectedDay != 'All') {
+        final dayLabel = project.presentationDay?.split(' - ').first;
+        if (dayLabel != _selectedDay) return false;
+      }
       if (_calonIndustriOnly && !project.calonIndustri) return false;
       return true;
     }).toList();
@@ -110,6 +115,11 @@ class _LecturerPageState extends ConsumerState<LecturerPage> {
                         _buildRoleChip('Supervisor'),
                         _buildRoleChip('Examiner'),
                         _buildRoleChip('Both'),
+                        const SizedBox(width: DesignSystem.spaceMd),
+                        Text('Day: ', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSurfaceVariant)),
+                        _buildDayChip('All'),
+                        _buildDayChip('Day 1'),
+                        _buildDayChip('Day 2'),
                         const SizedBox(width: DesignSystem.spaceMd),
                         FilterChip(
                           selected: _calonIndustriOnly,
@@ -189,6 +199,20 @@ class _LecturerPageState extends ConsumerState<LecturerPage> {
       selected: isSelected,
       onSelected: (val) => setState(() => _selectedRole = role),
       selectedColor: DesignSystem.primary,
+      labelStyle: TextStyle(
+        color: isSelected ? Colors.white : DesignSystem.onSurfaceVariant,
+        fontSize: 12,
+      ),
+    );
+  }
+
+  Widget _buildDayChip(String day) {
+    final isSelected = _selectedDay == day;
+    return ChoiceChip(
+      label: Text(day),
+      selected: isSelected,
+      onSelected: (val) => setState(() => _selectedDay = day),
+      selectedColor: DesignSystem.secondary,
       labelStyle: TextStyle(
         color: isSelected ? Colors.white : DesignSystem.onSurfaceVariant,
         fontSize: 12,
@@ -289,6 +313,23 @@ class _LecturerPageState extends ConsumerState<LecturerPage> {
                               ],
                             ),
                           ),
+                        if (project.presentationDay != null) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: DesignSystem.primaryContainer,
+                              borderRadius: DesignSystem.radiusSm,
+                            ),
+                            child: Text(
+                              project.presentationDay!.split(' - ').first,
+                              style: DesignSystem.labelCaps.copyWith(
+                                color: DesignSystem.onPrimaryContainer,
+                                fontSize: 10,
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                     const SizedBox(height: 4),
