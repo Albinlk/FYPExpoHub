@@ -3,9 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../app/theme/theme.dart';
-import '../../../../core/domain/models/project.dart';
 import '../../../../core/state/state_providers.dart';
-import '../../../../core/widgets/project_cover_image.dart';
+import '../../../../core/widgets/project_card.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -206,10 +205,13 @@ class _HomePageState extends ConsumerState<HomePage> {
                             crossAxisCount: 3,
                             crossAxisSpacing: DesignSystem.spaceMd,
                             mainAxisSpacing: DesignSystem.spaceMd,
-                            childAspectRatio: 1.15,
+                            childAspectRatio: 1.55,
                           ),
                           itemCount: display.length,
-                          itemBuilder: (context, index) => _buildFeaturedCard(display[index]),
+                          itemBuilder: (context, index) => ProjectCard(
+                            project: display[index],
+                            onTap: () => context.go('/projects/${display[index].id}'),
+                          ),
                         );
                       }
                       return ListView.builder(
@@ -220,7 +222,11 @@ class _HomePageState extends ConsumerState<HomePage> {
                           padding: EdgeInsets.only(
                             bottom: index == display.length - 1 ? 0 : DesignSystem.spaceMd,
                           ),
-                          child: _buildFeaturedCard(display[index]),
+                          child: ProjectCard(
+                            project: display[index],
+                            imageHeight: 160,
+                            onTap: () => context.go('/projects/${display[index].id}'),
+                          ),
                         ),
                       );
                     },
@@ -389,119 +395,6 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
-  Widget _buildFeaturedCard(Project project) {
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      color: project.calonIndustri ? DesignSystem.tertiaryContainer.withValues(alpha: 0.15) : null,
-      surfaceTintColor: project.calonIndustri ? DesignSystem.tertiary : null,
-      child: InkWell(
-        onTap: () => context.go('/projects/${project.id}'),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              height: 140,
-              width: double.infinity,
-              child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    ProjectCoverImage(
-                      title: project.title,
-                      category: project.category,
-                      imageUrl: project.coverImageUrl,
-                      fit: BoxFit.cover,
-                    ),
-                    if (project.calonIndustri)
-                      Positioned(
-                        top: 8,
-                        left: 8,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: DesignSystem.tertiary,
-                            borderRadius: DesignSystem.radiusSm,
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.workspace_premium, size: 13, color: Colors.white),
-                            const SizedBox(width: 4),
-                            Text(
-                               'Industry Candidate',
-                              style: DesignSystem.labelCaps.copyWith(color: Colors.white, fontSize: 10),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(DesignSystem.spaceMd),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: DesignSystem.secondaryContainer,
-                    borderRadius: DesignSystem.radiusSm,
-                  ),
-                  child: Text(
-                    project.category,
-                    style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSecondaryContainer, fontSize: 10),
-                  ),
-                ),
-                const SizedBox(height: DesignSystem.spaceSm),
-                Text(
-                  project.title,
-                  style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold, color: DesignSystem.primary),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  softWrap: true,
-                ),
-                const SizedBox(height: DesignSystem.spaceXs),
-                Text(
-                  'Student: ${project.teamDisplayNames.join(', ')}',
-                  style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant),
-                  softWrap: true,
-                ),
-                Text(
-                  'Supervisor: ${project.supervisorDisplayName}',
-                  style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant, fontStyle: FontStyle.italic),
-                  softWrap: true,
-                ),
-                if (project.boothNumber != null) ...[
-                  const SizedBox(height: DesignSystem.spaceXs),
-                  Row(
-                    children: [
-                      Icon(Icons.room, size: 13, color: DesignSystem.secondary),
-                      const SizedBox(width: 3),
-                      Flexible(
-                        child: Text(
-                          '${project.boothNumber}${project.boothZone != null ? ' • ${project.boothZone}' : ''}',
-                          style: DesignSystem.bodySm.copyWith(
-                            color: DesignSystem.secondary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
-      ),
-    );
-  }
 
   Widget _buildInfoTile(IconData icon, String label, String value) {
     return Container(

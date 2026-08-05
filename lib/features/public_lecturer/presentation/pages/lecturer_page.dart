@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../app/theme/theme.dart';
-import '../../../../core/domain/models/project.dart';
 import '../../../../core/state/state_providers.dart';
-import '../../../../core/widgets/project_cover_image.dart';
+import '../../../../core/widgets/project_card.dart';
 
 class LecturerPage extends ConsumerStatefulWidget {
   const LecturerPage({super.key});
@@ -162,12 +161,15 @@ class _LecturerPageState extends ConsumerState<LecturerPage> {
                   crossAxisCount: isDesktop ? 3 : 1,
                   crossAxisSpacing: DesignSystem.spaceMd,
                   mainAxisSpacing: DesignSystem.spaceMd,
-                  childAspectRatio: isDesktop ? 2.2 : 1.9,
+                  childAspectRatio: isDesktop ? 1.55 : 1.35,
                 ),
                 itemCount: filteredProjects.length,
                 itemBuilder: (context, index) {
                   final project = filteredProjects[index];
-                  return _buildProjectCard(project);
+                  return ProjectCard(
+                    project: project,
+                    onTap: () => context.push('/projects/${project.id}?from=lecturer'),
+                  );
                 },
               ),
             ],
@@ -186,151 +188,6 @@ class _LecturerPageState extends ConsumerState<LecturerPage> {
       ),
       items: options.map((opt) => DropdownMenuItem(value: opt, child: Text(opt, style: DesignSystem.bodySm))).toList(),
       onChanged: onChanged,
-    );
-  }
-
-  Widget _buildProjectCard(Project project) {
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      color: project.calonIndustri ? DesignSystem.tertiaryContainer.withValues(alpha: 0.15) : null,
-      surfaceTintColor: project.calonIndustri ? DesignSystem.tertiary : null,
-      child: InkWell(
-        onTap: () => context.push('/projects/${project.id}?from=lecturer'),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Unique cover on the left
-            SizedBox(
-              width: 100,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  ProjectCoverImage(
-                    title: project.title,
-                    category: project.category,
-                    imageUrl: project.coverImageUrl,
-                    fit: BoxFit.cover,
-                  ),
-                  if (project.calonIndustri)
-                    Positioned(
-                      top: 4,
-                      left: 4,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: DesignSystem.tertiary,
-                          borderRadius: DesignSystem.radiusSm,
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.workspace_premium, size: 11, color: Colors.white),
-                            const SizedBox(width: 3),
-                            Text(
-                            'Industry Candidate',
-                              style: DesignSystem.labelCaps.copyWith(color: Colors.white, fontSize: 8),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      project.title,
-                      style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold, color: DesignSystem.primary, height: 1.3),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            project.programmeCode,
-                            style: DesignSystem.labelCaps.copyWith(color: DesignSystem.secondary, fontWeight: FontWeight.bold, fontSize: 10),
-                          ),
-                        ),
-                        if (project.boothNumber != null)
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: DesignSystem.secondaryContainer,
-                              borderRadius: DesignSystem.radiusSm,
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.room, size: 13, color: DesignSystem.onSecondaryContainer),
-                                const SizedBox(width: 3),
-                                Text(
-                                  project.boothNumber!,
-                                  style: DesignSystem.bodySm.copyWith(
-                                    color: DesignSystem.onSecondaryContainer,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 11,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        if (project.presentationDay != null) ...[
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: DesignSystem.primaryContainer,
-                              borderRadius: DesignSystem.radiusSm,
-                            ),
-                            child: Text(
-                              project.presentationDay!.split(' - ').first,
-                              style: DesignSystem.labelCaps.copyWith(
-                                color: DesignSystem.onPrimaryContainer,
-                                fontSize: 10,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Student(s): ${project.teamDisplayNames.join(', ')}',
-                      style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant, height: 1.3),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Supervisor: ${project.supervisorDisplayName}',
-                      style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant, height: 1.3),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (project.examinerDisplayName != null) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        'Examiner: ${project.examinerDisplayName}',
-                        style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant, height: 1.3),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

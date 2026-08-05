@@ -3,9 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../app/theme/theme.dart';
-import '../../../../core/domain/models/project.dart';
 import '../../../../core/state/state_providers.dart';
-import '../../../../core/widgets/project_cover_image.dart';
+import '../../../../core/widgets/project_card.dart';
 
 class ProjectsPage extends ConsumerStatefulWidget {
   const ProjectsPage({super.key});
@@ -183,7 +182,10 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
                   ),
                   delegate: SliverChildBuilderDelegate((context, index) {
                     final project = filteredProjects[index];
-                    return _buildProjectCard(project);
+                    return ProjectCard(
+                      project: project,
+                      onTap: () => context.go('/projects/${project.id}'),
+                    );
                   }, childCount: filteredProjects.length),
                 ),
               ),
@@ -395,207 +397,6 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
     );
   }
 
-  Widget _buildProjectCard(Project project) {
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      color: project.calonIndustri
-          ? DesignSystem.tertiaryContainer.withValues(alpha: 0.15)
-          : null,
-      surfaceTintColor: project.calonIndustri ? DesignSystem.tertiary : null,
-      child: InkWell(
-        onTap: () => context.go('/projects/${project.id}'),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  ProjectCoverImage(
-                    title: project.title,
-                    category: project.category,
-                    imageUrl: project.coverImageUrl,
-                    fit: BoxFit.cover,
-                  ),
-                  if (project.calonIndustri)
-                    Positioned(
-                      top: 8,
-                      left: 8,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: DesignSystem.tertiary,
-                          borderRadius: DesignSystem.radiusSm,
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.workspace_premium,
-                              size: 13,
-                              color: Colors.white,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Industry Candidate',
-                              style: DesignSystem.labelCaps.copyWith(
-                                color: Colors.white,
-                                fontSize: 10,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      direction: Axis.vertical,
-                      crossAxisAlignment: WrapCrossAlignment.end,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.black54,
-                            borderRadius: DesignSystem.radiusSm,
-                          ),
-                          child: Text(
-                            project.category,
-                            style: DesignSystem.labelCaps.copyWith(
-                              color: Colors.white,
-                              fontSize: 10,
-                            ),
-                          ),
-                        ),
-                        if (project.boothNumber != null)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 5,
-                            ),
-                            decoration: BoxDecoration(
-                              color: DesignSystem.secondaryContainer,
-                              borderRadius: DesignSystem.radiusSm,
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.room,
-                                  size: 14,
-                                  color: DesignSystem.onSecondaryContainer,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  project.boothNumber!,
-                                  style: DesignSystem.bodySm.copyWith(
-                                    color: DesignSystem.onSecondaryContainer,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 11,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    project.title,
-                    style: DesignSystem.bodyMd.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: DesignSystem.primary,
-                      height: 1.3,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    project.programmeCode,
-                    style: DesignSystem.labelCaps.copyWith(
-                      color: DesignSystem.secondary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 10,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  if (project.boothNumber != null) ...[
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.room,
-                          size: 14,
-                          color: DesignSystem.secondary,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${project.boothNumber}${project.boothZone != null ? ' • ${project.boothZone}' : ''}',
-                          style: DesignSystem.bodySm.copyWith(
-                            color: DesignSystem.secondary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                  ],
-                  Text(
-                    'Student(s): ${project.teamDisplayNames.join(', ')}',
-                    style: DesignSystem.bodySm.copyWith(
-                      color: DesignSystem.onSurfaceVariant,
-                      height: 1.3,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Supervisor: ${project.supervisorDisplayName}',
-                    style: DesignSystem.bodySm.copyWith(
-                      color: DesignSystem.onSurfaceVariant,
-                      height: 1.3,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (project.examinerDisplayName != null) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      'Examiner: ${project.examinerDisplayName}',
-                      style: DesignSystem.bodySm.copyWith(
-                        color: DesignSystem.onSurfaceVariant,
-                        height: 1.3,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildEmptyState(bool isDesktop) {
     return Center(

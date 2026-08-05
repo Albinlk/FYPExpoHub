@@ -7,7 +7,7 @@ import '../../../../core/domain/models/project_lecturer_assignment.dart';
 import '../../../../core/domain/models/student_visit.dart';
 import '../../../../core/firebase/firebase_providers.dart';
 import '../../../../core/state/state_providers.dart';
-import '../../../../core/widgets/project_cover_image.dart';
+import '../../../../core/widgets/project_card.dart';
 import '../../../lecturer_auth/presentation/pages/lecturer_sign_in_page.dart';
 import '../widgets/mark_visited_dialog.dart';
 import '../widgets/undo_visit_dialog.dart';
@@ -175,7 +175,26 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
                 style: DesignSystem.labelCaps.copyWith(color: DesignSystem.primary),
               ),
               const SizedBox(height: DesignSystem.spaceMd),
-              ...filteredAssignments.map((a) => _buildVisitCard(a, projects, completedSet, voidedSet, visits)),
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: isDesktop ? 3 : 1,
+                  crossAxisSpacing: DesignSystem.spaceMd,
+                  mainAxisSpacing: DesignSystem.spaceMd,
+                  childAspectRatio: isDesktop ? 1.55 : 1.35,
+                ),
+                itemCount: filteredAssignments.length,
+                itemBuilder: (context, index) {
+                  return _buildVisitCard(
+                    filteredAssignments[index],
+                    projects,
+                    completedSet,
+                    voidedSet,
+                    visits,
+                  );
+                },
+              ),
             ],
           ],
         ),
@@ -286,110 +305,46 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
     final isVoided = voidedSet.contains(key);
     final visit = visits.where((v) => v.projectId == project.id && v.visitRole == assignment.role).firstOrNull;
 
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      color: project.calonIndustri ? DesignSystem.tertiaryContainer.withValues(alpha: 0.15) : null,
-      surfaceTintColor: project.calonIndustri ? DesignSystem.tertiary : null,
-      margin: const EdgeInsets.only(bottom: DesignSystem.spaceSm),
-      child: InkWell(
-        onTap: () => context.push('/lecturer/visits/${project.id}'),
-        child: Padding(
-          padding: const EdgeInsets.all(DesignSystem.spaceSm),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Stack(
-                children: [
-                  SizedBox(
-                    width: 80,
-                    height: 60,
-                    child: ProjectCoverImage(
-                      title: project.title,
-                      category: project.category,
-                      imageUrl: project.coverImageUrl,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  if (project.calonIndustri)
-                    Positioned(
-                      top: 2,
-                      left: 2,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: DesignSystem.tertiary,
-                          borderRadius: BorderRadius.circular(3),
-                        ),
-                        child: Icon(Icons.workspace_premium, size: 10, color: Colors.white),
-                      ),
-                    ),
-                ],
+    final roleChip = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: assignment.role == 'supervisor' ? DesignSystem.primary : DesignSystem.tertiary,
+        borderRadius: DesignSystem.radiusSm,
+      ),
+      child: Text(
+        assignment.role == 'supervisor' ? 'SV' : 'EX',
+        style: DesignSystem.labelCaps.copyWith(color: Colors.white, fontSize: 10),
+      ),
+    );
+
+    final statusOverlay = Positioned(
+      bottom: 8,
+      right: 8,
+      child: _buildStatusChip(isCompleted, isVoided, visit),
+    );
+
+    return ProjectCard(
+      project: project,
+      onTap: () => context.push('/lecturer/visits/${project.id}'),
+      imageOverlay: statusOverlay,
+      trailingContent: Wrap(
+        spacing: 6,
+        runSpacing: 6,
+        children: [
+          roleChip,
+          if (project.presentationDay != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: DesignSystem.secondaryContainer,
+                borderRadius: DesignSystem.radiusSm,
               ),
-              const SizedBox(width: DesignSystem.spaceSm),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      project.title,
-                      style: DesignSystem.bodySm.copyWith(fontWeight: FontWeight.bold, color: DesignSystem.primary),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      project.teamDisplayNames.join(', '),
-                      style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSurfaceVariant, fontSize: 10),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: assignment.role == 'supervisor' ? DesignSystem.primary.withOpacity(0.1) : DesignSystem.tertiary.withOpacity(0.1),
-                            borderRadius: DesignSystem.radiusSm,
-                          ),
-                          child: Text(
-                            assignment.role == 'supervisor' ? 'SV' : 'EX',
-                            style: DesignSystem.labelCaps.copyWith(
-                              color: assignment.role == 'supervisor' ? DesignSystem.primary : DesignSystem.tertiary,
-                              fontSize: 9,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: DesignSystem.spaceSm),
-                        if (project.boothNumber != null)
-                          Text(
-                            project.boothNumber!,
-                            style: DesignSystem.labelCaps.copyWith(color: DesignSystem.secondary, fontSize: 9),
-                          ),
-                        if (project.presentationDay != null) ...[
-                          const SizedBox(width: DesignSystem.spaceSm),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: DesignSystem.secondaryContainer,
-                              borderRadius: DesignSystem.radiusSm,
-                            ),
-                            child: Text(
-                              project.presentationDay!.split(' - ').first,
-                              style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSecondaryContainer, fontSize: 9),
-                            ),
-                          ),
-                        ],
-                        const Spacer(),
-                        _buildStatusChip(isCompleted, isVoided, visit),
-                      ],
-                    ),
-                  ],
-                ),
+              child: Text(
+                project.presentationDay!.split(' - ').first,
+                style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSecondaryContainer, fontSize: 10),
               ),
-            ],
-          ),
-        ),
+            ),
+        ],
       ),
     );
   }
@@ -399,10 +354,10 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
         decoration: BoxDecoration(
-          color: DesignSystem.errorContainer,
+          color: DesignSystem.error,
           borderRadius: DesignSystem.radiusSm,
         ),
-        child: Text('Voided', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onErrorContainer, fontSize: 9)),
+        child: Text('Voided', style: DesignSystem.labelCaps.copyWith(color: Colors.white, fontSize: 9)),
       );
     }
     if (isCompleted) {
@@ -412,15 +367,15 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
         decoration: BoxDecoration(
-          color: DesignSystem.tertiaryContainer.withOpacity(0.2),
+          color: DesignSystem.primary,
           borderRadius: DesignSystem.radiusSm,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.check_circle, size: 10, color: DesignSystem.onTertiaryContainer),
+            Icon(Icons.check_circle, size: 10, color: Colors.white),
             const SizedBox(width: 3),
-            Text(timeStr, style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onTertiaryContainer, fontSize: 9)),
+            Text(timeStr, style: DesignSystem.labelCaps.copyWith(color: Colors.white, fontSize: 9)),
           ],
         ),
       );
@@ -428,10 +383,10 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: DesignSystem.surfaceContainerHighest,
+        color: Colors.black54,
         borderRadius: DesignSystem.radiusSm,
       ),
-      child: Text('Not Yet', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSurfaceVariant, fontSize: 9)),
+      child: Text('Not Yet', style: DesignSystem.labelCaps.copyWith(color: Colors.white, fontSize: 9)),
     );
   }
 }
