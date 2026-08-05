@@ -258,12 +258,17 @@ class AdminLecturersPage extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             isDesktop
-                ? Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                ? Wrap(
+                    spacing: DesignSystem.spaceLg,
+                    runSpacing: DesignSystem.spaceMd,
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       _buildPageTitle('Lecturer Management', 'Register lecturers for My Visits mode access.'),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
+                      Wrap(
+                        spacing: DesignSystem.spaceMd,
+                        runSpacing: DesignSystem.spaceMd,
+                        crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
                           ElevatedButton.icon(
                             onPressed: () => _showAddLecturerDialog(context, ref),
@@ -274,7 +279,6 @@ class AdminLecturersPage extends ConsumerWidget {
                               foregroundColor: Colors.white,
                             ),
                           ),
-                          const SizedBox(width: DesignSystem.spaceMd),
                           OutlinedButton.icon(
                             onPressed: () => _backfillLecturerIds(context),
                             icon: const Icon(Icons.sync),

@@ -303,7 +303,9 @@ class AdminProjectsPage extends ConsumerWidget {
                                     children: [
                                       Row(
                                         children: [
-                                          Text(item.title, style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold, color: DesignSystem.primary)),
+                                          Flexible(
+                                            child: Text(item.title, style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold, color: DesignSystem.primary), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                          ),
                                           const SizedBox(width: 8),
                                           if (item.featured)
                                             Container(

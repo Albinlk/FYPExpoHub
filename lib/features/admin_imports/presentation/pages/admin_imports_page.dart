@@ -128,8 +128,10 @@ class _AdminImportsPageState extends ConsumerState<AdminImportsPage> {
 
                     if (_selectedFileName != null) ...[
                       const SizedBox(height: DesignSystem.spaceLg),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      Wrap(
+                        spacing: DesignSystem.spaceSm,
+                        runSpacing: DesignSystem.spaceSm,
+                        alignment: WrapAlignment.center,
                         children: [
                           ElevatedButton.icon(
                             onPressed: _isUploading ? null : _uploadAndProcess,
@@ -143,7 +145,6 @@ class _AdminImportsPageState extends ConsumerState<AdminImportsPage> {
                               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                             ),
                           ),
-                          const SizedBox(width: 12),
                           OutlinedButton(
                             onPressed: _isUploading ? null : () => setState(() => _selectedFileName = null),
                             style: OutlinedButton.styleFrom(foregroundColor: DesignSystem.error, side: const BorderSide(color: DesignSystem.error)),

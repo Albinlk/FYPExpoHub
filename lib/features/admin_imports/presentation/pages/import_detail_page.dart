@@ -171,7 +171,7 @@ class _ImportDetailPageState extends ConsumerState<ImportDetailPage> with Single
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/admin'),
         ),
-        title: Text('Data Matching Dashboard (${widget.importId})', style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold)),
+        title: Text('Data Matching Dashboard (${widget.importId})', style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
         actions: [
           if (!isReviewed) ...[
             ElevatedButton.icon(
@@ -197,12 +197,17 @@ class _ImportDetailPageState extends ConsumerState<ImportDetailPage> with Single
             width: double.infinity,
             padding: const EdgeInsets.all(DesignSystem.spaceMd),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Icon(Icons.file_copy, color: Colors.white70),
                 const SizedBox(width: 8),
-                Text(
-                  'File: ${currentImport.sourceFileName} • Importer: ${currentImport.uploadedBy} • Status: ${currentImport.status == "completed" ? "Successfully Published" : "Pending Review"}',
-                  style: DesignSystem.bodySm.copyWith(color: Colors.white70),
+                Expanded(
+                  child: Text(
+                    'File: ${currentImport.sourceFileName} • Importer: ${currentImport.uploadedBy} • Status: ${currentImport.status == "completed" ? "Successfully Published" : "Pending Review"}',
+                    style: DesignSystem.bodySm.copyWith(color: Colors.white70),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ),
@@ -421,10 +426,13 @@ class _ImportDetailPageState extends ConsumerState<ImportDetailPage> with Single
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: const [
                   Icon(Icons.privacy_tip, color: Colors.orange, size: 28),
                   SizedBox(width: 8),
-                  Text('Privacy Filter Summary (PDPA)', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: DesignSystem.primary)),
+                  Expanded(
+                    child: Text('Privacy Filter Summary (PDPA)', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: DesignSystem.primary)),
+                  ),
                 ],
               ),
               const Divider(height: 32),
@@ -533,9 +541,11 @@ class _ImportDetailPageState extends ConsumerState<ImportDetailPage> with Single
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _buildComparisonBadge('New Records', '$newItems records', Colors.green),
-                  _buildComparisonBadge('Updated Records', '$updatedItems records', Colors.blue),
-                  _buildComparisonBadge('No Changes', '0 records', Colors.grey),
+                  Expanded(child: _buildComparisonBadge('New Records', '$newItems records', Colors.green)),
+                  const SizedBox(width: 12),
+                  Expanded(child: _buildComparisonBadge('Updated Records', '$updatedItems records', Colors.blue)),
+                  const SizedBox(width: 12),
+                  Expanded(child: _buildComparisonBadge('No Changes', '0 records', Colors.grey)),
                 ],
               ),
             ],
@@ -551,10 +561,12 @@ class _ImportDetailPageState extends ConsumerState<ImportDetailPage> with Single
       padding: const EdgeInsets.all(DesignSystem.spaceMd),
       decoration: BoxDecoration(color: color.withValues(alpha: 0.06), border: Border.all(color: color.withValues(alpha: 0.2)), borderRadius: DesignSystem.radiusLg),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Text(count, style: DesignSystem.h3.copyWith(color: color, fontWeight: FontWeight.bold)),
+          Text(count, style: DesignSystem.h3.copyWith(color: color, fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
           const SizedBox(height: 4),
-          Text(label, style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant)),
+          Text(label, style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant), maxLines: 2, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center),
         ],
       ),
     );

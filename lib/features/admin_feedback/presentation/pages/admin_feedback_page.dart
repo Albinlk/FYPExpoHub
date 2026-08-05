@@ -215,11 +215,17 @@ class _AdminFeedbackPageState extends ConsumerState<AdminFeedbackPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             isDesktop
-                ? Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                ? Wrap(
+                    spacing: DesignSystem.spaceLg,
+                    runSpacing: DesignSystem.spaceMd,
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       _buildPageTitle(),
-                      Row(
+                      Wrap(
+                        spacing: DesignSystem.spaceMd,
+                        runSpacing: DesignSystem.spaceMd,
+                        crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
                           SizedBox(
                             width: 200,
@@ -233,9 +239,7 @@ class _AdminFeedbackPageState extends ConsumerState<AdminFeedbackPage> {
                               onChanged: (_) => setState(() {}),
                             ),
                           ),
-                          const SizedBox(width: DesignSystem.spaceMd),
                           _buildStatusFilter(),
-                          const SizedBox(width: DesignSystem.spaceMd),
                           ElevatedButton.icon(
                             onPressed: () => _exportCsv(filtered),
                             icon: const Icon(Icons.file_download, size: 16),
@@ -344,20 +348,21 @@ class _AdminFeedbackPageState extends ConsumerState<AdminFeedbackPage> {
                                 softWrap: true,
                               ),
                               const SizedBox(height: 4),
-                              Row(
+                              Wrap(
+                                spacing: 12,
+                                runSpacing: 4,
+                                crossAxisAlignment: WrapCrossAlignment.center,
                                 children: [
                                   if (entry.rating != null) ...[
                                     Icon(Icons.star, color: DesignSystem.secondaryContainer, size: 14),
                                     const SizedBox(width: 2),
                                     Text(entry.rating.toString(), style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant)),
-                                    const SizedBox(width: 12),
                                   ],
                                   Text(_formatDate(entry.createdAt), style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant)),
                                   if (entry.userId != null) ...[
-                                    const SizedBox(width: 12),
                                     Icon(Icons.person, color: DesignSystem.onSurfaceVariant.withValues(alpha: 0.5), size: 14),
                                     const SizedBox(width: 2),
-                                    Text(entry.userId!, style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant, fontSize: 12), overflow: TextOverflow.ellipsis),
+                                    Text(entry.userId!, style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant, fontSize: 12), overflow: TextOverflow.ellipsis, maxLines: 1),
                                   ],
                                 ],
                               ),

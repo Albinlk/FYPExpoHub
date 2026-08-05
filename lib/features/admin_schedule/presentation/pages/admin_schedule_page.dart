@@ -291,7 +291,9 @@ class AdminSchedulePage extends ConsumerWidget {
                                     children: [
                                       Row(
                                         children: [
-                                          Text(item.title, style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold, color: DesignSystem.primary)),
+                                          Flexible(
+                                            child: Text(item.title, style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold, color: DesignSystem.primary), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                          ),
                                           const SizedBox(width: 8),
                                           Container(
                                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),

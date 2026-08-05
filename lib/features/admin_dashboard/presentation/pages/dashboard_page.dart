@@ -76,15 +76,18 @@ class DashboardPage extends ConsumerWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(label, style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSurfaceVariant)),
-                const SizedBox(height: 8),
-                Text(value, style: DesignSystem.h1.copyWith(color: DesignSystem.primary, fontSize: 28)),
-              ],
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(label, style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSurfaceVariant), maxLines: 2, overflow: TextOverflow.ellipsis),
+                  const SizedBox(height: 8),
+                  Text(value, style: DesignSystem.h1.copyWith(color: DesignSystem.primary, fontSize: 28)),
+                ],
+              ),
             ),
+            const SizedBox(width: DesignSystem.spaceSm),
             Icon(icon, size: 36, color: color.withValues(alpha: 0.8)),
           ],
         ),
@@ -162,14 +165,17 @@ class DashboardPage extends ConsumerWidget {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(imp.sourceFileName, style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold, color: DesignSystem.primary)),
-                                const SizedBox(height: 2),
-                                Text('ID: ${imp.id} • Date: ${imp.uploadedAt.day}/${imp.uploadedAt.month}/${imp.uploadedAt.year}', style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant)),
-                              ],
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(imp.sourceFileName, style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold, color: DesignSystem.primary), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                  const SizedBox(height: 2),
+                                  Text('ID: ${imp.id} • Date: ${imp.uploadedAt.day}/${imp.uploadedAt.month}/${imp.uploadedAt.year}', style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                ],
+                              ),
                             ),
+                            const SizedBox(width: DesignSystem.spaceSm),
                             Row(
                               children: [
                                 Container(

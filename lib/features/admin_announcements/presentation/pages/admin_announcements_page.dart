@@ -253,7 +253,9 @@ class AdminAnnouncementsPage extends ConsumerWidget {
                                               padding: EdgeInsets.only(right: 6.0),
                                               child: Icon(Icons.push_pin, color: DesignSystem.secondary, size: 14),
                                             ),
-                                          Text(item.title, style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold, color: DesignSystem.primary)),
+                                          Flexible(
+                                            child: Text(item.title, style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold, color: DesignSystem.primary), maxLines: 2, overflow: TextOverflow.ellipsis),
+                                          ),
                                         ],
                                       ),
                                       const SizedBox(height: 2),
