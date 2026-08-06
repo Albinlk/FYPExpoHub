@@ -95,11 +95,15 @@ class ProjectCoverImage extends StatelessWidget {
   Widget build(BuildContext context) {
     // Try real network image first — fall back to generated visual on error.
     if (imageUrl != null && imageUrl!.isNotEmpty && !_isPlaceholder(imageUrl)) {
+      final dpr = MediaQuery.devicePixelRatioOf(context);
       return Image.network(
         imageUrl!,
         fit: fit,
         width: double.infinity,
         height: double.infinity,
+        // Decode at most ~400 logical px wide to avoid decoding full-res
+        // cover images for every grid card (ResizeImage only downscales).
+        cacheWidth: (400 * dpr).round(),
         errorBuilder: (_, __, ___) => _buildGeneratedCover(),
         loadingBuilder: (_, child, progress) {
           if (progress == null) return child;

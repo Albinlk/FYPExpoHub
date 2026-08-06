@@ -38,7 +38,7 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
     final lecturer = ref.watch(lecturerAuthProvider);
     final assignments = ref.watch(lecturerAssignmentsProvider);
     final visits = ref.watch(lecturerVisitsProvider);
-    final projects = ref.watch(publicProjectsProvider);
+    final projectsMap = ref.watch(projectsMapProvider);
     final adminUser = ref.watch(authStateChangesProvider).asData?.value;
 
     if (lecturer == null) {
@@ -67,7 +67,7 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
       if (_statusFilter == 'Visited' && !completedSet.contains(key)) return false;
       if (_statusFilter == 'Voided' && !voidedSet.contains(key)) return false;
 
-      final project = projects.where((p) => p.id == a.projectId).firstOrNull;
+      final project = projectsMap[a.projectId];
       if (project == null) return false;
 
       if (_dayFilter != 'All' && project.presentationDay != _dayFilter) return false;
@@ -157,8 +157,8 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
                           const SizedBox(width: DesignSystem.spaceSm),
                           _buildFilterChip('Day:', _dayFilter, ['All', ...{
                             for (final a in assignments)
-                              ...projects.where((p) => p.id == a.projectId).map((p) => p.presentationDay).whereType<String>(),
-                          }]),
+                              projectsMap[a.projectId]?.presentationDay,
+                          }.whereType<String>()]),
                         ],
                       ),
                     ),
@@ -188,7 +188,7 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
                 itemBuilder: (context, index) {
                   return _buildVisitCard(
                     filteredAssignments[index],
-                    projects,
+                    projectsMap,
                     completedSet,
                     voidedSet,
                     visits,
@@ -292,12 +292,12 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
 
   Widget _buildVisitCard(
     ProjectLecturerAssignment assignment,
-    List<Project> projects,
+    Map<String, Project> projectsMap,
     Set<String> completedSet,
     Set<String> voidedSet,
     List<StudentVisit> visits,
   ) {
-    final project = projects.where((p) => p.id == assignment.projectId).firstOrNull;
+    final project = projectsMap[assignment.projectId];
     if (project == null) return const SizedBox.shrink();
 
     final key = '${project.id}_${assignment.role}';

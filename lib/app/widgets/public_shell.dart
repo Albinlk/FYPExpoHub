@@ -22,13 +22,15 @@ class PublicShell extends ConsumerWidget {
     final location = GoRouterState.of(context).uri.toString();
     final isDesktop = MediaQuery.of(context).size.width >= 768;
     final bottomInset = MediaQuery.of(context).padding.bottom;
-    final lecturer = ref.watch(lecturerAuthProvider);
+    // Only rebuild the shell when the sign-in *state* flips, not on every
+    // lecturer/auth/Firestore emit (avoids rebuilding the whole nav).
+    final lecturerSignedIn = ref.watch(lecturerAuthProvider.select((l) => l != null));
 
     return Scaffold(
       appBar: isDesktop
           ? PreferredSize(
               preferredSize: const Size.fromHeight(64.0),
-              child: _DesktopNavBar(currentPath: location, lecturerSignedIn: lecturer != null),
+              child: _DesktopNavBar(currentPath: location, lecturerSignedIn: lecturerSignedIn),
             )
           : null,
       body: Stack(
@@ -59,7 +61,7 @@ class PublicShell extends ConsumerWidget {
           ),
         ],
       ),
-      bottomNavigationBar: !isDesktop ? _MobileBottomNavBar(currentPath: location, lecturerSignedIn: lecturer != null) : null,
+      bottomNavigationBar: !isDesktop ? _MobileBottomNavBar(currentPath: location, lecturerSignedIn: lecturerSignedIn) : null,
     );
   }
 }
@@ -223,6 +225,9 @@ class _MobileBottomNavBar extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.sizeOf(context).height * 0.9,
+      ),
       backgroundColor: DesignSystem.surfaceContainerLowest,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
@@ -234,6 +239,9 @@ class _MobileBottomNavBar extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                if (!lecturerSignedIn)
+                  _buildMenuItemExternal(context, 'Sign In', Icons.login),
+                if (!lecturerSignedIn) const Divider(),
                 _buildMenuItem(context, 'Booths', Icons.location_pin, '/booths'),
                 _buildMenuItem(context, 'Schedule', Icons.event_note, '/schedule'),
                 _buildMenuItem(context, 'Announcements', Icons.campaign, '/announcements'),
@@ -244,9 +252,6 @@ class _MobileBottomNavBar extends StatelessWidget {
                 _buildMenuItem(context, 'Exhibition Info', Icons.info, '/info'),
                 _buildMenuItem(context, 'Frequently Asked Questions', Icons.help_outline, '/faq'),
                 _buildMenuItem(context, 'Privacy Policy', Icons.privacy_tip_outlined, '/privacy'),
-                const Divider(),
-if (!lecturerSignedIn)
-    _buildMenuItemExternal(context, 'Sign In', Icons.login),
               ],
             ),
           ),

@@ -8,7 +8,7 @@ import '../../../../core/domain/models/student_visit.dart';
 class VisitDataTable extends StatelessWidget {
   final List<ProjectLecturerAssignment> assignments;
   final List<StudentVisit> visits;
-  final List<Project> projects;
+  final Map<String, Project> projects;
   final String Function(StudentVisit v) formatVisitTime;
   final void Function(StudentVisit visit) onVoid;
 
@@ -42,7 +42,7 @@ class VisitDataTable extends StatelessWidget {
             DataColumn(label: Text('Action', style: TextStyle(fontWeight: FontWeight.bold))),
           ],
           rows: assignments.map((a) {
-            final project = projects.where((p) => p.id == a.projectId).firstOrNull;
+            final project = projects[a.projectId];
             final visit = visits.where((v) => v.projectId == a.projectId && v.visitRole == a.role).firstOrNull;
             final isCompleted = visit != null && visit.status == 'completed';
             final isVoided = visit != null && visit.status == 'voided';
@@ -63,7 +63,7 @@ class VisitDataTable extends StatelessWidget {
 
     return Column(
       children: assignments.map((a) {
-        final project = projects.where((p) => p.id == a.projectId).firstOrNull;
+        final project = projects[a.projectId];
         final visit = visits.where((v) => v.projectId == a.projectId && v.visitRole == a.role).firstOrNull;
         final isCompleted = visit != null && visit.status == 'completed';
         final isVoided = visit != null && visit.status == 'voided';
@@ -165,13 +165,13 @@ class VisitDataTable extends StatelessWidget {
 String exportVisitsCsv(
   List<ProjectLecturerAssignment> assignments,
   List<StudentVisit> visits,
-  List<Project> projects,
+  Map<String, Project> projects,
 ) {
   final buffer = StringBuffer();
   buffer.writeln('Lecturer,Role,Student,Project,Programme,Booth,Status,Visit Time,Note');
 
   for (final a in assignments) {
-    final project = projects.where((p) => p.id == a.projectId).firstOrNull;
+    final project = projects[a.projectId];
     final visit = visits.where((v) => v.projectId == a.projectId && v.visitRole == a.role).firstOrNull;
     final status = visit != null ? (visit.status == 'completed' ? 'Visited' : 'Voided') : 'Not Yet';
     final timeStr = visit != null ? visit.visitedAt.toIso8601String() : '';

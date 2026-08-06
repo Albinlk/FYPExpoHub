@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
-import '../../../../core/domain/models/project.dart';
 import '../../../../core/domain/models/award.dart';
 import '../../../../core/state/state_providers.dart';
 
@@ -29,7 +28,8 @@ class AwardsPage extends ConsumerWidget {
     final allAwards = ref.watch(publicAwardsProvider);
     final publishedAwards = allAwards.where((a) => a.publicationStatus == 'published').toList();
 
-    final projects = ref.watch(publicProjectsProvider);
+    // O(1) project lookup by id.
+    final projectsMap = ref.watch(projectsMapProvider);
 
     return Scaffold(
       body: SingleChildScrollView(
@@ -64,10 +64,7 @@ class AwardsPage extends ConsumerWidget {
                     itemCount: publishedAwards.length,
                     itemBuilder: (context, index) {
                       final award = publishedAwards[index];
-                      final associatedProj = projects.cast<Project?>().firstWhere(
-                        (p) => p?.id == award.projectId,
-                        orElse: () => null,
-                      );
+                      final associatedProj = projectsMap[award.projectId];
 
                       final awardTitle = _getAwardTitle(award);
                       final winningProjectTitle = award.awardCategoryId == 'cat-manual'

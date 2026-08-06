@@ -5,10 +5,19 @@ import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/project.dart';
 import '../../../../core/state/state_providers.dart';
 
-class ProjectDetailPage extends ConsumerWidget {
+class ProjectDetailPage extends ConsumerStatefulWidget {
   final String slug;
 
   const ProjectDetailPage({super.key, required this.slug});
+
+  @override
+  ConsumerState<ProjectDetailPage> createState() => _ProjectDetailPageState();
+}
+
+class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
+  /// Tracks project ids whose visit has already been recorded for this page
+  /// instance, so the count is incremented at most once per page open.
+  final Set<String> _recordedVisits = {};
 
   void _goBack(BuildContext context) {
     final from = GoRouterState.of(context).uri.queryParameters['from'];
@@ -19,20 +28,32 @@ class ProjectDetailPage extends ConsumerWidget {
     }
   }
 
+  Project? _resolveProject(Map<String, Project> projectsMap, List<Project> allProjects) {
+    final byId = projectsMap[widget.slug];
+    if (byId != null) return byId;
+    return allProjects.cast<Project?>().firstWhere(
+      (p) => p != null && p.slug == widget.slug,
+      orElse: () => null,
+    );
+  }
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final isDesktop = MediaQuery.of(context).size.width >= 768;
     final padding = isDesktop ? DesignSystem.marginDesktop : DesignSystem.marginMobile;
 
     final allProjects = ref.watch(publicProjectsProvider);
-    // Find project by ID or Slug
-    final project = allProjects.cast<Project?>().firstWhere(
-      (p) => p != null && (p.id == slug || p.slug == slug),
-      orElse: () => null,
-    );
+    final projectsMap = ref.watch(projectsMapProvider);
+    final project = _resolveProject(projectsMap, allProjects);
 
-    if (project != null) {
-      ref.read(projectVisitCountsProvider.notifier).recordVisit(project.id);
+    // Record a visit exactly once per project when the detail page is shown.
+    // Scheduled after the frame so provider state isn't mutated during build.
+    if (project != null && !_recordedVisits.contains(project.id)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_recordedVisits.add(project.id)) {
+          ref.read(projectVisitCountsProvider.notifier).recordVisit(project.id);
+        }
+      });
     }
 
     if (project == null) {

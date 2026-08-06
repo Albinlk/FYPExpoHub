@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -14,12 +15,14 @@ class BoothsPage extends ConsumerStatefulWidget {
 
 class _BoothsPageState extends ConsumerState<BoothsPage> {
   final TextEditingController _searchController = TextEditingController();
-   String _selectedDay = 'Day 1 - 06 Aug 2026';
+  Timer? _searchDebounce;
+  String _selectedDay = 'Day 1 - 06 Aug 2026';
   String _selectedVenue = 'All';
   String _selectedProgram = 'All';
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -59,6 +62,10 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
     final prefix = boothNumber.substring(0, dash);
     return _prettyVenueByPrefix[prefix] ?? prefix;
   }
+
+  /// Reusable regexes (hoisted to avoid recompiling per sort invocation).
+  static final RegExp _leadingAlphaRegex = RegExp(r'^[A-Za-z]+');
+  static final RegExp _venueRegex = RegExp(r'^([A-Za-z]+)\s*(\d+)$');
 
   /// Per-venue background color for the booth badge.
   /// Derived from the booth-number prefix (course code).
@@ -138,7 +145,7 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
     if (boothNumber == null || boothNumber.isEmpty) return 9999;
     final parts = boothNumber.split('-');
     if (parts.length != 2) return 9999;
-    final zone = parts[0].replaceFirst(RegExp(r'^[A-Za-z]+'), '');
+    final zone = parts[0].replaceFirst(_leadingAlphaRegex, '');
     final num = int.tryParse(parts[1]) ?? 9999;
     final zoneVal = int.tryParse(zone, radix: 36) ?? 0;
     return zoneVal * 1000 + num;
@@ -147,9 +154,8 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
   /// Sorts venue labels by leading characters first, then the trailing number,
   /// e.g. "BK 1", "BK 2", ..., "DS 5", "DS 6".
   int _venueCompare(String a, String b) {
-    final regex = RegExp(r'^([A-Za-z]+)\s*(\d+)$');
-    final ma = regex.firstMatch(a);
-    final mb = regex.firstMatch(b);
+    final ma = _venueRegex.firstMatch(a);
+    final mb = _venueRegex.firstMatch(b);
     final aChars = ma?.group(1) ?? a;
     final bChars = mb?.group(1) ?? b;
     final charCmp = aChars.compareTo(bChars);
@@ -205,110 +211,132 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
     final hasProjects = filtered.isNotEmpty;
 
     return Scaffold(
-      body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: padding, vertical: DesignSystem.spaceXl),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Find Exhibition Booths', style: DesignSystem.h1.copyWith(color: DesignSystem.primary)),
-            const SizedBox(height: DesignSystem.spaceSm),
-            Text(
-              'Browse booths organized by presentation day and then venue.',
-              style: (isDesktop ? DesignSystem.bodyLg : DesignSystem.bodyLgMobile).copyWith(color: DesignSystem.onSurfaceVariant),
-              softWrap: true,
-            ),
-            const SizedBox(height: DesignSystem.spaceXl),
-            // Top Search & Filter Bar
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(DesignSystem.spaceMd),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextField(
-                      controller: _searchController,
-                      onChanged: (val) => setState(() {}),
-                      decoration: InputDecoration(
-                        hintText: 'Search by booth number, project title, or student name...',
-                        prefixIcon: Icon(Icons.search, color: DesignSystem.primary),
-                      ),
-                    ),
-                    const SizedBox(height: DesignSystem.spaceSm),
-                    Wrap(
-                      spacing: DesignSystem.spaceSm,
-                      runSpacing: DesignSystem.spaceXs,
-                      children: [
-                        SizedBox(
-                          width: isDesktop ? 200 : double.infinity,
-                          child: DropdownButtonFormField<String>(
-                            initialValue: _selectedDay,
-                            decoration: InputDecoration(
-                              labelText: 'Day',
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                            ),
-                            onChanged: (val) => setState(() {
-                              _selectedDay = val!;
-                              _selectedVenue = 'All';
-                            }),
-                            items: _dayOrder.map((day) {
-                              return DropdownMenuItem(value: day, child: Text(day, style: DesignSystem.bodySm, softWrap: true));
-                            }).toList(),
-                          ),
-                        ),
-                        SizedBox(
-                          width: isDesktop ? 200 : double.infinity,
-                          child: DropdownButtonFormField<String>(
-                            initialValue: _selectedVenue,
-                            decoration: InputDecoration(
-                              labelText: 'Venue',
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                            ),
-                            onChanged: (val) => setState(() => _selectedVenue = val!),
-                            items: ['All', ...sortedVenues].map((v) {
-                              return DropdownMenuItem(value: v, child: Text(v, style: DesignSystem.bodySm, softWrap: true));
-                            }).toList(),
-                          ),
-                        ),
-                        SizedBox(
-                          width: isDesktop ? 200 : double.infinity,
-                          child: DropdownButtonFormField<String>(
-                            initialValue: _selectedProgram,
-                            decoration: InputDecoration(
-                              labelText: 'Program',
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                            ),
-                            onChanged: (val) => setState(() => _selectedProgram = val!),
-                            items: programItems.map((prog) {
-                              return DropdownMenuItem(value: prog, child: Text(prog, style: DesignSystem.bodySm, softWrap: true));
-                            }).toList(),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+      body: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: padding,
+                vertical: DesignSystem.spaceXl,
               ),
-            ),
-            const SizedBox(height: DesignSystem.spaceXl),
-            hasProjects
-                ? _buildDayGroup(_selectedDay, filtered, isDesktop)
-                : Center(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Find Exhibition Booths', style: DesignSystem.h1.copyWith(color: DesignSystem.primary)),
+                  const SizedBox(height: DesignSystem.spaceSm),
+                  Text(
+                    'Browse booths organized by presentation day and then venue.',
+                    style: (isDesktop ? DesignSystem.bodyLg : DesignSystem.bodyLgMobile).copyWith(color: DesignSystem.onSurfaceVariant),
+                    softWrap: true,
+                  ),
+                  const SizedBox(height: DesignSystem.spaceXl),
+                  // Top Search & Filter Bar
+                  Card(
                     child: Padding(
-                      padding: const EdgeInsets.all(40.0),
-                      child: Text(
-                        'No booths found.',
-                        style: DesignSystem.bodyMd.copyWith(color: DesignSystem.onSurfaceVariant),
+                      padding: const EdgeInsets.all(DesignSystem.spaceMd),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          TextField(
+                            controller: _searchController,
+                            onChanged: (_) {
+                              _searchDebounce?.cancel();
+                              _searchDebounce = Timer(
+                                const Duration(milliseconds: 250),
+                                () => setState(() {}),
+                              );
+                            },
+                            decoration: InputDecoration(
+                              hintText: 'Search by booth number, project title, or student name...',
+                              prefixIcon: Icon(Icons.search, color: DesignSystem.primary),
+                            ),
+                          ),
+                          const SizedBox(height: DesignSystem.spaceSm),
+                          Wrap(
+                            spacing: DesignSystem.spaceSm,
+                            runSpacing: DesignSystem.spaceXs,
+                            children: [
+                              SizedBox(
+                                width: isDesktop ? 200 : double.infinity,
+                                child: DropdownButtonFormField<String>(
+                                  initialValue: _selectedDay,
+                                  decoration: InputDecoration(
+                                    labelText: 'Day',
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                                  ),
+                                  onChanged: (val) => setState(() {
+                                    _selectedDay = val!;
+                                    _selectedVenue = 'All';
+                                  }),
+                                  items: _dayOrder.map((day) {
+                                    return DropdownMenuItem(value: day, child: Text(day, style: DesignSystem.bodySm, softWrap: true));
+                                  }).toList(),
+                                ),
+                              ),
+                              SizedBox(
+                                width: isDesktop ? 200 : double.infinity,
+                                child: DropdownButtonFormField<String>(
+                                  initialValue: _selectedVenue,
+                                  decoration: InputDecoration(
+                                    labelText: 'Venue',
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                                  ),
+                                  onChanged: (val) => setState(() => _selectedVenue = val!),
+                                  items: ['All', ...sortedVenues].map((v) {
+                                    return DropdownMenuItem(value: v, child: Text(v, style: DesignSystem.bodySm, softWrap: true));
+                                  }).toList(),
+                                ),
+                              ),
+                              SizedBox(
+                                width: isDesktop ? 200 : double.infinity,
+                                child: DropdownButtonFormField<String>(
+                                  initialValue: _selectedProgram,
+                                  decoration: InputDecoration(
+                                    labelText: 'Program',
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                                  ),
+                                  onChanged: (val) => setState(() => _selectedProgram = val!),
+                                  items: programItems.map((prog) {
+                                    return DropdownMenuItem(value: prog, child: Text(prog, style: DesignSystem.bodySm, softWrap: true));
+                                  }).toList(),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
                   ),
-          ],
-        ),
+                  const SizedBox(height: DesignSystem.spaceXl),
+                ],
+              ),
+            ),
+          ),
+          if (hasProjects)
+            ..._buildDayGroupSlivers(_selectedDay, filtered, isDesktop, padding)
+          else
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(40.0),
+                child: Text(
+                  'No booths found.',
+                  style: DesignSystem.bodyMd.copyWith(color: DesignSystem.onSurfaceVariant),
+                ),
+              ),
+            ),
+          SliverToBoxAdapter(child: SizedBox(height: DesignSystem.spaceLg)),
+        ],
       ),
     );
   }
 
 
-  Widget _buildDayGroup(String dayLabel, List<Project> projects, bool isDesktop) {
+  List<Widget> _buildDayGroupSlivers(
+    String dayLabel,
+    List<Project> projects,
+    bool isDesktop,
+    double padding,
+  ) {
     // Group projects by venue (Excel-derived), then sort within each venue.
     final Map<String, List<Project>> venueBuckets = {};
     for (final p in projects) {
@@ -331,32 +359,36 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
         if (!_venueOrder.contains(v)) v,
     ];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(
-            horizontal: DesignSystem.spaceMd,
-            vertical: DesignSystem.spaceSm,
-          ),
-          decoration: BoxDecoration(
-            color: DesignSystem.primaryContainer.withValues(alpha: 0.15),
-            borderRadius: DesignSystem.radiusLg,
-            border: Border.all(color: DesignSystem.primary.withValues(alpha: 0.2)),
-          ),
-          child: Text(
-            dayLabel,
-            style: (isDesktop ? DesignSystem.h3 : DesignSystem.h3Mobile).copyWith(
-              color: DesignSystem.primary,
-              fontWeight: FontWeight.bold,
+    return [
+      SliverToBoxAdapter(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: padding),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(
+              horizontal: DesignSystem.spaceMd,
+              vertical: DesignSystem.spaceSm,
+            ),
+            decoration: BoxDecoration(
+              color: DesignSystem.primaryContainer.withValues(alpha: 0.15),
+              borderRadius: DesignSystem.radiusLg,
+              border: Border.all(color: DesignSystem.primary.withValues(alpha: 0.2)),
+            ),
+            child: Text(
+              dayLabel,
+              style: (isDesktop ? DesignSystem.h3 : DesignSystem.h3Mobile).copyWith(
+                color: DesignSystem.primary,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ),
-        const SizedBox(height: DesignSystem.spaceSm),
-        for (final venue in orderedVenues) ...[
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: DesignSystem.spaceSm, vertical: DesignSystem.spaceXs),
+      ),
+      const SliverToBoxAdapter(child: SizedBox(height: DesignSystem.spaceSm)),
+      for (final venue in orderedVenues) ...[
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: padding),
             child: Text(
               venue,
               style: DesignSystem.bodySm.copyWith(
@@ -366,74 +398,75 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
               softWrap: true,
             ),
           ),
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
+        ),
+        const SliverToBoxAdapter(child: SizedBox(height: DesignSystem.spaceXs)),
+        SliverPadding(
+          padding: EdgeInsets.symmetric(horizontal: padding),
+          sliver: SliverList.separated(
             itemCount: venueBuckets[venue]!.length,
+            separatorBuilder: (_, __) => const SizedBox(height: DesignSystem.spaceSm),
             itemBuilder: (context, index) {
               final p = venueBuckets[venue]![index];
 
-                final boothNumber = p.boothNumber ?? '—';
-                final badgeColor = _badgeColorFor(boothNumber);
-                final classGroup = _stripProgram(p.programmeCode);
-                final studentName = p.teamDisplayNames.isNotEmpty
-                    ? p.teamDisplayNames.first
-                    : p.supervisorDisplayName;
+              final boothNumber = p.boothNumber ?? '—';
+              final badgeColor = _badgeColorFor(boothNumber);
+              final classGroup = _stripProgram(p.programmeCode);
+              final studentName = p.teamDisplayNames.isNotEmpty
+                  ? p.teamDisplayNames.first
+                  : p.supervisorDisplayName;
 
-                return Card(
-                  margin: EdgeInsets.only(
-                    bottom: DesignSystem.spaceSm,
-                    left: isDesktop ? 0 : DesignSystem.spaceSm,
-                    right: isDesktop ? 0 : DesignSystem.spaceSm,
-                  ),
-                  child: ListTile(
-                    onTap: () => context.go('/projects/${p.id}'),
-                    leading: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.network(
-                        '/booth_images/booth-$boothNumber.png',
-                        width: 44,
-                        height: 44,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) => CircleAvatar(
-                          backgroundColor: badgeColor.withValues(alpha: 0.2),
-                          child: Text(
-                            boothNumber,
-                            style: DesignSystem.bodySm.copyWith(
-                              color: badgeColor,
-                              fontWeight: FontWeight.bold,
-                            ),
+              return Card(
+                margin: EdgeInsets.zero,
+                child: ListTile(
+                  onTap: () => context.go('/projects/${p.id}'),
+                  leading: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(
+                      '/booth_images/booth-$boothNumber.png',
+                      width: 44,
+                      height: 44,
+                      fit: BoxFit.cover,
+                      cacheWidth: 88,
+                      cacheHeight: 88,
+                      errorBuilder: (_, _, _) => CircleAvatar(
+                        backgroundColor: badgeColor.withValues(alpha: 0.2),
+                        child: Text(
+                          boothNumber,
+                          style: DesignSystem.bodySm.copyWith(
+                            color: badgeColor,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
                     ),
-                    title: Text(
-                      p.title,
-                      style: DesignSystem.bodyMd.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: DesignSystem.primary,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      softWrap: true,
-                    ),
-                    subtitle: Text(
-                      '$studentName • $classGroup',
-                      style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      softWrap: true,
-                    ),
-                    trailing: isDesktop
-                        ? const Icon(Icons.arrow_forward_ios, size: 16, color: DesignSystem.primary)
-                        : null,
                   ),
-                );
-              },
-            ),
-        ],
-        const SizedBox(height: DesignSystem.spaceLg),
+                  title: Text(
+                    p.title,
+                    style: DesignSystem.bodyMd.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: DesignSystem.primary,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    softWrap: true,
+                  ),
+                  subtitle: Text(
+                    '$studentName • $classGroup',
+                    style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    softWrap: true,
+                  ),
+                  trailing: isDesktop
+                      ? const Icon(Icons.arrow_forward_ios, size: 16, color: DesignSystem.primary)
+                      : null,
+                ),
+              );
+            },
+          ),
+        ),
+        const SliverToBoxAdapter(child: SizedBox(height: DesignSystem.spaceSm)),
       ],
-    );
+    ];
   }
 }

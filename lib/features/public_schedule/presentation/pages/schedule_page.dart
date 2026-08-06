@@ -110,62 +110,66 @@ class _SchedulePageState extends ConsumerState<SchedulePage> with SingleTickerPr
         final isInternal = item.visibility == 'internal';
         final isOngoing = false; // We can set this if time is within bounds, default to false.
 
-        return IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Left: Time info
-              SizedBox(
-                width: isDesktop ? 95 : 75,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item.startAt,
-                      style: DesignSystem.bodySm.copyWith(fontWeight: FontWeight.bold, color: DesignSystem.primary),
-                      softWrap: true,
-                    ),
-                    Text(
-                      item.endAt,
-                      style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant, fontSize: 12),
-                      softWrap: true,
-                    ),
-                  ],
-                ),
-              ),
-
-              // Middle: Line dot
-              Column(
-                children: [
-                  Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: isOngoing ? DesignSystem.secondaryContainer : DesignSystem.primary,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
+        final timeWidth = (isDesktop ? 95 : 75).toDouble();
+        return Padding(
+          padding: const EdgeInsets.only(bottom: DesignSystem.spaceMd),
+          child: SizedBox(
+            width: double.infinity,
+            child: Stack(
+              children: [
+                // Continuous connector line behind the dots, spanning the full
+                // row height without requiring IntrinsicHeight.
+                if (index != items.length - 1)
+                  Positioned(
+                    left: timeWidth + 5,
+                    top: 0,
+                    bottom: 0,
+                    child: Container(
+                      width: 2,
+                      color: DesignSystem.surfaceContainer,
                     ),
                   ),
-                  if (index != items.length - 1)
-                    Expanded(
-                      child: Container(
-                        width: 2,
-                        color: DesignSystem.surfaceContainer,
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Left: Time info
+                    SizedBox(
+                      width: timeWidth,
+                      child: Column(
+                        children: [
+                          Text(
+                            item.startAt,
+                            style: DesignSystem.bodySm.copyWith(fontWeight: FontWeight.bold, color: DesignSystem.primary),
+                            softWrap: true,
+                          ),
+                          Text(
+                            item.endAt,
+                            style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant, fontSize: 12),
+                            softWrap: true,
+                          ),
+                        ],
                       ),
                     ),
-                ],
-              ),
-              const SizedBox(width: DesignSystem.spaceSm),
 
-              // Right: Details Card
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: DesignSystem.spaceMd),
-                  child: Card(
-                    margin: EdgeInsets.zero,
-                    child: Padding(
-                      padding: const EdgeInsets.all(DesignSystem.spaceMd),
-                      child: Column(
+                    // Middle: Line dot
+                    Container(
+                      width: 12,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: isOngoing ? DesignSystem.secondaryContainer : DesignSystem.primary,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 2),
+                      ),
+                    ),
+                    const SizedBox(width: DesignSystem.spaceSm),
+
+                    // Right: Details Card
+                    Expanded(
+                      child: Card(
+                        margin: EdgeInsets.zero,
+                        child: Padding(
+                          padding: const EdgeInsets.all(DesignSystem.spaceMd),
+                          child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           if (isInternal || isOngoing)
@@ -256,10 +260,12 @@ class _SchedulePageState extends ConsumerState<SchedulePage> with SingleTickerPr
                     ),
                   ),
                 ),
-              ),
-            ],
-          ),
-        );
+              ],
+            ),
+          ],
+        ),
+      ),
+      );
       },
     );
   }

@@ -126,9 +126,9 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
   void _exportCsv(
     List<ProjectLecturerAssignment> filteredAssignments,
     List<StudentVisit> visits,
-    List<Project> projects,
+    Map<String, Project> projectsById,
   ) {
-    final csv = exportVisitsCsv(filteredAssignments, visits, projects);
+    final csv = exportVisitsCsv(filteredAssignments, visits, projectsById);
     final bytes = utf8.encode(csv);
     final base64 = base64Encode(bytes);
     final href = 'data:text/csv;base64,$base64';
@@ -147,6 +147,11 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
     final assignments = ref.watch(allAssignmentsProvider).asData?.value ?? [];
     final visits = ref.watch(allVisitsProvider).asData?.value ?? [];
     final projects = ref.watch(projectsProvider);
+
+    // O(1) project lookup by id, built once per build.
+    final projectsById = <String, Project>{
+      for (final p in projects) p.id: p,
+    };
 
     final svTotal = assignments.where((a) => a.role == 'supervisor' && a.status == 'active').length;
     final exTotal = assignments.where((a) => a.role == 'examiner' && a.status == 'active').length;
@@ -175,7 +180,7 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
 
       final query = _searchController.text.toLowerCase().trim();
       if (query.isEmpty) return true;
-      final project = projects.where((p) => p.id == a.projectId).firstOrNull;
+      final project = projectsById[a.projectId];
       if (project == null) return false;
       return a.lecturerDisplayName.toLowerCase().contains(query) ||
           project.title.toLowerCase().contains(query) ||
@@ -230,7 +235,7 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
                           _filterChip('Status', _statusFilter, ['All', 'Visited', 'Not Yet', 'Voided']),
                           const SizedBox(width: DesignSystem.spaceSm),
                           ElevatedButton.icon(
-                            onPressed: () => _exportCsv(filteredAssignments, visits, projects),
+                            onPressed: () => _exportCsv(filteredAssignments, visits, projectsById),
                             icon: const Icon(Icons.file_download, size: 16),
                             label: const Text('Export CSV', style: TextStyle(fontSize: 12)),
                             style: ElevatedButton.styleFrom(
@@ -282,7 +287,7 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
                 ),
               ),
             const SizedBox(height: DesignSystem.spaceMd),
-            _buildTabContent(_currentTab, filteredAssignments, visits, projects),
+            _buildTabContent(_currentTab, filteredAssignments, visits, projectsById),
           ],
         ),
       ),
@@ -293,14 +298,14 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
     String tab,
     List<ProjectLecturerAssignment> filtered,
     List<StudentVisit> visits,
-    List<Project> projects,
+    Map<String, Project> projectsById,
   ) {
     switch (tab) {
       case 'Overview':
         return VisitDataTable(
           assignments: filtered,
           visits: visits,
-          projects: projects,
+          projects: projectsById,
           formatVisitTime: _formatVisitTime,
           onVoid: _voidVisit,
         );
@@ -338,7 +343,7 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
         }
         return Column(
           children: grouped.entries.map((e) {
-            final project = projects.where((p) => p.id == e.key).firstOrNull;
+            final project = projectsById[e.key];
             final projectVisits = visits.where((v) => v.projectId == e.key).toList();
             final completedCount = projectVisits.where((v) => v.status == 'completed').length;
             return Card(
@@ -356,7 +361,7 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
           ..sort((a, b) => b.visitedAt.compareTo(a.visitedAt));
         return Column(
           children: sortedVisits.map((v) {
-            final project = projects.where((p) => p.id == v.projectId).firstOrNull;
+            final project = projectsById[v.projectId];
             final assignment = filtered.where((a) => a.id == v.assignmentId).firstOrNull;
             final isCompleted = v.status == 'completed';
             final isVoided = v.status == 'voided';
@@ -417,9 +422,12 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
     );
   }
 
+  static const List<String> _months = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  ];
+
   String _formatVisitTime(StudentVisit v) {
-    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     final dt = v.visitedAt;
-    return '${dt.day} ${months[dt.month - 1]} ${dt.year}, ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+    return '${dt.day} ${_months[dt.month - 1]} ${dt.year}, ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
   }
 }
