@@ -44,14 +44,11 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
 
       final db = FirebaseFirestore.instance;
 
-      final existing = await db.collection('studentProjectVisits')
-          .where('assignmentId', isEqualTo: assignmentId)
-          .where('visitRole', isEqualTo: role)
-          .where('status', isEqualTo: 'completed')
-          .limit(1)
-          .get();
+      final existing = ref.read(lecturerVisitsProvider).where(
+        (v) => v.projectId == project.id && v.visitRole == role && v.status == 'completed',
+      );
 
-      if (existing.docs.isNotEmpty) {
+      if (existing.isNotEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('This project has already been visited.'), backgroundColor: DesignSystem.error),
