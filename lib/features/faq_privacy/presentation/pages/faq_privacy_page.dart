@@ -76,7 +76,7 @@ class FaqPrivacyPage extends StatelessWidget {
       children: [
         Text('Privacy Policy', style: DesignSystem.h1.copyWith(color: DesignSystem.primary)),
         const SizedBox(height: DesignSystem.spaceSm),
-        Text('Last updated: 21 July 2026', style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant)),
+        Text('Last updated: August 2026', style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant)),
         const SizedBox(height: DesignSystem.spaceXl),
         Card(
           child: Padding(
@@ -92,10 +92,10 @@ class FaqPrivacyPage extends StatelessWidget {
                   softWrap: true,
                 ),
                 const SizedBox(height: DesignSystem.spaceLg),
-                Text('2. Student Data Isolation & Security', style: DesignSystem.h3.copyWith(color: DesignSystem.primary)),
+                Text('2. Student Data Policy & Exhibition Information', style: DesignSystem.h3.copyWith(color: DesignSystem.primary)),
                 const SizedBox(height: DesignSystem.spaceSm),
                 Text(
-                  'The FYP Expo Hub platform enforces strict data isolation policies. Sensitive details such as National ID numbers (MyKad), private emails, phone numbers, and raw grading evaluation marks are never stored in public collections and cannot be accessed by public visitors. Only authorised academic project details are presented on the public catalogue.',
+                  'Matric number may be displayed as approved FYP exhibition project information. Personal contact details, confidential evaluations, internal notes, login information, and private administrative records are not publicly displayed.',
                   style: DesignSystem.bodyMd.copyWith(height: 1.6),
                   softWrap: true,
                 ),
@@ -103,7 +103,7 @@ class FaqPrivacyPage extends StatelessWidget {
                 Text('3. Contact Us', style: DesignSystem.h3.copyWith(color: DesignSystem.primary)),
                 const SizedBox(height: DesignSystem.spaceSm),
                 Text(
-                  'If you have any questions or concerns regarding our privacy practices or personal data management, please contact system support at fyp_support@fskm.uitm.edu.my.',
+                  'If you have any questions or concerns regarding our privacy practices or personal data management, please contact system support at fskmfypexpo@uitm.edu.my.',
                   style: DesignSystem.bodyMd.copyWith(height: 1.6),
                   softWrap: true,
                 ),

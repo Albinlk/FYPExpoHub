@@ -5,12 +5,9 @@ import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/project.dart';
 import '../../../../core/domain/models/project_lecturer_assignment.dart';
 import '../../../../core/domain/models/student_visit.dart';
-import '../../../../core/firebase/firebase_providers.dart';
+import '../../../../core/supabase/supabase_client_provider.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/widgets/project_card.dart';
-import '../../../lecturer_auth/presentation/pages/lecturer_sign_in_page.dart';
-import '../widgets/mark_visited_dialog.dart';
-import '../widgets/undo_visit_dialog.dart';
 
 class LecturerVisitsPage extends ConsumerStatefulWidget {
   const LecturerVisitsPage({super.key});
@@ -39,11 +36,13 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
     final assignments = ref.watch(lecturerAssignmentsProvider);
     final visits = ref.watch(lecturerVisitsProvider);
     final projectsMap = ref.watch(projectsMapProvider);
-    final adminUser = ref.watch(authStateChangesProvider).asData?.value;
+    final authUser = ref.watch(currentAuthUserProvider);
 
-    if (lecturer == null) {
+    if (lecturer == null && authUser == null) {
       return _buildSignInPrompt(context, padding);
     }
+
+    final displayName = lecturer?.displayName ?? authUser?.email?.split('@').first.toUpperCase() ?? 'Lecturer';
 
     final svAssignments = assignments.where((a) => a.role == 'supervisor').toList();
     final exAssignments = assignments.where((a) => a.role == 'examiner').toList();
@@ -94,23 +93,22 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
                     Text('My Visits', style: DesignSystem.h1.copyWith(color: DesignSystem.primary)),
                     const SizedBox(height: DesignSystem.spaceXs),
                     Text(
-                      'Welcome, ${lecturer.displayName}',
+                      'Welcome, $displayName',
                       style: DesignSystem.bodyLg.copyWith(color: DesignSystem.onSurfaceVariant),
                     ),
                   ],
                 ),
-                if (adminUser != null)
-                  TextButton.icon(
-                    onPressed: () => context.go('/admin'),
-                    icon: const Icon(Icons.admin_panel_settings, size: 16),
-                    label: Text('Admin Panel', style: DesignSystem.bodySm.copyWith(color: DesignSystem.primary)),
-                  ),
-                TextButton.icon(
-                  onPressed: () {
-                    ref.read(lecturerAuthProvider.notifier).signOut();
-                  },
-                  icon: const Icon(Icons.logout, size: 16),
-                  label: Text('Sign Out', style: DesignSystem.bodySm.copyWith(color: DesignSystem.error)),
+                Wrap(
+                  spacing: 8,
+                  children: [
+                    TextButton.icon(
+                      onPressed: () {
+                        ref.read(lecturerAuthProvider.notifier).signOut();
+                      },
+                      icon: const Icon(Icons.logout, size: 16),
+                      label: Text('Sign Out', style: DesignSystem.bodySm.copyWith(color: DesignSystem.error)),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -168,7 +166,7 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
             ),
             const SizedBox(height: DesignSystem.spaceLg),
             if (filteredAssignments.isEmpty)
-              _buildEmptyState(_searchController.text.isNotEmpty || _roleFilter != 'Semua' || _statusFilter != 'Semua')
+              _buildEmptyState(_searchController.text.isNotEmpty || _roleFilter != 'All' || _statusFilter != 'All')
             else ...[
               Text(
                 '${filteredAssignments.length} projects found',
@@ -225,7 +223,7 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
               ),
               const SizedBox(height: DesignSystem.spaceLg),
               ElevatedButton(
-                onPressed: () => context.push('/lecturer/sign-in'),
+                onPressed: () => context.push('/admin/sign-in'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: DesignSystem.primary,
                   foregroundColor: DesignSystem.onPrimary,
@@ -373,7 +371,7 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.check_circle, size: 10, color: Colors.white),
+            const Icon(Icons.check_circle, size: 10, color: Colors.white),
             const SizedBox(width: 3),
             Text(timeStr, style: DesignSystem.labelCaps.copyWith(color: Colors.white, fontSize: 9)),
           ],

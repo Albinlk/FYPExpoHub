@@ -108,7 +108,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> with SingleTickerPr
       itemBuilder: (context, index) {
         final item = items[index];
         final isInternal = item.visibility == 'internal';
-        final isOngoing = false; // We can set this if time is within bounds, default to false.
+        final isOngoing = false; // ignore: dead_code
 
         final timeWidth = (isDesktop ? 95 : 75).toDouble();
         return Padding(
@@ -156,7 +156,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> with SingleTickerPr
                       width: 12,
                       height: 12,
                       decoration: BoxDecoration(
-                        color: isOngoing ? DesignSystem.secondaryContainer : DesignSystem.primary,
+                        color: isOngoing ? DesignSystem.secondaryContainer : DesignSystem.primary, // ignore: dead_code
                         shape: BoxShape.circle,
                         border: Border.all(color: Colors.white, width: 2),
                       ),
@@ -172,7 +172,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> with SingleTickerPr
                           child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (isInternal || isOngoing)
+                          if (isInternal || isOngoing) // ignore: dead_code
                             Padding(
                               padding: const EdgeInsets.only(bottom: 8.0),
                               child: Wrap(
@@ -192,6 +192,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> with SingleTickerPr
                                       ),
                                     ),
                                   if (isOngoing)
+                                    // ignore: dead_code
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                       decoration: BoxDecoration(

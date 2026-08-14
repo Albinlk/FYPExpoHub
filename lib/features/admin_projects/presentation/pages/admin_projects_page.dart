@@ -14,7 +14,7 @@ class AdminProjectsPage extends ConsumerWidget {
     final progNameController = TextEditingController(text: item?.programmeName ?? 'CS230 (Computer Science)');
     final descController = TextEditingController(text: item?.shortDescription ?? '');
     final categoryController = TextEditingController(text: item?.category ?? 'AI & Machine Learning');
-    final tagsController = TextEditingController(text: item?.technologyTags.join(', ') ?? 'Flutter, Dart, Firebase');
+    final tagsController = TextEditingController(text: item?.technologyTags.join(', ') ?? 'Flutter, Dart, Supabase');
     final studentsController = TextEditingController(text: item?.teamDisplayNames.join(', ') ?? '');
     final supervisorController = TextEditingController(text: item?.supervisorDisplayName ?? '');
     final examinerController = TextEditingController(text: item?.examinerDisplayName ?? '');

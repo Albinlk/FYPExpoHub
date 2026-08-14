@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../domain/models/project.dart';
 import '../domain/models/schedule_item.dart';
@@ -13,11 +12,102 @@ import '../domain/models/project_lecturer_assignment.dart';
 import '../domain/models/student_visit.dart';
 import '../domain/models/feedback_entry.dart';
 import '../data/excel_data.dart';
-import '../firebase/firestore_service.dart';
-import '../firebase/firebase_providers.dart';
+import '../supabase/supabase_client_provider.dart';
+import '../supabase/supabase_database_service.dart';
+import '../supabase/supabase_rpc_service.dart';
+import '../supabase/supabase_realtime_service.dart';
 import '../utils/logger.dart';
 
-final _fs = FirestoreService.instance;
+// ==============================================================================
+// SERVICE PROVIDERS
+// ==============================================================================
+final supabaseDbServiceProvider = Provider<SupabaseDatabaseService>((ref) {
+  final client = ref.watch(supabaseClientProvider);
+  return SupabaseDatabaseService(client);
+});
+
+final supabaseRpcServiceProvider = Provider<SupabaseRpcService>((ref) {
+  final client = ref.watch(supabaseClientProvider);
+  return SupabaseRpcService(client);
+});
+
+final supabaseRealtimeServiceProvider = Provider<SupabaseRealtimeService>((ref) {
+  final client = ref.watch(supabaseClientProvider);
+  return SupabaseRealtimeService(client);
+});
+
+// ==============================================================================
+// KEY NORMALIZER UTILITY (PostgreSQL snake_case <-> Dart camelCase)
+// ==============================================================================
+Map<String, dynamic> _normalizeKeys(Map<String, dynamic> data) {
+  final res = <String, dynamic>{};
+  data.forEach((k, v) {
+    var key = k;
+    if (k == 'event_id') key = 'eventId';
+    else if (k == 'matric_id') key = 'matricId';
+    else if (k == 'programme_code') key = 'programmeCode';
+    else if (k == 'programme_name') key = 'programmeName';
+    else if (k == 'short_description') key = 'shortDescription';
+    else if (k == 'tech_tags' || k == 'technology_tags') key = 'technologyTags';
+    else if (k == 'booth_id') key = 'boothId';
+    else if (k == 'booth_number') key = 'boothNumber';
+    else if (k == 'booth_zone') key = 'boothZone';
+    else if (k == 'presentation_day') key = 'presentationDay';
+    else if (k == 'cover_image_url') key = 'coverImageUrl';
+    else if (k == 'poster_url') key = 'posterUrl';
+    else if (k == 'team_display_name' || k == 'team_display_names') key = 'teamDisplayNames';
+    else if (k == 'supervisor_display_name') key = 'supervisorDisplayName';
+    else if (k == 'examiner_display_name') key = 'examinerDisplayName';
+    else if (k == 'demo_url') key = 'demoUrl';
+    else if (k == 'video_url') key = 'videoUrl';
+    else if (k == 'repository_url') key = 'repositoryUrl';
+    else if (k == 'industry_candidate' || k == 'calon_industri') key = 'calonIndustri';
+    else if (k == 'publication_status') key = 'publicationStatus';
+    else if (k == 'created_at') key = 'createdAt';
+    else if (k == 'updated_at') key = 'updatedAt';
+    else if (k == 'published_at') key = 'publishedAt';
+    else if (k == 'start_at') key = 'startAt';
+    else if (k == 'end_at') key = 'endAt';
+    else if (k == 'session_label') key = 'sessionLabel';
+    else if (k == 'daily_hours') key = 'dailyHours';
+    else if (k == 'location_details') key = 'locationDetails';
+    else if (k == 'map_url') key = 'mapUrl';
+    else if (k == 'hero_image_url') key = 'heroImageUrl';
+    else if (k == 'public_contact_email') key = 'publicContactEmail';
+    else if (k == 'faq_items') key = 'faqItems';
+    else if (k == 'location_note') key = 'locationNote';
+    else if (k == 'floor_plan_url' || k == 'static_floor_plan_url') key = 'staticFloorPlanUrl';
+    else if (k == 'linked_project_id' || k == 'project_id') key = 'projectId';
+    else if (k == 'is_pinned') key = 'pinned';
+    else if (k == 'category_id' || k == 'award_category_id') key = 'awardCategoryId';
+    else if (k == 'lecturer_id') key = 'lecturerId';
+    else if (k == 'lecturer_display_name') key = 'lecturerDisplayName';
+    else if (k == 'lecturer_email') key = 'lecturerEmail';
+    else if (k == 'assigned_at') key = 'assignedAt';
+    else if (k == 'visit_role') key = 'visitRole';
+    else if (k == 'visited_at') key = 'visitedAt';
+    else if (k == 'visit_note') key = 'visitNote';
+    else if (k == 'voided_at') key = 'voidedAt';
+    else if (k == 'voided_by') key = 'voidedBy';
+    else if (k == 'void_reason') key = 'voidReason';
+    else if (k == 'submitted_by' || k == 'user_id') key = 'userId';
+    else if (k == 'admin_note') key = 'adminNote';
+    else if (k == 'file_name' || k == 'source_file_name') key = 'sourceFileName';
+    else if (k == 'file_size_bytes') key = 'fileSizeBytes';
+    else if (k == 'uploaded_by') key = 'uploadedBy';
+    else if (k == 'uploaded_at') key = 'uploadedAt';
+
+    // Ensure list conversions
+    if (key == 'teamDisplayNames' && v is String) {
+      res[key] = [v];
+    } else if (key == 'technologyTags' && v is List) {
+      res[key] = v.cast<String>();
+    } else {
+      res[key] = v;
+    }
+  });
+  return res;
+}
 
 // ==========================================
 // 1. EVENT METADATA STATE
@@ -25,7 +115,7 @@ final _fs = FirestoreService.instance;
 class EventNotifier extends Notifier<Event> {
   @override
   Event build() {
-    _loadFromFirestore();
+    _loadFromSupabase();
     return Event(
       id: 'fskm-fyp-2026',
       title: 'FSKM FYP Expo Hub 2026',
@@ -72,20 +162,31 @@ class EventNotifier extends Notifier<Event> {
     );
   }
 
-  void _loadFromFirestore() async {
+  void _loadFromSupabase() async {
     try {
-      final data = await _fs.getEvent('fskm-fyp-2026');
+      final db = ref.read(supabaseDbServiceProvider);
+      final data = await db.getEvent('fskm-fyp-2026');
       if (data != null) {
-        state = Event.fromJson(data);
+        state = Event.fromJson(_normalizeKeys(data));
       }
     } catch (e) {
       logDebug('Event load failed (using fallback): $e');
     }
   }
 
-  void updateEvent(Event newEvent) {
+  void updateEvent(Event newEvent) async {
     state = newEvent.copyWith(updatedAt: DateTime.now());
-    _fs.setEvent(newEvent.id, newEvent.toJson());
+    try {
+      final rpc = ref.read(supabaseRpcServiceProvider);
+      await rpc.updateEventConfiguration(
+        eventId: newEvent.id,
+        payload: newEvent.toJson(),
+      );
+    } catch (e) {
+      logDebug('updateEvent via RPC failed: $e');
+      final db = ref.read(supabaseDbServiceProvider);
+      await db.setEvent(newEvent.id, newEvent.toJson());
+    }
   }
 }
 
@@ -99,16 +200,12 @@ final eventProvider = NotifierProvider<EventNotifier, Event>(
 class ProjectsNotifier extends Notifier<List<Project>> {
   ProjectsNotifier({this.publishedOnly = false});
 
-  /// When true, only documents with `publicationStatus == 'published'`
-  /// are streamed (public site). When false, all documents are streamed
-  /// (admin site — requires admin read access).
   final bool publishedOnly;
-
-  StreamSubscription? _sub;
 
   List<Project> _parseProjects(List<Map<String, dynamic>> dataList) {
     return dataList.map((m) {
-      final project = Project.fromJson(m);
+      final norm = _normalizeKeys(m);
+      final project = Project.fromJson(norm);
       if (project.coverImageUrl == 'assets/images/project_placeholder.jpg' ||
           project.coverImageUrl.isEmpty) {
         return project.copyWith(
@@ -120,16 +217,8 @@ class ProjectsNotifier extends Notifier<List<Project>> {
     }).toList();
   }
 
-  void _startStream() {
-    _sub = _fs.projectsStream(publishedOnly: publishedOnly).listen(
-      (dataList) => state = _parseProjects(dataList),
-      onError: (e) => logDebug('Projects stream error (Firebase unavailable): $e'),
-    );
-  }
-
   @override
   List<Project> build() {
-    // Return fallback data immediately; Firestore stream updates when connected
     final fallback = ExcelData.allProjects
         .map(
           (m) => Project(
@@ -166,28 +255,35 @@ class ProjectsNotifier extends Notifier<List<Project>> {
         )
         .toList();
 
-    try {
-      _startStream();
-    } catch (e) {
-      logDebug('Firestore projects stream setup failed: $e');
-    }
-    ref.onDispose(() => _sub?.cancel());
+    _loadProjects();
     return fallback;
+  }
+
+  void _loadProjects() async {
+    try {
+      final db = ref.read(supabaseDbServiceProvider);
+      final data = await db.getProjectsOnce(publishedOnly: publishedOnly);
+      if (data.isNotEmpty) {
+        state = _parseProjects(data);
+      }
+    } catch (e) {
+      logDebug('Projects load from Supabase warning: $e');
+    }
   }
 
   Future<void> refresh() async {
     try {
-      state = _parseProjects(
-        await _fs.getProjectsOnce(publishedOnly: publishedOnly),
-      );
+      final db = ref.read(supabaseDbServiceProvider);
+      final data = await db.getProjectsOnce(publishedOnly: publishedOnly);
+      state = _parseProjects(data);
     } catch (e) {
-      logDebug('Projects refresh failed (keeping current list): $e');
+      logDebug('Projects refresh failed: $e');
     }
   }
 
   void addProject(Project project) {
     state = [...state, project];
-    _fs.setProject(project.id, project.toJson());
+    ref.read(supabaseDbServiceProvider).setProject(project.id, project.toJson());
   }
 
   void updateProject(Project updated) {
@@ -196,12 +292,12 @@ class ProjectsNotifier extends Notifier<List<Project>> {
       for (final p in state)
         if (p.id == updated.id) data else p,
     ];
-    _fs.setProject(updated.id, data.toJson());
+    ref.read(supabaseDbServiceProvider).setProject(updated.id, data.toJson());
   }
 
   void deleteProject(String id) {
     state = state.where((p) => p.id != id).toList();
-    _fs.deleteProject(id);
+    ref.read(supabaseDbServiceProvider).deleteProject(id);
   }
 
   void togglePublishStatus(String id) {
@@ -209,17 +305,15 @@ class ProjectsNotifier extends Notifier<List<Project>> {
     if (idx == -1) return;
     final p = state[idx];
     final toggled = p.copyWith(
-      publicationStatus: p.publicationStatus == 'published'
-          ? 'draft'
-          : 'published',
+      publicationStatus: p.publicationStatus == 'published' ? 'draft' : 'published',
       publishedAt: p.publicationStatus != 'published' ? DateTime.now() : null,
       updatedAt: DateTime.now(),
     );
     state = [
-      for (final p in state)
-        if (p.id == id) toggled else p,
+      for (final item in state)
+        if (item.id == id) toggled else item,
     ];
-    _fs.setProject(id, toggled.toJson());
+    ref.read(supabaseDbServiceProvider).setProject(id, toggled.toJson());
   }
 }
 
@@ -227,9 +321,6 @@ final projectsProvider = NotifierProvider<ProjectsNotifier, List<Project>>(
   () => ProjectsNotifier(),
 );
 
-/// Public-site project catalogue: only `published` documents.
-/// Scoped with `where('publicationStatus', '==', 'published')` so Firestore
-/// rules allow anonymous visitors to read it.
 final publicProjectsProvider = NotifierProvider<ProjectsNotifier, List<Project>>(
   () => ProjectsNotifier(publishedOnly: true),
 );
@@ -238,7 +329,6 @@ final featuredProjectsProvider = Provider<List<Project>>((ref) {
   return ref.watch(publicProjectsProvider).where((p) => p.featured).toList();
 });
 
-/// O(1) project lookup by ID — use this instead of linear scans.
 final projectsMapProvider = Provider<Map<String, Project>>((ref) {
   return Map.fromEntries(
     ref.watch(publicProjectsProvider).map((p) => MapEntry(p.id, p)),
@@ -276,22 +366,11 @@ final mostVisitedProjectsProvider = Provider<List<Project>>((ref) {
 class ScheduleNotifier extends Notifier<List<ScheduleItem>> {
   ScheduleNotifier({this.publishedOnly = false});
 
-  /// When true, only `published` documents are streamed (public site).
   final bool publishedOnly;
-
-  StreamSubscription? _sub;
 
   @override
   List<ScheduleItem> build() {
-    try {
-      _sub = _fs.scheduleStream(publishedOnly: publishedOnly).listen((dataList) {
-        state = dataList.map((m) => ScheduleItem.fromJson(m)).toList();
-      });
-    } catch (e) {
-      logDebug('Schedule stream setup failed: $e');
-    }
-    ref.onDispose(() => _sub?.cancel());
-    return ExcelData.allScheduleItems
+    final fallback = ExcelData.allScheduleItems
         .map(
           (m) => ScheduleItem(
             id: m['id'] as String,
@@ -311,11 +390,26 @@ class ScheduleNotifier extends Notifier<List<ScheduleItem>> {
           ),
         )
         .toList();
+
+    _loadSchedule();
+    return fallback;
+  }
+
+  void _loadSchedule() async {
+    try {
+      final db = ref.read(supabaseDbServiceProvider);
+      final data = await db.getScheduleOnce(publishedOnly: publishedOnly);
+      if (data.isNotEmpty) {
+        state = data.map((m) => ScheduleItem.fromJson(_normalizeKeys(m))).toList();
+      }
+    } catch (e) {
+      logDebug('Schedule load from Supabase warning: $e');
+    }
   }
 
   void addScheduleItem(ScheduleItem item) {
     state = [...state, item];
-    _fs.setScheduleItem(item.id, item.toJson());
+    ref.read(supabaseDbServiceProvider).setScheduleItem(item.id, item.toJson());
   }
 
   void updateScheduleItem(ScheduleItem updated) {
@@ -324,12 +418,12 @@ class ScheduleNotifier extends Notifier<List<ScheduleItem>> {
       for (final s in state)
         if (s.id == updated.id) data else s,
     ];
-    _fs.setScheduleItem(updated.id, data.toJson());
+    ref.read(supabaseDbServiceProvider).setScheduleItem(updated.id, data.toJson());
   }
 
   void deleteScheduleItem(String id) {
     state = state.where((s) => s.id != id).toList();
-    _fs.deleteScheduleItem(id);
+    ref.read(supabaseDbServiceProvider).deleteScheduleItem(id);
   }
 
   void togglePublish(String id) {
@@ -337,17 +431,15 @@ class ScheduleNotifier extends Notifier<List<ScheduleItem>> {
     if (idx == -1) return;
     final s = state[idx];
     final toggled = s.copyWith(
-      publicationStatus: s.publicationStatus == 'published'
-          ? 'draft'
-          : 'published',
+      publicationStatus: s.publicationStatus == 'published' ? 'draft' : 'published',
       publishedAt: s.publicationStatus != 'published' ? DateTime.now() : null,
       updatedAt: DateTime.now(),
     );
     state = [
-      for (final s in state)
-        if (s.id == id) toggled else s,
+      for (final item in state)
+        if (item.id == id) toggled else item,
     ];
-    _fs.setScheduleItem(id, toggled.toJson());
+    ref.read(supabaseDbServiceProvider).setScheduleItem(id, toggled.toJson());
   }
 }
 
@@ -355,7 +447,6 @@ final scheduleProvider = NotifierProvider<ScheduleNotifier, List<ScheduleItem>>(
   () => ScheduleNotifier(),
 );
 
-/// Public-site schedule: only `published` documents (rules-safe query).
 final publicScheduleProvider = NotifierProvider<ScheduleNotifier, List<ScheduleItem>>(
   () => ScheduleNotifier(publishedOnly: true),
 );
@@ -366,10 +457,7 @@ final publicScheduleProvider = NotifierProvider<ScheduleNotifier, List<ScheduleI
 class BoothsNotifier extends Notifier<List<Booth>> {
   BoothsNotifier({this.publishedOnly = false});
 
-  /// When true, only `published` documents are streamed (public site).
   final bool publishedOnly;
-
-  StreamSubscription? _sub;
 
   @override
   List<Booth> build() {
@@ -392,20 +480,25 @@ class BoothsNotifier extends Notifier<List<Booth>> {
         )
         .toList();
 
-    try {
-      _sub = _fs.boothsStream(publishedOnly: publishedOnly).listen((dataList) {
-        state = dataList.map((m) => Booth.fromJson(m)).toList();
-      });
-    } catch (e) {
-      logDebug('Booths stream setup failed: $e');
-    }
-    ref.onDispose(() => _sub?.cancel());
+    _loadBooths();
     return fallback;
+  }
+
+  void _loadBooths() async {
+    try {
+      final db = ref.read(supabaseDbServiceProvider);
+      final data = await db.getBoothsOnce(publishedOnly: publishedOnly);
+      if (data.isNotEmpty) {
+        state = data.map((m) => Booth.fromJson(_normalizeKeys(m))).toList();
+      }
+    } catch (e) {
+      logDebug('Booths load from Supabase warning: $e');
+    }
   }
 
   void addBooth(Booth booth) {
     state = [...state, booth];
-    _fs.setBooth(booth.id, booth.toJson());
+    ref.read(supabaseDbServiceProvider).setBooth(booth.id, booth.toJson());
   }
 
   void updateBooth(Booth updated) {
@@ -414,12 +507,12 @@ class BoothsNotifier extends Notifier<List<Booth>> {
       for (final b in state)
         if (b.id == updated.id) data else b,
     ];
-    _fs.setBooth(updated.id, data.toJson());
+    ref.read(supabaseDbServiceProvider).setBooth(updated.id, data.toJson());
   }
 
   void deleteBooth(String id) {
     state = state.where((b) => b.id != id).toList();
-    _fs.deleteBooth(id);
+    ref.read(supabaseDbServiceProvider).deleteBooth(id);
   }
 }
 
@@ -427,7 +520,6 @@ final boothsProvider = NotifierProvider<BoothsNotifier, List<Booth>>(
   () => BoothsNotifier(),
 );
 
-/// Public-site booths: only `published` documents (rules-safe query).
 final publicBoothsProvider = NotifierProvider<BoothsNotifier, List<Booth>>(
   () => BoothsNotifier(publishedOnly: true),
 );
@@ -438,25 +530,27 @@ final publicBoothsProvider = NotifierProvider<BoothsNotifier, List<Booth>>(
 class AnnouncementsNotifier extends Notifier<List<Announcement>> {
   AnnouncementsNotifier({this.publishedOnly = false});
 
-  /// When true, only `published` documents are streamed (public site).
   final bool publishedOnly;
-
-  StreamSubscription? _sub;
 
   @override
   List<Announcement> build() {
-    _sub = _fs.announcementsStream(publishedOnly: publishedOnly).listen((
-      dataList,
-    ) {
-      state = dataList.map((m) => Announcement.fromJson(m)).toList();
-    });
-    ref.onDispose(() => _sub?.cancel());
+    _loadAnnouncements();
     return [];
+  }
+
+  void _loadAnnouncements() async {
+    try {
+      final db = ref.read(supabaseDbServiceProvider);
+      final data = await db.getAnnouncementsOnce(publishedOnly: publishedOnly);
+      state = data.map((m) => Announcement.fromJson(_normalizeKeys(m))).toList();
+    } catch (e) {
+      logDebug('Announcements load from Supabase warning: $e');
+    }
   }
 
   void addAnnouncement(Announcement ann) {
     state = [...state, ann];
-    _fs.setAnnouncement(ann.id, ann.toJson());
+    ref.read(supabaseDbServiceProvider).setAnnouncement(ann.id, ann.toJson());
   }
 
   void updateAnnouncement(Announcement updated) {
@@ -465,12 +559,12 @@ class AnnouncementsNotifier extends Notifier<List<Announcement>> {
       for (final a in state)
         if (a.id == updated.id) data else a,
     ];
-    _fs.setAnnouncement(updated.id, data.toJson());
+    ref.read(supabaseDbServiceProvider).setAnnouncement(updated.id, data.toJson());
   }
 
   void deleteAnnouncement(String id) {
     state = state.where((a) => a.id != id).toList();
-    _fs.deleteAnnouncement(id);
+    ref.read(supabaseDbServiceProvider).deleteAnnouncement(id);
   }
 
   void togglePinned(String id) {
@@ -484,7 +578,7 @@ class AnnouncementsNotifier extends Notifier<List<Announcement>> {
       for (final a in state)
         if (a.id == id) toggled else a,
     ];
-    _fs.setAnnouncement(id, toggled.toJson());
+    ref.read(supabaseDbServiceProvider).setAnnouncement(id, toggled.toJson());
   }
 
   void togglePublish(String id) {
@@ -492,19 +586,15 @@ class AnnouncementsNotifier extends Notifier<List<Announcement>> {
     if (idx == -1) return;
     final a = state[idx];
     final toggled = a.copyWith(
-      publicationStatus: a.publicationStatus == 'published'
-          ? 'draft'
-          : 'published',
-      publishedAt: a.publicationStatus != 'published'
-          ? DateTime.now()
-          : a.publishedAt,
+      publicationStatus: a.publicationStatus == 'published' ? 'draft' : 'published',
+      publishedAt: a.publicationStatus != 'published' ? DateTime.now() : a.publishedAt,
       updatedAt: DateTime.now(),
     );
     state = [
-      for (final a in state)
-        if (a.id == id) toggled else a,
+      for (final item in state)
+        if (item.id == id) toggled else item,
     ];
-    _fs.setAnnouncement(id, toggled.toJson());
+    ref.read(supabaseDbServiceProvider).setAnnouncement(id, toggled.toJson());
   }
 }
 
@@ -513,7 +603,6 @@ final announcementsProvider =
       () => AnnouncementsNotifier(),
     );
 
-/// Public-site announcements: only `published` documents (rules-safe query).
 final publicAnnouncementsProvider =
     NotifierProvider<AnnouncementsNotifier, List<Announcement>>(
       () => AnnouncementsNotifier(publishedOnly: true),
@@ -525,25 +614,27 @@ final publicAnnouncementsProvider =
 class AwardsNotifier extends Notifier<List<PublishedAwardWinner>> {
   AwardsNotifier({this.publishedOnly = false});
 
-  /// When true, only `published` documents are streamed (public site).
   final bool publishedOnly;
-
-  StreamSubscription? _sub;
 
   @override
   List<PublishedAwardWinner> build() {
-    _sub = _fs.awardWinnersStream(publishedOnly: publishedOnly).listen((
-      dataList,
-    ) {
-      state = dataList.map((m) => PublishedAwardWinner.fromJson(m)).toList();
-    });
-    ref.onDispose(() => _sub?.cancel());
+    _loadAwards();
     return [];
+  }
+
+  void _loadAwards() async {
+    try {
+      final db = ref.read(supabaseDbServiceProvider);
+      final data = await db.getAwardWinnersOnce(publishedOnly: publishedOnly);
+      state = data.map((m) => PublishedAwardWinner.fromJson(_normalizeKeys(m))).toList();
+    } catch (e) {
+      logDebug('Awards load from Supabase warning: $e');
+    }
   }
 
   void addWinner(PublishedAwardWinner winner) {
     state = [...state, winner];
-    _fs.setAwardWinner(winner.id, winner.toJson());
+    ref.read(supabaseDbServiceProvider).setAwardWinner(winner.id, winner.toJson());
   }
 
   void updateWinner(PublishedAwardWinner updated) {
@@ -552,12 +643,12 @@ class AwardsNotifier extends Notifier<List<PublishedAwardWinner>> {
       for (final w in state)
         if (w.id == updated.id) data else w,
     ];
-    _fs.setAwardWinner(updated.id, data.toJson());
+    ref.read(supabaseDbServiceProvider).setAwardWinner(updated.id, data.toJson());
   }
 
   void deleteWinner(String id) {
     state = state.where((w) => w.id != id).toList();
-    _fs.deleteAwardWinner(id);
+    ref.read(supabaseDbServiceProvider).deleteAwardWinner(id);
   }
 }
 
@@ -566,7 +657,6 @@ final awardsProvider =
       () => AwardsNotifier(),
     );
 
-/// Public-site award winners: only `published` documents (rules-safe query).
 final publicAwardsProvider =
     NotifierProvider<AwardsNotifier, List<PublishedAwardWinner>>(
       () => AwardsNotifier(publishedOnly: true),
@@ -576,20 +666,25 @@ final publicAwardsProvider =
 // 7. EXCEL IMPORTS & STAGING WORKFLOW STATE
 // ==========================================
 class ImportsNotifier extends Notifier<List<ImportRecord>> {
-  StreamSubscription? _sub;
-
   @override
   List<ImportRecord> build() {
-    _sub = _fs.importsStream().listen((dataList) {
-      state = dataList.map((m) => ImportRecord.fromJson(m)).toList();
-    });
-    ref.onDispose(() => _sub?.cancel());
+    _loadImports();
     return [];
+  }
+
+  void _loadImports() async {
+    try {
+      final db = ref.read(supabaseDbServiceProvider);
+      final data = await db.getImportsOnce();
+      state = data.map((m) => ImportRecord.fromJson(_normalizeKeys(m))).toList();
+    } catch (e) {
+      logDebug('Imports load warning: $e');
+    }
   }
 
   void addImport(ImportRecord r) {
     state = [r, ...state];
-    _fs.setImport(r.id, r.toJson());
+    ref.read(supabaseDbServiceProvider).setImport(r.id, r.toJson());
   }
 
   void updateImport(ImportRecord updated) {
@@ -597,7 +692,7 @@ class ImportsNotifier extends Notifier<List<ImportRecord>> {
       for (final r in state)
         if (r.id == updated.id) updated else r,
     ];
-    _fs.setImport(updated.id, updated.toJson());
+    ref.read(supabaseDbServiceProvider).setImport(updated.id, updated.toJson());
   }
 }
 
@@ -605,59 +700,53 @@ final importsProvider = NotifierProvider<ImportsNotifier, List<ImportRecord>>(
   () => ImportsNotifier(),
 );
 
-// Staging candidate dictionaries (stream-based)
 final scheduleCandidatesProvider =
-    StreamProvider.family<List<ScheduleCandidate>, String>((ref, importId) {
-      return _fs.scheduleCandidatesStream(importId).map((list) {
-        return list.map((m) => ScheduleCandidate.fromJson(m)).toList();
-      });
+    FutureProvider.family<List<ScheduleCandidate>, String>((ref, importId) async {
+      final db = ref.read(supabaseDbServiceProvider);
+      final list = await db.getScheduleCandidates(importId);
+      return list.map((m) => ScheduleCandidate.fromJson(_normalizeKeys(m))).toList();
     });
 
 final awardCandidatesProvider =
-    StreamProvider.family<List<AwardCandidate>, String>((ref, importId) {
-      return _fs.awardCandidatesStream(importId).map((list) {
-        return list.map((m) => AwardCandidate.fromJson(m)).toList();
-      });
+    FutureProvider.family<List<AwardCandidate>, String>((ref, importId) async {
+      final db = ref.read(supabaseDbServiceProvider);
+      final list = await db.getAwardCandidates(importId);
+      return list.map((m) => AwardCandidate.fromJson(_normalizeKeys(m))).toList();
     });
 
-final privacySkipsProvider = StreamProvider.family<List<PrivacySkip>, String>((
-  ref,
-  importId,
-) {
-  return _fs.privacySkipsStream(importId).map((list) {
-    return list.map((m) => PrivacySkip.fromJson(m)).toList();
-  });
-});
+final privacySkipsProvider =
+    FutureProvider.family<List<PrivacySkip>, String>((ref, importId) async {
+      final db = ref.read(supabaseDbServiceProvider);
+      final list = await db.getPrivacySkips(importId);
+      return list.map((m) => PrivacySkip.fromJson(_normalizeKeys(m))).toList();
+    });
 
 final validationIssuesProvider =
-    StreamProvider.family<List<ValidationIssue>, String>((ref, importId) {
-      return _fs.validationIssuesStream(importId).map((list) {
-        return list.map((m) => ValidationIssue.fromJson(m)).toList();
-      });
+    FutureProvider.family<List<ValidationIssue>, String>((ref, importId) async {
+      final db = ref.read(supabaseDbServiceProvider);
+      final list = await db.getValidationIssues(importId);
+      return list.map((m) => ValidationIssue.fromJson(_normalizeKeys(m))).toList();
     });
 
 // ==========================================
 // 8. LECTURER CONFIG & AUTH STATE
 // ==========================================
-
-/// Hardcoded fallback lecturer config (used when Firestore is unavailable).
 const hardcodedLecturerConfig = <String, String>{
   'albin1841@uitm.edu.my': 'ALBIN LEMUEL KUSHAN',
 };
 
-/// Streams all lecturer documents from Firestore.
-final allLecturersProvider = StreamProvider<List<Map<String, dynamic>>>((ref) {
-  return _fs.lecturersStream();
+final allLecturersProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  final db = ref.read(supabaseDbServiceProvider);
+  return db.getLecturersOnce();
 });
 
-/// Combined lecturer config: Firestore + hardcoded fallback (email -> displayName).
 final lecturerConfigProvider = Provider<Map<String, String>>((ref) {
   final all = ref.watch(allLecturersProvider);
   final result = <String, String>{};
   final list = all.asData?.value ?? [];
   for (final doc in list) {
-    final email = doc['email'] as String?;
-    final name = doc['displayName'] as String?;
+    final email = (doc['email'] ?? doc['display_name']) as String?;
+    final name = (doc['displayName'] ?? doc['display_name']) as String?;
     if (email != null && name != null) {
       result[email.toLowerCase()] = name;
     }
@@ -674,22 +763,23 @@ class LecturerAuthNotifier extends Notifier<Lecturer?> {
   @override
   Lecturer? build() {
     ref.listen(lecturerConfigProvider, (_, __) => _reevaluate());
-    ref.listen(authStateChangesProvider, (_, __) => _reevaluate());
+    ref.listen(currentAuthUserProvider, (_, __) => _reevaluate());
     _reevaluate();
     return null;
   }
 
   void _reevaluate() {
     final config = ref.read(lecturerConfigProvider);
-    final auth = ref.read(authStateChangesProvider);
-    final user = auth.asData?.value;
-    if (user != null &&
-        user.email != null &&
-        config.containsKey(user.email!.toLowerCase())) {
-      final displayName = config[user.email!.toLowerCase()]!;
+    final user = ref.read(currentAuthUserProvider);
+    if (user != null && user.email != null) {
+      final emailLower = user.email!.toLowerCase();
+      final displayName = config[emailLower] ??
+          (user.userMetadata?['display_name'] as String?) ??
+          user.email!.split('@').first.toUpperCase();
+
       state = Lecturer(
-        id: user.uid,
-        uid: user.uid,
+        id: user.id,
+        uid: user.id,
         displayName: displayName,
         email: user.email,
         createdAt: DateTime.now(),
@@ -700,8 +790,9 @@ class LecturerAuthNotifier extends Notifier<Lecturer?> {
     }
   }
 
-  void signOut() {
+  void signOut() async {
     state = null;
+    await ref.read(supabaseClientProvider).auth.signOut();
   }
 }
 
@@ -716,17 +807,13 @@ final lecturerUidProvider = Provider<String?>((ref) {
 // ==========================================
 // 9. PROJECT LECTURER ASSIGNMENTS STATE
 // ==========================================
-final allAssignmentsProvider = StreamProvider<List<ProjectLecturerAssignment>>((
-  ref,
-) {
-  return _fs.assignmentsStream().map((list) {
-    return list.map((m) => ProjectLecturerAssignment.fromJson(m)).toList();
-  });
+final allAssignmentsProvider = FutureProvider<List<ProjectLecturerAssignment>>((ref) async {
+  final db = ref.read(supabaseDbServiceProvider);
+  final list = await db.getAssignmentsOnce();
+  return list.map((m) => ProjectLecturerAssignment.fromJson(_normalizeKeys(m))).toList();
 });
 
-final lecturerAssignmentsProvider = Provider<List<ProjectLecturerAssignment>>((
-  ref,
-) {
+final lecturerAssignmentsProvider = Provider<List<ProjectLecturerAssignment>>((ref) {
   final lecturer = ref.watch(lecturerAuthProvider);
   final all = ref.watch(allAssignmentsProvider);
   if (lecturer == null) return [];
@@ -747,10 +834,10 @@ final lecturerAssignmentsProvider = Provider<List<ProjectLecturerAssignment>>((
 // ==========================================
 // 10. STUDENT VISITS STATE
 // ==========================================
-final allVisitsProvider = StreamProvider<List<StudentVisit>>((ref) {
-  return _fs.visitsStream().map((list) {
-    return list.map((m) => StudentVisit.fromJson(m)).toList();
-  });
+final allVisitsProvider = FutureProvider<List<StudentVisit>>((ref) async {
+  final db = ref.read(supabaseDbServiceProvider);
+  final list = await db.getVisitsOnce();
+  return list.map((m) => StudentVisit.fromJson(_normalizeKeys(m))).toList();
 });
 
 final lecturerVisitsProvider = Provider<List<StudentVisit>>((ref) {
@@ -773,30 +860,35 @@ final completedVisitsProvider = Provider<Set<String>>((ref) {
 // 11. FEEDBACK ENTRIES STATE
 // ==========================================
 class FeedbackEntriesNotifier extends Notifier<List<FeedbackEntry>> {
-  StreamSubscription? _sub;
-
   @override
   List<FeedbackEntry> build() {
-    _sub = _fs.feedbackEntriesStream().listen((dataList) {
-      state = dataList.map((m) => FeedbackEntry.fromJson(m)).toList();
-    });
-    ref.onDispose(() => _sub?.cancel());
+    _loadFeedback();
     return [];
+  }
+
+  void _loadFeedback() async {
+    try {
+      final db = ref.read(supabaseDbServiceProvider);
+      final data = await db.getFeedbackEntriesOnce();
+      state = data.map((m) => FeedbackEntry.fromJson(_normalizeKeys(m))).toList();
+    } catch (e) {
+      logDebug('Feedback load warning: $e');
+    }
   }
 
   Future<void> refresh() async {
     try {
-      state = (await _fs.getFeedbackEntriesOnce())
-          .map((m) => FeedbackEntry.fromJson(m))
-          .toList();
+      final db = ref.read(supabaseDbServiceProvider);
+      final data = await db.getFeedbackEntriesOnce();
+      state = data.map((m) => FeedbackEntry.fromJson(_normalizeKeys(m))).toList();
     } catch (e) {
-      logDebug('Feedback refresh failed (keeping current list): $e');
+      logDebug('Feedback refresh failed: $e');
     }
   }
 
   void addFeedbackEntry(FeedbackEntry entry) {
     state = [entry, ...state];
-    _fs.setFeedbackEntry(entry.id, entry.toJson());
+    ref.read(supabaseDbServiceProvider).setFeedbackEntry(entry.id, entry.toJson());
   }
 
   void updateFeedbackEntry(FeedbackEntry updated) {
@@ -805,12 +897,12 @@ class FeedbackEntriesNotifier extends Notifier<List<FeedbackEntry>> {
       for (final f in state)
         if (f.id == updated.id) data else f,
     ];
-    _fs.setFeedbackEntry(updated.id, data.toJson());
+    ref.read(supabaseDbServiceProvider).setFeedbackEntry(updated.id, data.toJson());
   }
 
   void deleteFeedbackEntry(String id) {
     state = state.where((f) => f.id != id).toList();
-    _fs.deleteFeedbackEntry(id);
+    ref.read(supabaseDbServiceProvider).deleteFeedbackEntry(id);
   }
 
   void setStatus(String id, String status) {
@@ -839,9 +931,8 @@ final feedbackEntriesProvider =
       () => FeedbackEntriesNotifier(),
     );
 
-/// Convenience: feedback submitted by the currently signed-in user.
 final myFeedbackProvider = Provider<List<FeedbackEntry>>((ref) {
-  final uid = ref.watch(firebaseAuthProvider).currentUser?.uid;
+  final uid = ref.watch(currentAuthUserProvider)?.id;
   if (uid == null) return const [];
   return ref.watch(feedbackEntriesProvider).where((f) => f.userId == uid).toList();
 });

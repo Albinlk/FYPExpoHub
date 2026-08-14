@@ -1,15 +1,14 @@
-import 'dart:js_interop';
-import 'dart:js_interop_unsafe';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 import '../../../../app/theme/theme.dart';
-import '../../../../core/firebase/firebase_providers.dart';
+import '../../../../core/supabase/supabase_client_provider.dart';
 import '../../../../core/state/state_providers.dart';
 
 void _goToMainSite() {
-  final location = globalContext['location'] as JSObject;
-  location['href'] = 'https://fskmjasinfypexhibition.site/'.toJS;
+  launchUrlString('https://fskmjasinfypexhibition.site/');
 }
 
 class SignInPage extends ConsumerStatefulWidget {
@@ -42,22 +41,24 @@ class _SignInPageState extends ConsumerState<SignInPage> {
     });
 
     try {
-      final auth = ref.read(firebaseAuthProvider);
-      await auth.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
+      final client = ref.read(supabaseClientProvider);
+      final response = await client.auth.signInWithPassword(
+        email: _emailController.text.trim().toLowerCase(),
         password: _passwordController.text.trim(),
       );
 
-      final user = auth.currentUser;
+      final user = response.user;
       if (user == null) throw Exception('Sign-in failed');
 
-      final idTokenResult = await user.getIdTokenResult(true);
-      final isAdmin = idTokenResult.claims?['admin'] == true;
+      ref.invalidate(currentProfileProvider);
+      ref.invalidate(isAdminProvider);
+      ref.invalidate(isLecturerProvider);
+
+      await Future.delayed(const Duration(milliseconds: 300));
 
       if (mounted) {
+        final isAdmin = await ref.read(isAdminProvider.future);
         if (isAdmin) {
-          ref.invalidate(isAdminProvider);
-          await Future.delayed(const Duration(milliseconds: 300));
           if (mounted) context.go('/admin');
           return;
         }
@@ -68,27 +69,30 @@ class _SignInPageState extends ConsumerState<SignInPage> {
           return;
         }
 
-        await auth.signOut();
-        setState(() {
-          _errorMessage = 'This account does not have access. Please use a registered UiTM email.';
-        });
+        // Default redirect based on profile check
+        final profile = await ref.read(currentProfileProvider.future);
+        if (profile?.role == 'lecturer') {
+          if (mounted) context.go('/lecturer/visits');
+          return;
+        }
+
+        if (mounted) context.go('/admin');
       }
-    } catch (e) {
-      final msg = e.toString();
-      String userMsg = 'Sign in failed. Please check your email and password.';
-      if (msg.contains('invalid-login-credentials') || msg.contains('INVALID_LOGIN_CREDENTIALS')) {
+    } on AuthException catch (e) {
+      String userMsg = 'Sign in failed. Please check your credentials.';
+      if (e.message.toLowerCase().contains('invalid login credentials')) {
         userMsg = 'Invalid email or password. Please try again.';
-      } else if (msg.contains('invalid-email')) {
-        userMsg = 'Invalid email format.';
-      } else if (msg.contains('user-disabled')) {
-        userMsg = 'This account has been disabled.';
-      } else if (msg.contains('too-many-requests')) {
-        userMsg = 'Too many attempts. Please try again later.';
-      } else if (msg.contains('network-request-failed')) {
-        userMsg = 'Network error. Please check your internet connection.';
+      } else if (e.message.toLowerCase().contains('email not confirmed')) {
+        userMsg = 'Please confirm your email address before signing in.';
+      } else {
+        userMsg = e.message;
       }
       setState(() {
         _errorMessage = userMsg;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Sign in failed: ${e.toString()}';
       });
     } finally {
       if (mounted) {
@@ -133,7 +137,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                         ),
                       ),
                       const Divider(height: 32),
-                      
+
                       if (_errorMessage != null) ...[
                         Container(
                           padding: const EdgeInsets.all(12),
@@ -199,7 +203,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                                   height: 20,
                                   child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                                 )
-                              :                           Text('Sign In', style: DesignSystem.button),
+                              : Text('Sign In', style: DesignSystem.button),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -207,7 +211,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                         child: TextButton(
                           onPressed: _goToMainSite,
                           child: Text(
-                             'Back to Homepage',
+                            'Back to Homepage',
                             style: DesignSystem.bodySm.copyWith(color: DesignSystem.secondary, fontWeight: FontWeight.bold),
                           ),
                         ),

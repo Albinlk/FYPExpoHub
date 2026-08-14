@@ -1,9 +1,7 @@
 import 'dart:convert';
-import 'dart:js_interop';
-import 'dart:js_interop_unsafe';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/feedback_entry.dart';
 import '../../../../core/state/state_providers.dart';
@@ -50,13 +48,7 @@ class _AdminFeedbackPageState extends ConsumerState<AdminFeedbackPage> {
     final bytes = utf8.encode(csv);
     final base64 = base64Encode(bytes);
     final href = 'data:text/csv;base64,$base64';
-
-    final document = globalContext['document'] as JSObject;
-    final anchor = document.callMethod('createElement'.toJS, ['a'.toJS].toJS) as JSObject;
-    anchor['href'] = href.toJS;
-    final now = DateTime.now();
-    anchor['download'] = 'feedback_export_${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}.csv'.toJS;
-    anchor.callMethod('click'.toJS, null);
+    launchUrlString(href);
   }
 
   void _showDetailDialog(BuildContext context, FeedbackEntry entry) {

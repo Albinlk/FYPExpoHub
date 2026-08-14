@@ -1,15 +1,13 @@
-import 'dart:js_interop';
-import 'dart:js_interop_unsafe';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 import '../../core/state/state_providers.dart';
 import '../theme/theme.dart';
 import 'feedback_form_widget.dart';
 
 void _openAdminPortal() {
-  final location = globalContext['location'] as JSObject;
-  location['href'] = 'https://admin.fskmjasinfypexhibition.site/admin/sign-in'.toJS;
+  launchUrlString('https://admin.fskmjasinfypexhibition.site/admin/sign-in');
 }
 
 class PublicShell extends ConsumerWidget {

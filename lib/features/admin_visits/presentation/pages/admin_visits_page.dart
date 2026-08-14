@@ -1,15 +1,12 @@
 import 'dart:convert';
-import 'dart:js_interop';
-import 'dart:js_interop_unsafe';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/project.dart';
 import '../../../../core/domain/models/project_lecturer_assignment.dart';
-import '../../../../core/utils/logger.dart';
 import '../../../../core/domain/models/student_visit.dart';
+import '../../../../core/supabase/supabase_client_provider.dart';
 import '../../../../core/state/state_providers.dart';
 import '../widgets/summary_cards.dart';
 import '../widgets/visit_data_table.dart';
@@ -43,7 +40,7 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('You are about to void this visit. This action cannot be undone.', style: DesignSystem.bodyMd),
+            const Text('You are about to void this visit. This action cannot be undone.', style: DesignSystem.bodyMd),
             const SizedBox(height: DesignSystem.spaceMd),
             TextField(
               controller: reasonController,
@@ -70,48 +67,20 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
     if (reason == null) return;
 
     try {
-      final user = FirebaseAuth.instance.currentUser;
+      final user = ref.read(currentAuthUserProvider);
       if (user == null) throw Exception('Not authenticated');
 
-      final db = FirebaseFirestore.instance;
-      final now = FieldValue.serverTimestamp();
+      final rpc = ref.read(supabaseRpcServiceProvider);
+      await rpc.voidStudentProjectVisit(
+        visitId: visit.id,
+        reason: reason,
+      );
 
-      await db.collection('studentProjectVisits').doc(visit.id).update({
-        'status': 'voided',
-        'voidedAt': now,
-        'voidedBy': user.uid,
-        'voidReason': reason,
-        'updatedAt': now,
-      });
-
-      try {
-        await db.collection('auditLogs').add({
-          'actorUid': user.uid,
-          'action': 'visit_voided',
-          'targetType': 'studentProjectVisits',
-          'targetId': visit.id,
-          'eventId': visit.eventId,
-          'metadataSafe': {
-            'projectId': visit.projectId,
-            'reason': reason,
-            'voidedByRole': 'admin',
-          },
-          'createdAt': now,
-        });
-      } catch (auditError) {
-        logDebug('Audit log skipped for visit_voided: $auditError');
-      }
+      ref.invalidate(allVisitsProvider);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Visit has been voided.'), backgroundColor: DesignSystem.error),
-        );
-      }
-    } on FirebaseException catch (e) {
-      if (mounted) {
-        final msg = e.code == 'permission-denied' ? 'You are not allowed.' : 'Error: ${e.message}';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(msg), backgroundColor: DesignSystem.error),
+          const SnackBar(content: Text('Visit has been voided.'), backgroundColor: DesignSystem.error),
         );
       }
     } catch (e) {
@@ -132,12 +101,7 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
     final bytes = utf8.encode(csv);
     final base64 = base64Encode(bytes);
     final href = 'data:text/csv;base64,$base64';
-
-    final document = globalContext['document'] as JSObject;
-    final anchor = document.callMethod('createElement'.toJS, ['a'.toJS].toJS) as JSObject;
-    anchor['href'] = href.toJS;
-    anchor['download'] = 'student_visits.csv'.toJS;
-    anchor.callMethod('click'.toJS, null);
+    launchUrlString(href);
   }
 
   @override
@@ -148,7 +112,7 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
     final visits = ref.watch(allVisitsProvider).asData?.value ?? [];
     final projects = ref.watch(projectsProvider);
 
-    // O(1) project lookup by id, built once per build.
+    // O(1) project lookup by id
     final projectsById = <String, Project>{
       for (final p in projects) p.id: p,
     };
@@ -326,11 +290,11 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
               child: ListTile(
                 leading: CircleAvatar(
                   backgroundColor: DesignSystem.primary,
-                  child: Text(e.key[0].toUpperCase(), style: const TextStyle(color: Colors.white)),
+                  child: Text(e.key.isNotEmpty ? e.key[0].toUpperCase() : '?', style: const TextStyle(color: Colors.white)),
                 ),
                 title: Text(e.key, style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold)),
                 subtitle: Text('${e.value.length} assignments, $completedCount visited', style: DesignSystem.bodySm),
-                trailing: Text('${completedCount}/${e.value.length}', style: DesignSystem.h3.copyWith(color: DesignSystem.primary)),
+                trailing: Text('$completedCount/${e.value.length}', style: DesignSystem.h3.copyWith(color: DesignSystem.primary)),
               ),
             );
           }).toList(),

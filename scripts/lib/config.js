@@ -1,20 +1,30 @@
 /**
  * Shared configuration for all scripts.
  * Loads credentials from scripts/.env (never commit real values).
+ *
+ * After Firebase → Supabase migration, scripts use Supabase credentials.
+ * Legacy Firebase credentials are still loaded for backward compatibility
+ * with existing data-processing utility scripts.
  */
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
+// Supabase credentials (primary after migration)
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+// Legacy Firebase credentials (kept for backward compatibility)
 const API_KEY = process.env.API_KEY;
 const FIREBASE_PROJECT = process.env.FIREBASE_PROJECT;
-const EVENT_ID = process.env.EVENT_ID;
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
-if (!API_KEY || !FIREBASE_PROJECT || !ADMIN_EMAIL || !ADMIN_PASSWORD) {
-  console.error('[ERROR] Missing required environment variables in scripts/.env');
-  console.error('Required: API_KEY, FIREBASE_PROJECT, EVENT_ID, ADMIN_EMAIL, ADMIN_PASSWORD');
-  process.exit(1);
+const EVENT_ID = process.env.EVENT_ID || 'fskm-fyp-2026';
+
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  console.warn('[WARN] Supabase credentials not found in scripts/.env');
+  console.warn('Required: SUPABASE_URL, SUPABASE_ANON_KEY');
 }
 
 const CALON_MATRICS = new Set([
@@ -40,4 +50,14 @@ const CALON_MATRICS = new Set([
   '2023436396','2023410826',
 ]);
 
-module.exports = { API_KEY, FIREBASE_PROJECT, EVENT_ID, ADMIN_EMAIL, ADMIN_PASSWORD, CALON_MATRICS };
+module.exports = {
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY,
+  SUPABASE_SERVICE_ROLE_KEY,
+  API_KEY,
+  FIREBASE_PROJECT,
+  EVENT_ID,
+  ADMIN_EMAIL,
+  ADMIN_PASSWORD,
+  CALON_MATRICS,
+};

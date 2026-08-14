@@ -1,11 +1,19 @@
 /**
- * Shared Firebase REST API helpers for all scripts.
+ * Shared API helpers for scripts.
+ *
+ * Post-migration, this module provides Supabase REST API helpers (primary)
+ * and legacy Firebase REST API helpers (deprecated, kept for reference only).
+ *
+ * DO NOT commit real credentials to version control.
  */
 const https = require('https');
 const http = require('http');
-const { API_KEY, FIREBASE_PROJECT, ADMIN_EMAIL, ADMIN_PASSWORD } = require('./config');
+const { SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, API_KEY, FIREBASE_PROJECT, ADMIN_EMAIL, ADMIN_PASSWORD } = require('./config');
 
-const FIRESTORE_BASE = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT}/databases/(default)/documents`;
+const SUPABASE_BASE = SUPABASE_URL ? `${SUPABASE_URL}/rest/v1` : null;
+const FIRESTORE_BASE = FIREBASE_PROJECT
+  ? `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT}/databases/(default)/documents`
+  : null;
 
 function httpsRequest(url, method, body, headers = {}) {
   return new Promise((resolve, reject) => {
@@ -28,6 +36,60 @@ function httpsRequest(url, method, body, headers = {}) {
   });
 }
 
+/**
+ * Supabase REST API helpers (primary post-migration).
+ */
+async function getSupabaseAdminToken() {
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    console.warn('Supabase service role key not configured — admin operations unavailable.');
+    return null;
+  }
+  return SUPABASE_SERVICE_ROLE_KEY;
+}
+
+function supabaseAuthHeader(token) {
+  return { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${token || SUPABASE_ANON_KEY}` };
+}
+
+async function supabaseSelect(table, query = '', token) {
+  if (!SUPABASE_BASE) throw new Error('SUPABASE_URL not configured');
+  let url = `${SUPABASE_BASE}/${table}`;
+  if (query) url += `?${query}`;
+  const res = await httpsRequest(url, 'GET', null, supabaseAuthHeader(token));
+  return res;
+}
+
+async function supabaseInsert(table, rows, token) {
+  if (!SUPABASE_BASE) throw new Error('SUPABASE_URL not configured');
+  const url = `${SUPABASE_BASE}/${table}`;
+  const res = await httpsRequest(url, 'POST', Array.isArray(rows) ? rows : [rows], {
+    ...supabaseAuthHeader(token),
+    Prefer: 'return=representation',
+  });
+  return res;
+}
+
+async function supabaseUpdate(table, id, row, token) {
+  if (!SUPABASE_BASE) throw new Error('SUPABASE_URL not configured');
+  const url = `${SUPABASE_BASE}/${table}?id=eq.${id}`;
+  const res = await httpsRequest(url, 'PATCH', row, supabaseAuthHeader(token));
+  return res;
+}
+
+async function supabaseUpsert(table, rows, token) {
+  if (!SUPABASE_BASE) throw new Error('SUPABASE_URL not configured');
+  const url = `${SUPABASE_BASE}/${table}`;
+  const res = await httpsRequest(url, 'POST', Array.isArray(rows) ? rows : [rows], {
+    ...supabaseAuthHeader(token),
+    Prefer: 'resolution=merge-duplicates',
+  });
+  return res;
+}
+
+/**
+ * Legacy Firebase REST API helpers (deprecated, kept for reference only).
+ * All logic has migrated to Supabase RPC functions.
+ */
 async function getAccessToken() {
   const resp = await httpsRequest(
     `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${API_KEY}`,
@@ -35,7 +97,6 @@ async function getAccessToken() {
     { email: ADMIN_EMAIL, password: ADMIN_PASSWORD, returnSecureToken: true }
   );
   if (resp.body.error) throw new Error(`Auth failed: ${resp.body.error.message}`);
-  console.log(`Authenticated as ${resp.body.email}`);
   return resp.body.idToken;
 }
 
@@ -65,8 +126,9 @@ function parseDocFields(doc) {
     else if (v.doubleValue !== undefined) result[k] = v.doubleValue;
     else if (v.booleanValue !== undefined) result[k] = v.booleanValue;
     else if (v.timestampValue !== undefined) result[k] = v.timestampValue;
-    else if (v.arrayValue !== undefined) result[k] = (v.arrayValue.values || []).map(i => i.stringValue || i);
+    else if (v.arrayValue !== undefined) result[k] = (v.arrayValue.values || []).map(i => i.stringValue || i.integerValue || i);
     else if (v.mapValue !== undefined) result[k] = parseDocFields({ fields: v.mapValue.fields });
+    else if (v.nullValue !== undefined) result[k] = null;
     else result[k] = v;
   }
   return result;
@@ -77,10 +139,10 @@ function mapToFields(obj) {
   for (const [k, v] of Object.entries(obj)) {
     if (v === null || v === undefined) continue;
     if (typeof v === 'string') fields[k] = { stringValue: v };
-    else if (typeof v === 'number') fields[k] = Number.isInteger(v) ? { integerValue: v } : { doubleValue: v };
+    else if (typeof v === 'number') fields[k] = Number.isInteger(v) ? { integerValue: String(v) } : { doubleValue: v };
     else if (typeof v === 'boolean') fields[k] = { booleanValue: v };
     else if (v instanceof Date) fields[k] = { timestampValue: v.toISOString() };
-    else if (Array.isArray(v)) fields[k] = { arrayValue: { values: v.map(i => (typeof i === 'string' ? { stringValue: i } : typeof i === 'number' ? (Number.isInteger(i) ? { integerValue: i } : { doubleValue: i }) : typeof i === 'boolean' ? { booleanValue: i } : { mapValue: { fields: mapToFields(i) } })) } };
+    else if (Array.isArray(v)) fields[k] = { arrayValue: { values: v.map(i => (typeof i === 'string' ? { stringValue: i } : typeof i === 'number' ? (Number.isInteger(i) ? { integerValue: String(i) } : { doubleValue: i }) : typeof i === 'boolean' ? { booleanValue: i } : { mapValue: { fields: mapToFields(i) } })) } };
     else if (typeof v === 'object') fields[k] = { mapValue: { fields: mapToFields(v) } };
   }
   return fields;
@@ -91,4 +153,22 @@ async function setDoc(collection, docId, data, token) {
   return httpsRequest(url, 'PATCH', { fields: mapToFields(data) }, authHeader(token));
 }
 
-module.exports = { httpsRequest, getAccessToken, authHeader, fetchAllDocs, parseDocFields, mapToFields, setDoc, FIRESTORE_BASE };
+module.exports = {
+  httpsRequest,
+  // Supabase (primary)
+  SUPABASE_BASE,
+  getSupabaseAdminToken,
+  supabaseAuthHeader,
+  supabaseSelect,
+  supabaseInsert,
+  supabaseUpdate,
+  supabaseUpsert,
+  // Firebase (legacy, deprecated)
+  FIRESTORE_BASE,
+  getAccessToken,
+  authHeader,
+  fetchAllDocs,
+  parseDocFields,
+  mapToFields,
+  setDoc,
+};

@@ -1,13 +1,11 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/project.dart';
 import '../../../../core/domain/models/student_visit.dart';
+import '../../../../core/supabase/supabase_client_provider.dart';
 import '../../../../core/state/state_providers.dart';
-import '../../../../core/utils/logger.dart';
 import '../../../../core/widgets/project_cover_image.dart';
 import '../widgets/mark_visited_dialog.dart';
 import '../widgets/undo_visit_dialog.dart';
@@ -39,87 +37,36 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
 
     setState(() => _isMarking = true);
     try {
-      final user = FirebaseAuth.instance.currentUser;
+      final user = ref.read(currentAuthUserProvider);
       if (user == null) throw Exception('Not authenticated');
 
-      final db = FirebaseFirestore.instance;
-
-      final existing = ref.read(lecturerVisitsProvider).where(
-        (v) => v.projectId == project.id && v.visitRole == role && v.status == 'completed',
+      final rpc = ref.read(supabaseRpcServiceProvider);
+      await rpc.markStudentProjectVisited(
+        assignmentId: assignmentId,
+        visitNote: result['note'],
       );
 
-      if (existing.isNotEmpty) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('This project has already been visited.'), backgroundColor: DesignSystem.error),
-          );
-          setState(() => _isMarking = false);
-        }
-        return;
-      }
-
-      final visitRef = db.collection('studentProjectVisits').doc();
-      final now = FieldValue.serverTimestamp();
-
-      await visitRef.set({
-        'id': visitRef.id,
-        'eventId': 'fskm-fyp-2026',
-        'projectId': project.id,
-        'assignmentId': assignmentId,
-        'lecturerId': user.uid,
-        'visitRole': role,
-        'visitNote': result['note'] ?? '',
-        'status': 'completed',
-        'visitedAt': now,
-        'createdAt': now,
-        'updatedAt': now,
-        'source': 'lecturer',
-      });
-
-      try {
-        await db.collection('auditLogs').add({
-          'actorUid': user.uid,
-          'action': 'visit_marked',
-          'targetType': 'studentProjectVisits',
-          'targetId': visitRef.id,
-          'eventId': 'fskm-fyp-2026',
-          'metadataSafe': {
-            'projectId': project.id,
-            'assignmentId': assignmentId,
-            'visitRole': role,
-          },
-          'createdAt': now,
-        });
-      } catch (auditError) {
-        logDebug('Audit log skipped for visit_marked: $auditError');
-      }
+      ref.invalidate(allVisitsProvider);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Student has been marked as visited.'),
+            content: const Text('Student has been marked as visited.'),
             backgroundColor: DesignSystem.tertiary,
           ),
         );
         setState(() => _isMarking = false);
       }
-    } on FirebaseException catch (e) {
+    } catch (e) {
       setState(() => _isMarking = false);
-      final msg = e.code == 'already-exists'
+      final msg = e.toString().contains('already-exists')
           ? 'Visit has already been recorded.'
-          : e.code == 'permission-denied'
+          : e.toString().contains('permission-denied')
               ? 'You are not allowed to mark this visit.'
-              : 'Error: ${e.message}';
+              : 'Error: ${e.toString()}';
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(msg), backgroundColor: DesignSystem.error),
-        );
-      }
-    } catch (e) {
-      setState(() => _isMarking = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}'), backgroundColor: DesignSystem.error),
         );
       }
     }
@@ -131,62 +78,36 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
 
     setState(() => _isUndoing = true);
     try {
-      final user = FirebaseAuth.instance.currentUser;
+      final user = ref.read(currentAuthUserProvider);
       if (user == null) throw Exception('Not authenticated');
 
-      final db = FirebaseFirestore.instance;
-      final now = FieldValue.serverTimestamp();
+      final rpc = ref.read(supabaseRpcServiceProvider);
+      await rpc.voidStudentProjectVisit(
+        visitId: visit.id,
+        reason: reason,
+      );
 
-      await db.collection('studentProjectVisits').doc(visit.id).update({
-        'status': 'voided',
-        'voidedAt': now,
-        'voidedBy': user.uid,
-        'voidReason': reason,
-        'updatedAt': now,
-      });
-
-      try {
-        await db.collection('auditLogs').add({
-          'actorUid': user.uid,
-          'action': 'visit_voided',
-          'targetType': 'studentProjectVisits',
-          'targetId': visit.id,
-          'eventId': visit.eventId,
-          'metadataSafe': {
-            'projectId': visit.projectId,
-            'reason': reason,
-            'voidedByRole': 'lecturer',
-          },
-          'createdAt': now,
-        });
-      } catch (auditError) {
-        logDebug('Audit log skipped for visit_voided: $auditError');
-      }
+      ref.invalidate(allVisitsProvider);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Visit has been cancelled. Student can be revisited.'),
+            content: const Text('Visit has been cancelled. Student can be revisited.'),
             backgroundColor: DesignSystem.tertiary,
           ),
         );
         setState(() => _isUndoing = false);
       }
-    } on FirebaseException catch (e) {
+    } catch (e) {
       setState(() => _isUndoing = false);
-      final msg = e.code == 'permission-denied'
+      final msg = e.toString().contains('permission-denied')
           ? 'You are not allowed to cancel this visit.'
-          : 'Error: ${e.message}';
+          : e.toString().contains('expired') || e.toString().contains('window')
+              ? 'The undo window for this visit has expired.'
+              : 'Error: ${e.toString()}';
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(msg), backgroundColor: DesignSystem.error),
-        );
-      }
-    } catch (e) {
-      setState(() => _isUndoing = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}'), backgroundColor: DesignSystem.error),
         );
       }
     }
@@ -258,10 +179,10 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.workspace_premium, size: 13, color: Colors.white),
+                                const Icon(Icons.workspace_premium, size: 13, color: Colors.white),
                                 const SizedBox(width: 4),
-                                  Text(
-                                    'Industry Candidate',
+                                const Text(
+                                  'Industry Candidate',
                                   style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600),
                                 ),
                               ],
@@ -375,7 +296,7 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
                   ),
               ],
             ),
-            if (hasVisit && visit != null) ...[
+            if (hasVisit) ...[
               const SizedBox(height: DesignSystem.spaceMd),
               _visitDetailRow('Visit Time', _formatDateTime(visit.visitedAt)),
               if (visit.visitNote != null && visit.visitNote!.isNotEmpty)

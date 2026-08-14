@@ -1,9 +1,7 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../app/theme/theme.dart';
-import '../../../../core/firebase/firestore_service.dart';
 import '../../../../core/state/state_providers.dart';
 
 class AdminLecturersPage extends ConsumerWidget {
@@ -58,9 +56,7 @@ class AdminLecturersPage extends ConsumerWidget {
                           const SizedBox(width: DesignSystem.spaceXs),
                           Expanded(
                             child: Text(
-                              'After saving, create the sign-in account manually in Firebase Console '
-                              '(Authentication → Users → Add user) using the same email, then share the '
-                              'password with the lecturer.',
+                              'Lecturers can sign in with their UiTM email. Ensure their account exists in Supabase Auth (or auto-provisions on first sign in).',
                               style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant),
                             ),
                           ),
@@ -83,7 +79,7 @@ class AdminLecturersPage extends ConsumerWidget {
                   onPressed: creating
                       ? null
                       : () async {
-                          final email = emailController.text.trim();
+                          final email = emailController.text.trim().toLowerCase();
                           final name = nameController.text.trim().toUpperCase();
 
                           if (email.isEmpty || name.isEmpty) {
@@ -97,13 +93,14 @@ class AdminLecturersPage extends ConsumerWidget {
 
                           try {
                             final uid = const Uuid().v4();
-                            await FirestoreService.instance.setLecturer(uid, {
-                              'uid': uid,
-                              'email': email,
-                              'displayName': name,
-                              'createdAt': FieldValue.serverTimestamp(),
-                            });
+                            final rpc = ref.read(supabaseRpcServiceProvider);
+                            await rpc.createLecturerAccountProfile(
+                              userId: uid,
+                              email: email,
+                              displayName: name,
+                            );
 
+                            ref.invalidate(allLecturersProvider);
                             if (dialogContext.mounted) Navigator.of(dialogContext).pop();
 
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -116,11 +113,11 @@ class AdminLecturersPage extends ConsumerWidget {
                             );
                           }
                         },
-                   style: ElevatedButton.styleFrom(
-                     backgroundColor: DesignSystem.secondary,
-                     foregroundColor: Colors.white,
-                   ),
-                   child: const Text('Add'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: DesignSystem.secondary,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Add'),
                 ),
               ],
             );
@@ -131,8 +128,8 @@ class AdminLecturersPage extends ConsumerWidget {
   }
 
   void _confirmDeleteLecturer(BuildContext context, WidgetRef ref, Map<String, dynamic> lecturer) {
-    final name = lecturer['displayName'] as String? ?? '';
-    final uid = lecturer['uid'] as String? ?? '';
+    final name = (lecturer['displayName'] ?? lecturer['display_name']) as String? ?? '';
+    final uid = (lecturer['id'] ?? lecturer['uid']) as String? ?? '';
 
     showDialog(
       context: context,
@@ -149,7 +146,9 @@ class AdminLecturersPage extends ConsumerWidget {
               onPressed: () async {
                 Navigator.of(dialogContext).pop();
                 try {
-                  await FirestoreService.instance.deleteLecturer(uid);
+                  final db = ref.read(supabaseDbServiceProvider);
+                  await db.deleteLecturer(uid);
+                  ref.invalidate(allLecturersProvider);
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('$name deleted successfully.')),
@@ -175,31 +174,30 @@ class AdminLecturersPage extends ConsumerWidget {
     );
   }
 
-  Future<void> _backfillLecturerIds(BuildContext context) async {
-    final db = FirebaseFirestore.instance;
+  Future<void> _backfillLecturerIds(BuildContext context, WidgetRef ref) async {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Updating lecturer IDs in assignments...')),
     );
     try {
-      final lecturersSnap = await db.collection('lecturers').get();
-      final lecturers = <String, String>{};
-      for (final doc in lecturersSnap.docs) {
-        final data = doc.data();
-        final name = (data['displayName'] as String? ?? '').trim().toUpperCase();
-        final uid = data['uid'] as String? ?? '';
+      final db = ref.read(supabaseDbServiceProvider);
+      final lecturersList = await db.getLecturersOnce();
+      final lecturersMap = <String, String>{};
+      for (final doc in lecturersList) {
+        final name = (doc['display_name'] as String? ?? '').trim().toUpperCase();
+        final uid = (doc['id'] as String? ?? '');
         if (name.isNotEmpty && uid.isNotEmpty) {
-          lecturers[name] = uid;
+          lecturersMap[name] = uid;
         }
       }
 
-      final assignmentsSnap = await db.collection('projectLecturerAssignments').get();
+      final assignmentsList = await db.getAssignmentsOnce();
       int patched = 0;
       int skipped = 0;
 
-      for (final doc in assignmentsSnap.docs) {
-        final data = doc.data();
-        final lecturerId = data['lecturerId'] as String? ?? '';
-        final lecturerName = (data['lecturerDisplayName'] as String? ?? '').trim().toUpperCase();
+      for (final doc in assignmentsList) {
+        final id = doc['id'] as String;
+        final lecturerId = doc['lecturer_id'] as String? ?? '';
+        final lecturerName = (doc['lecturer_display_name'] as String? ?? '').trim().toUpperCase();
 
         if (lecturerName.isEmpty) {
           skipped++;
@@ -211,14 +209,20 @@ class AdminLecturersPage extends ConsumerWidget {
           continue;
         }
 
-        final matchedUid = lecturers[lecturerName];
+        final matchedUid = lecturersMap[lecturerName];
         if (matchedUid != null) {
-          await doc.reference.update({'lecturerId': matchedUid});
+          await db.setAssignment(id, {
+            ...doc,
+            'lecturer_id': matchedUid,
+            'updated_at': DateTime.now().toIso8601String(),
+          });
           patched++;
         } else {
           skipped++;
         }
       }
+
+      ref.invalidate(allAssignmentsProvider);
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -280,7 +284,7 @@ class AdminLecturersPage extends ConsumerWidget {
                             ),
                           ),
                           OutlinedButton.icon(
-                            onPressed: () => _backfillLecturerIds(context),
+                            onPressed: () => _backfillLecturerIds(context, ref),
                             icon: const Icon(Icons.sync),
                             label: const Text('Backfill Lecturer IDs'),
                             style: OutlinedButton.styleFrom(
@@ -312,7 +316,7 @@ class AdminLecturersPage extends ConsumerWidget {
                       SizedBox(
                         width: double.infinity,
                         child: OutlinedButton.icon(
-                          onPressed: () => _backfillLecturerIds(context),
+                          onPressed: () => _backfillLecturerIds(context, ref),
                           icon: const Icon(Icons.sync),
                           label: const Text('Backfill Lecturer IDs'),
                           style: OutlinedButton.styleFrom(
@@ -324,7 +328,6 @@ class AdminLecturersPage extends ConsumerWidget {
                   ),
             const SizedBox(height: DesignSystem.spaceXl),
 
-            // Firestore lecturers section
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(DesignSystem.spaceLg),
@@ -348,9 +351,9 @@ class AdminLecturersPage extends ConsumerWidget {
                         return Column(
                           children: [
                             ...lecturers.map((doc) {
-                              final email = doc['email'] as String? ?? '';
-                              final name = doc['displayName'] as String? ?? '';
-                              final uid = doc['uid'] as String? ?? '';
+                              final email = (doc['email'] as String?) ?? '';
+                              final name = (doc['display_name'] as String?) ?? '';
+                              final uid = (doc['id'] as String?) ?? '';
                               return _buildLecturerRow(context, ref, email, name, uid, false);
                             }),
                             if (hardcodedEntries.isNotEmpty && lecturers.isNotEmpty)
@@ -377,54 +380,9 @@ class AdminLecturersPage extends ConsumerWidget {
                                 context, ref, entry.key, entry.value, '', true,
                               );
                             }),
-                            Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Text(
-                                 'Firestore unavailable. Only default lecturers shown.',
-                                style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant),
-                              ),
-                            ),
                           ],
                         );
                       },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: DesignSystem.spaceLg),
-
-            // Info card
-            Card(
-              color: DesignSystem.tertiaryContainer.withValues(alpha: 0.2),
-              child: Padding(
-                padding: const EdgeInsets.all(DesignSystem.spaceMd),
-                child: Row(
-                  children: [
-                    const Icon(Icons.info_outline, color: DesignSystem.tertiary),
-                    const SizedBox(width: DesignSystem.spaceSm),
-                    Expanded(
-                      child:                       Text.rich(
-                        TextSpan(
-                          children: [
-                            const TextSpan(
-                              text: 'Lecturers sign in using their UiTM email. Create their sign-in account '
-                                  'manually in Firebase Console (Authentication → Users → Add user) using the '
-                                  'same email. Ensure lecturers have projects assigned (SV/EX) to use the My Visits mode.\n\n',
-                            ),
-                            TextSpan(
-                              text: 'Backfill Lecturer IDs: ',
-                              style: DesignSystem.bodySm.copyWith(fontWeight: FontWeight.bold),
-                            ),
-                            const TextSpan(
-                              text: 'Use this button after adding new lecturers to link lecturer IDs to existing project assignments '
-                                  '(ensuring lecturers only see their own projects).',
-                            ),
-                          ],
-                        ),
-                        style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant),
-                      ),
                     ),
                   ],
                 ),
@@ -491,7 +449,7 @@ class AdminLecturersPage extends ConsumerWidget {
                 borderRadius: DesignSystem.radiusSm,
               ),
               child: Text(
-                 'DEFAULT',
+                'DEFAULT',
                 style: DesignSystem.labelCaps.copyWith(
                   color: DesignSystem.onSurfaceVariant,
                   fontSize: 10,
@@ -506,7 +464,7 @@ class AdminLecturersPage extends ConsumerWidget {
               onPressed: () {
                 _confirmDeleteLecturer(context, ref, {
                   'displayName': name,
-                  'uid': uid,
+                  'id': uid,
                 });
               },
             ),

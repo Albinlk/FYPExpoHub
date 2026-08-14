@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../../app/theme/theme.dart';
 import '../../core/domain/models/feedback_entry.dart';
-import '../../core/firebase/firebase_providers.dart';
+import '../../core/supabase/supabase_client_provider.dart';
 import '../../core/state/state_providers.dart';
 
 class FeedbackFormWidget extends ConsumerStatefulWidget {
@@ -74,12 +74,12 @@ class _FeedbackFormWidgetState extends ConsumerState<FeedbackFormWidget> {
 
     setState(() => _isSubmitting = true);
 
-    final user = ref.read(firebaseAuthProvider).currentUser;
+    final user = ref.read(currentAuthUserProvider);
     final now = DateTime.now();
 
     final entry = FeedbackEntry(
       id: const Uuid().v4(),
-      userId: user?.uid,
+      userId: user?.id,
       eventId: 'fskm-fyp-2026',
       subject: _subjectController.text.trim(),
       message: _messageController.text.trim(),
@@ -107,7 +107,7 @@ class _FeedbackFormWidgetState extends ConsumerState<FeedbackFormWidget> {
   }
 
   String _getUserAgent() {
-    return 'Flutter Web';
+    return 'Flutter Web (Supabase)';
   }
 
   @override

@@ -385,6 +385,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
+  // ignore: unused_element
   Widget _buildCountdownDivider() {
     return const Padding(
       padding: EdgeInsets.symmetric(horizontal: 8.0),

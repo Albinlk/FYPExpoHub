@@ -1,15 +1,13 @@
-import 'dart:js_interop';
-import 'dart:js_interop_unsafe';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../core/firebase/firebase_providers.dart';
+import 'package:url_launcher/url_launcher_string.dart';
+import '../../core/supabase/supabase_client_provider.dart';
 import '../theme/theme.dart';
 import 'feedback_form_widget.dart';
 
 void _goToPublicPortal() {
-  final location = globalContext['location'] as JSObject;
-  location['href'] = 'https://fskmjasinfypexhibition.site/'.toJS;
+  launchUrlString('https://fskmjasinfypexhibition.site/');
 }
 
 class AdminShell extends ConsumerWidget {
@@ -18,7 +16,10 @@ class AdminShell extends ConsumerWidget {
   const AdminShell({super.key, required this.child});
 
   void _logout(BuildContext context, WidgetRef ref) async {
-    await ref.read(firebaseAuthProvider).signOut();
+    await ref.read(supabaseClientProvider).auth.signOut();
+    ref.invalidate(currentAuthUserProvider);
+    ref.invalidate(currentProfileProvider);
+    ref.invalidate(isAdminProvider);
     if (context.mounted) {
       context.go('/');
     }
@@ -28,8 +29,8 @@ class AdminShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isDesktop = MediaQuery.of(context).size.width >= 768;
     final location = GoRouterState.of(context).uri.toString();
-    final authState = ref.watch(authStateChangesProvider);
-    final userEmail = authState.value?.email ?? 'Admin';
+    final user = ref.watch(currentAuthUserProvider);
+    final userEmail = user?.email ?? 'Admin';
 
     return Scaffold(
       appBar: AppBar(
@@ -150,7 +151,7 @@ class _AdminSidebar extends StatelessWidget {
           const Divider(color: Colors.white10),
           ListTile(
             leading: const Icon(Icons.arrow_back, color: Colors.white70, size: 20),
-            title:             Text(
+            title: Text(
               'Back to Public Portal',
               style: DesignSystem.bodySm.copyWith(color: Colors.white70),
             ),
@@ -269,7 +270,7 @@ class _AdminDrawer extends StatelessWidget {
           ),
         ),
         onTap: () {
-          Navigator.pop(context); // close drawer
+          Navigator.pop(context);
           context.go(route);
         },
         shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/state/state_providers.dart';
-import '../../../../core/domain/models/event.dart';
 
 class AdminEventPage extends ConsumerStatefulWidget {
   const AdminEventPage({super.key});
