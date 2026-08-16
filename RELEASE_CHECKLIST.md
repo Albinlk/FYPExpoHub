@@ -33,9 +33,9 @@
 - [ ] PDPA policy text updated in `faq_privacy_page.dart`
 
 ### 5. Testing
-- [ ] `flutter analyze` — exit code 0, no errors
-- [ ] `flutter test` — all tests pass (15/15 expected)
-- [ ] `flutter build web --release` — builds successfully
+- [x] `flutter analyze` — 0 errors, 0 warnings (103 info-level lints remain: deprecated withOpacity/value, style)
+- [x] `flutter test` — all tests pass (15/15)
+- [x] `flutter build web --release` — builds successfully (verified with Supabase dart-defines)
 - [ ] Web app loads and displays public content without authentication
 - [ ] Admin login works with Supabase Auth
 - [ ] Lecturer visit tracking (mark/void) works via RPC functions

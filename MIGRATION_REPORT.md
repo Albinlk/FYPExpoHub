@@ -11,9 +11,11 @@ The Supabase CLI is linked to the wrong project (wmpdhyhhxqcxhiaxljnd) and
 cannot be used for further CLI operations.
 
 **Status: Pending Verification**
-- [ ] Flutter tests (SDK not installed on this machine)
-- [ ] Final app smoke test
+- [x] Flutter tests (15/15 pass, verified 2026-08-16)
 - [x] README update (completed 2026-08-16)
+- [x] Flutter analyze (0 errors, 0 warnings; info-level lints only)
+- [x] Flutter build web --release (builds with Supabase dart-defines)
+- [ ] Final app smoke test on deployed site
 
 ## 2. Migration Applied
 
@@ -110,7 +112,9 @@ supabaseSelect('events','select=id,slug,title,status')
 
 | Item | Description | Owner |
 |------|-------------|-------|
-| Flutter test run | `flutter test` requires Flutter SDK installed on machine | Mobile Dev |
+| Flutter test run | `flutter test` — 15/15 pass (verified 2026-08-16) | Done |
+| Flutter analyze | 0 errors, 0 warnings (info-level lints only) | Done |
+| Flutter web build | `flutter build web --release` builds with Supabase dart-defines | Done |
 | Final app smoke test | Requires deployed GitHub Pages site + seeded data | Mobile Dev |
 | TypeScript types | Generated `supabase/types.ts` — verify consumption by tooling | Backend |
 | Import tool v2 | `migrate_data.js` needs real Excel test with supervisor matching | Data |
