@@ -26,12 +26,15 @@ void main() {
       ProviderScope(
         overrides: [
           supabaseClientProvider.overrideWithValue(mockClient),
+          // Avoid realtime/auth network connections in the test environment:
+          // onAuthStateChange would attempt a WebSocket to the mock URL and hang.
+          authStateChangesProvider.overrideWith((ref) => const Stream.empty()),
+          currentAuthUserProvider.overrideWith((ref) => null),
         ],
         child: const FYPExpoHubApp(),
       ),
     );
 
     expect(find.byType(FYPExpoHubApp), findsOneWidget);
-    await mockClient.dispose();
   });
 }
