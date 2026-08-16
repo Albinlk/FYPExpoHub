@@ -93,7 +93,7 @@ Stream<List<Project>> projectStream = supabase
 #### 5.2 Security (RLS)
 - All tables have RLS enabled
 - 6 helper functions (SECURITY DEFINER)
-- 23 RLS policies
+- 33 RLS policies
 - See `SUPABASE_RLS_POLICIES.md`
 
 #### 5.3 RPC Functions

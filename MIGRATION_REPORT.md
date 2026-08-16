@@ -13,15 +13,15 @@ cannot be used for further CLI operations.
 **Status: Pending Verification**
 - [ ] Flutter tests (SDK not installed on this machine)
 - [ ] Final app smoke test
-- [ ] README update
+- [x] README update (completed 2026-08-16)
 
 ## 2. Migration Applied
 
 | # | File | Status | Notes |
 |---|------|--------|-------|
 | 1 | `20260814000001_initial_schema.sql` | Applied | 19 tables, indexes, constraints |
-| 2 | `20260814000002_rls_policies.sql` | Applied | RLS on all 19 tables, 23 policies, 5 helper functions |
-| 3 | `20260814000003_rpc_functions.sql` | Applied | 5 SECURITY DEFINER functions + 1 helper |
+| 2 | `20260814000002_rls_policies.sql` | Applied | RLS on all 19 tables, 33 policies, 5 helper functions |
+| 3 | `20260814000003_rpc_functions.sql` | Applied | 5 SECURITY DEFINER RPC functions + 6 helpers |
 | 4 | `20260814000004_seed_data.sql` | Applied | settings (2 rows), events (1 row) |
 
 **Fix applied:** UUID for event `fskm-fyp-2026` updated from `'fskm-fyp-2026'::uuid` (invalid) to `'1977e782-430c-5f3f-a6c7-359f74650691'::uuid`.
@@ -33,11 +33,11 @@ cannot be used for further CLI operations.
 |-------|--------|
 | Tables exist | 19 tables confirmed |
 | RLS enabled | All 19 tables have RLS enabled |
-| Policies created | 23 policies across all tables |
-| Primary keys | All tables have PK |
-| Foreign keys | All relationships defined |
-| Indexes | 13 composite indexes created |
-| Constraints | 2 CHECK constraints |
+| Policies created | 33 policies across all tables |
+| Primary keys | 19 PK indexes (one per table) |
+| Foreign keys | 35 FK constraints |
+| Indexes | 12 composite indexes + 1 single-column (idx_projects_slug) + 6 unique non-PK |
+| Constraints | 24 CHECK constraints |
 
 ### 3.2 Data Verification
 | Table | Rows | Expected | Status |
@@ -47,15 +47,15 @@ cannot be used for further CLI operations.
 | `profiles` | 0 | 0 | OK |
 | `projects` | 0 | 0 | OK |
 
-**Seed data:**
+**Seed data (verified against live DB 2026-08-16):**
 ```sql
 settings:
-  key='event.id'     → value={"eventId":"1977e782-430c-5f3f-a6c7-359f74650691"}
-  key='visitor_config' → value={"allowAnonymousFeedback":true,...}
+  key='visit_tracker'  → value={"visitsEnabled":true,"visitOpenAt":null,"visitCloseAt":null,"allowVisitsAfterEvent":false,"allowVisitsBeforeEvent":false,"lecturerUndoWindowMinutes":30}
+  key='excel_import'   → value={"maxFileSize":"10 MB","mandatoryWorksheets":"SCHEDULE, AWARD WINNERS, COMMITTEE"}
 
 events:
   slug='fskm-fyp-2026'
-  title='FSKM Final Year Project Exhibition'
+  title='FSKM FYP Expo Hub 2026'
   status='active'
   publication_status='published'
 ```
@@ -93,7 +93,7 @@ Rows:
 Tested via `scripts/lib/firebase_api.js` `supabaseSelect()`:
 ```js
 supabaseSelect('events','select=id,slug,title,status')
-→ Returns: [{id: "1977e782-...", slug: "fskm-fyp-2026", title: "FSKM Final Year Project Exhibition", status: "active"}]
+→ Returns: [{id: "1977e782-...", slug: "fskm-fyp-2026", title: "FSKM FYP Expo Hub 2026", status: "active"}]
 ```
 **Result:** OK — API access working with anon key.
 
@@ -111,9 +111,11 @@ supabaseSelect('events','select=id,slug,title,status')
 | Item | Description | Owner |
 |------|-------------|-------|
 | Flutter test run | `flutter test` requires Flutter SDK installed on machine | Mobile Dev |
-| README update | Replace Firebase Hosting/Functions references with Supabase | Docs |
+| Final app smoke test | Requires deployed GitHub Pages site + seeded data | Mobile Dev |
 | TypeScript types | Generated `supabase/types.ts` — verify consumption by tooling | Backend |
 | Import tool v2 | `migrate_data.js` needs real Excel test with supervisor matching | Data |
+| CI secrets | Add `SUPABASE_URL` + `SUPABASE_ANON_KEY` to GitHub Actions secrets | Owner |
+| Data population | Seed projects, schedule, announcements, awards for production | Data |
 
 ## 6. Rollback Plan
 

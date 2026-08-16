@@ -124,5 +124,5 @@ node -e "const {supabaseSelect} = require('./scripts/lib/firebase_api'); supabas
 
 Expected output:
 ```
-[{data: [{id: "1977e782-430c-5f3f-a6c7-359f74650691", slug: "fskm-fyp-2026", title: "FSKM Final Year Project Exhibition", status: "active"}], error: null}]
+[{data: [{id: "1977e782-430c-5f3f-a6c7-359f74650691", slug: "fskm-fyp-2026", title: "FSKM FYP Expo Hub 2026", status: "active"}], error: null}]
 ```

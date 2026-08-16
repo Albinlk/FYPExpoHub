@@ -10,7 +10,7 @@
 - [ ] All 6 helper functions exist (is_admin, is_lecturer, current_user_role, current_event_is_public, can_read_project, can_read_assignment)
 - [ ] All 5 RPC functions exist (mark_student_project_visited, void_student_project_visit, publish_approved_import_changes, create_lecturer_account_profile, update_event_configuration)
 - [ ] All RPC functions use `SECURITY DEFINER`
-- [ ] All 23 RLS policies created (across all 19 tables)
+- [ ] All 33 RLS policies created (across all 19 tables)
 - [ ] Seed data inserted: settings (2 rows), events (1 row with slug 'fskm-fyp-2026')
 
 ### 2. Application Configuration
