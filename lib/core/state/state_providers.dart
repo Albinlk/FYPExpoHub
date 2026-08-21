@@ -16,6 +16,7 @@ import '../supabase/supabase_client_provider.dart';
 import '../supabase/supabase_database_service.dart';
 import '../supabase/supabase_rpc_service.dart';
 import '../supabase/supabase_realtime_service.dart';
+import '../supabase/supabase_storage_service.dart';
 import '../utils/logger.dart';
 
 // ==============================================================================
@@ -34,6 +35,11 @@ final supabaseRpcServiceProvider = Provider<SupabaseRpcService>((ref) {
 final supabaseRealtimeServiceProvider = Provider<SupabaseRealtimeService>((ref) {
   final client = ref.watch(supabaseClientProvider);
   return SupabaseRealtimeService(client);
+});
+
+final supabaseStorageServiceProvider = Provider<SupabaseStorageService>((ref) {
+  final client = ref.watch(supabaseClientProvider);
+  return SupabaseStorageService(client);
 });
 
 // ==============================================================================

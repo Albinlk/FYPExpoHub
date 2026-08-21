@@ -144,20 +144,28 @@ class _AdminSidebar extends StatelessWidget {
                 _buildSidebarItem(context, 'My Visits (Lecturer)', Icons.person_pin, '/lecturer/visits'),
                 _buildSidebarItem(context, 'Award Winners', Icons.emoji_events, '/admin/awards'),
                 _buildSidebarItem(context, 'Import Master File', Icons.file_upload, '/admin/imports'),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                  child: Divider(color: Colors.white24),
+                ),
+                _buildSidebarItem(context, 'FYP Management', Icons.school, '/fypms/coordinator'),
                 _buildSidebarItem(context, 'Settings', Icons.settings, '/admin/settings'),
               ],
             ),
           ),
           const Divider(color: Colors.white10),
-          ListTile(
-            leading: const Icon(Icons.arrow_back, color: Colors.white70, size: 20),
-            title: Text(
-              'Back to Public Portal',
-              style: DesignSystem.bodySm.copyWith(color: Colors.white70),
+          Material(
+            type: MaterialType.transparency,
+            child: ListTile(
+              leading: const Icon(Icons.arrow_back, color: Colors.white70, size: 20),
+              title: Text(
+                'Back to Public Portal',
+                style: DesignSystem.bodySm.copyWith(color: Colors.white70),
+              ),
+              onTap: _goToPublicPortal,
+              shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
+              dense: true,
             ),
-            onTap: _goToPublicPortal,
-            shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
-            dense: true,
           ),
           const SizedBox(height: DesignSystem.spaceMd),
         ],
@@ -173,18 +181,21 @@ class _AdminSidebar extends StatelessWidget {
         color: active ? DesignSystem.secondary.withOpacity(0.15) : Colors.transparent,
         borderRadius: DesignSystem.radiusLg,
       ),
-      child: ListTile(
-        leading: Icon(icon, color: active ? DesignSystem.secondaryContainer : Colors.white70, size: 20),
-        title: Text(
-          title,
-          style: DesignSystem.bodySm.copyWith(
-            color: active ? Colors.white : Colors.white70,
-            fontWeight: active ? FontWeight.bold : FontWeight.normal,
+      child: Material(
+        type: MaterialType.transparency,
+        child: ListTile(
+          leading: Icon(icon, color: active ? DesignSystem.secondaryContainer : Colors.white70, size: 20),
+          title: Text(
+            title,
+            style: DesignSystem.bodySm.copyWith(
+              color: active ? Colors.white : Colors.white70,
+              fontWeight: active ? FontWeight.bold : FontWeight.normal,
+            ),
           ),
+          onTap: () => context.go(route),
+          shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
+          dense: true,
         ),
-        onTap: () => context.go(route),
-        shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
-        dense: true,
       ),
     );
   }
@@ -227,23 +238,31 @@ class _AdminDrawer extends StatelessWidget {
                   _buildDrawerItem(context, 'My Visits (Lecturer)', Icons.person_pin, '/lecturer/visits'),
                   _buildDrawerItem(context, 'Award Winners', Icons.emoji_events, '/admin/awards'),
                   _buildDrawerItem(context, 'Import Master File', Icons.file_upload, '/admin/imports'),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                    child: Divider(color: Colors.white24),
+                  ),
+                  _buildDrawerItem(context, 'FYP Management', Icons.school, '/fypms/coordinator'),
                   _buildDrawerItem(context, 'Settings', Icons.settings, '/admin/settings'),
                 ],
               ),
             ),
             const Divider(color: Colors.white10),
-            ListTile(
-              leading: const Icon(Icons.arrow_back, color: Colors.white70, size: 20),
-              title: Text(
-                'Back to Public Portal',
-                style: DesignSystem.bodySm.copyWith(color: Colors.white70),
+            Material(
+              type: MaterialType.transparency,
+              child: ListTile(
+                leading: const Icon(Icons.arrow_back, color: Colors.white70, size: 20),
+                title: Text(
+                  'Back to Public Portal',
+                  style: DesignSystem.bodySm.copyWith(color: Colors.white70),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _goToPublicPortal();
+                },
+                shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
+                dense: true,
               ),
-              onTap: () {
-                Navigator.pop(context);
-                _goToPublicPortal();
-              },
-              shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
-              dense: true,
             ),
             const SizedBox(height: DesignSystem.spaceMd),
           ],
@@ -260,21 +279,24 @@ class _AdminDrawer extends StatelessWidget {
         color: active ? DesignSystem.secondary.withOpacity(0.15) : Colors.transparent,
         borderRadius: DesignSystem.radiusLg,
       ),
-      child: ListTile(
-        leading: Icon(icon, color: active ? DesignSystem.secondaryContainer : Colors.white70, size: 20),
-        title: Text(
-          title,
-          style: DesignSystem.bodySm.copyWith(
-            color: active ? Colors.white : Colors.white70,
-            fontWeight: active ? FontWeight.bold : FontWeight.normal,
+      child: Material(
+        type: MaterialType.transparency,
+        child: ListTile(
+          leading: Icon(icon, color: active ? DesignSystem.secondaryContainer : Colors.white70, size: 20),
+          title: Text(
+            title,
+            style: DesignSystem.bodySm.copyWith(
+              color: active ? Colors.white : Colors.white70,
+              fontWeight: active ? FontWeight.bold : FontWeight.normal,
+            ),
           ),
+          onTap: () {
+            Navigator.pop(context);
+            context.go(route);
+          },
+          shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
+          dense: true,
         ),
-        onTap: () {
-          Navigator.pop(context);
-          context.go(route);
-        },
-        shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
-        dense: true,
       ),
     );
   }

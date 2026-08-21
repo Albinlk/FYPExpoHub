@@ -259,24 +259,30 @@ class _MobileBottomNavBar extends StatelessWidget {
   }
 
   Widget _buildMenuItem(BuildContext context, String title, IconData icon, String route) {
-    return ListTile(
-      leading: Icon(icon, color: DesignSystem.primary),
-      title: Text(title, style: DesignSystem.bodyMd),
-      onTap: () {
-        Navigator.pop(context);
-        context.go(route);
-      },
+    return Material(
+      type: MaterialType.transparency,
+      child: ListTile(
+        leading: Icon(icon, color: DesignSystem.primary),
+        title: Text(title, style: DesignSystem.bodyMd),
+        onTap: () {
+          Navigator.pop(context);
+          context.go(route);
+        },
+      ),
     );
   }
 
   Widget _buildMenuItemExternal(BuildContext context, String title, IconData icon) {
-    return ListTile(
-      leading: Icon(icon, color: DesignSystem.primary),
-      title: Text(title, style: DesignSystem.bodyMd),
-      onTap: () {
-        Navigator.pop(context);
-        _openAdminPortal();
-      },
+    return Material(
+      type: MaterialType.transparency,
+      child: ListTile(
+        leading: Icon(icon, color: DesignSystem.primary),
+        title: Text(title, style: DesignSystem.bodyMd),
+        onTap: () {
+          Navigator.pop(context);
+          _openAdminPortal();
+        },
+      ),
     );
   }
 

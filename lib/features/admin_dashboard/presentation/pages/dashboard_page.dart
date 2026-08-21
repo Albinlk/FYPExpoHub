@@ -4,6 +4,7 @@ import '../../../../app/theme/theme.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/state/state_providers.dart';
+import '../../../../core/state/fypms_state_providers.dart';
 
 class DashboardPage extends ConsumerWidget {
   const DashboardPage({super.key});
@@ -16,6 +17,11 @@ class DashboardPage extends ConsumerWidget {
     final booths = ref.watch(boothsProvider);
     final schedule = ref.watch(scheduleProvider);
     final imports = ref.watch(importsProvider);
+    final fypRecords = ref.watch(fypRecordsProvider);
+    final pendingRequests = ref.watch(fypPendingSupervisionRequestsProvider);
+
+    final totalFypRecords = fypRecords.value?.length ?? 0;
+    final totalPendingRequests = pendingRequests.value?.length ?? 0;
 
     return Scaffold(
       body: SingleChildScrollView(
@@ -41,6 +47,8 @@ class DashboardPage extends ConsumerWidget {
                 _buildStatCard('Booths Available', '${booths.length}', Icons.map, Colors.green),
                 _buildStatCard('Event Schedules', '${schedule.length}', Icons.schedule, Colors.orange),
                 _buildStatCard('Files Imported', '${imports.length}', Icons.file_upload, Colors.purple),
+                _buildStatCard('FYP Records', '$totalFypRecords', Icons.school, Colors.teal),
+                _buildStatCard('Pending Requests', '$totalPendingRequests', Icons.mail_outline, Colors.red),
               ],
             ),
 
@@ -53,12 +61,20 @@ class DashboardPage extends ConsumerWidget {
                     children: [
                       Expanded(flex: 3, child: _buildRecentImports(context, ref, isDesktop)),
                       const SizedBox(width: DesignSystem.spaceLg),
-                      Expanded(flex: 2, child: _buildQuickActions(context, isDesktop)),
+                      Expanded(flex: 2, child: Column(
+                        children: [
+                          _buildQuickActions(context, isDesktop),
+                          const SizedBox(height: DesignSystem.spaceLg),
+                          _buildFypmsQuickActions(context, isDesktop),
+                        ],
+                      )),
                     ],
                   )
                 : Column(
                     children: [
                       _buildQuickActions(context, isDesktop),
+                      const SizedBox(height: DesignSystem.spaceLg),
+                      _buildFypmsQuickActions(context, isDesktop),
                       const SizedBox(height: DesignSystem.spaceLg),
                       _buildRecentImports(context, ref, isDesktop),
                     ],
@@ -130,6 +146,28 @@ class DashboardPage extends ConsumerWidget {
           shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
           padding: const EdgeInsets.symmetric(vertical: 14),
           alignment: Alignment.centerLeft,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFypmsQuickActions(BuildContext context, bool isDesktop) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(DesignSystem.spaceLg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('FYP Management', style: (isDesktop ? DesignSystem.h3 : DesignSystem.h3Mobile).copyWith(color: DesignSystem.primary)),
+            const SizedBox(height: DesignSystem.spaceLg),
+            _buildActionButton(context, 'Coordinator Dashboard', Icons.dashboard, '/fypms/coordinator'),
+            const SizedBox(height: DesignSystem.spaceSm),
+            _buildActionButton(context, 'All FYP Records', Icons.folder_open, '/fypms/coordinator/records'),
+            const SizedBox(height: DesignSystem.spaceSm),
+            _buildActionButton(context, 'Supervision Requests', Icons.mail, '/fypms/coordinator/requests'),
+            const SizedBox(height: DesignSystem.spaceSm),
+            _buildActionButton(context, 'Assignments', Icons.assignment_ind, '/fypms/coordinator/assignments'),
+          ],
         ),
       ),
     );
