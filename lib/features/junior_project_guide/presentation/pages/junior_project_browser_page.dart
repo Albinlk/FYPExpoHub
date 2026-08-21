@@ -83,38 +83,63 @@ class _JuniorProjectBrowserPageState
             ),
           ],
         ),
-        body: csp600Async.when(
-          data: (csp600Proposals) {
-            final csp650Projects = csp650Async;
-            final combined = _buildCombined(csp650Projects, csp600Proposals);
-            final visible = _applyFilters(combined);
-            final projList = visible.map((sp) => sp.project).toList();
+        body: _buildBody(csp650Async, csp600Async, isDesktop),
+      ),
+    );
+  }
 
-            return Column(
-              children: [
-                _buildSearchAndFilters(isDesktop, combined),
-                const SizedBox(height: 4),
-                _buildSectionSummary(visible, isDesktop),
-                Expanded(
-                  child: TabBarView(
-                    children: [
-                      _buildBrowseTab(visible, projList, isDesktop),
-                      _buildReportTab(projList, isDesktop),
-                    ],
-                  ),
-                ),
-              ],
-            );
-          },
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(
+  Widget _buildBody(
+    List<Project> csp650Projects,
+    AsyncValue<List<Project>> csp600Async,
+    bool isDesktop,
+  ) {
+    // CSP600: use data if loaded, empty list otherwise. Never block CSP650.
+    final csp600Projects = csp600Async.hasValue
+        ? csp600Async.value!
+        : <Project>[];
+
+    final combined = _buildCombined(csp650Projects, csp600Projects);
+    final visible = _applyFilters(combined);
+    final projList = visible.map((sp) => sp.project).toList();
+
+    return Column(
+      children: [
+        _buildSearchAndFilters(isDesktop, combined),
+        const SizedBox(height: 4),
+        _buildSectionSummary(visible, isDesktop),
+        if (csp600Async.isLoading)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
             child: Text(
-              'Error loading CSP600 data: $e',
-              style: DesignSystem.bodyMd.copyWith(color: DesignSystem.error),
+              'Loading CSP600 proposals...',
+              style: TextStyle(
+                fontStyle: FontStyle.italic,
+                color: DesignSystem.onSurfaceVariant,
+                fontSize: 12,
+              ),
             ),
           ),
+        if (csp600Async.hasError)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Text(
+              'CSP600 data unavailable — showing CSP650 only.',
+              style: TextStyle(
+                fontStyle: FontStyle.italic,
+                color: DesignSystem.error,
+                fontSize: 12,
+              ),
+            ),
+          ),
+        Expanded(
+          child: TabBarView(
+            children: [
+              _buildBrowseTab(visible, projList, isDesktop),
+              _buildReportTab(projList, isDesktop),
+            ],
+          ),
         ),
-      ),
+      ],
     );
   }
 
