@@ -18,7 +18,7 @@ import '../../../core/utils/logger.dart';
 ///   title*, technology_tags (semicolon-separated),
 ///   supervisor_display_name, programme_code, short_description,
 ///   category, team_display_names (semicolon-separated),
-///   booth_number, booth_zone, demo_url
+///   examiner, session, time_slot, student_id
 class Csp600CsvLoader {
   static const csvAssetPath = 'assets/data/csp600-proposals.csv';
   static const storageBucket = 'csp600-proposals';
@@ -88,9 +88,9 @@ class Csp600CsvLoader {
       final descCol = colIndex['short_description'] ?? -1;
       final catCol = colIndex['category'] ?? -1;
       final teamCol = colIndex['team_display_names'] ?? -1;
-      final boothNumCol = colIndex['booth_number'] ?? -1;
-      final boothZoneCol = colIndex['booth_zone'] ?? -1;
-      final demoCol = colIndex['demo_url'] ?? -1;
+      final examinerCol = colIndex['examiner'] ?? -1;
+      final sessionCol = colIndex['session'] ?? -1;
+      final timeCol = colIndex['time_slot'] ?? -1;
 
       final title = cell(titleCol);
       if (title.isEmpty) continue;
@@ -111,6 +111,13 @@ class Csp600CsvLoader {
               .toList()
           : <String>[];
 
+      final supervisor = cell(supervisorCol);
+      final session = cell(sessionCol);
+      final timeSlot = cell(timeCol);
+      final descSuffix = session.isNotEmpty
+          ? ' (Session: $session${timeSlot.isNotEmpty ? ", $timeSlot" : ""})'
+          : '';
+
       projects.add(Project(
         id: 'csp600-$r',
         eventId: 'fskm-fyp-2026',
@@ -119,18 +126,22 @@ class Csp600CsvLoader {
         matricId: null,
         programmeCode: cell(progCol),
         programmeName: cell(progCol),
-        shortDescription: cell(descCol),
+        shortDescription: cell(descCol).isNotEmpty
+            ? cell(descCol) + descSuffix
+            : title + descSuffix,
         category: cell(catCol),
         technologyTags: tags,
         boothId: null,
-        boothNumber: cell(boothNumCol).isEmpty ? null : cell(boothNumCol),
-        boothZone: cell(boothZoneCol).isEmpty ? null : cell(boothZoneCol),
+        boothNumber: null,
+        boothZone: null,
         coverImageUrl: 'assets/images/project_placeholder.jpg',
         posterUrl: null,
         teamDisplayNames: teamNames,
-        supervisorDisplayName: cell(supervisorCol),
-        examinerDisplayName: null,
-        demoUrl: cell(demoCol).isEmpty ? null : cell(demoCol),
+        supervisorDisplayName: supervisor,
+        examinerDisplayName: cell(examinerCol).isEmpty
+            ? null
+            : cell(examinerCol),
+        demoUrl: null,
         videoUrl: null,
         repositoryUrl: null,
         featured: false,
@@ -139,7 +150,7 @@ class Csp600CsvLoader {
         createdAt: now,
         updatedAt: now,
         publishedAt: now,
-        presentationDay: null,
+        presentationDay: session,
       ));
     }
 
