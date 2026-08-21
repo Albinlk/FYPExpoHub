@@ -1,0 +1,4 @@
+title,technology_tags,supervisor_display_name,programme_code,short_description,category,team_display_names,booth_number,booth_zone,demo_url
+Mobile AR Indoor Navigation,"Unity;AR Core;Firebase;C#",Dr. Ahmad,CS236,"AR-based indoor navigation system.",Computer Science,"Alice Tan;Bob Lee",,
+Campus Safety Alert System,"Flutter;Firebase;Web Scraping;Push Notifications",Prof. Lim,CS246,"Real-time safety alert platform for campus.",Computer Science,"Carol Ng",,
+Smart Parking Finder,"React Native;Firebase;GPS;Web Scraping","Dr. Tan",CS236,"IoT-based parking slot detection app.",Computer Science,"David Koh;Eve Lim","A-12","Zone A",
