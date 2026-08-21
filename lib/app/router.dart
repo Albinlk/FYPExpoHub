@@ -150,17 +150,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const SchedulePage(),
           ),
           GoRoute(
-            path: '/projects',
-            builder: (context, state) => const ProjectsPage(),
-            routes: [
-              GoRoute(
-                path: ':slug',
-                builder: (context, state) {
-                  final slug = state.pathParameters['slug'] ?? '';
-                  return ProjectDetailPage(slug: slug);
-                },
-              ),
-            ],
+            path: '/projects/junior-guide',
+            builder: (context, state) => const JuniorProjectBrowserPage(),
           ),
           GoRoute(
             path: '/booths',
@@ -175,8 +166,17 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const AwardsPage(),
           ),
           GoRoute(
-            path: '/projects/junior-guide',
-            builder: (context, state) => const JuniorProjectBrowserPage(),
+            path: '/projects',
+            builder: (context, state) => const ProjectsPage(),
+            routes: [
+              GoRoute(
+                path: ':slug',
+                builder: (context, state) {
+                  final slug = state.pathParameters['slug'] ?? '';
+                  return ProjectDetailPage(slug: slug);
+                },
+              ),
+            ],
           ),
           GoRoute(
             path: '/lecturer',
