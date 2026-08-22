@@ -241,20 +241,6 @@ class ProjectRowWidget extends ConsumerWidget {
             ),
           ],
         ),
-        if (project.shortDescription.isNotEmpty && project.shortDescription != project.title)
-          Padding(
-            padding: const EdgeInsets.only(top: 8, left: 2),
-            child: Text(
-              project.shortDescription,
-              style: DesignSystem.bodySm.copyWith(
-                color: DesignSystem.onSurfaceVariant,
-                height: 1.4,
-                fontSize: 12,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
       ],
     );
   }
