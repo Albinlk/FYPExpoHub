@@ -14,7 +14,7 @@ class ProjectSimilarity {
   static Set<String> tagSet(Project p) {
     final raw = p.technologyTags;
     final isPlaceholder = raw.length == 1 && raw.first.toUpperCase() == 'FYP';
-    final effective = (isPlaceholder || raw.isEmpty)
+    final effective = isPlaceholder
         ? inferTagsFromTitle(p.title)
         : raw;
     return effective.map(_normalizeTag).toSet();
@@ -59,7 +59,7 @@ class ProjectSimilarity {
   static List<String> displayTags(Project p) {
     final raw = p.technologyTags;
     final isPlaceholder = raw.length == 1 && raw.first.toUpperCase() == 'FYP';
-    if (isPlaceholder || raw.isEmpty) return inferTagsFromTitle(p.title);
+    if (isPlaceholder) return inferTagsFromTitle(p.title);
     return raw;
   }
 

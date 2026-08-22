@@ -4,7 +4,7 @@
 - **Project ref:** `siedglubjcedkbrpdzgi` (https://siedglubjcedkbrpdzgi.supabase.co)
 - **Flutter:** 3.41.9 stable / Dart 3.11.5 (local `D:\flutter\flutter` 2026-04-29)
 - **Stack:** Flutter Web (GitHub Pages) + Supabase (Auth, Postgres, RLS)
-- **Migrations on live:** 42 (17 app/schema incl. `fypms_student_slice`, `fypms_workflow_seed`, `fypms_workflow_rpc`, `fypms_demo_seed`, `fypms_realtime_publication` + 23 one-off bulk-population + `cleanup_exec_sql_and_restore_slug_constraint` + `fix_team_display_name_brackets`)
+- **Migrations on live:** **48** (17 app/schema + 23 bulk-population + 8 defect fixes: `fix_auth_policies_and_rewrite_handle_new_user`, `fix_auth_null_string_columns_v2`, `fix_fyp_record_field_update_case_branches`, `fix_report_version_bump`, `fix_correction_confirm_gate_staff_only`, `fix_expo_payload_merge_alias`, `seed_co_supervisor_account` + `fix_team_display_name_brackets`)
 
 ### What's new since 2026-08-19 snapshot
 1. **Performance pass `2e6ad748`** — `http`/`shared_preferences` moved to `dependencies`, strict `analysis_options` lints, `CachedNetworkImage` with `memCache`/`diskCache` in `project_cover_image`, removed deprecated `window.flutterWebRenderer="html"` + Google Fonts double-load, dropped pubspec `TTF` (≈1.8 MB) for `WOFF2`, hardened `Dockerfile/.dockerignore` for `serviceAccountKey.json`, added `CSP/HSTS/Permissions-Policy` + bootstrap `no-cache` in `nginx.conf`, multiplexed 5 FYPMS realtime channels to 1 (`fypms:live`), deduplicated `_normalizeKeys` to map-lookup, fixed N+1 `assignedFypRecordsProvider` via `getFypRecordsByIdsOnce(inFilter)`.
@@ -12,6 +12,7 @@
 3. **Project Guide polish `4232d953` + `1799cc85`** — removed duplicate `shortDescription` title row on desktop cards, added `Tech Stack` filter (`_selectedTechStack`, `_allTechStacks`, exact case-insensitive match) on desktop/mobile.
 4. **Student name brackets `941f0629`** — fixed `projects.team_display_name` stored as `["NAME"]` (legacy seed) → `NAME` (376 rows) via `student_team->>0` + `supabase/migrations/*_fix_team_display_name_brackets.sql`; `fypms_key_normalizer` now maps `student_team` jsonb (preferred) and strips `[]""` on legacy strings so UI never shows `[ STUDENT ]`.
 5. **Supabase projects populated** — bulk-population 23 migrations inserted 376 published projects (ExcelData fallback → live table); `team_display_name` now clean, `tech_tags` still pending DB migration (fallback + inference covers UI).
+6. **FYPMS defects DEF-1..5 + DEF-7 `20260822*` (6 migrations)** — `fix_auth_policies_and_rewrite_handle_new_user` (policies for `supabase_auth_admin` on 8 `auth` tables + `handle_new_user` → `profiles`) + `fix_auth_null_string_columns_v2` (`confirmation_token` `''`) → sign-in **11/11** `POST /auth/v1/token` 200 (was 500); `fix_fyp_record_field_update_case_branches` (CASE, typed `uuid`) → `student1` update `200` / `student2` `42501`; `fix_report_version_bump` (`MAX+1` + `FOR UPDATE`) → `proposal` v2 `200` v3 `200` (was 23505); `fix_correction_confirm_gate_staff_only` (staff-only) → `student1` on Record C `403` (was 200); `fix_expo_payload_merge_alias` (`e(k,v)`) → `coordinator` payload `200` with `marks` stripped (was 42703); `seed_co_supervisor_account` (`cosupervisor@fypms.test` 100…00b → Record B).
 
 ---
 
