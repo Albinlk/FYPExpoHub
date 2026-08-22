@@ -101,6 +101,7 @@ const _snakeToCamel = <String, String>{
   'poster_url': 'posterUrl',
   'team_display_names': 'teamDisplayNames',
   'team_display_name': 'teamDisplayNames',
+  'student_team': 'teamDisplayNames',
   'supervisor_display_name': 'supervisorDisplayName',
   'examiner_display_name': 'examinerDisplayName',
   'demo_url': 'demoUrl',
@@ -153,14 +154,48 @@ Map<String, dynamic> normalizeKeys(Map<String, dynamic> data) {
   final res = <String, dynamic>{};
   data.forEach((k, v) {
     final key = _snakeToCamel[k] ?? k;
-    if (key == 'teamDisplayNames' && v is String) {
-      res[key] = [v];
+    if (key == 'teamDisplayNames') {
+      if (v is String) {
+        // Skip string if we already have a proper list from student_team
+        if (res.containsKey(key) && res[key] is List && (res[key] as List).isNotEmpty) {
+          // Keep existing list (student_team is authoritative)
+        } else {
+          final s = v.trim();
+          // Fix malformed '["NAME"]' stored in team_display_name (legacy Supabase seed)
+          if (s.startsWith('[') && s.endsWith(']')) {
+            final cleaned = s
+                .replaceAll('[', '')
+                .replaceAll(']', '')
+                .replaceAll('"', '')
+                .replaceAll("'", '')
+                .trim();
+            if (cleaned.isEmpty) {
+              res[key] = <String>[];
+            } else {
+              // comma-separated if multiple
+              res[key] = cleaned.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+            }
+          } else if (s.isEmpty) {
+            res[key] = <String>[];
+          } else {
+            res[key] = [s];
+          }
+        }
+      } else if (v is List) {
+        // student_team jsonb array - preferred source, overwrites malformed string
+        final list = v.cast<String>().map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+        res[key] = list;
+      } else if (v == null) {
+        res[key] ??= <String>[];
+      }
     } else if (key == 'technologyTags' && v is List) {
       res[key] = v.cast<String>();
     } else {
       res[key] = v;
     }
   });
+  // Ensure teamDisplayNames always has a value (empty list if missing)
+  res.putIfAbsent('teamDisplayNames', () => <String>[]);
   return res;
 }
 
