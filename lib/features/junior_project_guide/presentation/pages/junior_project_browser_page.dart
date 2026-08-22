@@ -33,6 +33,7 @@ class _JuniorProjectBrowserPageState
   String _selectedSection = 'all';
   String _selectedProgramme = 'All';
   String _selectedCategory = 'All';
+  String _selectedTechStack = 'All';
 
   @override
   void dispose() {
@@ -180,10 +181,15 @@ class _JuniorProjectBrowserPageState
       final matchesCategory =
           _selectedCategory == 'All' || p.category == _selectedCategory;
 
+      final matchesTechStack = _selectedTechStack == 'All' ||
+          ProjectSimilarity.displayTags(p)
+              .any((t) => t.toLowerCase() == _selectedTechStack.toLowerCase());
+
       return matchesSection &&
           matchesSearch &&
           matchesProgramme &&
-          matchesCategory;
+          matchesCategory &&
+          matchesTechStack;
     }).toList();
   }
 
@@ -207,12 +213,23 @@ class _JuniorProjectBrowserPageState
     return seen.toList()..sort();
   }
 
+  List<String> _allTechStacks(List<SectionedProject> all) {
+    final seen = <String>{};
+    for (final sp in all) {
+      for (final tag in ProjectSimilarity.displayTags(sp.project)) {
+        seen.add(tag);
+      }
+    }
+    return seen.toList()..sort();
+  }
+
   Widget _buildSearchAndFilters(
     bool isDesktop,
     List<SectionedProject> all,
   ) {
     final programmes = _allProgrammes(all);
     final categories = _allCategories(all);
+    final techStacks = _allTechStacks(all);
 
     return Card(
       margin: EdgeInsets.symmetric(
@@ -244,8 +261,8 @@ class _JuniorProjectBrowserPageState
             ),
             const SizedBox(height: DesignSystem.spaceMd),
             isDesktop
-                ? _buildDesktopFilters(programmes, categories)
-                : _buildMobileFilters(programmes, categories),
+                ? _buildDesktopFilters(programmes, categories, techStacks)
+                : _buildMobileFilters(programmes, categories, techStacks),
           ],
         ),
       ),
@@ -255,15 +272,24 @@ class _JuniorProjectBrowserPageState
   Widget _buildDesktopFilters(
     List<String> programmes,
     List<String> categories,
+    List<String> techStacks,
   ) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        Wrap(
-          spacing: 8,
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildSectionPill('All', 'all'),
-            _buildSectionPill('CSP650', 'CSP650'),
-            _buildSectionPill('CSP600', 'CSP600'),
+            Text('Section', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSurfaceVariant)),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 8,
+              children: [
+                _buildSectionPill('All', 'all'),
+                _buildSectionPill('CSP650', 'CSP650'),
+                _buildSectionPill('CSP600', 'CSP600'),
+              ],
+            ),
           ],
         ),
         const SizedBox(width: DesignSystem.spaceLg),
@@ -275,7 +301,7 @@ class _JuniorProjectBrowserPageState
             (v) => setState(() => _selectedProgramme = v!),
           ),
         ),
-        const SizedBox(width: DesignSystem.spaceLg),
+        const SizedBox(width: 16),
         Expanded(
           child: _buildDropdownFilter(
             'Project Category',
@@ -284,13 +310,23 @@ class _JuniorProjectBrowserPageState
             (v) => setState(() => _selectedCategory = v!),
           ),
         ),
-        const SizedBox(width: DesignSystem.spaceLg),
+        const SizedBox(width: 16),
+        Expanded(
+          child: _buildDropdownFilter(
+            'Tech Stack',
+            _selectedTechStack,
+            ['All', ...techStacks],
+            (v) => setState(() => _selectedTechStack = v!),
+          ),
+        ),
+        const SizedBox(width: 12),
         TextButton(
           onPressed: () => setState(() {
             _searchController.clear();
             _selectedSection = 'all';
             _selectedProgramme = 'All';
             _selectedCategory = 'All';
+            _selectedTechStack = 'All';
           }),
           child: const Text('Reset Filters'),
         ),
@@ -301,6 +337,7 @@ class _JuniorProjectBrowserPageState
   Widget _buildMobileFilters(
     List<String> programmes,
     List<String> categories,
+    List<String> techStacks,
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -328,6 +365,13 @@ class _JuniorProjectBrowserPageState
           (v) => setState(() => _selectedCategory = v!),
         ),
         const SizedBox(height: DesignSystem.spaceMd),
+        _buildDropdownFilter(
+          'Tech Stack',
+          _selectedTechStack,
+          ['All', ...techStacks],
+          (v) => setState(() => _selectedTechStack = v!),
+        ),
+        const SizedBox(height: DesignSystem.spaceMd),
         SizedBox(
           width: double.infinity,
           child: TextButton(
@@ -336,6 +380,7 @@ class _JuniorProjectBrowserPageState
               _selectedSection = 'all';
               _selectedProgramme = 'All';
               _selectedCategory = 'All';
+              _selectedTechStack = 'All';
             }),
             child: const Text('Reset Filters'),
           ),
