@@ -171,7 +171,7 @@ class _JuniorProjectBrowserPageState
       final matchesSearch = searchLower.isEmpty ||
           p.title.toLowerCase().contains(searchLower) ||
           p.supervisorDisplayName.toLowerCase().contains(searchLower) ||
-          p.technologyTags
+          ProjectSimilarity.displayTags(p)
               .any((t) => t.toLowerCase().contains(searchLower));
 
       final matchesProgramme =
@@ -484,25 +484,94 @@ class _JuniorProjectBrowserPageState
         ? DesignSystem.marginDesktop
         : DesignSystem.marginMobile;
 
-    return ListView.separated(
-      padding: EdgeInsets.only(
-        left: padding,
-        right: padding,
-        bottom: DesignSystem.spaceLg,
-        top: 4,
-      ),
-      itemCount: visible.length,
-      separatorBuilder: (context, index) => const Divider(height: 1),
-      itemBuilder: (context, index) {
-        final sp = visible[index];
-        return ProjectRowWidget(
-          project: sp.project,
-          allProjects: projList,
-          showSection: true,
-          section: sp.section,
-        );
-      },
+    return Column(
+      children: [
+        if (isDesktop) _buildTableHeader(padding),
+        Expanded(
+          child: ListView.separated(
+            padding: EdgeInsets.only(
+              left: padding,
+              right: padding,
+              bottom: DesignSystem.spaceLg,
+              top: isDesktop ? 8 : 4,
+            ),
+            itemCount: visible.length,
+            separatorBuilder: (context, index) => const SizedBox(height: 8),
+            itemBuilder: (context, index) {
+              final sp = visible[index];
+              return ProjectRowWidget(
+                project: sp.project,
+                allProjects: projList,
+                showSection: true,
+                section: sp.section,
+                rowIndex: index,
+              );
+            },
+          ),
+        ),
+      ],
     );
+  }
+
+  Widget _buildTableHeader(double horizontalPadding) {
+    // Mirrors the flex ratios in ProjectRowWidget._buildDesktopRow
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: horizontalPadding),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: DesignSystem.surfaceContainer,
+        borderRadius: DesignSystem.radiusLg,
+        border: Border.all(color: DesignSystem.outlineVariant, width: 0.7),
+      ),
+      child: Row(
+        children: [
+          const SizedBox(width: 56), // offset for section pill
+          Expanded(
+            flex: 34,
+            child: _headerLabel('PROJECT TITLE', Icons.article_outlined),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            flex: 18,
+            child: _headerLabel('SUPERVISOR', Icons.person_outline),
+          ),
+          const SizedBox(width: 10),
+          SizedBox(
+            width: 88,
+            child: _headerLabel('PROGRAMME', Icons.school_outlined, center: true),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            flex: 28,
+            child: _headerLabel('TECH STACK', Icons.memory_outlined),
+          ),
+          const SizedBox(width: 12),
+          SizedBox(
+            width: 110,
+            child: _headerLabel('STATUS', Icons.verified_outlined, center: true),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _headerLabel(String text, IconData icon, {bool center = false}) {
+    final label = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 11, color: DesignSystem.onSurfaceVariant),
+        const SizedBox(width: 4),
+        Text(
+          text,
+          style: DesignSystem.labelCaps.copyWith(
+            color: DesignSystem.onSurfaceVariant,
+            fontSize: 10,
+            letterSpacing: 0.6,
+          ),
+        ),
+      ],
+    );
+    return center ? Center(child: label) : label;
   }
 
   Widget _buildReportTab(
