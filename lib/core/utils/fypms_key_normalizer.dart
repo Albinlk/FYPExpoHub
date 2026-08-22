@@ -1,133 +1,171 @@
-/// Normalizes PostgreSQL snake_case column names to Dart camelCase for all
-/// FYPMS tables. Mirrors the existing `_normalizeKeys` convention in
-/// `state_providers.dart` but scoped to the FYPMS schema.
-Map<String, dynamic> normalizeFypmsKeys(Map<String, dynamic> data) {
+const _snakeToCamel = <String, String>{
+  // FYPMS
+  'profile_id': 'profileId',
+  'role_code': 'roleCode',
+  'is_active': 'isActive',
+  'start_date': 'startDate',
+  'end_date': 'endDate',
+  'credit_hours': 'creditHours',
+  'academic_semester_id': 'academicSemesterId',
+  'course_code': 'courseCode',
+  'current_course_code': 'currentCourseCode',
+  'max_students': 'maxStudents',
+  'student_id': 'studentId',
+  'project_title': 'projectTitle',
+  'project_description': 'projectDescription',
+  'project_type': 'projectType',
+  'external_industry_partner': 'externalIndustryPartner',
+  'main_supervisor_id': 'mainSupervisorId',
+  'co_supervisor_id': 'coSupervisorId',
+  'examiner_id': 'examinerId',
+  'previous_record_id': 'previousRecordId',
+  'workflow_status': 'workflowStatus',
+  'fyp_record_id': 'fypRecordId',
+  'academic_role': 'academicRole',
+  'milestone_code': 'milestoneCode',
+  'milestone_title': 'milestoneTitle',
+  'target_date': 'targetDate',
+  'completed_at': 'completedAt',
+  'milestone_id': 'milestoneId',
+  'requested_by': 'requestedBy',
+  'requested_due_date': 'requestedDueDate',
+  'decided_by': 'decidedBy',
+  'decided_at': 'decidedAt',
+  'decision_comment': 'decisionComment',
+  'preferred_supervisor_id': 'preferredSupervisorId',
+  'decision_reason': 'decisionReason',
+  'week_number': 'weekNumber',
+  'progress_date': 'progressDate',
+  'next_plan': 'nextPlan',
+  'submitted_by': 'submittedBy',
+  'submitted_at': 'submittedAt',
+  'validated_by': 'validatedBy',
+  'validated_at': 'validatedAt',
+  'validation_comment': 'validationComment',
+  'form_code': 'formCode',
+  'form_version': 'formVersion',
+  'rubric_template_id': 'rubricTemplateId',
+  'evaluator_id': 'evaluatorId',
+  'weighted_total': 'weightedTotal',
+  'evaluated_at': 'evaluatedAt',
+  'rubric_code': 'rubricCode',
+  'rubric_name': 'rubricName',
+  'report_type': 'reportType',
+  'file_url': 'fileUrl',
+  'similarity_index': 'similarityIndex',
+  'reviewed_by': 'reviewedBy',
+  'reviewed_at': 'reviewedAt',
+  'review_comment': 'reviewComment',
+  'deliverable_type': 'deliverableType',
+  'is_required': 'isRequired',
+  'canvas_version': 'canvasVersion',
+  'is_latest': 'isLatest',
+  'item_code': 'itemCode',
+  'created_by': 'createdBy',
+  'correction_item_id': 'correctionItemId',
+  'confirmed_by': 'confirmedBy',
+  'confirmed_at': 'confirmedAt',
+  'offering_id': 'offeringId',
+  'session_code': 'sessionCode',
+  'session_title': 'sessionTitle',
+  'event_date': 'eventDate',
+  'session_type': 'sessionType',
+  'session_id': 'sessionId',
+  'slot_number': 'slotNumber',
+  'is_finalized': 'isFinalized',
+  'finalized_by': 'finalizedBy',
+  'finalized_at': 'finalizedAt',
+  'export_payload': 'exportPayload',
+  'published_project_id': 'publishedProjectId',
+  'prepared_by': 'preparedBy',
+  'prepared_at': 'preparedAt',
+  'published_by': 'publishedBy',
+  'actor_uid': 'actorUid',
+  'actor_role': 'actorRole',
+  'target_type': 'targetType',
+  'target_id': 'targetId',
+  'metadata_safe': 'metadataSafe',
+  // Expo Hub (shared)
+  'event_id': 'eventId',
+  'matric_id': 'matricId',
+  'programme_code': 'programmeCode',
+  'programme_name': 'programmeName',
+  'short_description': 'shortDescription',
+  'tech_tags': 'technologyTags',
+  'technology_tags': 'technologyTags',
+  'booth_id': 'boothId',
+  'booth_number': 'boothNumber',
+  'booth_zone': 'boothZone',
+  'presentation_day': 'presentationDay',
+  'cover_image_url': 'coverImageUrl',
+  'poster_url': 'posterUrl',
+  'team_display_names': 'teamDisplayNames',
+  'team_display_name': 'teamDisplayNames',
+  'supervisor_display_name': 'supervisorDisplayName',
+  'examiner_display_name': 'examinerDisplayName',
+  'demo_url': 'demoUrl',
+  'video_url': 'videoUrl',
+  'repository_url': 'repositoryUrl',
+  'calon_industri': 'calonIndustri',
+  'industry_candidate': 'calonIndustri',
+  'publication_status': 'publicationStatus',
+  'created_at': 'createdAt',
+  'updated_at': 'updatedAt',
+  'published_at': 'publishedAt',
+  'start_at': 'startAt',
+  'end_at': 'endAt',
+  'session_label': 'sessionLabel',
+  'daily_hours': 'dailyHours',
+  'location_details': 'locationDetails',
+  'map_url': 'mapUrl',
+  'hero_image_url': 'heroImageUrl',
+  'public_contact_email': 'publicContactEmail',
+  'faq_items': 'faqItems',
+  'location_note': 'locationNote',
+  'static_floor_plan_url': 'staticFloorPlanUrl',
+  'floor_plan_url': 'staticFloorPlanUrl',
+  'project_id': 'projectId',
+  'linked_project_id': 'projectId',
+  'is_pinned': 'pinned',
+  'award_category_id': 'awardCategoryId',
+  'category_id': 'awardCategoryId',
+  'lecturer_id': 'lecturerId',
+  'lecturer_display_name': 'lecturerDisplayName',
+  'lecturer_email': 'lecturerEmail',
+  'assigned_at': 'assignedAt',
+  'visit_role': 'visitRole',
+  'visited_at': 'visitedAt',
+  'visit_note': 'visitNote',
+  'voided_at': 'voidedAt',
+  'voided_by': 'voidedBy',
+  'void_reason': 'voidReason',
+  'user_id': 'userId',
+  'admin_note': 'adminNote',
+  'source_file_name': 'sourceFileName',
+  'file_name': 'sourceFileName',
+  'file_size_bytes': 'fileSizeBytes',
+  'uploaded_by': 'uploadedBy',
+  'uploaded_at': 'uploadedAt',
+};
+
+/// Generic normalizer for any Supabase row (FYPMS + Expo Hub).
+Map<String, dynamic> normalizeKeys(Map<String, dynamic> data) {
   final res = <String, dynamic>{};
   data.forEach((k, v) {
-    var key = k;
-    if (k == 'id') key = 'id';
-    else if (k == 'profile_id') key = 'profileId';
-    else if (k == 'role_code') key = 'roleCode';
-    else if (k == 'programme_code') key = 'programmeCode';
-    else if (k == 'is_active') key = 'isActive';
-    else if (k == 'code') key = 'code';
-    else if (k == 'label') key = 'label';
-    else if (k == 'status') key = 'status';
-    else if (k == 'start_date') key = 'startDate';
-    else if (k == 'end_date') key = 'endDate';
-    else if (k == 'name') key = 'name';
-    else if (k == 'stage') key = 'stage';
-    else if (k == 'credit_hours') key = 'creditHours';
-    else if (k == 'academic_semester_id') key = 'academicSemesterId';
-    else if (k == 'course_code') key = 'courseCode';
-    else if (k == 'current_course_code') key = 'currentCourseCode';
-    else if (k == 'lecturer_id') key = 'lecturerId';
-    else if (k == 'max_students') key = 'maxStudents';
-    else if (k == 'student_id') key = 'studentId';
-    else if (k == 'matric_id') key = 'matricId';
-    else if (k == 'project_title') key = 'projectTitle';
-    else if (k == 'project_description') key = 'projectDescription';
-    else if (k == 'project_type') key = 'projectType';
-    else if (k == 'external_industry_partner') key = 'externalIndustryPartner';
-    else if (k == 'main_supervisor_id') key = 'mainSupervisorId';
-    else if (k == 'co_supervisor_id') key = 'coSupervisorId';
-    else if (k == 'examiner_id') key = 'examinerId';
-    else if (k == 'previous_record_id') key = 'previousRecordId';
-    else if (k == 'workflow_status') key = 'workflowStatus';
-    else if (k == 'fyp_record_id') key = 'fypRecordId';
-    else if (k == 'academic_role') key = 'academicRole';
-    else if (k == 'assigned_by') key = 'assignedBy';
-    else if (k == 'assigned_at') key = 'assignedAt';
-    else if (k == 'milestone_code') key = 'milestoneCode';
-    else if (k == 'milestone_title') key = 'milestoneTitle';
-    else if (k == 'description') key = 'description';
-    else if (k == 'target_date') key = 'targetDate';
-    else if (k == 'completed_at') key = 'completedAt';
-    else if (k == 'milestone_id') key = 'milestoneId';
-    else if (k == 'requested_by') key = 'requestedBy';
-    else if (k == 'reason') key = 'reason';
-    else if (k == 'requested_due_date') key = 'requestedDueDate';
-    else if (k == 'decided_by') key = 'decidedBy';
-    else if (k == 'decided_at') key = 'decidedAt';
-    else if (k == 'decision_comment') key = 'decisionComment';
-    else if (k == 'preferred_supervisor_id') key = 'preferredSupervisorId';
-    else if (k == 'rationale') key = 'rationale';
-    else if (k == 'decision_reason') key = 'decisionReason';
-    else if (k == 'week_number') key = 'weekNumber';
-    else if (k == 'progress_date') key = 'progressDate';
-    else if (k == 'summary') key = 'summary';
-    else if (k == 'challenges') key = 'challenges';
-    else if (k == 'next_plan') key = 'nextPlan';
-    else if (k == 'submitted_by') key = 'submittedBy';
-    else if (k == 'submitted_at') key = 'submittedAt';
-    else if (k == 'validated_by') key = 'validatedBy';
-    else if (k == 'validated_at') key = 'validatedAt';
-    else if (k == 'validation_comment') key = 'validationComment';
-    else if (k == 'form_code') key = 'formCode';
-    else if (k == 'form_version') key = 'formVersion';
-    else if (k == 'payload') key = 'payload';
-    else if (k == 'rubric_template_id') key = 'rubricTemplateId';
-    else if (k == 'evaluator_id') key = 'evaluatorId';
-    else if (k == 'scores') key = 'scores';
-    else if (k == 'weighted_total') key = 'weightedTotal';
-    else if (k == 'comments') key = 'comments';
-    else if (k == 'evaluated_at') key = 'evaluatedAt';
-    else if (k == 'rubric_code') key = 'rubricCode';
-    else if (k == 'rubric_name') key = 'rubricName';
-    else if (k == 'criteria') key = 'criteria';
-    else if (k == 'version') key = 'version';
-    else if (k == 'report_type') key = 'reportType';
-    else if (k == 'file_url') key = 'fileUrl';
-    else if (k == 'similarity_index') key = 'similarityIndex';
-    else if (k == 'reviewed_by') key = 'reviewedBy';
-    else if (k == 'reviewed_at') key = 'reviewedAt';
-    else if (k == 'review_comment') key = 'reviewComment';
-    else if (k == 'deliverable_type') key = 'deliverableType';
-    else if (k == 'title') key = 'title';
-    else if (k == 'is_required') key = 'isRequired';
-    else if (k == 'canvas_version') key = 'canvasVersion';
-    else if (k == 'blocks') key = 'blocks';
-    else if (k == 'is_latest') key = 'isLatest';
-    else if (k == 'item_code') key = 'itemCode';
-    else if (k == 'severity') key = 'severity';
-    else if (k == 'created_by') key = 'createdBy';
-    else if (k == 'correction_item_id') key = 'correctionItemId';
-    else if (k == 'confirmed_by') key = 'confirmedBy';
-    else if (k == 'confirmed_at') key = 'confirmedAt';
-    else if (k == 'comment') key = 'comment';
-    else if (k == 'offering_id') key = 'offeringId';
-    else if (k == 'session_code') key = 'sessionCode';
-    else if (k == 'session_title') key = 'sessionTitle';
-    else if (k == 'event_date') key = 'eventDate';
-    else if (k == 'start_at') key = 'startAt';
-    else if (k == 'end_at') key = 'endAt';
-    else if (k == 'venue') key = 'venue';
-    else if (k == 'session_type') key = 'sessionType';
-    else if (k == 'session_id') key = 'sessionId';
-    else if (k == 'slot_number') key = 'slotNumber';
-    else if (k == 'room') key = 'room';
-    else if (k == 'marks') key = 'marks';
-    else if (k == 'grade') key = 'grade';
-    else if (k == 'is_finalized') key = 'isFinalized';
-    else if (k == 'finalized_by') key = 'finalizedBy';
-    else if (k == 'finalized_at') key = 'finalizedAt';
-    else if (k == 'export_payload') key = 'exportPayload';
-    else if (k == 'event_id') key = 'eventId';
-    else if (k == 'published_project_id') key = 'publishedProjectId';
-    else if (k == 'prepared_by') key = 'preparedBy';
-    else if (k == 'prepared_at') key = 'preparedAt';
-    else if (k == 'published_by') key = 'publishedBy';
-    else if (k == 'published_at') key = 'publishedAt';
-    else if (k == 'actor_uid') key = 'actorUid';
-    else if (k == 'actor_role') key = 'actorRole';
-    else if (k == 'action') key = 'action';
-    else if (k == 'target_type') key = 'targetType';
-    else if (k == 'target_id') key = 'targetId';
-    else if (k == 'metadata_safe') key = 'metadataSafe';
-    else if (k == 'source') key = 'source';
-    else if (k == 'created_at') key = 'createdAt';
-    else if (k == 'updated_at') key = 'updatedAt';
-    res[key] = v;
+    final key = _snakeToCamel[k] ?? k;
+    if (key == 'teamDisplayNames' && v is String) {
+      res[key] = [v];
+    } else if (key == 'technologyTags' && v is List) {
+      res[key] = v.cast<String>();
+    } else {
+      res[key] = v;
+    }
   });
   return res;
+}
+
+/// Normalizes PostgreSQL snake_case column names to Dart camelCase for all
+/// FYPMS tables. Kept for backwards compatibility — delegates to [normalizeKeys].
+Map<String, dynamic> normalizeFypmsKeys(Map<String, dynamic> data) {
+  return normalizeKeys(data);
 }

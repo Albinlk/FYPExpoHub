@@ -191,6 +191,7 @@ final myFypRecordsProvider = FutureProvider<List<FypRecord>>((ref) async {
 });
 
 /// FYP records assigned to the current lecturer (optionally by role).
+/// Optimized: fetches only assigned ids via `inFilter`, not full table.
 final assignedFypRecordsProvider =
     FutureProvider.family<List<FypRecord>, String?>((ref, role) async {
   final user = ref.watch(currentAuthUserProvider);
@@ -202,12 +203,8 @@ final assignedFypRecordsProvider =
       .whereType<String>()
       .toSet();
   if (recordIds.isEmpty) return const [];
-  final all = await db.getFypRecordsOnce();
-  final records = all
-      .where((m) => recordIds.contains(m['id'] as String?))
-      .map((m) => FypRecord.fromJson(normalizeFypmsKeys(m)))
-      .toList();
-  return records;
+  final rows = await db.getFypRecordsByIdsOnce(recordIds);
+  return rows.map((m) => FypRecord.fromJson(normalizeFypmsKeys(m))).toList();
 });
 
 // ==============================================================================
@@ -593,12 +590,6 @@ void invalidateFypmsRecordProviders(Ref ref, String recordId) {
 /// the refresh mechanism.
 final fypmsRealtimeProvider =
     Provider<FypmsRealtimeSubscriptions>((ref) {
-  final subs = FypmsRealtimeSubscriptions();
-  ref.onDispose(subs.dispose);
-
-  // Optional bridge: when Supabase is not initialized (tests, offline/flaky
-  // startup) the provider silently no-ops and the refetch-after-mutation
-  // fallback keeps pages working.
   bool isSupabaseReady() {
     try {
       return Supabase.instance.isInitialized;
@@ -608,38 +599,30 @@ final fypmsRealtimeProvider =
   }
 
   if (!isSupabaseReady()) {
-    return subs;
+    final empty = FypmsRealtimeSubscriptions();
+    ref.onDispose(() => empty.dispose());
+    return empty;
   }
 
   final client = ref.watch(supabaseClientProvider);
+  final subs = FypmsRealtimeSubscriptions(client);
+  ref.onDispose(() => subs.dispose());
   final realtime = SupabaseRealtimeService(client);
 
-  void attach(String table, {required void Function() onAny}) {
-    try {
-      subs.add(realtime.subscribeToFypmsChanges(
-        table: table,
-        onInsert: (_) => onAny(),
-        onUpdate: (_) => onAny(),
-        onDelete: (_) => onAny(),
-      ));
-    } catch (e) {
-      // Polling/refetch fallback remains; do not fail page startup.
-      logDebug('FYPMS realtime ($table) unavailable - polling fallback active: $e');
-    }
+  try {
+    subs.add(realtime.subscribeToFypmsLive(onTableChange: {
+      'fyp_supervision_requests': () {
+        ref.invalidate(fypPendingSupervisionRequestsProvider);
+        ref.invalidate(fypSupervisionRequestsProvider);
+      },
+      'fyp_progress_logs': () => ref.invalidate(fypProgressLogsProvider),
+      'fyp_form_submissions': () => ref.invalidate(fypFormSubmissionsProvider),
+      'fyp_correction_items': () => ref.invalidate(fypCorrectionItemsProvider),
+      'fyp_expo_publications': () => ref.invalidate(fypExpoPublicationsProvider),
+    }));
+  } catch (e) {
+    logDebug('FYPMS realtime (multiplex) unavailable - polling fallback active: $e');
   }
-
-  attach('fyp_supervision_requests', onAny: () {
-    ref.invalidate(fypPendingSupervisionRequestsProvider);
-    ref.invalidate(fypSupervisionRequestsProvider);
-  });
-  attach('fyp_progress_logs',
-      onAny: () => ref.invalidate(fypProgressLogsProvider));
-  attach('fyp_form_submissions',
-      onAny: () => ref.invalidate(fypFormSubmissionsProvider));
-  attach('fyp_correction_items',
-      onAny: () => ref.invalidate(fypCorrectionItemsProvider));
-  attach('fyp_expo_publications',
-      onAny: () => ref.invalidate(fypExpoPublicationsProvider));
 
   return subs;
 });

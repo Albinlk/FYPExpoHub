@@ -17,6 +17,7 @@ import '../supabase/supabase_database_service.dart';
 import '../supabase/supabase_rpc_service.dart';
 import '../supabase/supabase_realtime_service.dart';
 import '../supabase/supabase_storage_service.dart';
+import '../utils/fypms_key_normalizer.dart' show normalizeKeys;
 import '../utils/logger.dart';
 
 // ==============================================================================
@@ -43,77 +44,9 @@ final supabaseStorageServiceProvider = Provider<SupabaseStorageService>((ref) {
 });
 
 // ==============================================================================
-// KEY NORMALIZER UTILITY (PostgreSQL snake_case <-> Dart camelCase)
+// KEY NORMALIZER — delegates to shared map-lookup normalizer (O(1) vs 70-branch)
 // ==============================================================================
-Map<String, dynamic> _normalizeKeys(Map<String, dynamic> data) {
-  final res = <String, dynamic>{};
-  data.forEach((k, v) {
-    var key = k;
-    if (k == 'event_id') key = 'eventId';
-    else if (k == 'matric_id') key = 'matricId';
-    else if (k == 'programme_code') key = 'programmeCode';
-    else if (k == 'programme_name') key = 'programmeName';
-    else if (k == 'short_description') key = 'shortDescription';
-    else if (k == 'tech_tags' || k == 'technology_tags') key = 'technologyTags';
-    else if (k == 'booth_id') key = 'boothId';
-    else if (k == 'booth_number') key = 'boothNumber';
-    else if (k == 'booth_zone') key = 'boothZone';
-    else if (k == 'presentation_day') key = 'presentationDay';
-    else if (k == 'cover_image_url') key = 'coverImageUrl';
-    else if (k == 'poster_url') key = 'posterUrl';
-    else if (k == 'team_display_name' || k == 'team_display_names') key = 'teamDisplayNames';
-    else if (k == 'supervisor_display_name') key = 'supervisorDisplayName';
-    else if (k == 'examiner_display_name') key = 'examinerDisplayName';
-    else if (k == 'demo_url') key = 'demoUrl';
-    else if (k == 'video_url') key = 'videoUrl';
-    else if (k == 'repository_url') key = 'repositoryUrl';
-    else if (k == 'industry_candidate' || k == 'calon_industri') key = 'calonIndustri';
-    else if (k == 'publication_status') key = 'publicationStatus';
-    else if (k == 'created_at') key = 'createdAt';
-    else if (k == 'updated_at') key = 'updatedAt';
-    else if (k == 'published_at') key = 'publishedAt';
-    else if (k == 'start_at') key = 'startAt';
-    else if (k == 'end_at') key = 'endAt';
-    else if (k == 'session_label') key = 'sessionLabel';
-    else if (k == 'daily_hours') key = 'dailyHours';
-    else if (k == 'location_details') key = 'locationDetails';
-    else if (k == 'map_url') key = 'mapUrl';
-    else if (k == 'hero_image_url') key = 'heroImageUrl';
-    else if (k == 'public_contact_email') key = 'publicContactEmail';
-    else if (k == 'faq_items') key = 'faqItems';
-    else if (k == 'location_note') key = 'locationNote';
-    else if (k == 'floor_plan_url' || k == 'static_floor_plan_url') key = 'staticFloorPlanUrl';
-    else if (k == 'linked_project_id' || k == 'project_id') key = 'projectId';
-    else if (k == 'is_pinned') key = 'pinned';
-    else if (k == 'category_id' || k == 'award_category_id') key = 'awardCategoryId';
-    else if (k == 'lecturer_id') key = 'lecturerId';
-    else if (k == 'lecturer_display_name') key = 'lecturerDisplayName';
-    else if (k == 'lecturer_email') key = 'lecturerEmail';
-    else if (k == 'assigned_at') key = 'assignedAt';
-    else if (k == 'visit_role') key = 'visitRole';
-    else if (k == 'visited_at') key = 'visitedAt';
-    else if (k == 'visit_note') key = 'visitNote';
-    else if (k == 'voided_at') key = 'voidedAt';
-    else if (k == 'voided_by') key = 'voidedBy';
-    else if (k == 'void_reason') key = 'voidReason';
-    else if (k == 'submitted_by' || k == 'user_id') key = 'userId';
-    else if (k == 'admin_note') key = 'adminNote';
-    else if (k == 'file_name' || k == 'source_file_name') key = 'sourceFileName';
-    else if (k == 'file_size_bytes') key = 'fileSizeBytes';
-    else if (k == 'uploaded_by') key = 'uploadedBy';
-    else if (k == 'uploaded_at') key = 'uploadedAt';
-
-    // Ensure list conversions
-    if (key == 'teamDisplayNames' && v is String) {
-      res[key] = [v];
-    } else if (key == 'technologyTags' && v is List) {
-      res[key] = v.cast<String>();
-    } else {
-      res[key] = v;
-    }
-  });
-  return res;
-}
+Map<String, dynamic> _normalizeKeys(Map<String, dynamic> data) => normalizeKeys(data);
 
 // ==========================================
 // 1. EVENT METADATA STATE

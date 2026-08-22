@@ -16,10 +16,19 @@ build/
 *.apk
 *.ipa
 
+# Exclude secrets — never bake into image layers
+serviceAccountKey.json
+service-account*.json
+.env
+.env.*
+*.key
+*.p12
+*.keystore
+*.jks
+
 # Exclude Cloud Functions and local development packages
 functions/node_modules/
 node_modules/
-serviceAccountKey.json
 
 # Exclude local system logs
 *.log

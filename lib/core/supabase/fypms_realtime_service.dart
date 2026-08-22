@@ -12,7 +12,7 @@ extension FypmsRealtimeService on SupabaseRealtimeService {
     required void Function(Map<String, dynamic> record) onUpdate,
     required void Function(Map<String, dynamic> record) onDelete,
   }) {
-    final channel = Supabase.instance.client.channel('public:$table');
+    final channel = getClient().channel('public:$table');
     channel
         .onPostgresChanges(
           event: PostgresChangeEvent.insert,
@@ -37,6 +37,27 @@ extension FypmsRealtimeService on SupabaseRealtimeService {
         });
     return channel;
   }
+
+  /// Multiplexed subscription: one channel, N tables — saves websocket
+  /// connections (Supabase limit ~200 channels). Prefer this over
+  /// calling [subscribeToFypmsChanges] per table.
+  RealtimeChannel subscribeToFypmsLive({
+    required Map<String, void Function()> onTableChange,
+  }) {
+    final channel = getClient().channel('fypms:live');
+    for (final entry in onTableChange.entries) {
+      channel.onPostgresChanges(
+        event: PostgresChangeEvent.all,
+        schema: 'public',
+        table: entry.key,
+        callback: (_) => entry.value(),
+      );
+    }
+    channel.subscribe((status, [error]) {
+      logDebug('FYPMS realtime (multiplex) status: $status ${error ?? ""}');
+    });
+    return channel;
+  }
 }
 
 /// Owns the channels opened by the FYPMS realtime bridge so they can be torn
@@ -53,7 +74,14 @@ class FypmsRealtimeSubscriptions {
   Future<void> dispose() async {
     for (final channel in _channels) {
       try {
-        await _client?.removeChannel(channel);
+        if (_client != null) {
+          // ignore: unnecessary_non_null_assertion
+          await _client!.removeChannel(channel);
+        } else {
+          try {
+            await Supabase.instance.client.removeChannel(channel);
+          } catch (_) {}
+        }
       } catch (e) {
         logDebug('FYPMS realtime dispose error: $e');
       }

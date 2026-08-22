@@ -79,6 +79,23 @@ extension FypmsDatabaseService on SupabaseDatabaseService {
     }
   }
 
+  /// Fetch only the given FYP records by id — avoids N+1 full-table fetch
+  /// used by [assignedFypRecordsProvider].
+  Future<List<Map<String, dynamic>>> getFypRecordsByIdsOnce(Set<String> ids) async {
+    if (ids.isEmpty) return const [];
+    try {
+      final res = await Supabase.instance.client
+          .from('fyp_records')
+          .select()
+          .inFilter('id', ids.toList())
+          .order('created_at', ascending: false);
+      return List<Map<String, dynamic>>.from(res);
+    } catch (e) {
+      logDebug('Supabase getFypRecordsByIdsOnce error: $e');
+      return [];
+    }
+  }
+
   // ---------------------------------------------------
   // FYP RECORD ASSIGNMENTS
   // ---------------------------------------------------

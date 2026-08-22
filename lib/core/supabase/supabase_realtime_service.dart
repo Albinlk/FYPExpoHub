@@ -6,6 +6,10 @@ class SupabaseRealtimeService {
 
   SupabaseRealtimeService(this._client);
 
+  /// Exposes the underlying client for multiplex extensions without
+  /// reaching for the global `Supabase.instance`.
+  SupabaseClient getClient() => _client;
+
   /// Subscribes to published announcements with minimal bandwidth
   RealtimeChannel subscribeToAnnouncements({
     required void Function(Map<String, dynamic> record) onInsert,
@@ -52,6 +56,31 @@ class SupabaseRealtimeService {
         )
         .subscribe((status, [error]) {
           logDebug('Visits realtime status: $status ${error ?? ""}');
+        });
+    return channel;
+  }
+
+  /// Multiplexed public channel — one websocket for announcements + visits
+  RealtimeChannel subscribeToPublicLive({
+    required void Function(Map<String, dynamic> record) onAnnouncement,
+    required void Function(Map<String, dynamic> record) onVisit,
+  }) {
+    final channel = _client.channel('public:live');
+    channel
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'announcements',
+          callback: (payload) => onAnnouncement(payload.newRecord.isNotEmpty ? payload.newRecord : payload.oldRecord),
+        )
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'student_project_visits',
+          callback: (payload) => onVisit(payload.newRecord.isNotEmpty ? payload.newRecord : payload.oldRecord),
+        )
+        .subscribe((status, [error]) {
+          logDebug('Public realtime (multiplex) status: $status ${error ?? ""}');
         });
     return channel;
   }

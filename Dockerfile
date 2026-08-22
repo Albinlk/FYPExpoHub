@@ -29,7 +29,7 @@ COPY pubspec.yaml pubspec.lock ./
 # Fetch project dependencies
 RUN flutter pub get
 
-# Copy the complete source code
+# Copy source — .dockerignore excludes secrets (serviceAccountKey.json, .env, .git)
 COPY . .
 
 # Clean existing generated files and rebuild with build_runner in a single layer

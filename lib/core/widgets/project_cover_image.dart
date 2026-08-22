@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 /// A widget that renders a beautiful, deterministic cover image for a project.
@@ -94,21 +95,24 @@ class ProjectCoverImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Try real network image first — fall back to generated visual on error.
+    // Uses CachedNetworkImage for disk + memory caching; decoded size capped
+    // to ~400x250 logical px to avoid decoding full-res covers in grid.
     if (imageUrl != null && imageUrl!.isNotEmpty && !_isPlaceholder(imageUrl)) {
       final dpr = MediaQuery.devicePixelRatioOf(context);
-      return Image.network(
-        imageUrl!,
+      final targetW = (400 * dpr).round();
+      final targetH = (250 * dpr).round();
+      return CachedNetworkImage(
+        imageUrl: imageUrl!,
         fit: fit,
         width: double.infinity,
         height: double.infinity,
-        // Decode at most ~400 logical px wide to avoid decoding full-res
-        // cover images for every grid card (ResizeImage only downscales).
-        cacheWidth: (400 * dpr).round(),
-        errorBuilder: (_, __, ___) => _buildGeneratedCover(),
-        loadingBuilder: (_, child, progress) {
-          if (progress == null) return child;
-          return _buildGeneratedCover(); // show art immediately while loading
-        },
+        memCacheWidth: targetW,
+        memCacheHeight: targetH,
+        maxWidthDiskCache: targetW,
+        maxHeightDiskCache: targetH,
+        fadeInDuration: const Duration(milliseconds: 200),
+        placeholder: (_, __) => _buildGeneratedCover(),
+        errorWidget: (_, __, ___) => _buildGeneratedCover(),
       );
     }
     return _buildGeneratedCover();
@@ -161,7 +165,7 @@ class _CoverPainter extends CustomPainter {
     // Decorative circles (deterministic positions from seed)
     final rand = math.Random(seed);
     final circlePaint = Paint()
-      ..color = Colors.white.withAlpha(18)
+      ..color = Colors.white.withValues(alpha: 0.07)
       ..style = PaintingStyle.fill;
 
     for (int i = 0; i < 5; i++) {
@@ -173,7 +177,7 @@ class _CoverPainter extends CustomPainter {
 
     // Thin ring accents
     final ringPaint = Paint()
-      ..color = Colors.white.withAlpha(28)
+      ..color = Colors.white.withValues(alpha: 0.11)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.2;
 
@@ -219,9 +223,9 @@ class _CoverContent extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: Colors.white.withAlpha(30),
+            color: Colors.white.withValues(alpha: 0.12),
             shape: BoxShape.circle,
-            border: Border.all(color: Colors.white.withAlpha(60), width: 1),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.24), width: 1),
           ),
           child: Icon(icon, color: Colors.white, size: 26),
         ),
@@ -230,7 +234,7 @@ class _CoverContent extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
           decoration: BoxDecoration(
-            color: Colors.white.withAlpha(22),
+            color: Colors.white.withValues(alpha: 0.09),
             borderRadius: BorderRadius.circular(4),
           ),
           child: Text(
