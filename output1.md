@@ -1,11 +1,17 @@
 # FYP Expo Hub — Current State Snapshot
 
-- **Date:** 2026-08-19
+- **Date:** 2026-08-22
 - **Project ref:** `siedglubjcedkbrpdzgi` (https://siedglubjcedkbrpdzgi.supabase.co)
-- **Flutter:** 3.41.9 stable / Dart 3.11.5
+- **Flutter:** 3.41.9 stable / Dart 3.11.5 (local `D:\flutter\flutter` 2026-04-29)
 - **Stack:** Flutter Web (GitHub Pages) + Supabase (Auth, Postgres, RLS)
-- **Migrations on live:** 17 (incl. `fypms_student_slice`, `fypms_workflow_seed`,
-  `fypms_workflow_rpc`, `fypms_demo_seed`, `fypms_realtime_publication`)
+- **Migrations on live:** 42 (17 app/schema incl. `fypms_student_slice`, `fypms_workflow_seed`, `fypms_workflow_rpc`, `fypms_demo_seed`, `fypms_realtime_publication` + 23 one-off bulk-population + `cleanup_exec_sql_and_restore_slug_constraint` + `fix_team_display_name_brackets`)
+
+### What's new since 2026-08-19 snapshot
+1. **Performance pass `2e6ad748`** — `http`/`shared_preferences` moved to `dependencies`, strict `analysis_options` lints, `CachedNetworkImage` with `memCache`/`diskCache` in `project_cover_image`, removed deprecated `window.flutterWebRenderer="html"` + Google Fonts double-load, dropped pubspec `TTF` (≈1.8 MB) for `WOFF2`, hardened `Dockerfile/.dockerignore` for `serviceAccountKey.json`, added `CSP/HSTS/Permissions-Policy` + bootstrap `no-cache` in `nginx.conf`, multiplexed 5 FYPMS realtime channels to 1 (`fypms:live`), deduplicated `_normalizeKeys` to map-lookup, fixed N+1 `assignedFypRecordsProvider` via `getFypRecordsByIdsOnce(inFilter)`.
+2. **Tech tags inference `68deab17`** — replaced `["FYP"]` placeholder (387 projects) in `lib/core/data/excel_data.dart` with title-keyword inference (18 families, ≤4 tags; e.g. `Machine Learning`, `AR/VR / Game`, `Web / Dashboard`), added runtime fallback `ProjectSimilarity.inferTagsFromTitle/displayTags` for legacy Supabase `["FYP"]`, redesigned Project Guide browse tab with table header + aligned 5-col rows + tech-stack chips.
+3. **Project Guide polish `4232d953` + `1799cc85`** — removed duplicate `shortDescription` title row on desktop cards, added `Tech Stack` filter (`_selectedTechStack`, `_allTechStacks`, exact case-insensitive match) on desktop/mobile.
+4. **Student name brackets `941f0629`** — fixed `projects.team_display_name` stored as `["NAME"]` (legacy seed) → `NAME` (376 rows) via `student_team->>0` + `supabase/migrations/*_fix_team_display_name_brackets.sql`; `fypms_key_normalizer` now maps `student_team` jsonb (preferred) and strips `[]""` on legacy strings so UI never shows `[ STUDENT ]`.
+5. **Supabase projects populated** — bulk-population 23 migrations inserted 376 published projects (ExcelData fallback → live table); `team_display_name` now clean, `tech_tags` still pending DB migration (fallback + inference covers UI).
 
 ---
 
@@ -404,65 +410,38 @@ Note: `presentation/pages/` is **flat** — pages are named by role prefix
 | `profile_academic_roles` | 9 (no seeded co_supervisor — DEF-7 coverage gap) |
 | `fyp_records` | 3 (demo seed records A/B/C) |
 | FYPMS demo data | 2 supervision requests · 3 F5 logs · 7 forms · 2 evaluations · 3 reports · 3 deliverables · 1 lean canvas · 2 corrections · 1 confirmation · 2 sessions · 1 slot · 1 marks summary · 1 Expo publication (draft) · 5 milestones |
-| `projects` / `schedule_items` | 0 (Expo publish exercised manually during QA) |
+| `projects` | **376** (bulk-populated 2026-08-21 via 23 migrations; `team_display_name` clean, `tech_tags` placeholder `["FYP"]` on live — UI uses fallback `ExcelData` + `ProjectSimilarity.inferTagsFromTitle` until DB migration) |
+| `ExcelData` fallback | **387** projects in `lib/core/data/excel_data.dart` now with inferred `technologyTags` (18 families, ≤4 tags, `tech_tags_inferred.csv` committed) |
+| `schedule_items` | 0 (Expo publish exercised manually during QA) |
 | Tests | **80 passing** (`flutter test`) — 58 pre-existing + **12 route/role guards** + **5 mocked-RPC lifecycle** + **5 release regressions** (a/b/d/e, c-in-guards) |
-| Analyze | **0 errors, 0 warnings** (`flutter analyze`) |
+| Analyze | **0 errors, 0 warnings** (`flutter analyze --no-pub` 125 infos; 4 pre-existing `argument_type_not_assignable` in fypms pages) |
 | Build | `flutter build web --release` ✓ (75s) |
 | Public site | https://fskmjasinfypexhibition.site (HTTP 200) |
 | Admin site | https://admin.fskmjasinfypexhibition.site/admin/sign-in (HTTP 200) |
-| Deploy | GitHub Actions → GitHub Pages (both domains) |
-| Release build | `flutter build web --release` ✓ — rebuilt after workflow + realtime wiring, with `SUPABASE_URL`/`SUPABASE_ANON_KEY` dart-defines; `build/web/main.dart.js` ≈ 4.5 MB |
+| Deploy | GitHub Actions → GitHub Pages (both domains) — last **941f0629** |
+| Release build | `flutter build web --release` ✓ — rebuilt after workflow + realtime + Project Guide + bracket fix, with `SUPABASE_URL`/`SUPABASE_ANON_KEY` dart-defines; `build/web/main.dart.js` ≈ 4.5 MB |
 | Deployment smoke | release served locally + 7 entry routes headless-checked (`/`, `/projects`, `/booths`, `/schedule`, `/info`, `/fypms/student`, `/admin/sign-in`) — **0 console errors**, Flutter engine attached (`flutter-view`/`flt-glass-pane`) |
 | **Manual E2E QA (2026-08-19)** | Runbook matrix executed server-side per seeded actor (sign-in blocked by DEF-1). See `docs/FYPMS_RELEASE_CHECKLIST.md` §0 for per-role sign-off. **Verdict: NOT production-ready** — 6 defects filed (DEF-1..DEF-7). Demo data restored to baseline after QA. |
 | Local run | `flutter run -d web-server --web-port 8080` → http://localhost:8080 — booted in Chrome, no console errors (checked via headless Chrome + Dart VM service logs) |
 | opencode provider | `9router` → http://localhost:20129/v1 (port 20129; `GET /v1/models` + chat completion verified; default model `Free-Combo`) |
 
 ### Known cleanups in the latest pass
-- Real bug fixed: staff dialog confirm buttons were gated on state read once at build →
-  permanently disabled. Wrapped the 5 affected dialogs in `StatefulBuilder`
-  (assign examiner, finalize marks, create correction ×2, schedule slot, expo prepare).
-- `coordinator_presentations_page.dart` session-detail dialog read slots once via `ref.read`,
-  leaving a perpetual spinner → now a `Consumer` watching the family provider.
-- Replaced deprecated `DropdownButtonFormField.value:` → `initialValue:` across fypms pages.
-- Removed unused imports left from the rewiring (`coordinator_audit_page.dart`,
-  `csp_offerings_page.dart`).
-- Release-hardening pass (2026-08-19):
-  - `supabase/types.ts` regenerated to current schema (all workflow RPC signatures present).
-  - Demo/QA seed migration `fypms_demo_seed` + 3 linked records applied to dev.
-  - Tests +22: `fypms_route_guards_test.dart` (12), `fypms_rpc_lifecycle_test.dart` (5, mocked
-    Supabase HTTP), `fypms_regression_test.dart` (5); **80/80 total**.
-  - Realtime wired: `fypmsRealtimeProvider` (5 tables, provider invalidation, dispose-on-unmount,
-    polling fallback kept) + `fypms_realtime_publication` migration (publication membership + RLS
-    SELECT policies present).
-  - Fixed `ListTile`-inside-`DecoratedBox` Material ink bug in `fypms_shell.dart`,
-    `admin_shell.dart`, `public_shell.dart`.
-  - Added `docs/FYPMS_E2E_QA_RUNBOOK.md`, `docs/FYPMS_DEMO_SEEDING.md`,
-    `docs/FYPMS_RELEASE_CHECKLIST.md`.
-  - Added `docs/fypms_rls_verification.md` — student-slice RLS/RPC authorization
-    reference (design principle, per-RPC checks, verification steps).
-  - Manual E2E QA executed (server-side per-actor); demo data restored; sign-in blocked by
-    DEF-1; release verdict **NOT production-ready** until DEF-1..DEF-5 are fixed.
+- **2026-08-22 pass** (5 commits since snapshot):
+  - `2e6ad748` perf: bundle/caching/realtime — `http`/`shared_preferences` deps fix, strict lints, `CachedNetworkImage`, WOFF2-only fonts, Docker/CSP/HSTS, realtime multiplex `fypms:live`, `_normalizeKeys` map-lookup, N+1 `getFypRecordsByIdsOnce`.
+  - `68deab17` tech tags + Project Guide: inferred tags for 387 fallback projects, `ProjectSimilarity.inferTagsFromTitle/displayTags`, table header + 5-col aligned rows + chip design.
+  - `4232d953` removed duplicate `shortDescription` title row on desktop cards.
+  - `1799cc85` added `Tech Stack` filter (`_selectedTechStack`/`_allTechStacks` exact match, desktop+mobile).
+  - `941f0629` fixed `team_display_name` brackets `["NAME"]` → `NAME` (DB `student_team->>0` migration `fix_team_display_name_brackets` + `fypms_key_normalizer` `student_team` mapping & stripping).
+- Earlier **2026-08-19** pass (5 dialogs `StatefulBuilder`, `coordinator_presentations` `Consumer`, `initialValue`, imports, `supabase/types.ts`, demo seed, +22 tests, realtime `fypmsRealtimeProvider` + publication, `ListTile` ink bug, docs + RLs verification + manual QA) — carried forward.
 
-### Snapshot re-verification (live via MCP, 2026-08-19)
-- Live row counts match §5: public tables = **51** (42 app + 9 template: `users`,
-  `channels`, `content`, `schedules`, `oauth_states`, `processing_jobs`, `site_settings`,
-  `telemetry`, `activities`); `auth.users`=10, `profiles`=10, `profile_academic_roles`=9,
-  `settings`=3, `events`=1, `academic_semesters`=1, `fyp_records`=3.
-- Local migration count corrected **15 → 16** (the `20260820…_fypms_realtime_publication`
-  local file was missing from the earlier listing).
+### Snapshot re-verification (live via MCP, 2026-08-22)
+- Live via `supabase_list_migrations`: **42** migrations (17 app/schema + 23 bulk-population one-offs `populate_projects_batch_*` + `cleanup_exec_sql_and_restore_slug_constraint` + `fix_team_display_name_brackets`).
+- Live row counts: `projects`=376 (was 0 before bulk), `auth.users`=10, `profiles`=10, `profile_academic_roles`=9, `settings`=3, `events`=1, `fyp_records`=3. Public tables = **51** (42 app + 9 template). `team_display_name` now 0 bracketed rows (was `["NAME"]`).
+- Local `flutter analyze --no-pub` = 125 infos + 4 errors (pre-existing fypms `argument_type_not_assignable`), `flutter test` 80/80.
 
-### Working-tree / repo state (uncommitted vs `957c20d9`)
-- Entire FYPMS slice ships as **one uncommitted changeset**:
-  - Modified: `lib/app/router.dart`, `lib/app/widgets/admin_shell.dart`,
-    `lib/app/widgets/public_shell.dart`, `lib/core/state/state_providers.dart`,
-    `pubspec.yaml`/`pubspec.lock`, `supabase/types.ts`.
-  - New/untracked: `lib/features/fypms/`, `lib/core/domain/models/fypms/`,
-    `lib/core/supabase/fypms_*.dart` (database/rpc/realtime/storage service),
-    `lib/core/state/fypms_state_providers.dart`, `lib/app/widgets/fypms_shell.dart`,
-    `lib/core/utils/fypms_key_normalizer.dart`, `test/features/fypms/` (11 test files),
-    `supabase/migrations/` (12 fypms local files), `docs/`, this snapshot.
-- `flutter` CLI not on PATH in shell; test (80) / analyze / build figures carried forward
-  from the last verified run (release build + headless smoke documented above).
+### Working-tree / repo state (vs `941f0629`)
+- Snapshot updated to `2026-08-22` to include 5 commits above; repo clean except this file.
+- `flutter` at `D:\flutter\flutter` 3.41.9 stable (2026-04-29) Dart 3.11.5 — on PATH for `analyze`.
 
 ---
 
