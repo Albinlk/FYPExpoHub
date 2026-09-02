@@ -24,8 +24,11 @@ through the CMS.
 
 ## Row Level Security (RLS)
 
-All **19 tables** have RLS enabled. See [`SUPABASE_RLS_POLICIES.md`](./SUPABASE_RLS_POLICIES.md)
-for the full policy matrix.
+All **42 tables** (19 Expo Hub + 23 FYPMS) have RLS enabled. See
+[`SUPABASE_RLS_POLICIES.md`](./SUPABASE_RLS_POLICIES.md)
+for the Expo policy matrix; FYPMS policies live in
+`supabase/migrations/20260817000003_fypms_rls_policies.sql` and the
+September 2026 hardening migrations.
 
 ### Key Policies
 - **Default deny** — no data is accessible without an explicit policy
@@ -69,8 +72,9 @@ Per PDPA policy, the following student data is **approved for public display**:
 - **Never** use the service role key on the client
 
 ### Server-side / Scripts
-- The service role key (`SUPABASE_SERVICE_ROLE_KEY`) is used in migration
-  scripts (`scripts/lib/config.js`) and stored in `scripts/.env` (gitignored)
+- The service role key (`SUPABASE_SERVICE_ROLE_KEY`) was historically used by
+  local migration tooling (now removed); if you need it, obtain it from the
+  Supabase dashboard and keep it in a gitignored `.env`
 - The service role key **bypasses all RLS** — treat as a secret
 
 ## Secrets Management
@@ -79,12 +83,19 @@ Per PDPA policy, the following student data is **approved for public display**:
 |--------|----------|--------------|
 | `SUPABASE_URL` | `.env`, `--dart-define`, GitHub Actions secrets | No |
 | `SUPABASE_ANON_KEY` | `.env`, `--dart-define`, GitHub Actions secrets | No |
-| `SUPABASE_SERVICE_ROLE_KEY` | `scripts/.env` only | No |
+| `SUPABASE_SERVICE_ROLE_KEY` | Local gitignored `.env` only | No |
 | Firebase credentials | Removed | N/A |
+
+## Known Accepted Risks (Development)
+
+| Risk | Status | Rationale |
+|------|--------|-----------|
+| 11 `@fypms.test` demo accounts are **live** with a shared password documented in tracked seed migrations (`20260819000001`, `20260822142935`) | **Accepted** | Accounts are kept for development testing only. **Must be disabled or password-rotated before any real student data enters the project.** |
+| Anon key committed in `.env.example` | Accepted | Anon keys are publishable by design; RLS is the control. Rotate after initial release (checklist item below). |
 
 ## Security Audit Checklist
 
-- [x] All 19 tables have RLS enabled
+- [x] All 42 tables have RLS enabled
 - [x] Default deny (no blanket allow policies)
 - [x] Anonymous access restricted to published public data
 - [x] Lecturer visit mutations go through RPC functions
@@ -93,3 +104,28 @@ Per PDPA policy, the following student data is **approved for public display**:
 - [x] `matric_id` classified as approved public data per PDPA
 - [ ] Production anon key rotation (after initial release)
 - [ ] Enable Supabase Auth rate limiting
+- [ ] Disable `@fypms.test` demo accounts before production (see Accepted Risks above)
+
+## Security Hardening (September 2026)
+
+Applied via `supabase/migrations/20260901000001..3_security_hardening*.sql`:
+
+- **Private storage buckets** (`fyp-proposal-reports`, `fyp-final-reports`,
+  `fyp-deliverables`, `fyp-correction-evidence`) — anon read access removed;
+  reads/writes now path-scoped to the owning FYP record via
+  `can_read_fyp_storage_path()` / `can_write_fyp_storage_path()`
+- **`fyp-public-assets`** — writes restricted to coordinator/admin
+- **`list_fyp_students/staff/coordinators()`** — now gated to FYP coordinator /
+  CSP lecturer / admin (previously callable by anyone, leaking PII)
+- **Student self-UPDATE policies removed** on `fyp_records`, progress logs,
+  form submissions, report submissions, deliverables, lean canvases — all
+  edits flow through audited SECURITY DEFINER RPCs
+- **`fyp_marks_summaries`** — CSP lecturers SELECT-only (bypassing
+  `finalize_marks` is no longer possible)
+- **`is_csp_lecturer()`** — unknown course codes now deny instead of falling
+  back to CSP600
+- **`finalize_marks`** — cross-checks the record's actual course code
+- **`exec_sql_batch()` dropped** — leftover anon-executable arbitrary-SQL
+  function from the populate_projects scratch migrations
+- **Anon EXECUTE revoked** on all mutating RPCs; RLS-policy-referenced
+  helpers (read-only booleans, false for anon) intentionally keep anon grants
