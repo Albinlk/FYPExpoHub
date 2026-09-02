@@ -554,7 +554,8 @@ void main() {
 
       expect(find.text('Expo Publications'), findsOneWidget);
       expect(find.text('AI Health Assistant'), findsOneWidget);
-      expect(find.textContaining('Status: ready | event-1'), findsOneWidget);
+      // Event is now resolved to its title (was a raw UUID).
+      expect(find.textContaining('Status: ready | Expo 2026'), findsOneWidget);
       expect(find.text('Publish'), findsOneWidget);
     });
 

@@ -35,6 +35,19 @@ class _Fake extends http.BaseClient {
     bodies.add(body);
     // Return minimal success payload per function
     if (fn == 'update_fyp_record_field' || fn == 'admin_override_fyp_record_field') {
+      // Simulate the server-side ownership gate (can_edit_fyp_record): a cross-record
+      // edit is rejected with SQLSTATE 42501 / HTTP 403 carrying the permission-denied
+      // message the function RAISEs. Owned records succeed (200). This mirrors the live
+      // RBAC behaviour verified against the demo seed (s1->A, s2->B, s3->C).
+      if (fn == 'update_fyp_record_field' && body['p_value'] == 'CROSS-RECORD') {
+        final err = jsonEncode({
+          'code': '42501', 'details': null, 'hint': null,
+          'message': 'permission-denied: You do not have permission to edit this record.',
+        });
+        return http.StreamedResponse(
+            http.ByteStream.fromBytes(utf8.encode(err)), 403,
+            request: request, headers: const {'content-type': 'application/json; charset=utf-8'});
+      }
       return http.StreamedResponse(
           http.ByteStream.fromBytes(ok({'id': 'rec-1', 'project_title': body['p_value']}).bodyBytes), 200,
           request: request, headers: const {'content-type': 'application/json; charset=utf-8'});
@@ -96,6 +109,55 @@ void main() {
       await svc.adminOverrideFypRecordField(fypRecordId: 'rec-1', field: 'main_supervisor_id', value: '00000000-0000-0000-0000-000000000001', reason: 'QA');
       expect(_fake.calls.last, 'admin_override_fyp_record_field');
       expect(_fake.bodies.last['p_field'], 'main_supervisor_id');
+    });
+  });
+
+  // DEF-8 regression check: per-student ownership on update_fyp_record_field.
+  // Live verification (real JWTs, /rest/v1/rpc) confirmed all three seeded students
+  // edit their OWN record (200) and are denied on a foreign record (HTTP 403 /
+  // SQLSTATE 42501). These mock tests lock the client contract: args are forwarded
+  // on success, and the server's 403 denial is surfaced as PostgrestException.
+  group("DEF-2/DEF-8: per-student ownership gate", () {
+    test("student1 edits own record A -> 200, args forwarded", () async {
+      final svc = SupabaseRpcService(Supabase.instance.client);
+      final res = await svc.updateFypRecordField(fypRecordId: "rec-a", field: "project_title", value: "S1-OWN");
+      expect(_fake.calls.last, "update_fyp_record_field");
+      expect(_fake.bodies.last["p_fyp_record_id"], "rec-a");
+      expect(_fake.bodies.last["p_field"], "project_title");
+      expect(_fake.bodies.last["p_value"], "S1-OWN");
+      expect(res["project_title"], "S1-OWN");
+    });
+    test("student2 edits own record B -> 200, args forwarded", () async {
+      final svc = SupabaseRpcService(Supabase.instance.client);
+      final res = await svc.updateFypRecordField(fypRecordId: "rec-b", field: "project_title", value: "S2-OWN");
+      expect(_fake.calls.last, "update_fyp_record_field");
+      expect(_fake.bodies.last["p_fyp_record_id"], "rec-b");
+      expect(_fake.bodies.last["p_field"], "project_title");
+      expect(_fake.bodies.last["p_value"], "S2-OWN");
+      expect(res["project_title"], "S2-OWN");
+    });
+    test("student3 edits own record C -> 200, args forwarded", () async {
+      final svc = SupabaseRpcService(Supabase.instance.client);
+      final res = await svc.updateFypRecordField(fypRecordId: "rec-c", field: "project_description", value: "S3-OWN");
+      expect(_fake.calls.last, "update_fyp_record_field");
+      expect(_fake.bodies.last["p_field"], "project_description");
+      expect(_fake.bodies.last["p_value"], "S3-OWN");
+      expect(res["project_title"], "S3-OWN");
+    });
+    test("cross-record edit is denied (server 403) and surfaces as PostgrestException", () async {
+      final svc = SupabaseRpcService(Supabase.instance.client);
+      final before = _fake.bodies.length;
+      await expectLater(
+        () => svc.updateFypRecordField(fypRecordId: "rec-a", field: "project_title", value: "CROSS-RECORD"),
+        throwsA(
+          isA<PostgrestException>()
+              .having((e) => e.code, "code", "42501")
+              .having((e) => e.message, "message", contains("permission-denied")),
+        ),
+      );
+      expect(_fake.calls.last, "update_fyp_record_field");
+      expect(_fake.bodies.length, before + 1);
+      expect(_fake.bodies.last["p_value"], "CROSS-RECORD");
     });
   });
 
