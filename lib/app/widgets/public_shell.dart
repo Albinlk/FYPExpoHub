@@ -195,7 +195,7 @@ class _MobileBottomNavBar extends StatelessWidget {
   int _getSelectedIndex() {
     if (currentPath == '/') return 0;
     if (currentPath.startsWith('/booths')) return 1;
-    if (currentPath.startsWith('/schedule')) return 2;
+    if (currentPath.startsWith('/projects/junior-guide')) return 2;
     if (currentPath.startsWith('/lecturer')) return 3;
     return 4;
   }
@@ -209,7 +209,7 @@ class _MobileBottomNavBar extends StatelessWidget {
         context.go('/booths');
         break;
       case 2:
-        context.go('/schedule');
+        context.go('/projects/junior-guide');
         break;
       case 3:
         context.go('/lecturer');
@@ -324,10 +324,10 @@ class _MobileBottomNavBar extends StatelessWidget {
               selectedIcon: Icon(Icons.location_on, color: DesignSystem.onSecondaryContainer),
               label: 'Booths',
             ),
-            NavigationDestination(
-              icon: Icon(Icons.event_note_outlined),
-              selectedIcon: Icon(Icons.event_note, color: DesignSystem.onSecondaryContainer),
-              label: 'Schedule',
+             NavigationDestination(
+              icon: Icon(Icons.school_outlined),
+              selectedIcon: Icon(Icons.school, color: DesignSystem.onSecondaryContainer),
+              label: 'Past Sem Projects',
             ),
             NavigationDestination(
               icon: Icon(Icons.person_outline),

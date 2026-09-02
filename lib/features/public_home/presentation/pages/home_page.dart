@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../app/theme/theme.dart';
+import '../../../../core/domain/models/event.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/widgets/project_card.dart';
 
@@ -26,6 +27,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   Widget build(BuildContext context) {
     final isDesktop = MediaQuery.of(context).size.width >= 768;
     final padding = isDesktop ? DesignSystem.marginDesktop : DesignSystem.marginMobile;
+    final event = ref.watch(eventProvider);
 
     return Scaffold(
       body: SingleChildScrollView(
@@ -77,12 +79,12 @@ class _HomePageState extends ConsumerState<HomePage> {
                   const SizedBox(height: DesignSystem.spaceLg),
 
                   // EXHIBITION DETAILS ABOVE TIMER
-                  _buildExhibitionDetails(isDesktop),
+                  _buildExhibitionDetails(isDesktop, event),
 
                   const SizedBox(height: DesignSystem.spaceLg),
 
-                  // COUNTDOWN TIMER
-                  const _CountdownTimer(),
+                  // COUNTDOWN TIMER / EVENT STATUS
+                  _CountdownTimer(eventStart: event.startAt, eventEnd: event.endAt),
 
                   const SizedBox(height: DesignSystem.spaceXl),
 
@@ -220,7 +222,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                           itemCount: display.length,
                           itemBuilder: (context, index) => ProjectCard(
                             project: display[index],
-                            onTap: () => context.go('/projects/${display[index].id}'),
+                            onTap: () => context.go('/projects/${display[index].slug}'),
                           ),
                         );
                       }
@@ -235,7 +237,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                           child: ProjectCard(
                             project: display[index],
                             imageHeight: 160,
-                            onTap: () => context.go('/projects/${display[index].id}'),
+                            onTap: () => context.go('/projects/${display[index].slug}'),
                           ),
                         ),
                       );
@@ -258,18 +260,18 @@ class _HomePageState extends ConsumerState<HomePage> {
                       ? Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            _buildInfoTile(Icons.calendar_month, 'Exhibition Dates', '06 - 07 August 2026'),
-                            _buildInfoTile(Icons.location_on, 'Main Venue', 'Blok Kuliah, FSKM'),
-                            _buildInfoTile(Icons.hourglass_top, 'Visiting Hours', '9:00 AM - 5:00 PM'),
+                            _buildInfoTile(Icons.calendar_month, 'Exhibition Dates', _eventDates(event)),
+                            _buildInfoTile(Icons.location_on, 'Main Venue', event.venue),
+                            _buildInfoTile(Icons.hourglass_top, 'Visiting Hours', event.dailyHours),
                           ],
                         )
                       : Column(
                           children: [
-                            _buildInfoTile(Icons.calendar_month, 'Exhibition Dates', '06 - 07 August 2026'),
+                            _buildInfoTile(Icons.calendar_month, 'Exhibition Dates', _eventDates(event)),
                             const SizedBox(height: DesignSystem.spaceMd),
-                            _buildInfoTile(Icons.location_on, 'Main Venue', 'Blok Kuliah, FSKM'),
+                            _buildInfoTile(Icons.location_on, 'Main Venue', event.venue),
                             const SizedBox(height: DesignSystem.spaceMd),
-                            _buildInfoTile(Icons.hourglass_top, 'Visiting Hours', '9:00 AM - 5:00 PM'),
+                            _buildInfoTile(Icons.hourglass_top, 'Visiting Hours', event.dailyHours),
                           ],
                         ),
                 ],
@@ -281,22 +283,37 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
-  Widget _buildExhibitionDetails(bool isDesktop) {
+  /// "06 - 07 August 2026" derived from the live event record.
+  String _eventDates(Event event) {
+    final s = event.startAt.toLocal();
+    final e = event.endAt.toLocal();
+    const months = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December',
+    ];
+    if (s.month == e.month && s.year == e.year) {
+      return '${s.day.toString().padLeft(2, '0')} - '
+          '${e.day.toString().padLeft(2, '0')} ${months[e.month - 1]} ${e.year}';
+    }
+    return '${s.day}/${s.month}/${s.year} - ${e.day}/${e.month}/${e.year}';
+  }
+
+  Widget _buildExhibitionDetails(bool isDesktop, Event event) {
     final items = [
       _buildExhibitionDetailItem(
         Icons.calendar_month_rounded,
         'Date',
-        '06 - 07 August 2026',
+        _eventDates(event),
       ),
       _buildExhibitionDetailItem(
         Icons.access_time_rounded,
         'Time',
-        '9:00 AM - 5:00 PM',
+        event.dailyHours,
       ),
       _buildExhibitionDetailItem(
         Icons.location_on_rounded,
         'Venue',
-        'Blok Kuliah, FSKM',
+        event.venue,
       ),
     ];
 
@@ -431,43 +448,60 @@ class _HomePageState extends ConsumerState<HomePage> {
 }
 
 /// Isolated countdown timer widget — only this rebuilds every second,
-/// not the entire HomePage.
+/// not the entire HomePage. Shows a "concluded" state after the event ends
+/// and stops ticking.
 class _CountdownTimer extends StatefulWidget {
-  const _CountdownTimer();
+  final DateTime eventStart;
+  final DateTime eventEnd;
+
+  const _CountdownTimer({required this.eventStart, required this.eventEnd});
 
   @override
   State<_CountdownTimer> createState() => _CountdownTimerState();
 }
 
 class _CountdownTimerState extends State<_CountdownTimer> {
-  late Timer _timer;
+  Timer? _timer;
   Duration _timeRemaining = const Duration();
-  final DateTime _eventDate = DateTime(2026, 8, 6, 9, 0);
+  bool _concluded = false;
+  bool _live = false;
 
   @override
   void initState() {
     super.initState();
     _calculateTimeRemaining();
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      _calculateTimeRemaining();
-    });
+    if (!_concluded) {
+      _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        _calculateTimeRemaining();
+      });
+    }
   }
 
   @override
   void dispose() {
-    _timer.cancel();
+    _timer?.cancel();
     super.dispose();
   }
 
   void _calculateTimeRemaining() {
     final now = DateTime.now();
-    if (_eventDate.isAfter(now)) {
+    if (widget.eventEnd.isBefore(now)) {
+      // Event finished — stop ticking.
+      _timer?.cancel();
       setState(() {
-        _timeRemaining = _eventDate.difference(now);
+        _concluded = true;
+        _live = false;
+        _timeRemaining = Duration.zero;
+      });
+    } else if (widget.eventStart.isBefore(now)) {
+      // Event in progress.
+      setState(() {
+        _live = true;
+        _timeRemaining = widget.eventEnd.difference(now);
       });
     } else {
       setState(() {
-        _timeRemaining = Duration.zero;
+        _timeRemaining = widget.eventStart.difference(now);
       });
     }
   }
@@ -475,6 +509,57 @@ class _CountdownTimerState extends State<_CountdownTimer> {
   @override
   Widget build(BuildContext context) {
     final isDesktop = MediaQuery.of(context).size.width >= 768;
+
+    if (_concluded) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.08),
+          borderRadius: DesignSystem.radiusXl,
+          border: Border.all(color: Colors.white24),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.emoji_events, color: DesignSystem.secondaryContainer, size: 20),
+            const SizedBox(width: DesignSystem.spaceSm),
+            Text(
+              'Exhibition Concluded — Thank You for Visiting',
+              style: DesignSystem.bodyMd.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_live) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        decoration: BoxDecoration(
+          color: DesignSystem.secondaryContainer.withValues(alpha: 0.15),
+          borderRadius: DesignSystem.radiusXl,
+          border: Border.all(color: DesignSystem.secondaryContainer),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.celebration, color: DesignSystem.secondaryContainer, size: 20),
+            const SizedBox(width: DesignSystem.spaceSm),
+            Text(
+              'The Exhibition is Live Now!',
+              style: DesignSystem.bodyMd.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     final days = _timeRemaining.inDays;
     final hours = _timeRemaining.inHours % 24;
     final minutes = _timeRemaining.inMinutes % 60;

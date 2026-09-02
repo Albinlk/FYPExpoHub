@@ -184,7 +184,7 @@ class _LecturerPageState extends ConsumerState<LecturerPage> {
                     final project = filteredProjects[index];
                     return ProjectCard(
                       project: project,
-                      onTap: () => context.push('/projects/${project.id}?from=lecturer'),
+                      onTap: () => context.push('/projects/${project.slug}?from=lecturer'),
                     );
                   },
                   childCount: filteredProjects.length,

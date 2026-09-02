@@ -19,12 +19,27 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
   String _selectedDay = 'Day 1 - 06 Aug 2026';
   String _selectedVenue = 'All';
   String _selectedProgram = 'All';
+  bool _initializedFromQuery = false;
 
   @override
   void dispose() {
     _searchDebounce?.cancel();
     _searchController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Deep-link support: project detail's "View Booth Map" navigates to
+    // /booths?search=<booth number> — seed the search box once.
+    if (!_initializedFromQuery) {
+      _initializedFromQuery = true;
+      final q = GoRouterState.of(context).uri.queryParameters['search'] ?? '';
+      if (q.isNotEmpty) {
+        _searchController.text = q;
+      }
+    }
   }
 
   /// Static map from Excel booth-number prefix to a human-friendly venue label.
@@ -418,7 +433,7 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
               return Card(
                 margin: EdgeInsets.zero,
                 child: ListTile(
-                  onTap: () => context.go('/projects/${p.id}'),
+                  onTap: () => context.go('/projects/${p.slug}'),
                   leading: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
                     child: Image.network(

@@ -184,7 +184,7 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
                     final project = filteredProjects[index];
                     return ProjectCard(
                       project: project,
-                      onTap: () => context.go('/projects/${project.id}'),
+                      onTap: () => context.go('/projects/${project.slug}'),
                     );
                   }, childCount: filteredProjects.length),
                 ),
