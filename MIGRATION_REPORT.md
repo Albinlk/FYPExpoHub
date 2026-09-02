@@ -1,4 +1,9 @@
 # Migration Status Report — FYP Expo Hub
+
+> **Status: COMPLETE & SUPERSEDED (August 2026).** This is a historical
+> record of the one-time Firebase-to-Supabase migration. The `tools/` and
+> `scripts/` paths it references have since been removed from the repository.
+
 Date: 2026-08-14
 Project Ref: `siedglubjcedkbrpdzgi`
 
@@ -129,5 +134,5 @@ If data corruption or migration failure:
 3. Re-run migration files from `supabase/migrations/`
 4. Restore from pre-migration Firestore export if needed
 
-Detailed rollback procedure in `tools/firebase_to_supabase/migrate_data.js`
-output: `rollback_plan.md`.
+Detailed rollback procedure was documented in the (now-removed)
+`tools/firebase_to_supabase/rollback_plan.md`.

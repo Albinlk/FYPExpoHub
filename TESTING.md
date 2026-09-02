@@ -2,7 +2,8 @@
 
 ## Test Suite
 
-The project includes Flutter unit and widget tests in `test/`.
+The project includes **132 Flutter tests** (unit, widget, and route-guard)
+in `test/` — all runnable offline (no live backend needed).
 
 ### Running Tests
 
@@ -14,10 +15,7 @@ flutter pub get
 flutter test
 
 # Run a specific test file
-flutter test test/path/to/test.dart
-
-# Run with verbose output
-flutter test --verbose
+flutter test test/features/lecturer_visits/lecturer_visit_detail_test.dart
 
 # Run with coverage
 flutter test --coverage
@@ -29,75 +27,85 @@ flutter test --coverage
 flutter analyze
 ```
 
-Treats new errors as blocking. Existing deprecation warnings are informational.
+Zero errors is the gate (pre-existing infos/warnings are informational).
 
 ## Test Organization
 
 ```
 test/
-├── unit/
-│   ├── models/          # freezed model tests
-│   ├── providers/       # Riverpod provider tests
-│   └── utils/           # Utility function tests
-├── widget/
-│   ├── public/          # Public page widget tests
-│   ├── admin/           # Admin CMS widget tests
-│   └── lecturer/        # Lecturer portal widget tests
-└── integration/
-    └── app_test.dart    # End-to-end integration tests
+├── widget_test.dart                      # App smoke test (placeholder client)
+├── supabase_migration_test.dart          # Expo model round-trips
+├── admin_router_guards_test.dart         # Admin/lecturer route guards
+└── features/
+    ├── core/state_providers_test.dart    # Expo notifiers: offline fallback,
+    │                                     #   CRUD, publish toggle, featured
+    ├── lecturer_visits/                  # My Visits detail page + dialogs
+    │   └── lecturer_visit_detail_test.dart
+    ├── admin_feedback/                   # Feedback model + CSV export
+    ├── junior_project_guide/             # Similarity engine (Jaccard, clusters)
+    └── fypms/                            # 10 files: models, route guards,
+                                          #   staff/student pages, RPC lifecycle
+                                          #   (mocked HTTP), defect fixes,
+                                          #   regression, features
 ```
 
-## Expected Test Count
+### Notable suites
+- `fypms_rpc_lifecycle_test.dart` — the full 15-step student→CSP→coordinator
+  RPC chain against a mocked HTTP transport (the strongest suite).
+- `admin_router_guards_test.dart` — real `goRouterProvider` redirects:
+  unauthenticated/non-admin bounce, admin & lecturer post-sign-in landing.
+- `state_providers_test.dart` — the offline "seed-and-swap" fallback that
+  ships in every public page load.
 
-15 tests total (as per the release checklist).
+## Test Coverage Targets
 
-## Test Coverage Requirements
-
-| Feature Area | Target Coverage |
+| Feature Area | Status (Sept 2026) |
 |---|---|
-| Models (fromJson/toJson) | 100% |
-| Providers (state transitions) | 100% |
-| Public pages (anonymous) | 100% |
-| Lecturer pages (authenticated) | 100% |
-| Admin pages (authenticated) | 100% |
-| Offline fallback logic | 100% |
+| Models (fromJson/toJson) | Covered (Expo + FYPMS) |
+| FYPMS route guards | Covered (12 cases) |
+| Admin/lecturer route guards | Covered (7 cases) |
+| Lecturer visits flow (mark/void) | Covered (6 cases) |
+| Expo notifiers incl. offline fallback | Covered (11 cases) |
+| FYPMS staff/student pages | Covered (26 cases) |
+| Junior guide similarity | Covered (17 cases) |
+| Admin import staging lifecycle | Not yet covered |
+| Admin CRUD pages (non-import) | Not yet covered |
 
 ## Manual Testing Checklist
 
 ### Public Site (Anonymous)
 - [ ] Home page loads with event info
-- [ ] Projects list displays
-- [ ] Project detail page shows matric ID
-- [ ] Schedule page loads
-- [ ] Booths page loads
-- [ ] Announcements display
-- [ ] Awards page loads
-- [ ] FAQ/Privacy pages load
-- [ ] Offline fallback: disconnect network, verify seed data renders
+- [ ] Projects list displays; search/filters work
+- [ ] Project detail page shows matric ID, team, booth, links
+- [ ] Schedule, booths, announcements, awards, FAQ pages load
+- [ ] Junior Project Guide renders past titles + similarity clusters
+- [ ] Feedback floating button submits an entry
+- [ ] Offline fallback: with Supabase paused, seed data (376 projects) renders
 
 ### Lecturer Site
 - [ ] Sign in with lecturer account
-- [ ] My Visits dashboard shows assigned projects
-- [ ] Mark project as visited (verify success)
-- [ ] Cancel/void visit (verify required reason)
-- [ ] Visit appears in audit log
+- [ ] My Visits dashboard shows assigned SV/EX projects
+- [ ] Mark project as visited (note optional) — appears instantly
+- [ ] Cancel/void visit — reason required; status becomes voided
+- [ ] Duplicate visit attempt surfaces friendly error
 
 ### Admin Site
 - [ ] Sign in with admin account
 - [ ] All CMS pages load
-- [ ] Create/edit project
-- [ ] Toggle publication status
-- [ ] Import master file
-- [ ] Data matching dashboard works
-- [ ] Publish import changes
-- [ ] Visit monitoring dashboard
-- [ ] Export CSV from visits
-- [ ] Void visit with reason
+- [ ] Create/edit/publish project; toggle draft/published
+- [ ] Import master .xlsx → staging → Data Matching Dashboard → publish
+- [ ] Visits monitoring tabs + CSV export
+- [ ] Feedback moderation (status + admin note)
 
-### Offline/Paused Project
-- [ ] Simulate Supabase paused (no network)
-- [ ] Verify maintenance dialog appears
-- [ ] Verify offline seed data renders on public pages
+### FYPMS
+- [ ] Student: create record, submit F1 request, progress log, form,
+      report upload (Storage), lean canvas version, deliverable,
+      correction evidence
+- [ ] Supervisor: review log, evaluate form, create correction
+- [ ] Examiner: evaluate + corrections pages load
+- [ ] CSP: approve request, milestone, finalize marks (lock enforced)
+- [ ] Coordinator: assign roles, schedule presentation, publish record to
+      Expo → appears on public /projects
 
 ## CI Configuration
 
@@ -105,24 +113,24 @@ GitHub Actions workflow (`.github/workflows/deploy.yml`):
 1. Checkout code
 2. Setup Flutter
 3. `flutter pub get`
-4. `flutter analyze`
-5. `flutter build web --release` with `--dart-define` credentials
-6. Deploy to GitHub Pages
+4. `flutter analyze` (non-fatal infos/warnings)
+5. `flutter test`
+6. `flutter build web --release` with `--dart-define` credentials
+7. Deploy to GitHub Pages
 
 ## Supabase Database Testing
-
-Test the Supabase connection and schema:
 
 ```bash
 # Using the Supabase CLI
 supabase login
 supabase db diff
-
-# Manual API test (via scripts)
-node -e "const {supabaseSelect} = require('./scripts/lib/firebase_api'); supabaseSelect('events','select=id,slug,title,status').then(r => console.log(r))"
 ```
 
-Expected output:
-```
-[{data: [{id: "1977e782-430c-5f3f-a6c7-359f74650691", slug: "fskm-fyp-2026", title: "FSKM FYP Expo Hub 2026", status: "active"}], error: null}]
+Role-simulation SQL (run via MCP / SQL editor):
+```sql
+begin;
+set local request.jwt.claims to '{"sub":"<uid>","role":"authenticated"}';
+set local role authenticated;
+select count(*) from public.fyp_records;  -- should be only the caller's rows
+rollback;
 ```

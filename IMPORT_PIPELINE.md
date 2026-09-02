@@ -101,17 +101,12 @@ This RPC function:
 4. Updates `import.status` to `'published'`
 5. Returns a JSON summary with counts
 
-## Migration Tool
+## Migration Tool (removed)
 
-The `tools/firebase_to_supabase/migrate_data.js` script provides a
-Firestore-export-to-SQL migration path:
-```bash
-node tools/firebase_to_supabase/migrate_data.js --dry-run
-node tools/firebase_to_supabase/migrate_data.js --write
-```
-
-Outputs:
-- `seed_data.sql`
+The one-time Firebase migration tooling (`tools/firebase_to_supabase/`,
+including `migrate_data.js` and its `seed_data.sql` output) was removed from
+the repository in September 2026 after the migration completed. See
+`MIGRATION_REPORT.md` for the historical record.
 - `migration_summary.json`
 - `migration_errors.csv`
 - `rollback_plan.md`

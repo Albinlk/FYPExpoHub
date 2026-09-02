@@ -5,7 +5,19 @@
 - **URL**: `https://siedglubjcedkbrpdzgi.supabase.co`
 - **Region**: Default (Free Tier)
 
-## Tables (19)
+## Scope
+
+The database contains **42 tables**: the **19 Expo Hub tables** documented
+in detail below, plus **23 FYPMS tables** (see the addendum at the end and
+the source of truth in `supabase/migrations/`).
+
+> **Note:** The live project also carries a small number of tables from an
+> unrelated content-scheduler template (`users`, `content`, `channels`,
+> `activities`, `processing_jobs`, `schedules`, `telemetry`,
+> `site_settings`, `oauth_states`). They are RLS-protected and unused by
+> this app.
+
+## Tables (19) — Expo Hub
 
 ### 1. profiles
 User profiles linked to Supabase Auth (`auth.users`).
@@ -130,3 +142,41 @@ FYP projects exhibited at the event.
 - `unique (event_id, booth_number)` on booths
 - `unique (event_id, project_id, lecturer_id, role)` on lecturer_assignments
 - `unique (event_id, project_id, lecturer_id, visit_role)` on student_project_visits
+
+## FYPMS Tables (23) — Summary
+
+Detailed DDL lives in `supabase/migrations/20260817000001_fypms_core_tables.sql`
+(+ additive migrations). All have RLS and `updated_at` triggers.
+
+| Table | Purpose | Key columns / relations |
+|-------|---------|------------------------|
+| `fyp_records` | Central FYP entity | `student_id → profiles`, `academic_semester_id`, `current_course_code` (CSP600/CSP650), `main_supervisor_id` / `co_supervisor_id` / `examiner_id`, `workflow_status` (17 states), unique per (semester, student, course) |
+| `fyp_record_assignments` | Parallel assignment rows | `fyp_record_id`, `lecturer_id`, `academic_role` (supervisor/co_supervisor/examiner), `is_active` |
+| `academic_semesters` | Semester reference | `code`, `status` (planned/active/completed/archived) |
+| `academic_courses` | Course reference | `code` (CSP600/CSP650), `stage` (formulation/project) |
+| `fyp_course_offerings` | Who teaches what, when | (semester, course, `lecturer_id`), `is_active`, `max_students` |
+| `profile_academic_roles` | FYPMS role grants | (profile, `role_code` in 7 values, `programme_code`), `is_active` |
+| `fyp_supervision_requests` | F1 requests | record FK, `preferred_supervisor_id`, status pending/approved/rejected/withdrawn |
+| `fyp_progress_logs` | F5 weekly logs | record FK, `week_number` (unique per record), status draft/submitted/validated/rejected |
+| `fyp_form_submissions` | F1–F16 form payloads | record FK, `form_code` CHECK, `form_version`, `payload jsonb` |
+| `fyp_form_evaluations` | Rubric scoring | submission FK + `evaluator_id` (unique pair), `criteria_scores jsonb`, server-computed `weighted_total` |
+| `fyp_rubric_templates` | Versioned rubrics | `criteria jsonb`, versioned |
+| `fyp_report_submissions` | Proposal/final reports | record FK, `report_type`, `version`, `file_url`, `similarity_index` |
+| `fyp_deliverables` | Typed checklist | record FK, `deliverable_type`, versioned |
+| `fyp_lean_canvases` | F13 canvases | record FK, `canvas_version`, `is_latest` |
+| `fyp_correction_items` | Corrections | record FK, auto `CORR-xxxxxxxx`, severity minor/major, status open→…→closed |
+| `fyp_correction_confirmations` | Staff confirmations | correction FK, `confirmed_by` |
+| `fyp_milestones` | Milestones | record FK + `milestone_code` (unique), `target_date`, status |
+| `fyp_milestone_extensions` | Extension requests | milestone FK, `requested_by`, decision fields |
+| `fyp_marks_summaries` | Final marks | (record, semester, course) unique, `marks jsonb`, `weighted_total`, `is_finalized` lock |
+| `fyp_presentation_sessions` | Defence/expo sessions | offering FK, `session_type`, times, venue |
+| `fyp_presentation_slots` | Slot bookings | session FK + record FK, `slot_number`, times, `room` |
+| `fyp_expo_publications` | FYPMS → Expo bridge | record FK + `events` FK, `payload jsonb` (public-safe whitelist), `published_project_id` |
+| `fyp_audit_logs` | RPC audit trail | actor, action, target, `metadata_safe jsonb`, `source='database_rpc'` |
+
+### Storage buckets (5)
+`fyp-proposal-reports`, `fyp-final-reports`, `fyp-deliverables`,
+`fyp-correction-evidence` (private; path-scoped via
+`can_read/write_fyp_storage_path`) and `fyp-public-assets` (public read;
+coordinator/admin write). Path convention:
+`{semester_code}/{fyp_record_id}/{resource_type}/{version}/{file_name}`.

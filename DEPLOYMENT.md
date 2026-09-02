@@ -73,18 +73,29 @@ flutter run -d chrome \
 
 ### Migrations
 
-Migrations live in `supabase/migrations/`:
+Migrations live in `supabase/migrations/` (timestamp-prefixed, applied in
+order):
+
 ```
-01_initial_schema.sql       — 19 tables, indexes, constraints
-02_rls_policies.sql         — RLS policies, helper functions
-03_rpc_functions.sql        — RPC functions (SECURITY DEFINER)
-04_seed_data.sql            — Seed data (settings, events)
+20260814000001..04  Expo Hub: schema, RLS, RPCs, seed
+20260817000001..07  FYPMS: core tables, helpers, RLS, RPCs, storage, seed
+20260818/19*        FYPMS: student slice, workflow RPCs, seeds, realtime
+20260820000001/02   FYPMS demo seed + realtime publication
+20260821*           (live-only populate_projects bulk-import series)
+20260822*           Defect fixes (DEF-1..7), auth policies, co-supervisor seed
+20260901*           Security hardening (storage path-scoping, RPC gates,
+                    exec_sql_batch removal, F14-F16 flag, evidence RPC)
 ```
 
-To apply migrations locally:
+To apply migrations:
 ```bash
 supabase db push
 ```
+
+> The live project also contains a historical `populate_projects` /
+> `exec_sql` migration series applied during the initial bulk import; it has
+> been cleaned up (`exec_sql`/`exec_sql_batch` dropped) and is not part of
+> the repo's migration set.
 
 ### TypeScript Types
 

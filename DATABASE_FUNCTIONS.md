@@ -1,11 +1,12 @@
 # Database Functions (RPC) — FYP Expo Hub
 
-All 5 custom PostgreSQL functions use `SECURITY DEFINER` so they execute
-with the function owner's privileges, allowing them to bypass RLS
-restrictions that would block the authenticated user directly.
+The database defines **~55 functions**: read-only policy helpers
+(`is_admin()`, `can_read_fyp_record()`, `is_csp_lecturer()`, ...) plus
+**~30 SECURITY DEFINER RPCs** for mutations. All SECURITY DEFINER functions
+pin `search_path` and use `auth.uid()` to identify and gate the caller.
 
-Each function uses `auth.uid()` to identify the caller and validates
-their profile role from `public.profiles`.
+The 5 Expo Hub RPCs are documented in detail below; the FYPMS RPC set is
+summarized at the end (source of truth: `supabase/migrations/`).
 
 ## 1. `mark_student_project_visited`
 
@@ -164,3 +165,46 @@ final result = await supabase.rpc('update_event_configuration', {
   },
 });
 ```
+
+---
+
+## FYPMS RPC Functions (summary)
+
+All follow the same conventions: `auth.uid()` null-check (`28000`), role
+gate (`42501`), argument validation (`22023`), state-machine preconditions
+(`55000`), and an `fyp_audit_logs` write with `source='database_rpc'`.
+
+| Function | Gate | Purpose |
+|---|---|---|
+| `create_fyp_record` | coordinator/admin or student self-service | Create record; sets initial workflow status by course |
+| `submit_supervision_request` | record owner | F1 supervision request |
+| `decide_supervision_request` | assigned supervisor/co-sup or coordinator/CSP | Approve/reject; sets `main_supervisor_id` on approval |
+| `update_fyp_record_field` / `admin_override_fyp_record_field` | owner / admin (+reason) | Edit whitelisted project fields (typed CASE branches) |
+| `submit_progress_log` | record owner | F5 weekly log (unique per record+week) |
+| `validate_progress_log` | assigned supervisor/co-sup/coordinator | Validate or reject submitted logs |
+| `submit_fyp_form` | record owner | Version form submissions; F14–F16 require `settings.fypms_features.special_evaluation_enabled` |
+| `submit_form_evaluation` | assigned staff | Upsert evaluation; `weighted_total` computed server-side from the active rubric |
+| `save_lean_canvas` | owner/assigned staff | New canvas version; demotes previous `is_latest` |
+| `submit_deliverable` | record owner | Deliverable checklist submission |
+| `submit_report_version` | record owner | Report version + storage file URL |
+| `assign_supervisor_to_fyp_record` | coordinator | Assign supervisor/co-supervisor |
+| `assign_examiner` | CSP lecturer or coordinator | Assign examiner + assignment row |
+| `create_or_update_milestone` | CSP lecturer / supervisor | Upsert milestone |
+| `grant_milestone_extension` | (defined; no UI yet) | Milestone extension workflow |
+| `finalize_marks` | CSP lecturer for the course — cross-checked against the record's actual course | Sum component breakdown; `is_finalized` lock |
+| `schedule_presentation_slot` | CSP lecturer of the session's offering or coordinator | Insert slot; sets `project_pending_presentation` |
+| `create_correction_item` | assigned supervisor/co-sup/examiner | Auto `CORR-xxxxxxxx` code |
+| `submit_correction_evidence` | record owner (student) | open/in_progress → `evidence_submitted` for staff review |
+| `confirm_correction` / `confirm_fyp_corrections` | assigned staff only | Confirmation row + status advance |
+| `prepare_expo_publication` | coordinator/admin | Build public-safe payload (whitelist merge) |
+| `publish_fyp_record_to_expo` | coordinator/admin | Upsert into public `projects`; marks publication published |
+| `archive_fyp_record` | coordinator/admin | Archive record |
+| `list_fyp_students` / `list_fyp_staff` / `list_fyp_coordinators` | coordinator / CSP lecturer / admin (in-function gate) | Profile listings for pickers (RLS blocks direct reads) |
+
+## September 2026 hardening notes
+
+- `exec_sql_batch` **dropped** (leftover anon-executable arbitrary-SQL function).
+- Anon EXECUTE revoked on all mutating RPCs; policy-referenced read-only
+  helpers keep anon grants by design (RLS evaluates them as the caller).
+- `finalize_marks` cross-checks `p_course_code` against the record's
+  `current_course_code`.
