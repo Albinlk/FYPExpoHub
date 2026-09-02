@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
+import '../../../../core/domain/models/fypms/fyp_record.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import '../widgets/fypms_loading_widget.dart';
 
@@ -43,7 +44,7 @@ class SupervisorProgressPage extends ConsumerWidget {
 }
 
 class _RecordProgressSection extends ConsumerWidget {
-  final dynamic record;
+  final FypRecord record;
 
   const _RecordProgressSection({required this.record});
 

@@ -21,6 +21,8 @@ import '../features/fypms/presentation/pages/supervisor_evaluations_page.dart';
 import '../features/fypms/presentation/pages/supervisor_milestones_page.dart';
 import '../features/fypms/presentation/pages/supervisor_progress_page.dart';
 import '../features/fypms/presentation/pages/examiner_dashboard_page.dart';
+import '../features/fypms/presentation/pages/examiner_corrections_page.dart';
+import '../features/fypms/presentation/pages/examiner_evaluations_page.dart';
 import '../features/fypms/presentation/pages/fypms_placeholder_page.dart';
 import '../features/fypms/presentation/pages/lecturer_record_detail_page.dart';
 import '../features/fypms/presentation/pages/student_corrections_page.dart';
@@ -412,17 +414,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/fypms/examiner/evaluations',
-            builder: (context, state) => const FypmsPlaceholderPage(
-              title: 'Evaluations',
-              icon: Icons.description,
-            ),
+            builder: (context, state) => const ExaminerEvaluationsPage(),
           ),
           GoRoute(
             path: '/fypms/examiner/corrections',
-            builder: (context, state) => const FypmsPlaceholderPage(
-              title: 'Corrections',
-              icon: Icons.fact_check,
-            ),
+            builder: (context, state) => const ExaminerCorrectionsPage(),
           ),
           // ---- CSP workspace ----
           GoRoute(

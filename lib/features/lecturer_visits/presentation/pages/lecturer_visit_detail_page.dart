@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/project.dart';
+import '../../../../core/domain/models/project_lecturer_assignment.dart';
 import '../../../../core/domain/models/student_visit.dart';
 import '../../../../core/supabase/supabase_client_provider.dart';
 import '../../../../core/state/state_providers.dart';
@@ -229,7 +230,7 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
 
   Widget _buildVisitSection(
     String title,
-    dynamic assignment,
+    ProjectLecturerAssignment? assignment,
     StudentVisit? visit,
     Project project,
     bool isMarking,

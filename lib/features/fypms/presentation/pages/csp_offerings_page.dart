@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../app/theme/theme.dart';
+import '../../../../core/domain/models/fypms/academic_semester.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import '../widgets/fypms_loading_widget.dart';
 
@@ -10,6 +12,7 @@ class CspOfferingsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final offerings = ref.watch(fypmsOfferingsProvider);
+    final semesters = ref.watch(fypmsSemestersProvider);
 
     return Scaffold(
       backgroundColor: DesignSystem.background,
@@ -27,6 +30,10 @@ class CspOfferingsPage extends ConsumerWidget {
           if (list.isEmpty) {
             return const Center(child: Text('No active course offerings found.'));
           }
+          final semesterCodeById = <String, String>{
+            for (final s in semesters.asData?.value ?? const <AcademicSemester>[])
+              s.id: s.code,
+          };
           return ListView(
             padding: const EdgeInsets.all(DesignSystem.gutter),
             children: [
@@ -40,7 +47,7 @@ class CspOfferingsPage extends ConsumerWidget {
                     contentPadding: const EdgeInsets.all(DesignSystem.spaceMd),
                     leading: const Icon(Icons.school, size: 40, color: DesignSystem.primary),
                     title: Text(
-                      '${offering.courseCode} — ${offering.academicSemesterId}',
+                      '${offering.courseCode} — ${semesterCodeById[offering.academicSemesterId] ?? offering.academicSemesterId}',
                       style: DesignSystem.bodyLg.copyWith(fontWeight: FontWeight.bold),
                     ),
                     subtitle: Text(
@@ -48,13 +55,7 @@ class CspOfferingsPage extends ConsumerWidget {
                       style: DesignSystem.bodySm,
                     ),
                     trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      // Logic to view students in this offering
-                      // For now, we just show a snackbar
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Viewing offering ${offering.courseCode}')),
-                      );
-                    },
+                    onTap: () => context.go('/fypms/csp/milestones'),
                   ),
                 ),
             ],
