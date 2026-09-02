@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/state/fypms_state_providers.dart';
+import '../../../../core/utils/fypms_format.dart';
 import '../widgets/fypms_loading_widget.dart';
 
 class StudentRecordDetailPage extends ConsumerWidget {
@@ -13,6 +14,7 @@ class StudentRecordDetailPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final records = ref.watch(myFypRecordsProvider);
     final assignments = ref.watch(fypRecordAssignmentsProvider(recordId));
+    final directory = ref.watch(supervisorsDirectoryProvider);
 
     return records.when(
       loading: () => const FypmsLoadingWidget(),
@@ -31,6 +33,15 @@ class StudentRecordDetailPage extends ConsumerWidget {
             ),
           );
         }
+
+        // Resolve staff display names from the public directory (id + name +
+        // role); fall back gracefully while it loads.
+        final nameById = <String, String>{
+          for (final s in directory.asData?.value ?? [])
+            if (s['id'] is String) s['id'] as String: (s['display_name'] as String? ?? ''),
+        };
+        String staffName(String? id) =>
+            id == null ? 'Not assigned' : (nameById[id] ?? 'Staff member');
 
         return Scaffold(
           backgroundColor: DesignSystem.background,
@@ -59,15 +70,27 @@ class StudentRecordDetailPage extends ConsumerWidget {
                   _InfoRow(label: 'Course', value: record.currentCourseCode),
                   _InfoRow(label: 'Programme', value: record.programmeCode),
                   _InfoRow(label: 'Matric ID', value: record.matricId ?? '—'),
-                  _InfoRow(label: 'Workflow Status', value: record.workflowStatus.replaceAll('_', ' ')),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                          width: 140,
+                          child: Text('Workflow Status', style: DesignSystem.bodySm.copyWith(fontWeight: FontWeight.bold)),
+                        ),
+                        Expanded(child: FypStatusBadge.workflow(record.workflowStatus)),
+                      ],
+                    ),
+                  ),
                 ],
               ),
               _Section(
                 title: 'Supervisors & Examiner',
                 children: [
-                  _InfoRow(label: 'Main Supervisor', value: record.mainSupervisorId ?? 'Not assigned'),
-                  _InfoRow(label: 'Co-Supervisor', value: record.coSupervisorId ?? 'Not assigned'),
-                  _InfoRow(label: 'Examiner', value: record.examinerId ?? 'Not assigned'),
+                  _InfoRow(label: 'Main Supervisor', value: staffName(record.mainSupervisorId)),
+                  _InfoRow(label: 'Co-Supervisor', value: staffName(record.coSupervisorId)),
+                  _InfoRow(label: 'Examiner', value: staffName(record.examinerId)),
                 ],
               ),
               _Section(
@@ -92,15 +115,18 @@ class StudentRecordDetailPage extends ConsumerWidget {
                                     color: DesignSystem.primary,
                                   ),
                                   title: Text(a.academicRole.replaceAll('_', ' '), style: DesignSystem.bodySm),
-                                  subtitle: Text('Assigned: ${a.assignedAt.toLocal()}'.replaceFirst(' 00:00:00', ''), style: DesignSystem.bodySm),
+                                  subtitle: Text(
+                                    'Assigned: ${formatFypDate(a.assignedAt)}',
+                                    style: DesignSystem.bodySm,
+                                  ),
                                 ),
                             ],
                           ),
                   ),
                 ],
               ),
-              _InfoRow(label: 'Created', value: record.createdAt.toIso8601String()),
-              _InfoRow(label: 'Last Updated', value: record.updatedAt.toIso8601String()),
+              _InfoRow(label: 'Created', value: formatFypDateTime(record.createdAt)),
+              _InfoRow(label: 'Last Updated', value: formatFypDateTime(record.updatedAt)),
             ],
           ),
         );

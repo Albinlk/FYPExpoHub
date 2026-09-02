@@ -4,6 +4,7 @@ import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/fypms/fyp_milestone.dart';
 import '../../../../core/domain/models/fypms/fyp_record.dart';
 import '../../../../core/state/fypms_state_providers.dart';
+import '../../../../core/utils/fypms_format.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/supabase/fypms_rpc_service.dart';
 import '../widgets/fypms_loading_widget.dart';
@@ -96,12 +97,18 @@ class _RecordMilestonesSection extends ConsumerWidget {
                       leading: const Icon(Icons.flag, color: DesignSystem.primary),
                       title: Text('${m.milestoneCode} — ${m.milestoneTitle}', style: DesignSystem.bodySm.copyWith(fontWeight: FontWeight.bold)),
                       subtitle: Text(
-                        'Target: ${m.targetDate?.toLocal().toString().split(' ')[0] ?? 'TBD'} | Status: ${m.status}',
+                        'Target: ${m.targetDate != null ? formatFypDate(m.targetDate!) : 'TBD'}',
                         style: DesignSystem.bodySm,
                       ),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.edit, size: 20),
-                        onPressed: () => _showMilestoneDialog(context, ref, m),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          FypStatusBadge.milestone(m.status),
+                          IconButton(
+                            icon: const Icon(Icons.edit, size: 20),
+                            onPressed: () => _showMilestoneDialog(context, ref, m),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -152,7 +159,7 @@ class _RecordMilestonesSection extends ConsumerWidget {
                     const SizedBox(height: DesignSystem.spaceMd),
                     ListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: Text('Target Date: ${selectedDate.toLocal().toString().split(' ')[0]}', style: DesignSystem.bodySm),
+                      title: Text('Target Date: ${formatFypDate(selectedDate)}', style: DesignSystem.bodySm),
                       trailing: IconButton(
                         icon: const Icon(Icons.calendar_today),
                         onPressed: () async {

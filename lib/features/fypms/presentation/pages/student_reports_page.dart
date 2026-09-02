@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/fypms/fyp_record.dart';
 import '../../../../core/state/fypms_state_providers.dart';
+import '../../../../core/utils/fypms_format.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/supabase/fypms_rpc_service.dart';
 import '../widgets/fypms_loading_widget.dart';
@@ -84,7 +85,7 @@ class StudentReportsPage extends ConsumerWidget {
                                   ),
                                 const SizedBox(height: DesignSystem.spaceSm),
                                 Text(
-                                  'Submitted ${report.submittedAt.toLocal()}'.replaceFirst(' 00:00:00', ''),
+                                  'Submitted ${formatFypDateTime(report.submittedAt)}',
                                   style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant),
                                 ),
                               ],

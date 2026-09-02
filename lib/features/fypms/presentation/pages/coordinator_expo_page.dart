@@ -10,6 +10,7 @@ class CoordinatorExpoPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final publications = ref.watch(fypExpoPublicationsProvider);
+    final events = ref.watch(fypPublishedEventsProvider);
 
     return Scaffold(
       backgroundColor: DesignSystem.background,
@@ -23,7 +24,12 @@ class CoordinatorExpoPage extends ConsumerWidget {
       body: publications.when(
         loading: () => const FypmsLoadingWidget(),
         error: (e, _) => Center(child: Text('Error: $e')),
-        data: (pubs) => ListView(
+        data: (pubs) {
+          final eventTitleById = <String, String>{
+            for (final e in events.asData?.value ?? [])
+              if (e['id'] is String) e['id'] as String: (e['title'] as String? ?? 'Event'),
+          };
+          return ListView(
           padding: const EdgeInsets.all(DesignSystem.gutter),
           children: [
             FilledButton.icon(
@@ -59,7 +65,8 @@ class CoordinatorExpoPage extends ConsumerWidget {
                       style: DesignSystem.bodyLg.copyWith(fontWeight: FontWeight.bold),
                     ),
                     subtitle: Text(
-                      'Status: ${pub.status} | ${pub.eventId}',
+                      'Status: ${pub.status.replaceAll('_', ' ')} | '
+                      '${eventTitleById[pub.eventId] ?? 'Event'}',
                       style: DesignSystem.bodySm,
                     ),
                     trailing: pub.status == 'ready'
@@ -75,7 +82,8 @@ class CoordinatorExpoPage extends ConsumerWidget {
                   ),
                 ),
           ],
-        ),
+        );
+        },
       ),
     );
   }

@@ -5,6 +5,7 @@ import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/fypms/fyp_record.dart';
 import '../../../../core/supabase/supabase_client_provider.dart';
 import '../../../../core/state/fypms_state_providers.dart';
+import '../../../../core/utils/fypms_format.dart';
 
 class StudentDashboardPage extends ConsumerWidget {
   const StudentDashboardPage({super.key});
@@ -81,36 +82,11 @@ class _RecordCard extends ConsumerWidget {
             const SizedBox(height: DesignSystem.spaceXs),
             Text('Programme: ${r.programmeCode}', style: DesignSystem.bodySm),
             const SizedBox(height: DesignSystem.spaceSm),
-            _StatusBadge(status: r.workflowStatus),
+            FypStatusBadge.workflow(r.workflowStatus),
           ],
         ),
         trailing: const Icon(Icons.chevron_right),
         onTap: () => context.go('/fypms/student/records/${r.id}'),
-      ),
-    );
-  }
-}
-
-class _StatusBadge extends StatelessWidget {
-  final String status;
-
-  const _StatusBadge({required this.status});
-
-  @override
-  Widget build(BuildContext context) {
-    final label = status.replaceAll('_', ' ');
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: DesignSystem.spaceSm, vertical: 4),
-      decoration: BoxDecoration(
-        color: DesignSystem.secondary.withOpacity(0.15),
-        borderRadius: DesignSystem.radiusLg,
-      ),
-      child: Text(
-        label.toUpperCase(),
-        style: DesignSystem.bodySm.copyWith(
-          color: DesignSystem.onSecondaryContainer,
-          fontWeight: FontWeight.bold,
-        ),
       ),
     );
   }

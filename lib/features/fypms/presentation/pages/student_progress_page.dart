@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/state/fypms_state_providers.dart';
+import '../../../../core/utils/fypms_format.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/supabase/fypms_rpc_service.dart';
 import '../widgets/fypms_loading_widget.dart';
@@ -90,7 +91,7 @@ class StudentProgressPage extends ConsumerWidget {
                                   ),
                                 const SizedBox(height: DesignSystem.spaceSm),
                                 Text(
-                                  'Date: ${log.progressDate.toLocal()}'.replaceFirst(' 00:00:00', ''),
+                                  'Date: ${formatFypDate(log.progressDate)}',
                                   style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant),
                                 ),
                               ],

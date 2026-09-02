@@ -71,7 +71,7 @@ class CoordinatorRequestsPage extends ConsumerWidget {
   }
 }
 
-class _RequestCard extends ConsumerWidget {
+class _RequestCard extends ConsumerStatefulWidget {
   final FypSupervisionRequest request;
   final FypRecord? record;
   final void Function(String decision, String? reason) onDecide;
@@ -83,8 +83,25 @@ class _RequestCard extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final reasonController = TextEditingController();
+  ConsumerState<_RequestCard> createState() => _RequestCardState();
+}
+
+class _RequestCardState extends ConsumerState<_RequestCard> {
+  // Hoisted out of build(): the realtime bridge invalidates the pending-
+  // requests provider on table changes, which rebuilds every card and would
+  // otherwise silently discard the typed decision reason.
+  final TextEditingController _reasonController = TextEditingController();
+
+  @override
+  void dispose() {
+    _reasonController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final request = widget.request;
+    final record = widget.record;
 
     return Card(
       elevation: 1,
@@ -127,7 +144,7 @@ class _RequestCard extends ConsumerWidget {
             ),
             const SizedBox(height: DesignSystem.spaceSm),
             TextField(
-              controller: reasonController,
+              controller: _reasonController,
               decoration: const InputDecoration(labelText: 'Decision reason (optional)'),
             ),
             const SizedBox(height: DesignSystem.spaceMd),
@@ -135,11 +152,11 @@ class _RequestCard extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 OutlinedButton(
-                  onPressed: () => onDecide(
+                  onPressed: () => widget.onDecide(
                     'rejected',
-                    reasonController.text.trim().isEmpty
+                    _reasonController.text.trim().isEmpty
                         ? null
-                        : reasonController.text.trim(),
+                        : _reasonController.text.trim(),
                   ),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: DesignSystem.error,
@@ -149,11 +166,11 @@ class _RequestCard extends ConsumerWidget {
                 ),
                 const SizedBox(width: DesignSystem.spaceSm),
                 FilledButton(
-                  onPressed: () => onDecide(
+                  onPressed: () => widget.onDecide(
                     'approved',
-                    reasonController.text.trim().isEmpty
+                    _reasonController.text.trim().isEmpty
                         ? null
-                        : reasonController.text.trim(),
+                        : _reasonController.text.trim(),
                   ),
                   child: const Text('Approve'),
                 ),

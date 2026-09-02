@@ -132,28 +132,32 @@ class CoordinatorPresentationsPage extends ConsumerWidget {
     showDialog<void>(
       context: context,
       builder: (dialogContext) {
-        Future<void> pickStart() async {
-          final t = await showTimePicker(
-            context: dialogContext,
-            initialTime: TimeOfDay.fromDateTime(startAt),
-          );
-          if (t != null) {
-            startAt = DateTime(baseDate.year, baseDate.month, baseDate.day, t.hour, t.minute);
-          }
-        }
-
-        Future<void> pickEnd() async {
-          final t = await showTimePicker(
-            context: dialogContext,
-            initialTime: TimeOfDay.fromDateTime(endAt),
-          );
-          if (t != null) {
-            endAt = DateTime(baseDate.year, baseDate.month, baseDate.day, t.hour, t.minute);
-          }
-        }
-
         return StatefulBuilder(
           builder: (context, setState) {
+            Future<void> pickStart() async {
+              final t = await showTimePicker(
+                context: dialogContext,
+                initialTime: TimeOfDay.fromDateTime(startAt),
+              );
+              if (t != null) {
+                setState(() {
+                  startAt = DateTime(baseDate.year, baseDate.month, baseDate.day, t.hour, t.minute);
+                });
+              }
+            }
+
+            Future<void> pickEnd() async {
+              final t = await showTimePicker(
+                context: dialogContext,
+                initialTime: TimeOfDay.fromDateTime(endAt),
+              );
+              if (t != null) {
+                setState(() {
+                  endAt = DateTime(baseDate.year, baseDate.month, baseDate.day, t.hour, t.minute);
+                });
+              }
+            }
+
             return AlertDialog(
               backgroundColor: DesignSystem.surfaceContainerLowest,
               title: Text('Schedule Slot', style: DesignSystem.h2),

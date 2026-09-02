@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/state/fypms_state_providers.dart';
+import '../../../../core/utils/fypms_format.dart';
 import '../widgets/fypms_loading_widget.dart';
 import '../widgets/student_record_workspace.dart';
 
@@ -64,7 +65,7 @@ class StudentMilestonesPage extends ConsumerWidget {
                                   ),
                                 if (m.targetDate != null)
                                   Text(
-                                    'Target: ${m.targetDate!.toLocal()}'.replaceFirst(' 00:00:00', ''),
+                                    'Target: ${formatFypDate(m.targetDate!)}',
                                     style: DesignSystem.bodySm,
                                   ),
                                 const SizedBox(height: DesignSystem.spaceSm),

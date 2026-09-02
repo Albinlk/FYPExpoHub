@@ -5,6 +5,23 @@ import '../../core/supabase/supabase_client_provider.dart';
 import '../../core/state/fypms_state_providers.dart';
 import '../theme/theme.dart';
 
+/// Workspace dashboard routes match exactly only — their sub-pages (e.g.
+/// /fypms/supervisor/evaluations) must not also highlight the dashboard
+/// entry alongside the sub-page entry.
+const _dashboardRoutes = [
+  '/fypms/student',
+  '/fypms/supervisor',
+  '/fypms/examiner',
+  '/fypms/csp',
+  '/fypms/coordinator',
+];
+
+bool _navRouteIsActive(String route, String currentPath) {
+  final isDashboard = _dashboardRoutes.contains(route);
+  return (isDashboard && currentPath == route) ||
+      (!isDashboard && currentPath.startsWith(route));
+}
+
 class FypmsShell extends ConsumerWidget {
   final Widget child;
 
@@ -158,7 +175,8 @@ List<({String title, IconData icon, String route})> _navItems({
       (title: 'Deliverables', icon: Icons.checklist, route: '/fypms/student/deliverables'),
       (title: 'Milestones', icon: Icons.flag, route: '/fypms/student/milestones'),
       (title: 'Corrections', icon: Icons.fact_check, route: '/fypms/student/corrections'),
-      (title: 'Presentations', icon: Icons.event, route: '/fypms/student/presentations'),
+      // Presentations nav hidden until the page is implemented (route is a
+      // placeholder in the router).
       (title: 'Marks', icon: Icons.scoreboard, route: '/fypms/student/marks'),
     ]);
   }
@@ -189,7 +207,8 @@ List<({String title, IconData icon, String route})> _navItems({
       (title: 'Supervision Requests', icon: Icons.mail, route: '/fypms/csp/requests'),
       (title: 'Offerings', icon: Icons.school, route: '/fypms/csp/offerings'),
       (title: 'Milestones', icon: Icons.flag, route: '/fypms/csp/milestones'),
-      (title: 'Presentations', icon: Icons.event, route: '/fypms/csp/presentations'),
+      // Presentations nav hidden until the page is implemented (route is a
+      // placeholder in the router).
       (title: 'Marks', icon: Icons.scoreboard, route: '/fypms/csp/marks'),
     ]);
   }
@@ -279,8 +298,7 @@ class _FypmsSidebar extends StatelessWidget {
   }
 
   Widget _buildSidebarItem(BuildContext context, String title, IconData icon, String route) {
-    final active = (route == '/fypms/student' && currentPath == '/fypms/student') ||
-        (route != '/fypms/student' && currentPath.startsWith(route));
+    final active = _navRouteIsActive(route, currentPath);
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
@@ -385,8 +403,7 @@ class _FypmsDrawer extends StatelessWidget {
   }
 
   Widget _buildDrawerItem(BuildContext context, String title, IconData icon, String route) {
-    final active = (route == '/fypms/student' && currentPath == '/fypms/student') ||
-        (route != '/fypms/student' && currentPath.startsWith(route));
+    final active = _navRouteIsActive(route, currentPath);
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(

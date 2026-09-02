@@ -5,16 +5,23 @@ import '../../../../core/domain/models/fypms/fyp_milestone.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/supabase/fypms_rpc_service.dart';
+import '../../../../core/utils/fypms_format.dart';
 import '../widgets/fypms_loading_widget.dart';
 
-class CspMilestonesPage extends ConsumerWidget {
+class CspMilestonesPage extends ConsumerStatefulWidget {
   const CspMilestonesPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // CSP lecturers typically manage milestones for a specific course offering.
-    // For simplicity, we list all milestones they have access to via the provider.
-    // In a real scenario, we'd filter by the CSP lecturer's active course.
+  ConsumerState<CspMilestonesPage> createState() => _CspMilestonesPageState();
+}
+
+class _CspMilestonesPageState extends ConsumerState<CspMilestonesPage> {
+  String? _selectedRecordId;
+
+  @override
+  Widget build(BuildContext context) {
+    // CSP lecturers manage milestones per FYP record; a selector lets them
+    // pick which record's milestone set they are editing.
     final records = ref.watch(fypRecordsProvider);
 
     return Scaffold(
@@ -38,10 +45,44 @@ class CspMilestonesPage extends ConsumerWidget {
               child: Text('No records found to manage milestones.'),
             );
           }
-          // We use the first record's ID to load milestones for that course/semester
-          // In a real app, the user would select a course offering first.
-          final firstRecord = list.first;
-          return _MilestonesList(recordId: firstRecord.id);
+          final selectedId = _selectedRecordId ?? list.first.id;
+          final selected =
+              list.firstWhere((r) => r.id == selectedId, orElse: () => list.first);
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  DesignSystem.gutter, DesignSystem.spaceSm, DesignSystem.gutter, 0),
+                child: Row(
+                  children: [
+                    Text('Record: ', style: DesignSystem.bodyMd),
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        value: selected.id,
+                        isExpanded: true,
+                        decoration: const InputDecoration(
+                          isDense: true,
+                          border: InputBorder.none,
+                        ),
+                        items: [
+                          for (final r in list)
+                            DropdownMenuItem(
+                              value: r.id,
+                              child: Text(
+                                '${r.projectTitle ?? 'Untitled'} (${r.currentCourseCode})',
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                        ],
+                        onChanged: (v) => setState(() => _selectedRecordId = v),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(child: _MilestonesList(recordId: selected.id)),
+            ],
+          );
         },
       ),
     );
@@ -112,13 +153,19 @@ class _MilestonesList extends ConsumerWidget {
                           ),
                         ),
                         subtitle: Text(
-                          'Target: ${m.targetDate?.toLocal().toString().split(' ')[0] ?? 'TBD'} | Status: ${m.status}',
+                          'Target: ${m.targetDate != null ? formatFypDate(m.targetDate!) : 'TBD'}',
                           style: DesignSystem.bodySm,
                         ),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.edit, size: 20),
-                          onPressed: () =>
-                              _showMilestoneDialog(context, ref, m),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            FypStatusBadge.milestone(m.status),
+                            IconButton(
+                              icon: const Icon(Icons.edit, size: 20),
+                              onPressed: () =>
+                                  _showMilestoneDialog(context, ref, m),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -185,7 +232,7 @@ class _MilestonesList extends ConsumerWidget {
                     ListTile(
                       contentPadding: EdgeInsets.zero,
                       title: Text(
-                        'Target Date: ${selectedDate.toLocal().toString().split(' ')[0]}',
+                        'Target Date: ${formatFypDate(selectedDate)}',
                         style: DesignSystem.bodySm,
                       ),
                       trailing: IconButton(
