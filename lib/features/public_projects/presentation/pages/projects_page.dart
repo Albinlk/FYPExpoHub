@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/state/state_providers.dart';
+import '../../../../core/widgets/collapsible_filter_panel.dart';
 import '../../../../core/widgets/project_card.dart';
 
 class ProjectsPage extends ConsumerStatefulWidget {
@@ -19,7 +20,25 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
   String _selectedCategory = 'All';
   bool _calonIndustriOnly = false;
   bool _initialized = false;
+  bool _mobileFiltersExpanded = false;
   Timer? _debounceTimer;
+
+  /// Number of collapsed filters currently active (drives the toggle badge).
+  int get _activeFilterCount {
+    var count = 0;
+    if (_selectedProgramme != 'All') count++;
+    if (_selectedCategory != 'All') count++;
+    return count;
+  }
+
+  void _resetFilters() {
+    setState(() {
+      _searchController.clear();
+      _selectedProgramme = 'All';
+      _selectedCategory = 'All';
+      _calonIndustriOnly = false;
+    });
+  }
 
   @override
   void initState() {
@@ -196,6 +215,56 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
   }
 
   Widget _buildSearchAndFilters(bool isDesktop) {
+    final searchField = TextField(
+      controller: _searchController,
+      onChanged: _onSearchChanged,
+      decoration: InputDecoration(
+        isDense: !isDesktop,
+        hintText: isDesktop
+            ? 'Search by project title, student, or supervisor...'
+            : 'Search title, student, supervisor...',
+        prefixIcon: const Icon(Icons.search, color: DesignSystem.primary),
+      ),
+    );
+
+    if (!isDesktop) {
+      // Mobile: search + Industry chip always visible; programme/category
+      // dropdowns collapse behind a badged Filters toggle.
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        child: CollapsibleFilterPanel(
+          header: searchField,
+          headerTrailing: _buildCalonChip(),
+          activeCount: _activeFilterCount,
+          expanded: _mobileFiltersExpanded,
+          onToggle: () =>
+              setState(() => _mobileFiltersExpanded = !_mobileFiltersExpanded),
+          filterFields: [
+            _buildDropdownFilter(
+              'Academic Program',
+              _selectedProgramme,
+              _programmes,
+              (val) => setState(() => _selectedProgramme = val!),
+            ),
+            _buildDropdownFilter(
+              'Project Category',
+              _selectedCategory,
+              _categories,
+              (val) => setState(() => _selectedCategory = val!),
+            ),
+          ],
+          resetControl: TextButton.icon(
+            onPressed: () {
+              _resetFilters();
+              setState(() => _mobileFiltersExpanded = false);
+            },
+            icon: const Icon(Icons.filter_alt_off, size: 18),
+            label: const Text('Reset Filters'),
+          ),
+        ),
+      );
+    }
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(DesignSystem.spaceMd),
@@ -204,123 +273,55 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
             // Search Input Row
             Row(
               children: [
-                Expanded(
-                  child: TextField(
-                    controller: _searchController,
-                    onChanged: _onSearchChanged,
-                    decoration: const InputDecoration(
-                      hintText:
-                          'Search by project title, student, or supervisor...',
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: DesignSystem.primary,
-                      ),
+                Expanded(child: searchField),
+                const SizedBox(width: DesignSystem.spaceMd),
+                ElevatedButton(
+                  onPressed: _resetFilters,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: DesignSystem.surfaceContainer,
+                    foregroundColor: DesignSystem.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: DesignSystem.radiusLg,
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 16,
                     ),
                   ),
+                  child: const Text('Reset Filters'),
                 ),
-                if (isDesktop) ...[
-                  const SizedBox(width: DesignSystem.spaceMd),
-                  ElevatedButton(
-                    onPressed: () => setState(() {
-                      _searchController.clear();
-                      _selectedProgramme = 'All';
-                      _selectedCategory = 'All';
-                      _calonIndustriOnly = false;
-                    }),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: DesignSystem.surfaceContainer,
-                      foregroundColor: DesignSystem.primary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: DesignSystem.radiusLg,
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 16,
-                      ),
-                    ),
-                    child: const Text('Reset Filters'),
-                  ),
-                ],
               ],
             ),
             const SizedBox(height: DesignSystem.spaceMd),
 
-            // Filters Dropdowns
-            isDesktop
-                ? Row(
-                    children: [
-                      Expanded(
-                        child: _buildDropdownFilter(
-                          'Academic Program',
-                          _selectedProgramme,
-                          _programmes,
-                          (val) {
-                            setState(() => _selectedProgramme = val!);
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: DesignSystem.spaceMd),
-                      Expanded(
-                        child: _buildDropdownFilter(
-                          'Project Category',
-                          _selectedCategory,
-                          _categories,
-                          (val) {
-                            setState(() => _selectedCategory = val!);
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: DesignSystem.spaceMd),
-                      _buildCalonChip(),
-                    ],
-                  )
-                : Column(
-                    children: [
-                      _buildDropdownFilter(
-                        'Academic Program',
-                        _selectedProgramme,
-                        _programmes,
-                        (val) {
-                          setState(() => _selectedProgramme = val!);
-                        },
-                      ),
-                      const SizedBox(height: DesignSystem.spaceMd),
-                      _buildDropdownFilter(
-                        'Project Category',
-                        _selectedCategory,
-                        _categories,
-                        (val) {
-                          setState(() => _selectedCategory = val!);
-                        },
-                      ),
-                      const SizedBox(height: DesignSystem.spaceMd),
-                      _buildCalonChip(),
-                      const SizedBox(height: DesignSystem.spaceMd),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () => setState(() {
-                            _searchController.clear();
-                            _selectedProgramme = 'All';
-                            _selectedCategory = 'All';
-                            _calonIndustriOnly = false;
-                          }),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: DesignSystem.surfaceContainer,
-                            foregroundColor: DesignSystem.primary,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: DesignSystem.radiusLg,
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 24,
-                              vertical: 16,
-                            ),
-                          ),
-                          child: const Text('Reset Filters'),
-                        ),
-                      ),
-                    ],
+            // Filters Dropdowns (desktop row unchanged)
+            Row(
+              children: [
+                Expanded(
+                  child: _buildDropdownFilter(
+                    'Academic Program',
+                    _selectedProgramme,
+                    _programmes,
+                    (val) {
+                      setState(() => _selectedProgramme = val!);
+                    },
                   ),
+                ),
+                const SizedBox(width: DesignSystem.spaceMd),
+                Expanded(
+                  child: _buildDropdownFilter(
+                    'Project Category',
+                    _selectedCategory,
+                    _categories,
+                    (val) {
+                      setState(() => _selectedCategory = val!);
+                    },
+                  ),
+                ),
+                const SizedBox(width: DesignSystem.spaceMd),
+                _buildCalonChip(),
+              ],
+            ),
           ],
         ),
       ),

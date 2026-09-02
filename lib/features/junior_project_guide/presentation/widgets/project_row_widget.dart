@@ -278,20 +278,29 @@ class ProjectRowWidget extends ConsumerWidget {
           runSpacing: 6,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.person_outline, size: 13, color: DesignSystem.onSurfaceVariant),
-                const SizedBox(width: 4),
-                Text(
-                  project.supervisorDisplayName,
-                  style: DesignSystem.bodySm.copyWith(
-                    color: DesignSystem.onSurfaceVariant,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
+            ConstrainedBox(
+              // Cap the supervisor row so long names ellipsize instead of
+              // overflowing the card on narrow screens.
+              constraints: const BoxConstraints(maxWidth: 220),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.person_outline, size: 13, color: DesignSystem.onSurfaceVariant),
+                  const SizedBox(width: 4),
+                  Flexible(
+                    child: Text(
+                      project.supervisorDisplayName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: DesignSystem.bodySm.copyWith(
+                        color: DesignSystem.onSurfaceVariant,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
@@ -348,6 +357,9 @@ class ProjectRowWidget extends ConsumerWidget {
             runSpacing: 5,
             children: tags.map((tag) {
               return Container(
+                // Cap chip width so a single very long tag wraps instead of
+                // overflowing the card on narrow screens.
+                constraints: const BoxConstraints(maxWidth: 240),
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: DesignSystem.primary.withValues(alpha: 0.07),
@@ -356,6 +368,8 @@ class ProjectRowWidget extends ConsumerWidget {
                 ),
                 child: Text(
                   tag,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: DesignSystem.labelCaps.copyWith(
                     color: DesignSystem.primary,
                     fontSize: 10,

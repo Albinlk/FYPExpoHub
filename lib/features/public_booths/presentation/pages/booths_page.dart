@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/project.dart';
 import '../../../../core/state/state_providers.dart';
+import '../../../../core/widgets/collapsible_filter_panel.dart';
 
 class BoothsPage extends ConsumerStatefulWidget {
   const BoothsPage({super.key});
@@ -20,6 +21,22 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
   String _selectedVenue = 'All';
   String _selectedProgram = 'All';
   bool _initializedFromQuery = false;
+  bool _mobileFiltersExpanded = false;
+
+  /// Number of collapsed filters currently active (drives the toggle badge).
+  int get _activeFilterCount {
+    var count = 0;
+    if (_selectedVenue != 'All') count++;
+    if (_selectedProgram != 'All') count++;
+    return count;
+  }
+
+  void _clearVenueAndProgram() {
+    setState(() {
+      _selectedVenue = 'All';
+      _selectedProgram = 'All';
+    });
+  }
 
   @override
   void dispose() {
@@ -246,82 +263,83 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
                   ),
                   const SizedBox(height: DesignSystem.spaceXl),
                   // Top Search & Filter Bar
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(DesignSystem.spaceMd),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          TextField(
-                            controller: _searchController,
-                            onChanged: (_) {
-                              _searchDebounce?.cancel();
-                              _searchDebounce = Timer(
-                                const Duration(milliseconds: 250),
-                                () => setState(() {}),
-                              );
-                            },
-                            decoration: InputDecoration(
-                              hintText: 'Search by booth number, project title, or student name...',
-                              prefixIcon: Icon(Icons.search, color: DesignSystem.primary),
+                  if (isDesktop)
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(DesignSystem.spaceMd),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            TextField(
+                              controller: _searchController,
+                              onChanged: (_) {
+                                _searchDebounce?.cancel();
+                                _searchDebounce = Timer(
+                                  const Duration(milliseconds: 250),
+                                  () => setState(() {}),
+                                );
+                              },
+                              decoration: InputDecoration(
+                                hintText:
+                                    'Search by booth number, project title, or student name...',
+                                prefixIcon: Icon(Icons.search, color: DesignSystem.primary),
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: DesignSystem.spaceSm),
-                          Wrap(
-                            spacing: DesignSystem.spaceSm,
-                            runSpacing: DesignSystem.spaceXs,
-                            children: [
-                              SizedBox(
-                                width: isDesktop ? 200 : double.infinity,
-                                child: DropdownButtonFormField<String>(
-                                  initialValue: _selectedDay,
-                                  decoration: InputDecoration(
-                                    labelText: 'Day',
-                                    contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                                  ),
-                                  onChanged: (val) => setState(() {
-                                    _selectedDay = val!;
-                                    _selectedVenue = 'All';
-                                  }),
-                                  items: _dayOrder.map((day) {
-                                    return DropdownMenuItem(value: day, child: Text(day, style: DesignSystem.bodySm, softWrap: true));
-                                  }).toList(),
-                                ),
-                              ),
-                              SizedBox(
-                                width: isDesktop ? 200 : double.infinity,
-                                child: DropdownButtonFormField<String>(
-                                  initialValue: _selectedVenue,
-                                  decoration: InputDecoration(
-                                    labelText: 'Venue',
-                                    contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                                  ),
-                                  onChanged: (val) => setState(() => _selectedVenue = val!),
-                                  items: ['All', ...sortedVenues].map((v) {
-                                    return DropdownMenuItem(value: v, child: Text(v, style: DesignSystem.bodySm, softWrap: true));
-                                  }).toList(),
-                                ),
-                              ),
-                              SizedBox(
-                                width: isDesktop ? 200 : double.infinity,
-                                child: DropdownButtonFormField<String>(
-                                  initialValue: _selectedProgram,
-                                  decoration: InputDecoration(
-                                    labelText: 'Program',
-                                    contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                                  ),
-                                  onChanged: (val) => setState(() => _selectedProgram = val!),
-                                  items: programItems.map((prog) {
-                                    return DropdownMenuItem(value: prog, child: Text(prog, style: DesignSystem.bodySm, softWrap: true));
-                                  }).toList(),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
+                            const SizedBox(height: DesignSystem.spaceSm),
+                            Wrap(
+                              spacing: DesignSystem.spaceSm,
+                              runSpacing: DesignSystem.spaceXs,
+                              children: [
+                                _buildDayDropdown(width: 200),
+                                _buildVenueDropdown(width: 200, sortedVenues: sortedVenues),
+                                _buildProgramDropdown(width: 200, programItems: programItems),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  else
+                    // Mobile: search + Day stay visible (Day is the page's
+                    // organizing principle); Venue/Program collapse behind a
+                    // badged Filters toggle.
+                    CollapsibleFilterPanel(
+                      header: TextField(
+                        controller: _searchController,
+                        onChanged: (_) {
+                          _searchDebounce?.cancel();
+                          _searchDebounce = Timer(
+                            const Duration(milliseconds: 250),
+                            () => setState(() {}),
+                          );
+                        },
+                        decoration: InputDecoration(
+                          isDense: true,
+                          hintText: 'Search booth, title, student...',
+                          prefixIcon: Icon(Icons.search, color: DesignSystem.primary),
+                        ),
+                      ),
+                      headerTrailing: _buildDayDropdown(
+                          width: double.infinity, isDense: true),
+                      activeCount: _activeFilterCount,
+                      expanded: _mobileFiltersExpanded,
+                      onToggle: () => setState(
+                          () => _mobileFiltersExpanded = !_mobileFiltersExpanded),
+                      filterFields: [
+                        _buildVenueDropdown(
+                            width: null, sortedVenues: sortedVenues, isDense: true),
+                        _buildProgramDropdown(
+                            width: null, programItems: programItems, isDense: true),
+                      ],
+                      resetControl: TextButton.icon(
+                        onPressed: () {
+                          _clearVenueAndProgram();
+                          setState(() => _mobileFiltersExpanded = false);
+                        },
+                        icon: const Icon(Icons.filter_alt_off, size: 18),
+                        label: const Text('Clear Venue & Program'),
                       ),
                     ),
-                  ),
                   const SizedBox(height: DesignSystem.spaceXl),
                 ],
               ),
@@ -345,6 +363,83 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
     );
   }
 
+
+  Widget _buildDayDropdown({double? width, bool isDense = false}) {
+    return SizedBox(
+      width: width,
+      child: DropdownButtonFormField<String>(
+        initialValue: _selectedDay,
+        isDense: isDense,
+        isExpanded: true,
+        decoration: InputDecoration(
+          labelText: 'Day',
+          isDense: isDense,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+        ),
+        onChanged: (val) => setState(() {
+          _selectedDay = val!;
+          _selectedVenue = 'All';
+        }),
+        items: _dayOrder.map((day) {
+          return DropdownMenuItem(
+            value: day,
+            child: Text(
+              day,
+              style: DesignSystem.bodySm,
+              softWrap: true,
+              overflow: TextOverflow.ellipsis,
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildVenueDropdown({
+    required List<String> sortedVenues,
+    double? width,
+    bool isDense = false,
+  }) {
+    return SizedBox(
+      width: width,
+      child: DropdownButtonFormField<String>(
+        initialValue: _selectedVenue,
+        isDense: isDense,
+        decoration: InputDecoration(
+          labelText: 'Venue',
+          isDense: isDense,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+        ),
+        onChanged: (val) => setState(() => _selectedVenue = val!),
+        items: ['All', ...sortedVenues].map((v) {
+          return DropdownMenuItem(value: v, child: Text(v, style: DesignSystem.bodySm, softWrap: true));
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildProgramDropdown({
+    required List<String> programItems,
+    double? width,
+    bool isDense = false,
+  }) {
+    return SizedBox(
+      width: width,
+      child: DropdownButtonFormField<String>(
+        initialValue: _selectedProgram,
+        isDense: isDense,
+        decoration: InputDecoration(
+          labelText: 'Program',
+          isDense: isDense,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+        ),
+        onChanged: (val) => setState(() => _selectedProgram = val!),
+        items: programItems.map((prog) {
+          return DropdownMenuItem(value: prog, child: Text(prog, style: DesignSystem.bodySm, softWrap: true));
+        }).toList(),
+      ),
+    );
+  }
 
   List<Widget> _buildDayGroupSlivers(
     String dayLabel,

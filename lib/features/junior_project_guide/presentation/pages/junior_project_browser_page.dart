@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/project.dart';
 import '../../../../core/state/state_providers.dart';
+import '../../../../core/widgets/collapsible_filter_panel.dart';
 import '../../domain/csp600_csv_loader.dart';
 import '../../domain/project_similarity.dart';
 import '../widgets/project_row_widget.dart';
@@ -34,6 +35,26 @@ class _JuniorProjectBrowserPageState
   String _selectedProgramme = 'All';
   String _selectedCategory = 'All';
   String _selectedTechStack = 'All';
+  bool _mobileFiltersExpanded = false;
+
+  /// Number of collapsed filters currently active (drives the toggle badge).
+  int get _activeFilterCount {
+    var count = 0;
+    if (_selectedProgramme != 'All') count++;
+    if (_selectedCategory != 'All') count++;
+    if (_selectedTechStack != 'All') count++;
+    return count;
+  }
+
+  void _resetFilters() {
+    setState(() {
+      _searchController.clear();
+      _selectedSection = 'all';
+      _selectedProgramme = 'All';
+      _selectedCategory = 'All';
+      _selectedTechStack = 'All';
+    });
+  }
 
   @override
   void dispose() {
@@ -231,39 +252,109 @@ class _JuniorProjectBrowserPageState
     final categories = _allCategories(all);
     final techStacks = _allTechStacks(all);
 
-    return Card(
-      margin: EdgeInsets.symmetric(
-        horizontal: isDesktop ? DesignSystem.marginDesktop : DesignSystem.marginMobile,
+    if (isDesktop) {
+      return Card(
+        margin: EdgeInsets.symmetric(
+          horizontal: DesignSystem.marginDesktop,
+          vertical: DesignSystem.spaceMd,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(DesignSystem.spaceMd),
+          child: Column(
+            children: [
+              TextField(
+                controller: _searchController,
+                onChanged: (_) => setState(() {}),
+                decoration: InputDecoration(
+                  hintText: 'Search by project title, supervisor, or tech tags...',
+                  prefixIcon:
+                      const Icon(Icons.search, color: DesignSystem.primary),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear, size: 18),
+                          onPressed: () {
+                            setState(() {
+                              _searchController.clear();
+                            });
+                          },
+                        )
+                      : null,
+                ),
+              ),
+              const SizedBox(height: DesignSystem.spaceMd),
+              _buildDesktopFilters(programmes, categories, techStacks),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Mobile: compact collapsible panel — search + section pills stay
+    // visible; the three dropdowns hide behind a badged toggle.
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: DesignSystem.marginMobile,
         vertical: DesignSystem.spaceMd,
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(DesignSystem.spaceMd),
-        child: Column(
+      child: CollapsibleFilterPanel(
+        header: TextField(
+          controller: _searchController,
+          onChanged: (_) => setState(() {}),
+          decoration: InputDecoration(
+            hintText: 'Search title, supervisor, tags...',
+            prefixIcon: const Icon(Icons.search, color: DesignSystem.primary),
+            isDense: true,
+            suffixIcon: _searchController.text.isNotEmpty
+                ? IconButton(
+                    icon: const Icon(Icons.clear, size: 18),
+                    onPressed: () {
+                      setState(() {
+                        _searchController.clear();
+                      });
+                    },
+                  )
+                : null,
+          ),
+        ),
+        headerTrailing: Wrap(
+          spacing: 8,
           children: [
-            TextField(
-              controller: _searchController,
-              onChanged: (_) => setState(() {}),
-              decoration: InputDecoration(
-                hintText: 'Search by project title, supervisor, or tech tags...',
-                prefixIcon:
-                    const Icon(Icons.search, color: DesignSystem.primary),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear, size: 18),
-                        onPressed: () {
-                          setState(() {
-                            _searchController.clear();
-                          });
-                        },
-                      )
-                    : null,
-              ),
-            ),
-            const SizedBox(height: DesignSystem.spaceMd),
-            isDesktop
-                ? _buildDesktopFilters(programmes, categories, techStacks)
-                : _buildMobileFilters(programmes, categories, techStacks),
+            _buildSectionPill('All', 'all'),
+            _buildSectionPill('CSP650', 'CSP650'),
+            _buildSectionPill('CSP600', 'CSP600'),
           ],
+        ),
+        activeCount: _activeFilterCount,
+        expanded: _mobileFiltersExpanded,
+        onToggle: () =>
+            setState(() => _mobileFiltersExpanded = !_mobileFiltersExpanded),
+        filterFields: [
+          _buildDropdownFilter(
+            'Academic Program',
+            _selectedProgramme,
+            ['All', ...programmes],
+            (v) => setState(() => _selectedProgramme = v!),
+          ),
+          _buildDropdownFilter(
+            'Project Category',
+            _selectedCategory,
+            ['All', ...categories],
+            (v) => setState(() => _selectedCategory = v!),
+          ),
+          _buildDropdownFilter(
+            'Tech Stack',
+            _selectedTechStack,
+            ['All', ...techStacks],
+            (v) => setState(() => _selectedTechStack = v!),
+          ),
+        ],
+        resetControl: TextButton.icon(
+          onPressed: () {
+            _resetFilters();
+            setState(() => _mobileFiltersExpanded = false);
+          },
+          icon: const Icon(Icons.filter_alt_off, size: 18),
+          label: const Text('Reset Filters'),
         ),
       ),
     );
@@ -321,69 +412,8 @@ class _JuniorProjectBrowserPageState
         ),
         const SizedBox(width: 12),
         TextButton(
-          onPressed: () => setState(() {
-            _searchController.clear();
-            _selectedSection = 'all';
-            _selectedProgramme = 'All';
-            _selectedCategory = 'All';
-            _selectedTechStack = 'All';
-          }),
+          onPressed: _resetFilters,
           child: const Text('Reset Filters'),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMobileFilters(
-    List<String> programmes,
-    List<String> categories,
-    List<String> techStacks,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Wrap(
-          spacing: 8,
-          children: [
-            _buildSectionPill('All', 'all'),
-            _buildSectionPill('CSP650', 'CSP650'),
-            _buildSectionPill('CSP600', 'CSP600'),
-          ],
-        ),
-        const SizedBox(height: DesignSystem.spaceMd),
-        _buildDropdownFilter(
-          'Academic Program',
-          _selectedProgramme,
-          ['All', ...programmes],
-          (v) => setState(() => _selectedProgramme = v!),
-        ),
-        const SizedBox(height: DesignSystem.spaceMd),
-        _buildDropdownFilter(
-          'Project Category',
-          _selectedCategory,
-          ['All', ...categories],
-          (v) => setState(() => _selectedCategory = v!),
-        ),
-        const SizedBox(height: DesignSystem.spaceMd),
-        _buildDropdownFilter(
-          'Tech Stack',
-          _selectedTechStack,
-          ['All', ...techStacks],
-          (v) => setState(() => _selectedTechStack = v!),
-        ),
-        const SizedBox(height: DesignSystem.spaceMd),
-        SizedBox(
-          width: double.infinity,
-          child: TextButton(
-            onPressed: () => setState(() {
-              _searchController.clear();
-              _selectedSection = 'all';
-              _selectedProgramme = 'All';
-              _selectedCategory = 'All';
-              _selectedTechStack = 'All';
-            }),
-            child: const Text('Reset Filters'),
-          ),
         ),
       ],
     );
@@ -478,13 +508,13 @@ class _JuniorProjectBrowserPageState
 
     return Padding(
       padding: padding,
-      child: Row(
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 4,
         children: [
-          if (csp650Count > 0) ...[
+          if (csp650Count > 0)
             _buildSummaryBadge('CSP650', csp650Count, DesignSystem.secondaryContainer,
                 DesignSystem.onSecondaryContainer, 'projects'),
-            const SizedBox(width: 8),
-          ],
           if (csp600Count > 0)
             _buildSummaryBadge('CSP600', csp600Count, DesignSystem.tertiaryContainer,
                 DesignSystem.onTertiaryContainer, 'proposals'),
