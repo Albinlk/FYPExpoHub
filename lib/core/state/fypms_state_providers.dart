@@ -170,6 +170,15 @@ final fypmsOfferingsProvider = FutureProvider<List<FypCourseOffering>>((ref) asy
   return data.map((m) => FypCourseOffering.fromJson(normalizeFypmsKeys(m))).toList();
 });
 
+/// Course offerings belonging to the current lecturer (for the CSP dashboard).
+final myFypmsOfferingsProvider =
+    FutureProvider<List<FypCourseOffering>>((ref) async {
+  final user = ref.watch(currentAuthUserProvider);
+  if (user == null) return const [];
+  final all = await ref.watch(fypmsOfferingsProvider.future);
+  return all.where((o) => o.lecturerId == user.id).toList();
+});
+
 // ==============================================================================
 // FYP RECORDS (per current user)
 // ==============================================================================
@@ -318,6 +327,14 @@ final fypStaffProvider =
     FutureProvider.family<List<Map<String, dynamic>>, List<String>>((ref, roles) async {
   final rpc = ref.watch(supabaseRpcServiceProvider);
   return rpc.listFypStaff(roleCodes: roles);
+});
+
+/// Public-safe supervisor directory (id + display name) for the student
+/// supervision-request picker (via SECURITY DEFINER RPC; no emails).
+final supervisorsDirectoryProvider =
+    FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  final rpc = ref.watch(supabaseRpcServiceProvider);
+  return rpc.listSupervisorsPublic();
 });
 
 /// Pending supervision requests across all records (coordinator view).

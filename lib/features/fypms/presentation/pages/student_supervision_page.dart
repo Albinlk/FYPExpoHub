@@ -4,6 +4,7 @@ import '../../../../app/theme/theme.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/supabase/fypms_rpc_service.dart';
+import '../../../../core/utils/fypms_format.dart';
 import '../widgets/fypms_loading_widget.dart';
 import '../widgets/student_record_workspace.dart';
 
@@ -16,6 +17,7 @@ class StudentSupervisionPage extends ConsumerWidget {
       title: 'Supervision Requests',
       builder: (context, ref, record) {
         final requests = ref.watch(fypSupervisionRequestsProvider(record.id));
+        final directory = ref.watch(supervisorsDirectoryProvider);
         return Column(
           children: [
             Padding(
@@ -51,6 +53,10 @@ class StudentSupervisionPage extends ConsumerWidget {
                       ),
                     );
                   }
+                  final nameById = <String, String>{
+                    for (final s in directory.asData?.value ?? [])
+                      if (s['id'] is String) s['id'] as String: (s['display_name'] as String? ?? ''),
+                  };
                   return ListView(
                     padding: const EdgeInsets.symmetric(horizontal: DesignSystem.gutter),
                     children: [
@@ -72,7 +78,7 @@ class StudentSupervisionPage extends ConsumerWidget {
                               children: [
                                 if (req.preferredSupervisorId != null)
                                   Text(
-                                    'Preferred: ${req.preferredSupervisorId}',
+                                    'Preferred: ${nameById[req.preferredSupervisorId] ?? 'Supervisor pending assignment'}',
                                     style: DesignSystem.bodySm,
                                   ),
                                 if (req.rationale?.isNotEmpty == true)
@@ -90,7 +96,7 @@ class StudentSupervisionPage extends ConsumerWidget {
                                   ),
                                 const SizedBox(height: DesignSystem.spaceSm),
                                 Text(
-                                  'Submitted ${req.createdAt.toLocal()}'.replaceFirst(' 00:00:00', ''),
+                                  'Submitted ${formatFypDate(req.createdAt)}',
                                   style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant),
                                 ),
                               ],
@@ -110,15 +116,17 @@ class StudentSupervisionPage extends ConsumerWidget {
 
   void _showNewRequestDialog(
       BuildContext context, WidgetRef ref, String fypRecordId) {
-    final preferredController = TextEditingController();
     final rationaleController = TextEditingController();
+    String? selectedSupervisorId;
+    bool isSubmitting = false;
 
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, setState) {
             final isDesktop = MediaQuery.of(context).size.width >= 768;
+            final directory = ref.watch(supervisorsDirectoryProvider);
             return AlertDialog(
               title: Text(
                 'Submit Supervision Request',
@@ -131,10 +139,38 @@ class StudentSupervisionPage extends ConsumerWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      TextField(
-                        controller: preferredController,
-                        decoration: const InputDecoration(
-                          labelText: 'Preferred Supervisor (optional)',
+                      directory.when(
+                        loading: () => const Padding(
+                          padding: EdgeInsets.all(DesignSystem.spaceMd),
+                          child: CircularProgressIndicator(),
+                        ),
+                        error: (e, _) => Text(
+                          'Could not load supervisors. You can still submit without a preference.',
+                          style: DesignSystem.bodySm
+                              .copyWith(color: DesignSystem.onSurfaceVariant),
+                          textAlign: TextAlign.center,
+                        ),
+                        data: (supervisors) => DropdownButtonFormField<String>(
+                          value: selectedSupervisorId,
+                          isExpanded: true,
+                          decoration: const InputDecoration(
+                            labelText: 'Preferred Supervisor (optional)',
+                            prefixIcon: Icon(Icons.supervisor_account),
+                          ),
+                          items: [
+                            for (final s in supervisors)
+                              if ((s['role_code'] as String? ?? 'supervisor') ==
+                                  'supervisor')
+                                DropdownMenuItem(
+                                  value: s['id'] as String,
+                                  child: Text(
+                                    s['display_name'] as String? ?? 'Supervisor',
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                          ],
+                          onChanged: (v) =>
+                              setState(() => selectedSupervisorId = v),
                         ),
                       ),
                       const SizedBox(height: DesignSystem.spaceSm),
@@ -151,43 +187,53 @@ class StudentSupervisionPage extends ConsumerWidget {
               ),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  onPressed: isSubmitting ? null : () => Navigator.of(dialogContext).pop(),
                   child: const Text('Cancel'),
                 ),
                 ElevatedButton(
-                  onPressed: () async {
-                    Navigator.of(dialogContext).pop();
-                    try {
-                      final rpc = ref.read(supabaseRpcServiceProvider);
-                      await rpc.submitSupervisionRequest(
-                        fypRecordId: fypRecordId,
-                        preferredSupervisorId: preferredController.text.trim().isEmpty
-                            ? null
-                            : preferredController.text.trim(),
-                        rationale: rationaleController.text.trim().isEmpty
-                            ? null
-                            : rationaleController.text.trim(),
-                      );
-                      if (context.mounted) {
-                        ref.invalidate(fypSupervisionRequestsProvider(fypRecordId));
-                        ref.invalidate(myFypRecordsProvider);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Supervision request submitted.')),
-                        );
-                      }
-                    } catch (e) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Failed to submit: $e')),
-                        );
-                      }
-                    }
-                  },
+                  onPressed: isSubmitting
+                      ? null
+                      : () async {
+                          setState(() => isSubmitting = true);
+                          try {
+                            final rpc = ref.read(supabaseRpcServiceProvider);
+                            await rpc.submitSupervisionRequest(
+                              fypRecordId: fypRecordId,
+                              preferredSupervisorId: selectedSupervisorId,
+                              rationale: rationaleController.text.trim().isEmpty
+                                  ? null
+                                  : rationaleController.text.trim(),
+                            );
+                            if (dialogContext.mounted) {
+                              Navigator.of(dialogContext).pop();
+                            }
+                            ref.invalidate(fypSupervisionRequestsProvider(fypRecordId));
+                            ref.invalidate(myFypRecordsProvider);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Supervision request submitted.')),
+                              );
+                            }
+                          } catch (e) {
+                            setState(() => isSubmitting = false);
+                            if (dialogContext.mounted) {
+                              ScaffoldMessenger.of(dialogContext).showSnackBar(
+                                SnackBar(content: Text('Failed to submit: $e')),
+                              );
+                            }
+                          }
+                        },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: DesignSystem.secondary,
                     foregroundColor: Colors.white,
                   ),
-                  child: const Text('Submit'),
+                  child: isSubmitting
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Text('Submit'),
                 ),
               ],
             );

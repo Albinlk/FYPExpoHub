@@ -318,6 +318,20 @@ extension FypmsRpcService on SupabaseRpcService {
     });
   }
 
+  /// Student-side correction acknowledgement: moves an open/in-progress
+  /// correction to 'evidence_submitted' for staff review.
+  Future<Map<String, dynamic>> submitCorrectionEvidence({
+    required String correctionItemId,
+    String? note,
+    String? fileUrl,
+  }) async {
+    return _rpc('submit_correction_evidence', {
+      'p_correction_item_id': correctionItemId,
+      if (note != null) 'p_note': note,
+      if (fileUrl != null) 'p_file_url': fileUrl,
+    });
+  }
+
   Future<Map<String, dynamic>> prepareExpoPublication({
     required String fypRecordId,
     required String eventId,
@@ -402,6 +416,19 @@ extension FypmsRpcService on SupabaseRpcService {
       return List<Map<String, dynamic>>.from(response as List);
     } catch (e) {
       logDebug('Supabase FYPMS RPC list_fyp_coordinators error: $e');
+      rethrow;
+    }
+  }
+
+  /// SECURITY DEFINER helper: public-safe supervisor directory (id + name
+  /// only) for the student supervision-request picker.
+  Future<List<Map<String, dynamic>>> listSupervisorsPublic() async {
+    try {
+      final client = Supabase.instance.client;
+      final response = await client.rpc('list_supervisors_public');
+      return List<Map<String, dynamic>>.from(response as List);
+    } catch (e) {
+      logDebug('Supabase FYPMS RPC list_supervisors_public error: $e');
       rethrow;
     }
   }

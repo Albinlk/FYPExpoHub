@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/fypms/fyp_record.dart';
 import '../../../../core/state/fypms_state_providers.dart';
+import '../../../../core/utils/fypms_format.dart';
 import '../widgets/fypms_loading_widget.dart';
 
 class SupervisorCorrectionsPage extends ConsumerWidget {
@@ -94,12 +95,12 @@ class _RecordCorrectionsSection extends ConsumerWidget {
                         item.severity == 'major' ? Icons.warning_amber : Icons.fact_check,
                         color: item.severity == 'major' ? DesignSystem.error : DesignSystem.primary,
                       ),
-                      title: Text('${item.itemCode} — ${item.severity}', style: DesignSystem.bodySm.copyWith(fontWeight: FontWeight.bold)),
-                      subtitle: Text(item.description, style: DesignSystem.bodySm),
-                      trailing: Text(
-                        item.status.replaceAll('_', ' '),
-                        style: DesignSystem.bodySm,
+                      title: Text(
+                        '${item.itemCode ?? 'Correction'} — ${item.severity}',
+                        style: DesignSystem.bodySm.copyWith(fontWeight: FontWeight.bold),
                       ),
+                      subtitle: Text(item.description, style: DesignSystem.bodySm),
+                      trailing: _trailingFor(context, ref, item),
                     ),
                   ),
               ],
@@ -108,6 +109,110 @@ class _RecordCorrectionsSection extends ConsumerWidget {
         ),
         const SizedBox(height: DesignSystem.spaceLg),
       ],
+    );
+  }
+
+  Widget? _trailingFor(BuildContext context, WidgetRef ref, dynamic item) {
+    final status = item.status as String;
+    if (status == 'confirmed' || status == 'closed') {
+      return const Icon(Icons.check_circle, color: DesignSystem.secondary);
+    }
+    if (status == 'evidence_submitted') {
+      return FilledButton.icon(
+        onPressed: () => _showConfirmDialog(context, ref, item.id as String),
+        icon: const Icon(Icons.check, size: 16),
+        label: const Text('Confirm'),
+        style: FilledButton.styleFrom(
+          backgroundColor: DesignSystem.secondary,
+          foregroundColor: Colors.white,
+        ),
+      );
+    }
+    return FypStatusBadge.correction(status);
+  }
+
+  void _showConfirmDialog(BuildContext context, WidgetRef ref, String itemId) {
+    final notesController = TextEditingController();
+    bool isSubmitting = false;
+
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              backgroundColor: DesignSystem.surfaceContainerLowest,
+              title: Text('Confirm Correction', style: DesignSystem.h2),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Confirm that the student\'s evidence is satisfactory. '
+                    'This marks the correction as confirmed.',
+                  ),
+                  const SizedBox(height: DesignSystem.spaceMd),
+                  TextField(
+                    controller: notesController,
+                    decoration: const InputDecoration(
+                      labelText: 'Notes (optional)',
+                    ),
+                    maxLines: 3,
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: isSubmitting ? null : () => Navigator.pop(dialogContext),
+                  child: const Text('Cancel'),
+                ),
+                FilledButton(
+                  onPressed: isSubmitting
+                      ? null
+                      : () async {
+                          setState(() => isSubmitting = true);
+                          try {
+                            await ref.read(confirmCorrectionProvider)(
+                              itemId,
+                              'confirmed',
+                              notesController.text.trim().isEmpty
+                                  ? null
+                                  : notesController.text.trim(),
+                              record.id,
+                            );
+                            if (dialogContext.mounted) {
+                              Navigator.pop(dialogContext);
+                            }
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Correction confirmed.')),
+                              );
+                            }
+                          } catch (e) {
+                            setState(() => isSubmitting = false);
+                            if (dialogContext.mounted) {
+                              ScaffoldMessenger.of(dialogContext).showSnackBar(
+                                SnackBar(content: Text('Failed: $e')),
+                              );
+                            }
+                          }
+                        },
+                  style: FilledButton.styleFrom(
+                    backgroundColor: DesignSystem.secondary,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: isSubmitting
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Text('Confirm'),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 
