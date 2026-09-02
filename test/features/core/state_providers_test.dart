@@ -155,8 +155,9 @@ void main() {
       final projects = container.read(publicProjectsProvider);
       expect(projects, isNotEmpty);
       expect(projects.first.eventId, 'fskm-fyp-2026');
-      // The fallback path rewrites empty covers to placehold.co URLs.
-      expect(projects.first.coverImageUrl, isNotEmpty);
+      // Placeholder rows keep an EMPTY cover url so ProjectCoverImage
+      // renders its generated local cover (no third-party requests).
+      expect(projects.first.coverImageUrl, isEmpty);
     });
 
     test('replaces fallback once Supabase returns rows', () async {
@@ -175,6 +176,37 @@ void main() {
       final projects = container.read(publicProjectsProvider);
       expect(projects, hasLength(1));
       expect(projects.first.id, 'db-1');
+      // Placeholder cover URLs are normalised to empty (generated covers).
+      expect(projects.first.coverImageUrl, isEmpty);
+      sub.close();
+    });
+
+    test('legacy placeholder paths and placehold.co links normalise to empty',
+        () async {
+      final db = _StubDatabaseService()
+        ..projectsToReturn.addAll([
+          _row(_project(id: 'legacy-1'))
+              ..['coverImageUrl'] = 'assets/images/project_placeholder.jpg',
+          _row(_project(id: 'legacy-2'))
+              ..['coverImageUrl'] =
+              'https://placehold.co/400x250/3b82f6/ffffff?text=Old',
+          _row(_project(id: 'real-1'))
+              ..['coverImageUrl'] = 'https://example.com/real-cover.png',
+        ]);
+      final container = _container(db);
+      addTearDown(container.dispose);
+
+      final sub = container.listen(publicProjectsProvider, (_, __) {});
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      final byId = {
+        for (final p in container.read(publicProjectsProvider)) p.id: p,
+      };
+      expect(byId['legacy-1']!.coverImageUrl, isEmpty);
+      expect(byId['legacy-2']!.coverImageUrl, isEmpty);
+      // Real uploaded URLs pass through untouched.
+      expect(byId['real-1']!.coverImageUrl,
+          'https://example.com/real-cover.png');
       sub.close();
     });
   });

@@ -21,7 +21,7 @@ class AdminProjectsPage extends ConsumerWidget {
     final boothNumController = TextEditingController(text: item?.boothNumber ?? '');
     final boothZoneController = TextEditingController(text: item?.boothZone ?? 'Zone A');
     final demoController = TextEditingController(text: item?.demoUrl ?? '');
-    final coverController = TextEditingController(text: item?.coverImageUrl ?? 'assets/images/project_placeholder.jpg');
+    final coverController = TextEditingController(text: item?.coverImageUrl ?? '');
 
     String status = item?.publicationStatus ?? 'published';
     bool featured = item?.featured ?? false;
@@ -83,7 +83,10 @@ class AdminProjectsPage extends ConsumerWidget {
                       const SizedBox(height: DesignSystem.spaceSm),
                       TextField(
                         controller: coverController,
-                        decoration: const InputDecoration(labelText: 'Cover Image URL'),
+                        decoration: const InputDecoration(
+                          labelText: 'Cover Image URL',
+                          helperText: 'Leave empty to auto-generate a unique cover design',
+                        ),
                       ),
                       const SizedBox(height: DesignSystem.spaceMd),
                       CheckboxListTile(

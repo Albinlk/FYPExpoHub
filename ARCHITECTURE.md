@@ -89,6 +89,10 @@ correction items, expo publications).
 
 #### 4.3 Offline Fallback (Expo)
 - **Seed data**: `lib/core/data/ExcelData` (bundled, 376 projects)
+- **Generated covers**: rows without a real `cover_image_url` render a
+  deterministic local cover (`ProjectCoverImage`: 12 palettes × category
+  icon × title initials × title-hash geometry) — zero network requests,
+  unique per project
 - **Pattern**: Providers seed with offline data, then swap when Supabase
   responds; a maintenance dialog shows if the backend is unreachable
 

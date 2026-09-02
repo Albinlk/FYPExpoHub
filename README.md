@@ -112,6 +112,7 @@ Overview dashboard, event info, schedule, projects, booths, lecturers, announcem
 ### Cross-cutting
 - **Publication lifecycle** — `draft` / `published` / `archived` on all public tables; anonymous reads see `published` only.
 - **Offline fallback** — the public site seeds from a bundled `ExcelData` dataset (376 projects) and swaps to Supabase rows when available.
+- **Generated covers** — projects without an uploaded cover image render a unique, deterministic local gradient cover (palette + category icon + initials + per-title geometry) — no third-party image service.
 - **Audit logging** — every mutating RPC writes `audit_logs` / `fyp_audit_logs` server-side; no client write path.
 
 ---

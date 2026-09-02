@@ -67,19 +67,19 @@ class ProjectCoverImage extends StatelessWidget {
   }
 
   // ── Keyword → accent colour hints ─────────────────────────────────────────
-  static int _paletteIndex(String title, String category) {
-    // Simple but stable hash: sum of char codes, spread across palette count.
-    final seed = (title + category)
-        .codeUnits
-        .fold<int>(0, (prev, c) => (prev * 31 + c) & 0x7FFFFFFF);
-    return seed % _palettes.length;
-  }
+  static int _paletteIndex(String title, String category) =>
+      _hash(title + category) % _palettes.length;
 
   // ── Detect "real" uploaded image vs generic placeholder ───────────────────
+  /// Public so providers can normalise stored cover URLs (e.g. strip the
+  /// legacy placeholder path / placehold.co links before they reach the UI).
+  static bool isPlaceholderUrl(String? url) => _isPlaceholder(url);
+
   static bool _isPlaceholder(String? url) {
     if (url == null || url.isEmpty) return true;
     // Common placeholder patterns used in this project
     if (url.contains('placeholder') ||
+        url.contains('placehold.co') ||
         url.contains('default') ||
         url.contains('via.placeholder') ||
         url.contains('picsum')) return true;
@@ -88,9 +88,14 @@ class ProjectCoverImage extends StatelessWidget {
     final path = uri?.path.toLowerCase() ?? '';
     if (path.endsWith('cover_placeholder.png') ||
         path.endsWith('default_cover.jpg') ||
-        path.endsWith('no_image.png')) return true;
+        path.endsWith('no_image.png') ||
+        path.endsWith('project_placeholder.jpg')) return true;
     return false;
   }
+
+  /// Stable 31-bit hash of any string (same algorithm as _paletteIndex).
+  static int _hash(String value) =>
+      value.codeUnits.fold<int>(0, (prev, c) => (prev * 31 + c) & 0x7FFFFFFF);
 
   @override
   Widget build(BuildContext context) {
@@ -123,11 +128,16 @@ class ProjectCoverImage extends StatelessWidget {
     final palette = _palettes[idx];
     final icon = _iconForCategory(category);
 
+    // Seed geometry with the FULL title+category hash (not just the palette
+    // index) so every project paints a one-of-a-kind arrangement of circles
+    // and rings — 376 projects share 12 palettes, but no two covers match.
+    final seed = _hash(title + category);
+
     return CustomPaint(
       painter: _CoverPainter(
         colorA: palette[0],
         colorB: palette[1],
-        seed: idx,
+        seed: seed,
       ),
       child: Center(
         child: _CoverContent(title: title, icon: icon, colorB: palette[1]),

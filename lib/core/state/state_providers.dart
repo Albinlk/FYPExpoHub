@@ -19,6 +19,7 @@ import '../supabase/supabase_realtime_service.dart';
 import '../supabase/supabase_storage_service.dart';
 import '../utils/fypms_key_normalizer.dart' show normalizeKeys;
 import '../utils/logger.dart';
+import '../widgets/project_cover_image.dart';
 
 // ==============================================================================
 // SERVICE PROVIDERS
@@ -145,12 +146,12 @@ class ProjectsNotifier extends Notifier<List<Project>> {
     return dataList.map((m) {
       final norm = _normalizeKeys(m);
       final project = Project.fromJson(norm);
+      // Placeholder rows keep an EMPTY cover url — ProjectCoverImage then
+      // renders its deterministic generated gradient cover locally
+      // (no third-party placehold.co requests).
       if (project.coverImageUrl == 'assets/images/project_placeholder.jpg' ||
-          project.coverImageUrl.isEmpty) {
-        return project.copyWith(
-          coverImageUrl:
-              'https://placehold.co/400x250/3b82f6/ffffff?text=${Uri.encodeComponent(project.title)}',
-        );
+          ProjectCoverImage.isPlaceholderUrl(project.coverImageUrl)) {
+        return project.copyWith(coverImageUrl: '');
       }
       return project;
     }).toList();
@@ -175,8 +176,9 @@ class ProjectsNotifier extends Notifier<List<Project>> {
             boothNumber: m['booth_number'] as String?,
             boothZone: m['booth_zone'] as String?,
             presentationDay: m['presentation_day'] as String?,
-            coverImageUrl:
-                'https://placehold.co/400x250/3b82f6/ffffff?text=${Uri.encodeComponent(m['title'] as String)}',
+            // Empty cover url -> ProjectCoverImage generates a unique
+            // local gradient cover (offline-proof, no external requests).
+            coverImageUrl: '',
             posterUrl: m['poster_url'] as String?,
             teamDisplayNames: (m['team_display_names'] as List).cast<String>(),
             supervisorDisplayName: m['supervisor_display_name'] as String,
