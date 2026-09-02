@@ -1,13 +1,12 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher_string.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/project.dart';
 import '../../../../core/domain/models/project_lecturer_assignment.dart';
 import '../../../../core/domain/models/student_visit.dart';
 import '../../../../core/supabase/supabase_client_provider.dart';
 import '../../../../core/state/state_providers.dart';
+import '../../../../core/utils/download_util.dart';
 import '../widgets/summary_cards.dart';
 import '../widgets/visit_data_table.dart';
 
@@ -98,10 +97,8 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
     Map<String, Project> projectsById,
   ) {
     final csv = exportVisitsCsv(filteredAssignments, visits, projectsById);
-    final bytes = utf8.encode(csv);
-    final base64 = base64Encode(bytes);
-    final href = 'data:text/csv;base64,$base64';
-    launchUrlString(href);
+    final stamp = DateTime.now().toIso8601String().split('T').first;
+    downloadTextFileWeb('student_visits_$stamp.csv', csv);
   }
 
   @override
@@ -126,8 +123,9 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
     final pending = totalRequired - completed;
     final voided = visits.where((v) => v.status == 'voided').length;
 
-    final todayStart = DateTime.now();
-    final todayEnd = DateTime(todayStart.year, todayStart.month, todayStart.day + 1);
+    final now = DateTime.now();
+    final todayStart = DateTime(now.year, now.month, now.day);
+    final todayEnd = DateTime(now.year, now.month, now.day + 1);
     final visitedToday = visits.where((v) =>
       v.status == 'completed' &&
       v.visitedAt.isAfter(todayStart) &&

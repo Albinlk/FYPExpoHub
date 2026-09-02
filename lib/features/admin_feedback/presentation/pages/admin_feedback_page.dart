@@ -1,10 +1,9 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher_string.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/feedback_entry.dart';
 import '../../../../core/state/state_providers.dart';
+import '../../../../core/utils/download_util.dart';
 import '../widgets/feedback_csv_export.dart';
 
 class AdminFeedbackPage extends ConsumerStatefulWidget {
@@ -45,10 +44,8 @@ class _AdminFeedbackPageState extends ConsumerState<AdminFeedbackPage> {
 
   void _exportCsv(List<FeedbackEntry> entries) {
     final csv = exportFeedbackCsv(entries);
-    final bytes = utf8.encode(csv);
-    final base64 = base64Encode(bytes);
-    final href = 'data:text/csv;base64,$base64';
-    launchUrlString(href);
+    final stamp = DateTime.now().toIso8601String().split('T').first;
+    downloadTextFileWeb('feedback_entries_$stamp.csv', csv);
   }
 
   void _showDetailDialog(BuildContext context, FeedbackEntry entry) {
