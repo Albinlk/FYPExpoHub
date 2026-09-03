@@ -307,38 +307,89 @@ class _MobileBottomNavBar extends StatelessWidget {
       ),
       child: SafeArea(
         top: false,
-        child: NavigationBar(
-          selectedIndex: selectedIndex,
-          onDestinationSelected: (index) => _onItemTapped(context, index),
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          indicatorColor: DesignSystem.secondaryContainer,
-          destinations: const [
-            NavigationDestination(
-              icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(Icons.home, color: DesignSystem.onSecondaryContainer),
-              label: 'Home',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.location_on_outlined),
-              selectedIcon: Icon(Icons.location_on, color: DesignSystem.onSecondaryContainer),
-              label: 'Booths',
-            ),
-             NavigationDestination(
-              icon: Icon(Icons.school_outlined),
-              selectedIcon: Icon(Icons.school, color: DesignSystem.onSecondaryContainer),
-              label: 'Past Sem Projects',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.person_outline),
-              selectedIcon: Icon(Icons.person, color: DesignSystem.onSecondaryContainer),
-              label: 'Lecturer',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.menu),
-              label: 'Menu',
-            ),
-          ],
+        // On very narrow screens (<360px) the M3 label padding makes even
+        // short words wrap; scale label text down slightly so every label
+        // stays on one centered line.
+        child: Builder(
+          builder: (scaleContext) {
+            final narrow =
+                MediaQuery.sizeOf(scaleContext).width < 360;
+            final parent = MediaQuery.of(scaleContext);
+            final bar = NavigationBar(
+              selectedIndex: selectedIndex,
+              onDestinationSelected: (index) => _onItemTapped(context, index),
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              indicatorColor: DesignSystem.secondaryContainer,
+              destinations: const [
+                NavigationDestination(
+                  icon: Icon(Icons.home_outlined),
+                  selectedIcon: Icon(Icons.home, color: DesignSystem.onSecondaryContainer),
+                  label: 'Home',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.location_on_outlined),
+                  selectedIcon: Icon(Icons.location_on, color: DesignSystem.onSecondaryContainer),
+                  label: 'Map',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.school_outlined),
+                  selectedIcon: Icon(Icons.school, color: DesignSystem.onSecondaryContainer),
+                  label: 'Guide',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.person_outline),
+                  selectedIcon: Icon(Icons.person, color: DesignSystem.onSecondaryContainer),
+                  label: 'Visits',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.menu),
+                  label: 'Menu',
+                ),
+              ],
+            );
+            if (!narrow) return bar;
+            // Very narrow screens: icons only (Material pattern) — labels
+            // would wrap to clipped multi-line text at this slot width.
+            return MediaQuery(
+              data: parent,
+              child: NavigationBar(
+                labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
+                selectedIndex: selectedIndex,
+                onDestinationSelected: (index) => _onItemTapped(context, index),
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                height: 64,
+                indicatorColor: DesignSystem.secondaryContainer,
+                destinations: const [
+                  NavigationDestination(
+                    icon: Icon(Icons.home_outlined),
+                    selectedIcon: Icon(Icons.home, color: DesignSystem.onSecondaryContainer),
+                    label: 'Home',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.location_on_outlined),
+                    selectedIcon: Icon(Icons.location_on, color: DesignSystem.onSecondaryContainer),
+                    label: 'Map',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.school_outlined),
+                    selectedIcon: Icon(Icons.school, color: DesignSystem.onSecondaryContainer),
+                    label: 'Guide',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.person_outline),
+                    selectedIcon: Icon(Icons.person, color: DesignSystem.onSecondaryContainer),
+                    label: 'Visits',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.menu),
+                    label: 'Menu',
+                  ),
+                ],
+              ),
+            );
+          },
         ),
       ),
     );
