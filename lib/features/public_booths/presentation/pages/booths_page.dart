@@ -349,11 +349,35 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
             ..._buildDayGroupSlivers(_selectedDay, filtered, isDesktop, padding)
           else
             SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(40.0),
-                child: Text(
-                  'No booths found.',
-                  style: DesignSystem.bodyMd.copyWith(color: DesignSystem.onSurfaceVariant),
+              // App-standard centered empty state (matches Projects /
+              // Lecturer / Junior Guide).
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(40.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.location_off_outlined,
+                        size: 64,
+                        color: DesignSystem.outlineVariant,
+                      ),
+                      const SizedBox(height: DesignSystem.spaceSm),
+                      Text(
+                        'No Booths Found',
+                        textAlign: TextAlign.center,
+                        style: DesignSystem.h3.copyWith(color: DesignSystem.onSurfaceVariant),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Please check your search keywords or filters.',
+                        textAlign: TextAlign.center,
+                        style: DesignSystem.bodySm.copyWith(
+                          color: DesignSystem.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

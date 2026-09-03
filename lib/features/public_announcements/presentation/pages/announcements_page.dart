@@ -38,6 +38,7 @@ class AnnouncementsPage extends ConsumerWidget {
                       padding: const EdgeInsets.symmetric(vertical: 40.0),
                       child: Text(
                         'No announcements available at this time.',
+                        textAlign: TextAlign.center,
                         style: DesignSystem.bodyMd.copyWith(color: DesignSystem.onSurfaceVariant),
                       ),
                     ),

@@ -189,20 +189,42 @@ class _HomePageState extends ConsumerState<HomePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Featured Projects', style: (isDesktop ? DesignSystem.h2 : DesignSystem.h2Mobile).copyWith(color: DesignSystem.primary)),
-                      TextButton(
+                      Expanded(
+                        child: Text(
+                          'Featured Projects',
+                          // Centered on mobile to match the Exhibition
+                          // Overview section; left on desktop.
+                          textAlign:
+                              isDesktop ? TextAlign.start : TextAlign.center,
+                          style: (isDesktop ? DesignSystem.h2 : DesignSystem.h2Mobile).copyWith(color: DesignSystem.primary),
+                        ),
+                      ),
+                      if (isDesktop)
+                        TextButton(
+                          onPressed: () => context.go('/projects'),
+                          child: Row(
+                            children: const [
+                              Text('View All', style: TextStyle(fontWeight: FontWeight.bold, color: DesignSystem.secondary)),
+                              Icon(Icons.arrow_forward_ios, size: 14, color: DesignSystem.secondary),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                  if (!isDesktop)
+                    Center(
+                      child: TextButton(
                         onPressed: () => context.go('/projects'),
                         child: Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: const [
                             Text('View All', style: TextStyle(fontWeight: FontWeight.bold, color: DesignSystem.secondary)),
                             Icon(Icons.arrow_forward_ios, size: 14, color: DesignSystem.secondary),
                           ],
                         ),
                       ),
-                    ],
-                  ),
+                    ),
                   const SizedBox(height: DesignSystem.spaceMd),
                   Consumer(
                     builder: (context, ref, child) {
@@ -343,15 +365,20 @@ class _HomePageState extends ConsumerState<HomePage> {
           : IntrinsicWidth(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
+                // Center each detail row within the box so the mobile
+                // details block looks neat inside the centered hero
+                // (was: rows pinned ragged-left to the widest row).
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   items[0],
                   const SizedBox(height: DesignSystem.spaceSm),
-                  Container(height: 1, color: Colors.white.withOpacity(0.1)),
+                  // Full-width separators (inside IntrinsicWidth they clamp
+                  // to the box width; without a width they render 0px).
+                  Container(height: 1, width: double.infinity, color: Colors.white.withOpacity(0.1)),
                   const SizedBox(height: DesignSystem.spaceSm),
                   items[1],
                   const SizedBox(height: DesignSystem.spaceSm),
-                  Container(height: 1, color: Colors.white.withOpacity(0.1)),
+                  Container(height: 1, width: double.infinity, color: Colors.white.withOpacity(0.1)),
                   const SizedBox(height: DesignSystem.spaceSm),
                   items[2],
                 ],
@@ -371,6 +398,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   Widget _buildExhibitionDetailItem(IconData icon, String label, String value) {
     return Row(
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Container(
           padding: const EdgeInsets.all(8),
@@ -385,28 +413,34 @@ class _HomePageState extends ConsumerState<HomePage> {
           ),
         ),
         const SizedBox(width: DesignSystem.spaceSm),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              label.toUpperCase(),
-              style: DesignSystem.labelCaps.copyWith(
-                color: Colors.white60,
-                fontSize: 10,
-                letterSpacing: 0.5,
+        // Flexible so long values (e.g. multi-line venue names) wrap within
+        // the hero width instead of overflowing the row on narrow screens.
+        Flexible(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label.toUpperCase(),
+                textAlign: TextAlign.center,
+                style: DesignSystem.labelCaps.copyWith(
+                  color: Colors.white60,
+                  fontSize: 10,
+                  letterSpacing: 0.5,
+                ),
               ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              value,
-              style: DesignSystem.bodyMd.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
+              const SizedBox(height: 2),
+              Text(
+                value,
+                textAlign: TextAlign.center,
+                style: DesignSystem.bodyMd.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+                softWrap: true,
               ),
-              softWrap: true,
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     );
@@ -520,14 +554,19 @@ class _CountdownTimerState extends State<_CountdownTimer> {
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const Icon(Icons.emoji_events, color: DesignSystem.secondaryContainer, size: 20),
             const SizedBox(width: DesignSystem.spaceSm),
-            Text(
-              'Exhibition Concluded — Thank You for Visiting',
-              style: DesignSystem.bodyMd.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
+            Flexible(
+              child: Text(
+                'Exhibition Concluded — Thank You for Visiting',
+                textAlign: TextAlign.center,
+                softWrap: true,
+                style: DesignSystem.bodyMd.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ],
@@ -545,14 +584,19 @@ class _CountdownTimerState extends State<_CountdownTimer> {
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const Icon(Icons.celebration, color: DesignSystem.secondaryContainer, size: 20),
             const SizedBox(width: DesignSystem.spaceSm),
-            Text(
-              'The Exhibition is Live Now!',
-              style: DesignSystem.bodyMd.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
+            Flexible(
+              child: Text(
+                'The Exhibition is Live Now!',
+                textAlign: TextAlign.center,
+                softWrap: true,
+                style: DesignSystem.bodyMd.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ],
@@ -565,17 +609,22 @@ class _CountdownTimerState extends State<_CountdownTimer> {
     final minutes = _timeRemaining.inMinutes % 60;
     final seconds = _timeRemaining.inSeconds % 60;
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _buildCountdownItem(days.toString().padLeft(2, '0'), 'Days', isDesktop),
-        _buildCountdownDivider(),
-        _buildCountdownItem(hours.toString().padLeft(2, '0'), 'Hours', isDesktop),
-        _buildCountdownDivider(),
-        _buildCountdownItem(minutes.toString().padLeft(2, '0'), 'Mins', isDesktop),
-        _buildCountdownDivider(),
-        _buildCountdownItem(seconds.toString().padLeft(2, '0'), 'Secs', isDesktop),
-      ],
+    // FittedBox scales the 4-item strip down on narrow screens instead of
+    // overflowing (pre-existing 25px overflow at ~390px).
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          _buildCountdownItem(days.toString().padLeft(2, '0'), 'Days', isDesktop),
+          _buildCountdownDivider(),
+          _buildCountdownItem(hours.toString().padLeft(2, '0'), 'Hours', isDesktop),
+          _buildCountdownDivider(),
+          _buildCountdownItem(minutes.toString().padLeft(2, '0'), 'Mins', isDesktop),
+          _buildCountdownDivider(),
+          _buildCountdownItem(seconds.toString().padLeft(2, '0'), 'Secs', isDesktop),
+        ],
+      ),
     );
   }
 

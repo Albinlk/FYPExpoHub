@@ -60,11 +60,13 @@ class _SchedulePageState extends ConsumerState<SchedulePage> with SingleTickerPr
             ),
             const SizedBox(height: DesignSystem.spaceXl),
 
-            // Tab Bar
+            // Tab Bar — mobile: the two day tabs split the width evenly with
+            // centered labels (matches the Junior Guide tab bar); desktop
+            // keeps the centered scrollable style.
             TabBar(
               controller: _tabController,
-              isScrollable: true,
-              tabAlignment: isDesktop ? TabAlignment.center : TabAlignment.start,
+              isScrollable: isDesktop,
+              tabAlignment: isDesktop ? TabAlignment.center : null,
               tabs: _days.map((day) => Tab(text: day)).toList(),
               labelStyle: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold),
               unselectedLabelColor: DesignSystem.onSurfaceVariant,
@@ -97,6 +99,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> with SingleTickerPr
           padding: const EdgeInsets.all(DesignSystem.spaceLg),
           child: Text(
             'No schedule slots available for this day.',
+            textAlign: TextAlign.center,
             style: DesignSystem.bodyMd.copyWith(color: DesignSystem.onSurfaceVariant),
           ),
         ),

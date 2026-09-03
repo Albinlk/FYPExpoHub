@@ -54,6 +54,7 @@ class AwardsPage extends ConsumerWidget {
                       padding: const EdgeInsets.symmetric(vertical: 40.0),
                       child: Text(
                         'Award winners have not been published yet. Check back soon!',
+                        textAlign: TextAlign.center,
                         style: DesignSystem.bodyMd.copyWith(color: DesignSystem.onSurfaceVariant),
                       ),
                     ),

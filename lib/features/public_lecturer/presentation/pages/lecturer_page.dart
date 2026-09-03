@@ -151,7 +151,7 @@ class _LecturerPageState extends ConsumerState<LecturerPage> {
                           children: [
                             const Icon(Icons.search, size: 64, color: DesignSystem.outlineVariant),
                             const SizedBox(height: DesignSystem.spaceMd),
-                            Text('Please enter your name to find your projects', style: DesignSystem.bodyMd.copyWith(color: DesignSystem.onSurfaceVariant)),
+                            Text('Please enter your name to find your projects', textAlign: TextAlign.center, style: DesignSystem.bodyMd.copyWith(color: DesignSystem.onSurfaceVariant)),
                           ],
                         ),
                       ),
@@ -160,7 +160,7 @@ class _LecturerPageState extends ConsumerState<LecturerPage> {
                     Center(
                       child: Padding(
                         padding: const EdgeInsets.all(DesignSystem.spaceXl),
-                        child: Text('No projects found for this name and role.', style: DesignSystem.bodyMd.copyWith(color: DesignSystem.onSurfaceVariant)),
+                        child: Text('No projects found for this name and role.', textAlign: TextAlign.center, style: DesignSystem.bodyMd.copyWith(color: DesignSystem.onSurfaceVariant)),
                       ),
                     )
                   else

@@ -727,12 +727,14 @@ class _JuniorProjectBrowserPageState
             const SizedBox(height: DesignSystem.spaceMd),
             Text(
               'No Projects Found',
+              textAlign: TextAlign.center,
               style: (isDesktop ? DesignSystem.h3 : DesignSystem.h3Mobile)
                   .copyWith(color: DesignSystem.onSurfaceVariant),
             ),
             const SizedBox(height: 8),
             Text(
               'Check your search keywords or reset filters.',
+              textAlign: TextAlign.center,
               style: DesignSystem.bodySm.copyWith(
                 color: DesignSystem.onSurfaceVariant,
               ),

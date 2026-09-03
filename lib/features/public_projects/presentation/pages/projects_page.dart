@@ -413,12 +413,14 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
             const SizedBox(height: DesignSystem.spaceSm),
             Text(
               'No Projects Found',
+              textAlign: TextAlign.center,
               style: (isDesktop ? DesignSystem.h3 : DesignSystem.h3Mobile)
                   .copyWith(color: DesignSystem.onSurfaceVariant),
             ),
             const SizedBox(height: 4),
             Text(
               'Please check your search keywords or reset filters.',
+              textAlign: TextAlign.center,
               style: DesignSystem.bodySm.copyWith(
                 color: DesignSystem.onSurfaceVariant,
               ),
