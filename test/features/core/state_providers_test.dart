@@ -139,6 +139,9 @@ class _StubDatabaseService extends SupabaseDatabaseService {
 }
 
 void main() {
+  // rootBundle (offline fallback asset) requires an initialized binding.
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   ProviderContainer _container(_StubDatabaseService db) => ProviderContainer(
         overrides: [
           supabaseDbServiceProvider.overrideWithValue(db),
@@ -147,12 +150,20 @@ void main() {
       );
 
   group('ProjectsNotifier offline fallback', () {
-    test('seeds from bundled ExcelData when Supabase read fails', () {
+    test('seeds from the fallback JSON asset when Supabase read fails',
+        () async {
       final db = _StubDatabaseService()..failReads = true;
       final container = _container(db);
       addTearDown(container.dispose);
 
-      final projects = container.read(publicProjectsProvider);
+      // Poll until the async fallback fills state (a 600KB JSON parse can
+      // take longer than any fixed delay in debug mode).
+      List<Project> projects = const [];
+      for (var i = 0; i < 50 && projects.isEmpty; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+        projects = container.read(publicProjectsProvider);
+      }
+
       expect(projects, isNotEmpty);
       expect(projects.first.eventId, 'fskm-fyp-2026');
       // Placeholder rows keep an EMPTY cover url so ProjectCoverImage

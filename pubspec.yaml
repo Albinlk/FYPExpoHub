@@ -42,5 +42,6 @@ flutter:
 
   assets:
     - assets/data/csp600-proposals.csv
+    - assets/data/offline_fallback.json
   # Fonts are served as WOFF2 via web/index.html preload + @font-face
   # (smaller than TTF, avoids double-download). No pubspec TTF needed.

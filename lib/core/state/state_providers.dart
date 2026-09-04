@@ -11,7 +11,7 @@ import '../domain/models/lecturer.dart';
 import '../domain/models/project_lecturer_assignment.dart';
 import '../domain/models/student_visit.dart';
 import '../domain/models/feedback_entry.dart';
-import '../data/excel_data.dart';
+import '../data/offline_fallback.dart';
 import '../supabase/supabase_client_provider.dart';
 import '../supabase/supabase_database_service.dart';
 import '../supabase/supabase_rpc_service.dart';
@@ -159,51 +159,33 @@ class ProjectsNotifier extends Notifier<List<Project>> {
 
   @override
   List<Project> build() {
-    final fallback = ExcelData.allProjects
-        .map(
-          (m) => Project(
-            id: m['id'] as String,
-            eventId: m['event_id'] as String,
-            slug: m['slug'] as String,
-            title: m['title'] as String,
-            matricId: m['matric_id'] as String?,
-            programmeCode: m['programme_code'] as String,
-            programmeName: m['programme_name'] as String,
-            shortDescription: m['short_description'] as String,
-            category: m['category'] as String,
-            technologyTags: (m['technology_tags'] as List).cast<String>(),
-            boothId: m['booth_id'] as String?,
-            boothNumber: m['booth_number'] as String?,
-            boothZone: m['booth_zone'] as String?,
-            presentationDay: m['presentation_day'] as String?,
-            // Empty cover url -> ProjectCoverImage generates a unique
-            // local gradient cover (offline-proof, no external requests).
-            coverImageUrl: '',
-            posterUrl: m['poster_url'] as String?,
-            teamDisplayNames: (m['team_display_names'] as List).cast<String>(),
-            supervisorDisplayName: m['supervisor_display_name'] as String,
-            examinerDisplayName: m['examiner_display_name'] as String?,
-            demoUrl: m['demo_url'] as String?,
-            videoUrl: m['video_url'] as String?,
-            repositoryUrl: m['repository_url'] as String?,
-            featured: m['featured'] as bool,
-            calonIndustri: (m['calon_industri'] as bool?) ?? false,
-            publicationStatus: m['publication_status'] as String,
-            createdAt: m['created_at'] as DateTime,
-            updatedAt: m['updated_at'] as DateTime,
-            publishedAt: m['published_at'] as DateTime?,
-          ),
-        )
-        .toList();
-
     _loadProjects();
-    return fallback;
+    return const [];
   }
 
+  /// Loads remote data and the offline-fallback asset in parallel. The
+  /// fallback fills state first (near-instant content), and live Supabase
+  /// rows overwrite it as soon as they arrive — the fallback is skipped
+  /// entirely if remote wins the race.
+  ///
+  /// The remote future gets an immediate no-op catchError so its error is
+  /// never unhandled in the window before the later await re-throws into
+  /// the local try/catch.
   void _loadProjects() async {
+    final remote = _fetchRemote().catchError(
+      (Object e) => <Map<String, dynamic>>[],
+    );
     try {
-      final db = ref.read(supabaseDbServiceProvider);
-      final data = await db.getProjectsOnce(publishedOnly: publishedOnly);
+      final data = await OfflineFallback.load();
+      final fallback = _parseProjects(data['projects'] ?? const []);
+      if (state.isEmpty && fallback.isNotEmpty) {
+        state = fallback;
+      }
+    } catch (e) {
+      logDebug('Projects fallback asset warning: $e');
+    }
+    try {
+      final data = await remote;
       if (data.isNotEmpty) {
         state = _parseProjects(data);
       }
@@ -212,11 +194,17 @@ class ProjectsNotifier extends Notifier<List<Project>> {
     }
   }
 
+  Future<List<Map<String, dynamic>>> _fetchRemote() async {
+    final db = ref.read(supabaseDbServiceProvider);
+    return db.getProjectsOnce(publishedOnly: publishedOnly);
+  }
+
   Future<void> refresh() async {
     try {
-      final db = ref.read(supabaseDbServiceProvider);
-      final data = await db.getProjectsOnce(publishedOnly: publishedOnly);
-      state = _parseProjects(data);
+      final data = await _fetchRemote();
+      if (data.isNotEmpty) {
+        state = _parseProjects(data);
+      }
     } catch (e) {
       logDebug('Projects refresh failed: $e');
     }
@@ -311,41 +299,40 @@ class ScheduleNotifier extends Notifier<List<ScheduleItem>> {
 
   @override
   List<ScheduleItem> build() {
-    final fallback = ExcelData.allScheduleItems
-        .map(
-          (m) => ScheduleItem(
-            id: m['id'] as String,
-            eventId: m['event_id'] as String,
-            date: m['date'] as DateTime,
-            startAt: m['start_at'] as String,
-            endAt: m['end_at'] as String,
-            title: m['title'] as String,
-            venue: m['venue'] as String,
-            audience: m['audience'] as String,
-            description: m['description'] as String?,
-            visibility: m['visibility'] as String,
-            publicationStatus: m['publication_status'] as String,
-            createdAt: m['created_at'] as DateTime,
-            updatedAt: m['updated_at'] as DateTime,
-            publishedAt: m['published_at'] as DateTime?,
-          ),
-        )
-        .toList();
-
     _loadSchedule();
-    return fallback;
+    return const [];
   }
 
+  /// Same pattern as ProjectsNotifier: fallback asset fills state first,
+  /// live Supabase rows overwrite it when they arrive (remote wins).
   void _loadSchedule() async {
+    final remote = _fetchRemoteSchedule().catchError(
+      (Object e) => <Map<String, dynamic>>[],
+    );
     try {
-      final db = ref.read(supabaseDbServiceProvider);
-      final data = await db.getScheduleOnce(publishedOnly: publishedOnly);
+      final data = await OfflineFallback.load();
+      final fallback = (data['scheduleItems'] ?? const [])
+          .map((m) => ScheduleItem.fromJson(_normalizeKeys(m)))
+          .toList();
+      if (state.isEmpty && fallback.isNotEmpty) {
+        state = fallback;
+      }
+    } catch (e) {
+      logDebug('Schedule fallback asset warning: $e');
+    }
+    try {
+      final data = await remote;
       if (data.isNotEmpty) {
         state = data.map((m) => ScheduleItem.fromJson(_normalizeKeys(m))).toList();
       }
     } catch (e) {
       logDebug('Schedule load from Supabase warning: $e');
     }
+  }
+
+  Future<List<Map<String, dynamic>>> _fetchRemoteSchedule() async {
+    final db = ref.read(supabaseDbServiceProvider);
+    return db.getScheduleOnce(publishedOnly: publishedOnly);
   }
 
   void addScheduleItem(ScheduleItem item) {
@@ -402,39 +389,40 @@ class BoothsNotifier extends Notifier<List<Booth>> {
 
   @override
   List<Booth> build() {
-    final fallback = ExcelData.allBooths
-        .map(
-          (m) => Booth(
-            id: m['id'] as String,
-            eventId: m['event_id'] as String,
-            boothNumber: m['booth_number'] as String,
-            zone: m['zone'] as String,
-            locationNote: m['location_note'] as String,
-            staticFloorPlanUrl: m['static_floor_plan_url'] as String?,
-            projectId: m['project_id'] as String?,
-            presentationDay: m['presentation_day'] as String?,
-            publicationStatus: m['publication_status'] as String,
-            createdAt: m['created_at'] as DateTime,
-            updatedAt: m['updated_at'] as DateTime,
-            publishedAt: m['published_at'] as DateTime?,
-          ),
-        )
-        .toList();
-
     _loadBooths();
-    return fallback;
+    return const [];
   }
 
+  /// Same pattern as ProjectsNotifier: fallback asset fills state first,
+  /// live Supabase rows overwrite it when they arrive (remote wins).
   void _loadBooths() async {
+    final remote = _fetchRemoteBooths().catchError(
+      (Object e) => <Map<String, dynamic>>[],
+    );
     try {
-      final db = ref.read(supabaseDbServiceProvider);
-      final data = await db.getBoothsOnce(publishedOnly: publishedOnly);
+      final data = await OfflineFallback.load();
+      final fallback = (data['booths'] ?? const [])
+          .map((m) => Booth.fromJson(_normalizeKeys(m)))
+          .toList();
+      if (state.isEmpty && fallback.isNotEmpty) {
+        state = fallback;
+      }
+    } catch (e) {
+      logDebug('Booths fallback asset warning: $e');
+    }
+    try {
+      final data = await remote;
       if (data.isNotEmpty) {
         state = data.map((m) => Booth.fromJson(_normalizeKeys(m))).toList();
       }
     } catch (e) {
       logDebug('Booths load from Supabase warning: $e');
     }
+  }
+
+  Future<List<Map<String, dynamic>>> _fetchRemoteBooths() async {
+    final db = ref.read(supabaseDbServiceProvider);
+    return db.getBoothsOnce(publishedOnly: publishedOnly);
   }
 
   void addBooth(Booth booth) {
