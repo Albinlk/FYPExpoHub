@@ -131,9 +131,72 @@
 
   <title>FYP Expo Hub</title>
   <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#031636">
 </head>
 <body>
-  <!-- Flutter Web renderer auto-select (CanvasKit/Auto) — removed deprecated window.flutterWebRenderer="html" -->
+  <!-- Branded splash: visible at byte-zero while the Flutter engine
+       downloads; removed by flutter_bootstrap.js on first frame. -->
+  <div id="splash">
+    <div class="splash-inner">
+      <div class="splash-logo">FYP Expo Hub</div>
+      <div class="splash-sub">FSKM Final Year Project Exhibition</div>
+      <div class="splash-spinner"></div>
+      <div class="splash-loading">Loading…</div>
+    </div>
+  </div>
+  <style>
+    #splash {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #031636;
+      font-family: 'Montserrat', 'Inter', sans-serif;
+      color: #fff;
+      transition: opacity 0.35s ease;
+    }
+    #splash.splash-fade { opacity: 0; }
+    .splash-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      padding: 0 24px;
+      text-align: center;
+    }
+    .splash-logo {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      color: #FED65B;
+    }
+    .splash-sub {
+      font-size: 12px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.55);
+    }
+    .splash-spinner {
+      margin-top: 10px;
+      width: 26px;
+      height: 26px;
+      border: 3px solid rgba(254, 214, 91, 0.25);
+      border-top-color: #FED65B;
+      border-radius: 50%;
+      animation: splash-spin 0.9s linear infinite;
+    }
+    @keyframes splash-spin {
+      to { transform: rotate(360deg); }
+    }
+    .splash-loading {
+      font-size: 11px;
+      letter-spacing: 1px;
+      color: rgba(255, 255, 255, 0.45);
+    }
+  </style>
+
   <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader

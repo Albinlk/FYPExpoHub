@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../app/router_title_io.dart'
+    if (dart.library.js_interop) '../app/router_title_web.dart';
+import '../app/theme/theme.dart';
 import '../core/supabase/supabase_client_provider.dart';
 import '../core/state/state_providers.dart';
 import '../core/state/fypms_state_providers.dart';
@@ -73,6 +76,12 @@ import 'widgets/public_shell.dart';
 final goRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/',
+    observers: [RouteTitleObserver()],
+    // Branded 404 for unknown URLs.
+    errorPageBuilder: (context, state) => MaterialPage(
+      key: state.pageKey,
+      child: _NotFoundPage(uri: state.uri.toString()),
+    ),
     redirect: (context, state) async {
       final user = ref.read(currentAuthUserProvider);
       final path = state.uri.toString();
@@ -540,5 +549,139 @@ bool _roleAllowsWorkspace(List<String> roles, String workspace) {
       return has('fyp_coordinator') || has('admin');
     default:
       return false;
+   }
+}
+
+/// Branded 404 page for unknown routes.
+class _NotFoundPage extends StatelessWidget {
+  final String uri;
+
+
+  const _NotFoundPage({required this.uri});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final padding =
+        isDesktop ? DesignSystem.marginDesktop : DesignSystem.marginMobile;
+    return Scaffold(
+      backgroundColor: DesignSystem.background,
+      body: Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: padding),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.travel_explore_outlined,
+                size: 72,
+                color: DesignSystem.outlineVariant,
+              ),
+              const SizedBox(height: DesignSystem.spaceMd),
+              Text(
+                'Page Not Found',
+                textAlign: TextAlign.center,
+                style: (isDesktop ? DesignSystem.h2 : DesignSystem.h2Mobile)
+                    .copyWith(color: DesignSystem.primary),
+              ),
+              const SizedBox(height: DesignSystem.spaceSm),
+              Text(
+                'The page "$uri" does not exist or has moved.',
+                textAlign: TextAlign.center,
+                style: DesignSystem.bodyMd.copyWith(
+                  color: DesignSystem.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: DesignSystem.spaceXl),
+              Wrap(
+                spacing: DesignSystem.spaceMd,
+                runSpacing: DesignSystem.spaceSm,
+                alignment: WrapAlignment.center,
+                children: [
+                  FilledButton.icon(
+                    onPressed: () => context.go('/'),
+                    icon: const Icon(Icons.home_outlined, size: 18),
+                    label: const Text('Go Home'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: DesignSystem.primary,
+                      foregroundColor: DesignSystem.onPrimary,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 14,
+                      ),
+                    ),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: () => context.go('/projects'),
+                    icon: const Icon(Icons.folder_open_outlined, size: 18),
+                    label: const Text('Browse Projects'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: DesignSystem.primary,
+                      side: const BorderSide(color: DesignSystem.primary),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 14,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Sets the browser tab / window title per route (NavigatorObserver).
+/// Uses `document.title` via JS interop on web; no-op elsewhere.
+class RouteTitleObserver extends NavigatorObserver {
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) =>
+      _apply(route);
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) =>
+      _apply(newRoute);
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) =>
+      _apply(previousRoute);
+
+  void _apply(Route<dynamic>? route) {
+    if (route == null) return;
+    final name = route.settings.name;
+    if (name == null) return;
+    final title = _titleForPath(name);
+    _setDocumentTitle(title.isEmpty ? 'FYP Expo Hub' : title);
+  }
+
+  static String _titleForPath(String path) {
+    String t(String s) => '$s · FYP Expo Hub';
+    if (path == '/') return 'FYP Expo Hub — FSKM FYP Exhibition';
+    if (path == '/info') return t('Exhibition Info');
+    if (path == '/schedule') return t('Schedule');
+    if (path == '/booths') return t('Booths');
+    if (path == '/announcements') return t('Announcements');
+    if (path == '/awards') return t('Awards');
+    if (path == '/projects/junior-guide') return t('Past Projects Guide');
+    if (path.startsWith('/projects/')) return t('Project Details');
+    if (path == '/projects') return t('Projects');
+    if (path == '/lecturer/sign-in' || path == '/lecturer/visits') {
+      return t('My Visits');
+    }
+    if (path == '/lecturer' || path.startsWith('/lecturer/')) {
+      return t('Lecturer Portal');
+    }
+    if (path == '/faq') return t('FAQ');
+    if (path == '/privacy') return t('Privacy Policy');
+    if (path == '/admin') return t('Admin Dashboard');
+    if (path.startsWith('/admin/')) return t('Admin');
+    if (path.startsWith('/fypms')) return t('FYPMS');
+    return '';
+  }
+
+  static void _setDocumentTitle(String title) {
+    // Web sets document.title via conditional import; no-op elsewhere.
+    setDocumentTitleImpl(title);
   }
 }

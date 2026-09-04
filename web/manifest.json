@@ -1,11 +1,11 @@
 {
-    "name": "fyp_expo_hub",
-    "short_name": "fyp_expo_hub",
+    "name": "FYP Expo Hub",
+    "short_name": "FYP Expo Hub",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#031636",
+    "theme_color": "#031636",
+    "description": "FSKM Final Year Project Exhibition — browse projects, booths, schedule, announcements and award winners.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
