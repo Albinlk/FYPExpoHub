@@ -39,7 +39,7 @@ jobs:
 
       - name: Build Web
         run: |
-          flutter build web --release --base-href "/" \
+          flutter build web --release --wasm --base-href "/" \
             --dart-define=SUPABASE_URL="${{ secrets.SUPABASE_URL }}" \
             --dart-define=SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}"
           cp build/web/index.html build/web/404.html
