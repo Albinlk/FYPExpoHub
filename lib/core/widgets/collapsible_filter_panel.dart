@@ -76,35 +76,60 @@ class CollapsibleFilterPanel extends StatelessWidget {
                   ? Padding(
                       padding:
                           const EdgeInsets.only(top: DesignSystem.spaceSm),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // 2-column grid: pairs fields row by row; an odd
-                          // final field stretches full width.
-                          for (var i = 0; i < filterFields.length; i += 2)
-                            Padding(
-                              padding: EdgeInsets.only(
-                                bottom: i + 2 < filterFields.length
+                      child: Builder(
+                        builder: (fieldContext) {
+                          // Adaptive columns: 2-up only when there's
+                          // genuinely room (~200px+ per dropdown after
+                          // paddings/gaps) — otherwise full-width stacked
+                          // fields so labels like "Software Engineering &
+                          // Applications" never crush on phones.
+                          final available =
+                              MediaQuery.sizeOf(fieldContext).width;
+                          final useTwoColumns = available >= 480;
+
+                          final fields = [
+                            for (var i = 0;
+                                i < filterFields.length;
+                                i += useTwoColumns ? 2 : 1) ...[
+                              if (useTwoColumns) ...[
+                                Row(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(child: filterFields[i]),
+                                    if (i + 1 < filterFields.length) ...[
+                                      const SizedBox(
+                                          width: DesignSystem.spaceSm),
+                                      Expanded(
+                                          child: filterFields[i + 1]),
+                                    ],
+                                  ],
+                                ),
+                              ] else
+                                filterFields[i],
+                              SizedBox(
+                                height: i + (useTwoColumns ? 2 : 1) <
+                                        filterFields.length
                                     ? DesignSystem.spaceSm
                                     : 0,
                               ),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(child: filterFields[i]),
-                                  if (i + 1 < filterFields.length) ...[
-                                    const SizedBox(width: DesignSystem.spaceSm),
-                                    Expanded(child: filterFields[i + 1]),
-                                  ],
-                                ],
-                              ),
-                            ),
-                          if (resetControl != null) ...[
-                            const SizedBox(height: DesignSystem.spaceSm),
-                            SizedBox(width: double.infinity, child: resetControl!),
-                          ],
-                        ],
+                            ],
+                          ];
+
+                          return Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ...fields,
+                              if (resetControl != null) ...[
+                                const SizedBox(height: DesignSystem.spaceSm),
+                                SizedBox(
+                                    width: double.infinity,
+                                    child: resetControl!),
+                              ],
+                            ],
+                          );
+                        },
                       ),
                     )
                   : const SizedBox(width: double.infinity),

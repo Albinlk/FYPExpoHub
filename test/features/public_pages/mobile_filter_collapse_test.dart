@@ -60,8 +60,28 @@ void main() {
   }
 
   group('CollapsibleFilterPanel (unit)', () {
+    Future<void> _pumpPanel(
+      WidgetTester tester,
+      Size viewport,
+    ) async {
+      tester.view.physicalSize = viewport;
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(
+        MaterialApp(home: Scaffold(body: _PanelHarness(activeCount: 0))),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Filters'));
+      await tester.pumpAndSettle();
+    }
+
     testWidgets('collapsed default, badge shows active count',
         (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -77,8 +97,45 @@ void main() {
       expect(find.text('Filters · 2'), findsOneWidget);
     });
 
-    testWidgets('toggle expands to show 2-column fields, collapses again',
-        (tester) async {
+    testWidgets(
+        'phone viewport (390px): fields stack FULL WIDTH — no crushed '
+        'two-column dropdowns', (tester) async {
+      await _pumpPanel(tester, const Size(390, 844));
+
+      // All three fields visible.
+      expect(find.text('Field A'), findsOneWidget);
+      expect(find.text('Field B'), findsOneWidget);
+      expect(find.text('Field C'), findsOneWidget);
+
+      // Width contract: every field spans (nearly) the full available
+      // width — card padding 16*2 + ListView scaffold => ~350px+ each.
+      // A two-column layout would be ~159px and must never appear.
+      for (final label in ['Field A', 'Field B', 'Field C']) {
+        final rect = tester.getRect(find.text(label));
+        expect(rect.width, greaterThan(300),
+            reason: '$label must be full width on phones (got ${rect.width})');
+      }
+    });
+
+    testWidgets('wide viewport (600px): fields pair two-up', (tester) async {
+      await _pumpPanel(tester, const Size(600, 900));
+
+      expect(find.text('Field A'), findsOneWidget);
+      expect(find.text('Field B'), findsOneWidget);
+      expect(find.text('Field C'), findsOneWidget);
+
+      // Two-column contract: A and B share a row (same top), each ~half.
+      final a = tester.getRect(find.text('Field A'));
+      final b = tester.getRect(find.text('Field B'));
+      expect(b.top, equals(a.top));
+      expect(a.width, lessThan(300));
+    });
+
+    testWidgets('toggle expands and collapses again', (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
       await tester.pumpWidget(
         MaterialApp(home: Scaffold(body: _PanelHarness(activeCount: 0))),
       );
@@ -87,8 +144,6 @@ void main() {
       await tester.tap(find.text('Filters'));
       await tester.pumpAndSettle();
       expect(find.text('Field A'), findsOneWidget);
-      expect(find.text('Field B'), findsOneWidget);
-      expect(find.text('Field C'), findsOneWidget);
       expect(find.text('Reset'), findsOneWidget);
 
       await tester.tap(find.text('Filters'));
@@ -139,6 +194,22 @@ void main() {
     expect(find.text('Academic Program'), findsOneWidget);
     expect(find.text('Project Category'), findsOneWidget);
     expect(find.text('Reset Filters'), findsOneWidget);
+
+    // Width contract: the real dropdown fields span the full panel width
+    // on phones (no narrow two-column crushing). The DropdownButton sits
+    // inside a full-width bordered Container (the visible field), so walk
+    // up to it. Inner button ~= field minus 24px horizontal padding.
+    final dropdowns = find.byType(DropdownButton<String>);
+    expect(dropdowns.evaluate().length, greaterThanOrEqualTo(2));
+    for (final dd in dropdowns.evaluate()) {
+      final inner = tester.getRect(find.byWidget(dd.widget));
+      // Inner button must be within ~40px of the full panel width
+      // (390 screen - 16 page - 16 card - 2 border - 24 inner padding).
+      expect(inner.width, greaterThan(250),
+          reason:
+              'dropdown field too narrow on phones (inner=${inner.width}; '
+              'two-column crush would be ~159px)');
+    }
   });
 
   testWidgets('BoothsPage mobile: Day stays visible, Venue/Program collapse',
@@ -175,6 +246,13 @@ class _PanelHarness extends StatefulWidget {
 class _PanelHarnessState extends State<_PanelHarness> {
   bool _expanded = false;
 
+  /// Full-width marker field: width comes from the LAYOUT (Expanded /
+  /// column stretch), not from the text inside.
+  Widget _field(String label) => SizedBox(
+        width: double.infinity,
+        child: Text(label),
+      );
+
   @override
   Widget build(BuildContext context) {
     return ListView(
@@ -185,10 +263,10 @@ class _PanelHarnessState extends State<_PanelHarness> {
           activeCount: widget.activeCount,
           expanded: _expanded,
           onToggle: () => setState(() => _expanded = !_expanded),
-          filterFields: const [
-            Text('Field A'),
-            Text('Field B'),
-            Text('Field C'),
+          filterFields: [
+            _field('Field A'),
+            _field('Field B'),
+            _field('Field C'),
           ],
           resetControl: TextButton(
             onPressed: () {},
