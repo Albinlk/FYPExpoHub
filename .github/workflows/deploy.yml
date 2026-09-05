@@ -43,6 +43,11 @@ jobs:
             --dart-define=SUPABASE_URL="${{ secrets.SUPABASE_URL }}" \
             --dart-define=SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}"
           cp build/web/index.html build/web/404.html
+          # Stamp the deploy version into the service worker + its
+          # registration URL so each release gets a fresh asset cache.
+          DEPLOY_VERSION="${GITHUB_SHA::12}"
+          sed -i "s/{{BUILD_VERSION}}/${DEPLOY_VERSION}/g" \
+            build/web/sw.js build/web/flutter_bootstrap.js
 
       - name: Upload Artifacts
         uses: actions/upload-pages-artifact@v3
