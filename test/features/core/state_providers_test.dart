@@ -85,9 +85,21 @@ class _StubDatabaseService extends SupabaseDatabaseService {
   final List<Map<String, dynamic>> projectsToReturn = [];
   final List<Map<String, dynamic>> announcementsToReturn = [];
   bool failReads = false;
+  int lecturerQueryCount = 0;
 
   final List<(String, Map<String, dynamic>)> upserts = [];
   final List<(String, String)> deletes = [];
+
+  @override
+  Future<List<Map<String, dynamic>>> getLecturersOnce() async {
+    lecturerQueryCount++;
+    return [
+      {
+        'email': 'aminah@uitm.edu.my',
+        'display_name': 'DR. AMINAH',
+      },
+    ];
+  }
 
   @override
   Future<List<Map<String, dynamic>>> getProjectsOnce({
@@ -137,6 +149,15 @@ class _StubDatabaseService extends SupabaseDatabaseService {
     deletes.add(('announcements', id));
   }
 }
+
+User _fakeLecturerUser() => User(
+      id: 'user-1',
+      email: 'aminah@uitm.edu.my',
+      aud: 'authenticated',
+      appMetadata: const {},
+      userMetadata: const {},
+      createdAt: DateTime(2026, 1, 1).toIso8601String(),
+    );
 
 void main() {
   // rootBundle (offline fallback asset) requires an initialized binding.
@@ -385,6 +406,53 @@ void main() {
       addTearDown(container.dispose);
 
       expect(container.read(lecturerAuthProvider), isNull);
+    });
+
+    test('anonymous visitor does not fire the lecturers query', () {
+      // The public shell watches lecturerAuthProvider on every page —
+      // it must NOT trigger getLecturersOnce when nobody is signed in
+      // (it previously queried the lecturers table for every visitor).
+      final db = _StubDatabaseService();
+      final container = _container(db);
+      addTearDown(container.dispose);
+
+      // Read the signed-in selector the shell uses, then let async
+      // settles flush.
+      expect(
+        container.read(lecturerAuthProvider.select((l) => l != null)),
+        isFalse,
+      );
+      // Give any (erroneously started) provider work a chance to run.
+      container.listen(lecturerAuthProvider, (_, __) {});
+      expect(db.lecturerQueryCount, 0,
+          reason: 'lecturers table must not be queried for anonymous users');
+    });
+
+    test('signed-in lecturer resolves display name from config', () async {
+      final db = _StubDatabaseService();
+      final container = _container(db);
+      addTearDown(container.dispose);
+
+      // Simulate sign-in: override the auth user with a lecturer email
+      // and re-evaluate (drive through the same provider chain).
+      final overrideContainer = ProviderContainer(
+        overrides: [
+          supabaseDbServiceProvider.overrideWithValue(db),
+          currentAuthUserProvider.overrideWith((ref) => _fakeLecturerUser()),
+        ],
+      );
+      addTearDown(overrideContainer.dispose);
+
+      final sub = overrideContainer.listen(lecturerAuthProvider, (_, __) {},
+          fireImmediately: true);
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+
+      final lecturer = overrideContainer.read(lecturerAuthProvider);
+      expect(lecturer, isNotNull);
+      // Config takes precedence over metadata for the display name.
+      expect(lecturer!.displayName, 'DR. AMINAH');
+      expect(overrideContainer.read(lecturerUidProvider), 'user-1');
+      sub.close();
     });
   });
 }

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show User;
 import '../domain/models/project.dart';
 import '../domain/models/schedule_item.dart';
 import '../domain/models/announcement.dart';
@@ -688,35 +689,53 @@ final lecturerAuthProvider = NotifierProvider<LecturerAuthNotifier, Lecturer?>(
   LecturerAuthNotifier.new,
 );
 
+/// Lecturer config gated on sign-in: anonymous visitors never initialize
+/// the config (and therefore never fire the lecturers-table query).
+final _lecturerConfigWhenSignedIn = Provider<Map<String, String>?>((ref) {
+  final user = ref.watch(currentAuthUserProvider);
+  if (user == null) return null;
+  return ref.watch(lecturerConfigProvider);
+});
+
 class LecturerAuthNotifier extends Notifier<Lecturer?> {
   @override
   Lecturer? build() {
-    ref.listen(lecturerConfigProvider, (_, __) => _reevaluate());
-    ref.listen(currentAuthUserProvider, (_, __) => _reevaluate());
-    _reevaluate();
-    return null;
+    // Only react to auth changes. The lecturer CONFIG (display names via
+    // allLecturersProvider -> getLecturersOnce) is read lazily below when a
+    // user is actually signed in — previously this notifier eagerly fired a
+    // lecturers-table query on every anonymous page load.
+    final initial = _evaluate(user: ref.read(currentAuthUserProvider));
+    ref.listen(
+      currentAuthUserProvider,
+      (_, next) => state = _evaluate(user: next),
+    );
+    // Re-resolve the display name once the config arrives (only possible
+    // when signed in — the gated provider is a no-op otherwise).
+    ref.listen(_lecturerConfigWhenSignedIn, (_, __) {
+      state = _evaluate(user: ref.read(currentAuthUserProvider));
+    });
+    return initial;
   }
 
-  void _reevaluate() {
+  Lecturer? _evaluate({User? user}) {
+    if (user == null || user.email == null) return null;
+    // Signed in: now (and only now) read the config for the display name.
+    // lecturerConfigProvider watching allLecturersProvider only triggers
+    // the lecturers-table query from authenticated sessions.
     final config = ref.read(lecturerConfigProvider);
-    final user = ref.read(currentAuthUserProvider);
-    if (user != null && user.email != null) {
-      final emailLower = user.email!.toLowerCase();
-      final displayName = config[emailLower] ??
-          (user.userMetadata?['display_name'] as String?) ??
-          user.email!.split('@').first.toUpperCase();
+    final emailLower = user.email!.toLowerCase();
+    final displayName = config[emailLower] ??
+        (user.userMetadata?['display_name'] as String?) ??
+        user.email!.split('@').first.toUpperCase();
 
-      state = Lecturer(
-        id: user.id,
-        uid: user.id,
-        displayName: displayName,
-        email: user.email,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-    } else {
-      state = null;
-    }
+    return Lecturer(
+      id: user.id,
+      uid: user.id,
+      displayName: displayName,
+      email: user.email,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
   }
 
   void signOut() async {
