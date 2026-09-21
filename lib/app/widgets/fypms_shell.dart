@@ -124,6 +124,7 @@ class FypmsShell extends ConsumerWidget {
                 IconButton(
                   icon: const Icon(Icons.logout),
                   onPressed: () => _logout(context, ref),
+                  tooltip: 'Sign Out',
                 ),
               ]
             : null,
@@ -302,7 +303,7 @@ class _FypmsSidebar extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
-        color: active ? DesignSystem.secondary.withOpacity(0.15) : Colors.transparent,
+        color: active ? DesignSystem.secondary.withValues(alpha: 0.15) : Colors.transparent,
         borderRadius: DesignSystem.radiusLg,
       ),
       child: Material(
@@ -407,7 +408,7 @@ class _FypmsDrawer extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
-        color: active ? DesignSystem.secondary.withOpacity(0.15) : Colors.transparent,
+        color: active ? DesignSystem.secondary.withValues(alpha: 0.15) : Colors.transparent,
         borderRadius: DesignSystem.radiusLg,
       ),
       child: Material(

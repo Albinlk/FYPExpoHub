@@ -363,10 +363,12 @@ class AdminProjectsPage extends ConsumerWidget {
                                     const SizedBox(width: 16),
                                     IconButton(
                                       icon: const Icon(Icons.edit, size: 18),
+                                      tooltip: 'Edit project',
                                       onPressed: () => _showAddEditDialog(context, ref, item),
                                     ),
                                     IconButton(
                                       icon: const Icon(Icons.delete, size: 18, color: DesignSystem.error),
+                                      tooltip: 'Delete project',
                                       onPressed: () {
                                         ref.read(projectsProvider.notifier).deleteProject(item.id);
                                         ScaffoldMessenger.of(context).showSnackBar(

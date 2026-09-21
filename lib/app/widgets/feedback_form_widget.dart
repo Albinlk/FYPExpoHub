@@ -133,6 +133,7 @@ class _FeedbackFormWidgetState extends ConsumerState<FeedbackFormWidget> {
               IconButton(
                 icon: const Icon(Icons.close),
                 onPressed: () => Navigator.of(context).pop(),
+                tooltip: 'Close',
               ),
             ],
           ),

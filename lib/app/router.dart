@@ -4,9 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../app/router_title_io.dart'
     if (dart.library.js_interop) '../app/router_title_web.dart';
 import '../app/theme/theme.dart';
-import '../core/supabase/supabase_client_provider.dart';
-import '../core/state/state_providers.dart';
-import '../core/state/fypms_state_providers.dart';
+import 'router_guards.dart';
 import '../features/fypms/presentation/pages/csp_dashboard_page.dart';
 import '../features/fypms/presentation/pages/csp_marks_page.dart';
 import '../features/fypms/presentation/pages/csp_milestones_page.dart';
@@ -82,64 +80,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       key: state.pageKey,
       child: _NotFoundPage(uri: state.uri.toString()),
     ),
-    redirect: (context, state) async {
-      final user = ref.read(currentAuthUserProvider);
-      final path = state.uri.toString();
-      final isLoggingIn = path == '/admin/sign-in';
-      final isAdminPath = path.startsWith('/admin');
-      final isFypmsPath = path.startsWith('/fypms');
-      final isAdminDomain = Uri.base.host == 'admin.fskmjasinfypexhibition.site';
-
-      // FYPMS routes: require authentication.
-      if (isFypmsPath) {
-        if (user == null) {
-          return '/admin/sign-in';
-        }
-        final roles = await ref.read(fypmsCurrentRolesProvider.future);
-        if (roles.isEmpty) {
-          // Keep the shell, which renders the "No FYPMS Access" screen.
-          return null;
-        }
-        final home = _fypmsHomeForRoles(roles);
-        if (path == '/fypms' || path == '/fypms/') {
-          return home;
-        }
-        // Per-workspace guards: users may only enter workspaces they hold a
-        // role in. Redirect to their home workspace otherwise.
-        final workspace = _fypmsWorkspaceForPath(path);
-        if (workspace != null && !_roleAllowsWorkspace(roles, workspace)) {
-          return home;
-        }
-        return null;
-      }
-
-      // On admin domain root, go to sign-in if not authenticated
-      if (isAdminDomain && path == '/') {
-        return user == null ? '/admin/sign-in' : '/admin';
-      }
-
-      if (isAdminPath && !isLoggingIn) {
-        if (user == null) {
-          return '/admin/sign-in';
-        }
-        final isAdmin = await ref.read(isAdminProvider.future);
-        if (!isAdmin) {
-          return '/admin/sign-in';
-        }
-      }
-
-      if (user != null && isLoggingIn) {
-        final isAdmin = await ref.read(isAdminProvider.future);
-        if (isAdmin) {
-          return '/admin';
-        }
-        final lecturer = ref.read(lecturerAuthProvider);
-        if (lecturer != null) {
-          return '/lecturer/visits';
-        }
-      }
-
-      return null;
+    redirect: (context, state) {
+      return resolveRouterRedirect(ref, state.uri.toString());
     },
     routes: [
       // -------------------------------------------------------------
@@ -500,57 +442,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
-
-/// Resolves the landing workspace for a set of FYPMS role codes.
-String _fypmsHomeForRoles(List<String> roles) {
-  if (roles.contains('student')) return '/fypms/student';
-  if (roles.contains('supervisor') || roles.contains('co_supervisor')) {
-    return '/fypms/supervisor';
-  }
-  if (roles.contains('examiner')) return '/fypms/examiner';
-  if (roles.contains('csp600_lecturer') || roles.contains('csp650_lecturer')) {
-    return '/fypms/csp';
-  }
-  if (roles.contains('fyp_coordinator') || roles.contains('admin')) {
-    return '/fypms/coordinator';
-  }
-  return '/fypms';
-}
-
-/// Identifies which FYPMS workspace a path belongs to, or null for the
-/// workspace-agnostic `/fypms` root.
-String? _fypmsWorkspaceForPath(String path) {
-  const workspaces = [
-    'student',
-    'supervisor',
-    'examiner',
-    'csp',
-    'coordinator',
-  ];
-  final segments = path.split('/');
-  if (segments.length < 3 || segments[1] != 'fypms') return null;
-  final workspace = segments[2];
-  return workspaces.contains(workspace) ? workspace : null;
-}
-
-/// Whether the given role codes permit access to the given workspace.
-bool _roleAllowsWorkspace(List<String> roles, String workspace) {
-  final has = (String code) => roles.contains(code);
-  switch (workspace) {
-    case 'student':
-      return has('student');
-    case 'supervisor':
-      return has('supervisor') || has('co_supervisor');
-    case 'examiner':
-      return has('examiner');
-    case 'csp':
-      return has('csp600_lecturer') || has('csp650_lecturer');
-    case 'coordinator':
-      return has('fyp_coordinator') || has('admin');
-    default:
-      return false;
-   }
-}
 
 /// Branded 404 page for unknown routes.
 class _NotFoundPage extends StatelessWidget {

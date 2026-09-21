@@ -61,6 +61,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
         appBar: AppBar(
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
+            tooltip: 'Back',
             onPressed: () => _goBack(context),
           ),
           title: const Text('Project Not Found'),
@@ -87,6 +88,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
+          tooltip: 'Back',
           onPressed: () => _goBack(context),
         ),
         title: Text('Project Details', style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold)),

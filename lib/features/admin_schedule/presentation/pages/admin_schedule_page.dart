@@ -346,10 +346,12 @@ class AdminSchedulePage extends ConsumerWidget {
                                     const SizedBox(width: 16),
                                     IconButton(
                                       icon: const Icon(Icons.edit, size: 18),
+                                      tooltip: 'Edit schedule item',
                                       onPressed: () => _showAddEditDialog(context, ref, item),
                                     ),
                                     IconButton(
                                       icon: const Icon(Icons.delete, size: 18, color: DesignSystem.error),
+                                      tooltip: 'Delete schedule item',
                                       onPressed: () {
                                         ref.read(scheduleProvider.notifier).deleteScheduleItem(item.id);
                                         ScaffoldMessenger.of(context).showSnackBar(

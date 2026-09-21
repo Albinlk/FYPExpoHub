@@ -345,9 +345,9 @@ class _HomePageState extends ConsumerState<HomePage> {
         vertical: DesignSystem.spaceMd,
       ),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.08),
+        color: Colors.white.withValues(alpha: 0.08),
         borderRadius: DesignSystem.radiusXl,
-        border: Border.all(color: Colors.white.withOpacity(0.15)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
       ),
       child: isDesktop
           ? IntrinsicHeight(
@@ -374,11 +374,11 @@ class _HomePageState extends ConsumerState<HomePage> {
                   const SizedBox(height: DesignSystem.spaceSm),
                   // Full-width separators (inside IntrinsicWidth they clamp
                   // to the box width; without a width they render 0px).
-                  Container(height: 1, width: double.infinity, color: Colors.white.withOpacity(0.1)),
+                  Container(height: 1, width: double.infinity, color: Colors.white.withValues(alpha: 0.1)),
                   const SizedBox(height: DesignSystem.spaceSm),
                   items[1],
                   const SizedBox(height: DesignSystem.spaceSm),
-                  Container(height: 1, width: double.infinity, color: Colors.white.withOpacity(0.1)),
+                  Container(height: 1, width: double.infinity, color: Colors.white.withValues(alpha: 0.1)),
                   const SizedBox(height: DesignSystem.spaceSm),
                   items[2],
                 ],
@@ -391,7 +391,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: DesignSystem.spaceLg),
       width: 1,
-      color: Colors.white.withOpacity(0.15),
+      color: Colors.white.withValues(alpha: 0.15),
     );
   }
 
@@ -403,7 +403,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: DesignSystem.secondaryContainer.withOpacity(0.2),
+            color: DesignSystem.secondaryContainer.withValues(alpha: 0.2),
             shape: BoxShape.circle,
           ),
           child: Icon(
@@ -633,7 +633,7 @@ class _CountdownTimerState extends State<_CountdownTimer> {
       constraints: const BoxConstraints(minWidth: 60, maxWidth: 80),
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: DesignSystem.spaceSm),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.08),
+        color: Colors.white.withValues(alpha: 0.08),
         borderRadius: DesignSystem.radiusLg,
         border: Border.all(color: Colors.white10),
       ),

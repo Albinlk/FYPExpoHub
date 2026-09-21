@@ -272,6 +272,7 @@ class _JuniorProjectBrowserPageState
                   suffixIcon: _searchController.text.isNotEmpty
                       ? IconButton(
                           icon: const Icon(Icons.clear, size: 18),
+                          tooltip: 'Clear search',
                           onPressed: () {
                             setState(() {
                               _searchController.clear();
@@ -307,6 +308,7 @@ class _JuniorProjectBrowserPageState
             suffixIcon: _searchController.text.isNotEmpty
                 ? IconButton(
                     icon: const Icon(Icons.clear, size: 18),
+                    tooltip: 'Clear search',
                     onPressed: () {
                       setState(() {
                         _searchController.clear();

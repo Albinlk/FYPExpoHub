@@ -139,6 +139,7 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
+          tooltip: 'Back',
           onPressed: _goBack,
         ),
         title: Text(project.title, style: DesignSystem.h3.copyWith(color: DesignSystem.primary, fontSize: 18)),
@@ -252,7 +253,7 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: role == 'supervisor' ? DesignSystem.primary.withOpacity(0.1) : DesignSystem.tertiary.withOpacity(0.1),
+                    color: role == 'supervisor' ? DesignSystem.primary.withValues(alpha: 0.1) : DesignSystem.tertiary.withValues(alpha: 0.1),
                     borderRadius: DesignSystem.radiusSm,
                   ),
                   child: Text(title, style: DesignSystem.labelCaps.copyWith(
@@ -265,7 +266,7 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: DesignSystem.tertiaryContainer.withOpacity(0.2),
+                      color: DesignSystem.tertiaryContainer.withValues(alpha: 0.2),
                       borderRadius: DesignSystem.radiusSm,
                     ),
                     child: Row(

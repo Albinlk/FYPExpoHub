@@ -1,5 +1,10 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../utils/logger.dart';
 
 /// Supabase client singleton provider
 final supabaseClientProvider = Provider<SupabaseClient>((ref) {
@@ -71,18 +76,32 @@ final currentProfileProvider = FutureProvider<UserProfile?>((ref) async {
 
     if (data == null) return null;
     return UserProfile.fromJson(data);
+  } on SocketException catch (e) {
+    logDebug('Profile fetch failed (offline): $e');
+    return _profileFromMetadataFallback(user);
+  } on TimeoutException catch (e) {
+    logDebug('Profile fetch failed (timeout): $e');
+    return _profileFromMetadataFallback(user);
   } catch (e) {
-    // If profiles query fails (e.g. offline/network), return a fallback from user metadata
-    return UserProfile(
-      id: user.id,
-      email: user.email ?? '',
-      displayName: (user.userMetadata?['display_name'] as String?) ??
-          user.email?.split('@').first.toUpperCase() ??
-          '',
-      role: (user.userMetadata?['role'] as String?) ?? 'lecturer',
-    );
+    // Unlike a network/offline failure, this means the backend responded
+    // with an error (e.g. a Postgres/RLS error) — log it distinctly so it
+    // isn't mistaken for expected offline behaviour, then still fall back
+    // to metadata so the UI doesn't hard-fail on a transient backend issue.
+    logDebug('Profile fetch failed (backend error, not offline): $e');
+    return _profileFromMetadataFallback(user);
   }
 });
+
+UserProfile _profileFromMetadataFallback(User user) {
+  return UserProfile(
+    id: user.id,
+    email: user.email ?? '',
+    displayName: (user.userMetadata?['display_name'] as String?) ??
+        user.email?.split('@').first.toUpperCase() ??
+        '',
+    role: (user.userMetadata?['role'] as String?) ?? 'lecturer',
+  );
+}
 
 /// Admin validation provider (checks database profile role)
 final isAdminProvider = FutureProvider<bool>((ref) async {

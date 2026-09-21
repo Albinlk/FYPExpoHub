@@ -109,7 +109,7 @@ class VisitDataTable extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: isSv ? DesignSystem.primary.withOpacity(0.1) : DesignSystem.tertiary.withOpacity(0.1),
+        color: isSv ? DesignSystem.primary.withValues(alpha: 0.1) : DesignSystem.tertiary.withValues(alpha: 0.1),
         borderRadius: DesignSystem.radiusSm,
       ),
       child: Text(isSv ? 'SV' : 'EX', style: DesignSystem.labelCaps.copyWith(
@@ -130,7 +130,7 @@ class VisitDataTable extends StatelessWidget {
     if (isCompleted) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-        decoration: BoxDecoration(color: DesignSystem.tertiaryContainer.withOpacity(0.2), borderRadius: DesignSystem.radiusSm),
+        decoration: BoxDecoration(color: DesignSystem.tertiaryContainer.withValues(alpha: 0.2), borderRadius: DesignSystem.radiusSm),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [

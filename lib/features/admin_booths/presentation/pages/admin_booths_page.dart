@@ -284,10 +284,12 @@ class AdminBoothsPage extends ConsumerWidget {
                                     const SizedBox(width: 16),
                                     IconButton(
                                       icon: const Icon(Icons.edit, size: 18),
+                                      tooltip: 'Edit booth',
                                       onPressed: () => _showAddEditDialog(context, ref, item),
                                     ),
                                     IconButton(
                                       icon: const Icon(Icons.delete, size: 18, color: DesignSystem.error),
+                                      tooltip: 'Delete booth',
                                       onPressed: () {
                                         ref.read(boothsProvider.notifier).deleteBooth(item.id);
                                         ScaffoldMessenger.of(context).showSnackBar(

@@ -94,6 +94,7 @@ class _ImportDetailPageState extends ConsumerState<ImportDetailPage> {
         title: const Text('Review Master File Import'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
+          tooltip: 'Back to imports',
           onPressed: () => context.go('/admin/imports'),
         ),
       ),

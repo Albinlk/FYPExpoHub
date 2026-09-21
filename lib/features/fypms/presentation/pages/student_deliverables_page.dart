@@ -167,8 +167,8 @@ class StudentDeliverablesPage extends ConsumerWidget {
                   padding: const EdgeInsets.all(DesignSystem.spaceMd),
                   decoration: BoxDecoration(
                     color: readiness.ready
-                        ? DesignSystem.secondary.withOpacity(0.15)
-                        : DesignSystem.errorContainer.withOpacity(0.4),
+                        ? DesignSystem.secondary.withValues(alpha: 0.15)
+                        : DesignSystem.errorContainer.withValues(alpha: 0.4),
                     borderRadius: DesignSystem.radiusLg,
                   ),
                   child: Text(

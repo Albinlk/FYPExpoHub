@@ -233,6 +233,7 @@ class DashboardPage extends ConsumerWidget {
                                 const SizedBox(width: 12),
                                 IconButton(
                                   icon: const Icon(Icons.arrow_forward_ios, size: 14),
+                                  tooltip: 'View import details',
                                   onPressed: () => context.go('/admin/imports/${imp.id}'),
                                 ),
                               ],

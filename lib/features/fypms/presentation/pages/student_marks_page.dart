@@ -62,7 +62,7 @@ class StudentMarksPage extends ConsumerWidget {
                                       Container(
                                         padding: const EdgeInsets.symmetric(horizontal: DesignSystem.spaceSm, vertical: 4),
                                         decoration: BoxDecoration(
-                                          color: DesignSystem.secondary.withOpacity(0.15),
+                                          color: DesignSystem.secondary.withValues(alpha: 0.15),
                                           borderRadius: DesignSystem.radiusLg,
                                         ),
                                         child: Text(

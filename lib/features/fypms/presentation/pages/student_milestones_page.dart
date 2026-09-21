@@ -98,7 +98,7 @@ class _StatusBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: DesignSystem.spaceSm, vertical: 4),
       decoration: BoxDecoration(
         color: status == 'completed'
-            ? DesignSystem.secondary.withOpacity(0.15)
+            ? DesignSystem.secondary.withValues(alpha: 0.15)
             : status == 'overdue'
                 ? DesignSystem.errorContainer
                 : DesignSystem.surfaceContainer,
