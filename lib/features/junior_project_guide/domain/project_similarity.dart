@@ -119,20 +119,36 @@ class ProjectSimilarity {
     'General CS',
   };
 
+  /// Lowercased-tag -> canonical-cased [knownCategories] value. Admin-
+  /// entered tags (the unrestricted free-text field on Admin Projects) can
+  /// carry any casing, e.g. "data analytics" or "NETWORKING" — those must
+  /// still resolve to the same canonical category as "Data Analytics" /
+  /// "Networking" so two differently-cased duplicates of the same category
+  /// actually intersect in [categoryTags]. Without this, a lowercase
+  /// variant falls through to [inferTagsFromTitle] instead, which has no
+  /// keyword matching a bare category name like "data analytics" or
+  /// "networking" (its keywords are specific tech terms, e.g. 'sdn',
+  /// 'vlan') and silently miscategorizes it into the 'General CS' catch-all.
+  static final Map<String, String> _knownCategoriesByLowercase = {
+    for (final c in knownCategories) c.toLowerCase(): c,
+  };
+
   /// Tags collapsed onto the same standardized category vocabulary
   /// regardless of source: a tag that's already one of [knownCategories]
-  /// (how Expo Hub projects are seeded) passes through unchanged, while a
-  /// genuinely raw/free-text tag (how CSP600 CSV proposals are authored —
-  /// e.g. "MQTT", "VLAN", "Snort") is keyword-categorized via
-  /// [inferTagsFromTitle]. Intended for filter/browse UIs that need one
-  /// consistent tech-stack vocabulary across both sources; [displayTags]
-  /// remains the source of truth for showing a project's actual tags.
+  /// (how Expo Hub projects are seeded), in any casing, passes through as
+  /// its canonical form, while a genuinely raw/free-text tag (how CSP600
+  /// CSV proposals are authored — e.g. "MQTT", "VLAN", "Snort") is
+  /// keyword-categorized via [inferTagsFromTitle]. Intended for filter/
+  /// browse UIs that need one consistent tech-stack vocabulary across both
+  /// sources; [displayTags] remains the source of truth for showing a
+  /// project's actual tags.
   static Set<String> categoryTags(Project p) {
     final raw = displayTags(p);
     final result = <String>{};
     for (final tag in raw) {
-      if (knownCategories.contains(tag)) {
-        result.add(tag);
+      final canonical = _knownCategoriesByLowercase[tag.toLowerCase().trim()];
+      if (canonical != null) {
+        result.add(canonical);
       } else {
         result.addAll(inferTagsFromTitle(tag));
       }

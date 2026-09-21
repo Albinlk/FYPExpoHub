@@ -164,6 +164,25 @@ void main() {
       );
     });
 
+    test('a differently-cased known category resolves to its canonical '
+        'form, not the "General CS" catch-all (Admin Projects has an '
+        'unrestricted free-text tag field, so admin-entered casing can '
+        'vary)', () {
+      final lower = _project(id: 'a', tags: ['machine learning', 'data analytics', 'networking']);
+      final canonical = _project(
+          id: 'b', tags: ['Machine Learning', 'Data Analytics', 'Networking']);
+
+      expect(
+        ProjectSimilarity.categoryTags(lower),
+        ProjectSimilarity.categoryTags(canonical),
+        reason: 'a lowercase duplicate of an existing tag set must '
+            'resolve to the exact same category set as the canonical one, '
+            'so the two are still detected as redundant',
+      );
+      expect(ProjectSimilarity.categoryTags(lower),
+          {'Machine Learning', 'Data Analytics', 'Networking'});
+    });
+
     // Every raw tag actually used in assets/data/csp600-proposals.csv,
     // mapped to the category bucket it must resolve to so the Tech Stack
     // filter shows one consistent vocabulary across CSP650 (already
