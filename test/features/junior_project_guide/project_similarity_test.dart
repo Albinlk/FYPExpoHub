@@ -153,6 +153,40 @@ void main() {
       expect(clusters.first.count, 4);
       expect(clusters.last.count, 2);
     });
+
+    test('drops a transitively-joined cluster left with no tag common to '
+        'every member (union-find only guarantees each PAIR met the '
+        'threshold, not the whole group)', () {
+      // a~b share {3,4}, b~c share {5,6}, a~c share {1,2} — each pairwise
+      // overlap meets the 2-tag threshold, transitively joining a, b, c
+      // into one cluster, but no single tag is common to all three.
+      final a = _project(id: 'a', tags: ['1', '2', '3', '4']);
+      final b = _project(id: 'b', tags: ['3', '4', '5', '6']);
+      final c = _project(id: 'c', tags: ['5', '6', '1', '2']);
+
+      final clusters = ProjectSimilarity.buildClusters(
+        [a, b, c],
+        minShared: 2,
+      );
+      expect(clusters, isEmpty);
+    });
+  });
+
+  group('ProjectSimilarity - titleInferredCategoryTags', () {
+    test('infers categories from title regardless of existing tags — even '
+        'when the project already carries an unrelated real tag (CSP650 '
+        'projects normally never run title inference unless the tag is '
+        'the legacy placeholder)', () {
+      final p = _project(
+        id: 'a',
+        tags: ['Web / Dashboard'], // a real, unrelated existing tag
+        title: 'BLOCKCHAIN-BASED VOTING SYSTEM FOR STUDENT ELECTIONS',
+      );
+      expect(ProjectSimilarity.titleInferredCategoryTags(p), contains('Blockchain'));
+      // Ignores the existing tag entirely — this is a title-only signal.
+      expect(ProjectSimilarity.titleInferredCategoryTags(p),
+          isNot(contains('Web / Dashboard')));
+    });
   });
 
   group('ProjectSimilarity - categoryTags', () {

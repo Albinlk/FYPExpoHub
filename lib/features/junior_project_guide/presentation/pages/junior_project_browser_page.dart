@@ -9,8 +9,10 @@ import '../../../../core/state/state_providers.dart';
 import '../../../../core/widgets/collapsible_filter_panel.dart';
 import '../../domain/csp600_csv_loader.dart';
 import '../../domain/project_similarity.dart';
+import '../../domain/title_similarity.dart';
 import '../widgets/project_row_widget.dart';
 import '../widgets/redundancy_cluster_widget.dart';
+import '../widgets/title_similar_cluster_widget.dart';
 
 /// Debounce delay for the search field: filtering + re-deriving the
 /// similarity index on every keystroke is wasted work once the projects
@@ -64,6 +66,7 @@ class _JuniorProjectBrowserPageState
   Map<String, Set<String>> _cachedCategoryTagIndex = const {};
   Map<String, int> _cachedSimilarityCounts = const {};
   Map<String, String> _cachedIdToSection = const {};
+  Map<String, Set<String>> _cachedTitleTokenIndex = const {};
 
   /// Number of collapsed filters currently active (drives the toggle badge).
   int get _activeFilterCount {
@@ -115,10 +118,16 @@ class _JuniorProjectBrowserPageState
     _cachedFullProjList = combined.map((sp) => sp.project).toList();
     _cachedCategoryTagIndex =
         ProjectSimilarity.buildCategoryTagIndex(_cachedFullProjList);
-    _cachedSimilarityCounts = ProjectSimilarity.computeSimilarityCounts(
+    _cachedTitleTokenIndex =
+        TitleSimilarity.buildTitleTokenIndex(_cachedFullProjList);
+    // Combined (category-tag OR title-wording) so the Browse-tab badge and
+    // the Unique/Has Similar filter agree with both Redundancy Report
+    // sections — see computeCombinedSimilarityCounts's doc for why a plain
+    // category-only count would miss title-only matches.
+    _cachedSimilarityCounts = TitleSimilarity.computeCombinedSimilarityCounts(
       _cachedFullProjList,
-      tagIndex: _cachedCategoryTagIndex,
-      minShared: ProjectSimilarity.minSharedCategoriesForCluster,
+      categoryTagIndex: _cachedCategoryTagIndex,
+      titleTokenIndex: _cachedTitleTokenIndex,
     );
     _cachedIdToSection = {
       for (final sp in combined) sp.project.id: sp.section,
@@ -247,6 +256,7 @@ class _JuniorProjectBrowserPageState
     final categoryTagIndex = _cachedCategoryTagIndex;
     final similarityCounts = _cachedSimilarityCounts;
     final idToSection = _cachedIdToSection;
+    final titleTokenIndex = _cachedTitleTokenIndex;
 
     final visible = _applyFilters(combined, similarityCounts);
 
@@ -290,8 +300,13 @@ class _JuniorProjectBrowserPageState
               // to the full corpus (not the Browse-tab filters) so the
               // report always reflects redundancy across the whole guide.
               _tabController.index == 1
-                  ? _buildReportTab(fullProjList, categoryTagIndex,
-                      similarityCounts, idToSection, isDesktop)
+                  ? _buildReportTab(
+                      fullProjList,
+                      categoryTagIndex,
+                      titleTokenIndex,
+                      similarityCounts,
+                      idToSection,
+                      isDesktop)
                   : const SizedBox.shrink(),
             ],
           ),
@@ -963,11 +978,18 @@ class _JuniorProjectBrowserPageState
   Widget _buildReportTab(
     List<Project> projList,
     Map<String, Set<String>> categoryTagIndex,
+    Map<String, Set<String>> titleTokenIndex,
     Map<String, int> similarityCounts,
     Map<String, String> idToSection,
     bool isDesktop,
   ) {
-    final clusters = ProjectSimilarity.buildClusters(
+    int crossCohortFirst(List<Project> a, List<Project> b) {
+      final aCross = isCrossCohortCluster(a, idToSection) ? 1 : 0;
+      final bCross = isCrossCohortCluster(b, idToSection) ? 1 : 0;
+      return bCross - aCross;
+    }
+
+    final tagClusters = ProjectSimilarity.buildClusters(
       projList,
       tagIndex: categoryTagIndex,
       minShared: ProjectSimilarity.minSharedCategoriesForCluster,
@@ -978,13 +1000,22 @@ class _JuniorProjectBrowserPageState
       // buildClusters already sorts by size descending; this is a stable
       // secondary key on top of that.
       ..sort((a, b) {
-        final aCross = isCrossCohortCluster(a, idToSection) ? 1 : 0;
-        final bCross = isCrossCohortCluster(b, idToSection) ? 1 : 0;
-        if (aCross != bCross) return bCross - aCross;
-        return b.count.compareTo(a.count);
+        final cross = crossCohortFirst(a.projects, b.projects);
+        return cross != 0 ? cross : b.count.compareTo(a.count);
       });
 
-    if (clusters.isEmpty) {
+    // Title-based redundancy is a separate signal from tag/category overlap
+    // — two projects can be worded almost identically while sharing zero
+    // tags, or share tags while being worded completely differently.
+    final titleClusters = TitleSimilarity.buildTitleClusters(
+      projList,
+      tokenIndex: titleTokenIndex,
+    )..sort((a, b) {
+        final cross = crossCohortFirst(a.projects, b.projects);
+        return cross != 0 ? cross : b.count.compareTo(a.count);
+      });
+
+    if (tagClusters.isEmpty && titleClusters.isEmpty) {
       return Center(
         child: Padding(
           padding: EdgeInsets.symmetric(
@@ -1008,7 +1039,8 @@ class _JuniorProjectBrowserPageState
               ),
               const SizedBox(height: 8),
               Text(
-                'No groups of projects share 2+ technology categories.',
+                'No groups of projects share 2+ technology categories or '
+                'near-identical titles.',
                 style: DesignSystem.bodyMd
                     .copyWith(color: DesignSystem.onSurfaceVariant),
                 textAlign: TextAlign.center,
@@ -1023,22 +1055,65 @@ class _JuniorProjectBrowserPageState
         ? DesignSystem.marginDesktop
         : DesignSystem.marginMobile;
 
-    return ListView.builder(
+    return ListView(
       padding: EdgeInsets.symmetric(
         horizontal: padding,
         vertical: DesignSystem.spaceLg,
       ),
-      itemCount: clusters.length,
-      itemBuilder: (context, index) {
-        final cluster = clusters[index];
-        return RedundancyClusterWidget(
-          cluster: cluster,
-          similarityCounts: similarityCounts,
-          categoryTagIndex: categoryTagIndex,
-          idToSection: idToSection,
-          isDesktop: isDesktop,
-        );
-      },
+      children: [
+        if (tagClusters.isNotEmpty) ...[
+          _reportSectionHeader(
+            'Similar by Tech Stack',
+            '${tagClusters.length} group(s) sharing 2+ technology categories',
+            isDesktop,
+          ),
+          const SizedBox(height: DesignSystem.spaceSm),
+          for (final cluster in tagClusters)
+            RedundancyClusterWidget(
+              cluster: cluster,
+              similarityCounts: similarityCounts,
+              categoryTagIndex: categoryTagIndex,
+              idToSection: idToSection,
+              isDesktop: isDesktop,
+            ),
+          const SizedBox(height: DesignSystem.spaceMd),
+        ],
+        if (titleClusters.isNotEmpty) ...[
+          _reportSectionHeader(
+            'Similar by Project Title',
+            '${titleClusters.length} group(s) with near-identical wording',
+            isDesktop,
+          ),
+          const SizedBox(height: DesignSystem.spaceSm),
+          for (final cluster in titleClusters)
+            TitleSimilarClusterWidget(
+              cluster: cluster,
+              similarityCounts: similarityCounts,
+              idToSection: idToSection,
+              isDesktop: isDesktop,
+            ),
+        ],
+      ],
+    );
+  }
+
+  Widget _reportSectionHeader(String title, String subtitle, bool isDesktop) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 2),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: (isDesktop ? DesignSystem.h2 : DesignSystem.h2Mobile)
+                .copyWith(color: DesignSystem.primary),
+          ),
+          Text(
+            subtitle,
+            style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant),
+          ),
+        ],
+      ),
     );
   }
 

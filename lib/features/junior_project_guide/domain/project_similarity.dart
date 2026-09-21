@@ -83,6 +83,18 @@ class ProjectSimilarity {
     return raw;
   }
 
+  /// Category tags inferred PURELY from [p.title], ignoring any existing
+  /// `technologyTags` — regardless of cohort. CSP650 projects normally get
+  /// their category tags straight from the (already-standardized) DB field
+  /// via [categoryTags]/[displayTags] and never run through title
+  /// inference unless the tag is missing; this is an independent,
+  /// title-only signal for CSP650 too (e.g. as a cross-check, or as input
+  /// to title-based redundancy tooling that wants a topic label rather
+  /// than a raw shared-word list — see TitleSimilarity.buildTitleClusters).
+  static Set<String> titleInferredCategoryTags(Project p) {
+    return inferTagsFromTitle(p.title).toSet();
+  }
+
   /// The fixed set of category buckets [inferTagsFromTitle] can produce.
   /// Used by [categoryTags] to tell an already-standardized tag (Expo Hub
   /// projects are seeded with these directly) apart from genuinely raw,
@@ -315,6 +327,13 @@ class ProjectSimilarity {
             sharedTags: sharedTags,
           );
         })
+        // Union-find only guarantees each PAIR in a cluster met the
+        // threshold, not that every tag survives intersection across the
+        // whole (transitively-joined) group — a 3+ member cluster can end
+        // up with zero tags common to all members. Such a cluster has
+        // nothing concrete to show a reader, so it's dropped rather than
+        // rendered as an unexplained "shares nothing" group.
+        .where((c) => c.sharedTags.isNotEmpty)
         .toList()
       ..sort((a, b) => b.projects.length.compareTo(a.projects.length));
 

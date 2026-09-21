@@ -5,20 +5,20 @@ import '../../../../core/domain/models/project.dart';
 import '../../domain/project_similarity.dart';
 import 'project_row_widget.dart';
 
-/// Whether [cluster] spans more than one section (e.g. CSP650 and CSP600)
+/// Whether [projects] spans more than one section (e.g. CSP650 and CSP600)
 /// — the highest-value signal this report can show, since it means a
-/// junior's proposed topic overlaps with a completed senior project.
-/// A free function (not a widget method) so it's usable from both this
-/// widget and the page's cluster-sorting logic, and unit-testable without
-/// Flutter widget-test infra.
+/// junior's proposed topic overlaps with a completed senior project. Takes
+/// the raw project list (not a specific cluster type) so it's shared by
+/// both tag-based [RedundancyCluster]s and title-based [TitleSimilarCluster]s.
+/// A free function (not a widget method) so it's also usable from the
+/// page's cluster-sorting logic, and unit-testable without Flutter
+/// widget-test infra.
 bool isCrossCohortCluster(
-  RedundancyCluster cluster,
+  List<Project> projects,
   Map<String, String> idToSection,
 ) {
-  final sections = cluster.projects
-      .map((p) => idToSection[p.id])
-      .whereType<String>()
-      .toSet();
+  final sections =
+      projects.map((p) => idToSection[p.id]).whereType<String>().toSet();
   return sections.length > 1;
 }
 
@@ -42,7 +42,7 @@ class RedundancyClusterWidget extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final sharedTagsStr = cluster.sharedTags.join(', ');
     final headerColor = DesignSystem.primary;
-    final crossCohort = isCrossCohortCluster(cluster, idToSection);
+    final crossCohort = isCrossCohortCluster(cluster.projects, idToSection);
     final cohesion = ProjectSimilarity.clusterCohesion(
       cluster.projects,
       tagIndex: categoryTagIndex,
