@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
@@ -8,6 +10,11 @@ import '../../domain/csp600_csv_loader.dart';
 import '../../domain/project_similarity.dart';
 import '../widgets/project_row_widget.dart';
 import '../widgets/redundancy_cluster_widget.dart';
+
+/// Debounce delay for the search field: filtering + re-deriving the
+/// similarity index on every keystroke is wasted work once the projects
+/// list is in the hundreds — this coalesces bursts of typing into one pass.
+const _searchDebounce = Duration(milliseconds: 250);
 
 /// Wraps a [Project] with the section it belongs to.
 class SectionedProject {
@@ -29,8 +36,11 @@ class JuniorProjectBrowserPage extends ConsumerStatefulWidget {
 }
 
 class _JuniorProjectBrowserPageState
-    extends ConsumerState<JuniorProjectBrowserPage> {
+    extends ConsumerState<JuniorProjectBrowserPage>
+    with SingleTickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
+  late final TabController _tabController;
+  Timer? _searchDebounceTimer;
   String _selectedSection = 'all';
   String _selectedProgramme = 'All';
   String _selectedCategory = 'All';
@@ -56,9 +66,30 @@ class _JuniorProjectBrowserPageState
     });
   }
 
+  void _onSearchChanged(String _) {
+    _searchDebounceTimer?.cancel();
+    _searchDebounceTimer = Timer(_searchDebounce, () {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+    // The Redundancy Report tab's clusters are only computed while it's
+    // selected (see _buildBody) — this listener rebuilds on tab switch so
+    // that computation actually happens once the user lands on it.
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) setState(() {});
+    });
+  }
+
   @override
   void dispose() {
+    _searchDebounceTimer?.cancel();
     _searchController.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 
@@ -69,44 +100,42 @@ class _JuniorProjectBrowserPageState
     final csp650Async = ref.watch(publicProjectsProvider);
     final csp600Async = ref.watch(csp600ProposalsProvider);
 
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: DesignSystem.primary,
-          foregroundColor: Colors.white,
-          title: Text(
-            'Past Sem Projects',
-            style: (isDesktop ? DesignSystem.h3 : DesignSystem.h3Mobile)
-                .copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-          ),
-          bottom: const TabBar(
-            indicatorColor: Colors.white70,
-            labelColor: Colors.white,
-            unselectedLabelColor: Colors.white70,
-            labelStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-            unselectedLabelStyle: TextStyle(fontSize: 14),
-            tabs: [
-              Tab(text: 'Browse'),
-              Tab(text: 'Redundancy Report'),
-            ],
-          ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              tooltip: 'Refresh',
-              onPressed: () {
-                ref.invalidate(publicProjectsProvider);
-                ref.invalidate(csp600ProposalsProvider);
-              },
-            ),
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: DesignSystem.primary,
+        foregroundColor: Colors.white,
+        title: Text(
+          'Past Sem Projects',
+          style: (isDesktop ? DesignSystem.h3 : DesignSystem.h3Mobile)
+              .copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+        ),
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorColor: Colors.white70,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
+          labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+          unselectedLabelStyle: const TextStyle(fontSize: 14),
+          tabs: const [
+            Tab(text: 'Browse'),
+            Tab(text: 'Redundancy Report'),
           ],
         ),
-        body: _buildBody(csp650Async, csp600Async, isDesktop),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Refresh',
+            onPressed: () {
+              ref.invalidate(publicProjectsProvider);
+              ref.invalidate(csp600ProposalsProvider);
+            },
+          ),
+        ],
       ),
+      body: _buildBody(csp650Async, csp600Async, isDesktop),
     );
   }
 
@@ -123,6 +152,15 @@ class _JuniorProjectBrowserPageState
     final combined = _buildCombined(csp650Projects, csp600Projects);
     final visible = _applyFilters(combined);
     final projList = visible.map((sp) => sp.project).toList();
+
+    // Computed once per build and shared by every comparison below, instead
+    // of ProjectSimilarity re-normalizing the same project's tags on every
+    // pairwise check (see ProjectSimilarity.buildTagIndex).
+    final tagIndex = ProjectSimilarity.buildTagIndex(projList);
+    final similarityCounts = ProjectSimilarity.computeSimilarityCounts(
+      projList,
+      tagIndex: tagIndex,
+    );
 
     return Column(
       children: [
@@ -155,9 +193,16 @@ class _JuniorProjectBrowserPageState
           ),
         Expanded(
           child: TabBarView(
+            controller: _tabController,
             children: [
-              _buildBrowseTab(visible, projList, isDesktop),
-              _buildReportTab(projList, isDesktop),
+              _buildBrowseTab(visible, similarityCounts, isDesktop),
+              // Clusters are the expensive O(n^2) part of this feature —
+              // only compute them while this tab is actually selected, so
+              // typing in search while on Browse doesn't pay for it.
+              _tabController.index == 1
+                  ? _buildReportTab(
+                      projList, tagIndex, similarityCounts, isDesktop)
+                  : const SizedBox.shrink(),
             ],
           ),
         ),
@@ -169,15 +214,12 @@ class _JuniorProjectBrowserPageState
     List<Project> csp650Projects,
     List<Project> csp600Projects,
   ) {
-    final result = <SectionedProject>[];
-    for (final p in csp650Projects) {
-      if (p.publicationStatus == 'published') {
-        result.add(SectionedProject(project: p, section: 'CSP650'));
-      }
-    }
-    for (final p in csp600Projects) {
-      result.add(SectionedProject(project: p, section: 'CSP600'));
-    }
+    // csp650Projects comes from publicProjectsProvider, which already
+    // queries published-only rows — no need to re-check publicationStatus.
+    final result = <SectionedProject>[
+      for (final p in csp650Projects) SectionedProject(project: p, section: 'CSP650'),
+      for (final p in csp600Projects) SectionedProject(project: p, section: 'CSP600'),
+    ];
     return result;
   }
 
@@ -262,24 +304,31 @@ class _JuniorProjectBrowserPageState
           padding: const EdgeInsets.all(DesignSystem.spaceMd),
           child: Column(
             children: [
-              TextField(
-                controller: _searchController,
-                onChanged: (_) => setState(() {}),
-                decoration: InputDecoration(
-                  hintText: 'Search by project title, supervisor, or tech tags...',
-                  prefixIcon:
-                      const Icon(Icons.search, color: DesignSystem.primary),
-                  suffixIcon: _searchController.text.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(Icons.clear, size: 18),
-                          tooltip: 'Clear search',
-                          onPressed: () {
-                            setState(() {
-                              _searchController.clear();
-                            });
-                          },
-                        )
-                      : null,
+              // The clear (x) icon needs to react to every keystroke, but
+              // filtering the (possibly hundreds-long) list is debounced —
+              // listening on the controller directly keeps the icon instant
+              // without forcing the expensive parent rebuild on every key.
+              ListenableBuilder(
+                listenable: _searchController,
+                builder: (context, _) => TextField(
+                  controller: _searchController,
+                  onChanged: _onSearchChanged,
+                  decoration: InputDecoration(
+                    hintText: 'Search by project title, supervisor, or tech tags...',
+                    prefixIcon:
+                        const Icon(Icons.search, color: DesignSystem.primary),
+                    suffixIcon: _searchController.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, size: 18),
+                            tooltip: 'Clear search',
+                            onPressed: () {
+                              setState(() {
+                                _searchController.clear();
+                              });
+                            },
+                          )
+                        : null,
+                  ),
                 ),
               ),
               const SizedBox(height: DesignSystem.spaceMd),
@@ -298,24 +347,27 @@ class _JuniorProjectBrowserPageState
         vertical: DesignSystem.spaceMd,
       ),
       child: CollapsibleFilterPanel(
-        header: TextField(
-          controller: _searchController,
-          onChanged: (_) => setState(() {}),
-          decoration: InputDecoration(
-            hintText: 'Search title, supervisor, tags...',
-            prefixIcon: const Icon(Icons.search, color: DesignSystem.primary),
-            isDense: true,
-            suffixIcon: _searchController.text.isNotEmpty
-                ? IconButton(
-                    icon: const Icon(Icons.clear, size: 18),
-                    tooltip: 'Clear search',
-                    onPressed: () {
-                      setState(() {
-                        _searchController.clear();
-                      });
-                    },
-                  )
-                : null,
+        header: ListenableBuilder(
+          listenable: _searchController,
+          builder: (context, _) => TextField(
+            controller: _searchController,
+            onChanged: _onSearchChanged,
+            decoration: InputDecoration(
+              hintText: 'Search title, supervisor, tags...',
+              prefixIcon: const Icon(Icons.search, color: DesignSystem.primary),
+              isDense: true,
+              suffixIcon: _searchController.text.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear, size: 18),
+                      tooltip: 'Clear search',
+                      onPressed: () {
+                        setState(() {
+                          _searchController.clear();
+                        });
+                      },
+                    )
+                  : null,
+            ),
           ),
         ),
         headerTrailing: Wrap(
@@ -550,7 +602,7 @@ class _JuniorProjectBrowserPageState
 
   Widget _buildBrowseTab(
     List<SectionedProject> visible,
-    List<Project> projList,
+    Map<String, int> similarityCounts,
     bool isDesktop,
   ) {
     if (visible.isEmpty) {
@@ -578,7 +630,7 @@ class _JuniorProjectBrowserPageState
               final sp = visible[index];
               return ProjectRowWidget(
                 project: sp.project,
-                allProjects: projList,
+                simCount: similarityCounts[sp.project.id] ?? 0,
                 showSection: true,
                 section: sp.section,
                 rowIndex: index,
@@ -653,9 +705,12 @@ class _JuniorProjectBrowserPageState
 
   Widget _buildReportTab(
     List<Project> projList,
+    Map<String, Set<String>> tagIndex,
+    Map<String, int> similarityCounts,
     bool isDesktop,
   ) {
-    final clusters = ProjectSimilarity.buildClusters(projList);
+    final clusters =
+        ProjectSimilarity.buildClusters(projList, tagIndex: tagIndex);
 
     if (clusters.isEmpty) {
       return Center(
@@ -706,7 +761,7 @@ class _JuniorProjectBrowserPageState
         final cluster = clusters[index];
         return RedundancyClusterWidget(
           cluster: cluster,
-          allProjects: projList,
+          similarityCounts: similarityCounts,
           showSection: true,
           isDesktop: isDesktop,
         );

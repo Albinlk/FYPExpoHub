@@ -63,17 +63,38 @@ class ProjectSimilarity {
     return raw;
   }
 
+  /// Precomputes each project's normalized tag set once, keyed by id.
+  /// Pass the result as `tagIndex` to the methods below when comparing many
+  /// projects (e.g. [buildClusters], [computeSimilarityCounts]) so [tagSet]
+  /// — which re-normalizes and re-infers tags from scratch — isn't repeated
+  /// for the same project on every one of its O(n) comparisons.
+  static Map<String, Set<String>> buildTagIndex(List<Project> projects) {
+    return {for (final p in projects) p.id: tagSet(p)};
+  }
+
+  static Set<String> _tagsFor(Project p, Map<String, Set<String>>? tagIndex) {
+    return tagIndex?[p.id] ?? tagSet(p);
+  }
+
   /// Returns the number of shared normalized tags between two projects.
-  static int sharedTagCount(Project a, Project b) {
-    final aTags = tagSet(a);
-    final bTags = tagSet(b);
+  static int sharedTagCount(
+    Project a,
+    Project b, {
+    Map<String, Set<String>>? tagIndex,
+  }) {
+    final aTags = _tagsFor(a, tagIndex);
+    final bTags = _tagsFor(b, tagIndex);
     return aTags.intersection(bTags).length;
   }
 
   /// Jaccard similarity (0.0-1.0) between two projects' tag sets.
-  static double jaccardSimilarity(Project a, Project b) {
-    final aTags = tagSet(a);
-    final bTags = tagSet(b);
+  static double jaccardSimilarity(
+    Project a,
+    Project b, {
+    Map<String, Set<String>>? tagIndex,
+  }) {
+    final aTags = _tagsFor(a, tagIndex);
+    final bTags = _tagsFor(b, tagIndex);
     if (aTags.isEmpty && bTags.isEmpty) return 0.0;
     final intersection = aTags.intersection(bTags).length;
     final union = aTags.union(bTags).length;
@@ -83,23 +104,66 @@ class ProjectSimilarity {
 
   /// Returns all projects that share [minSharedTagsForCluster] or more tags
   /// with [target] (excluding the target itself).
-  static List<Project> findSimilar(Project target, List<Project> all) {
-    return all.where((p) =>
-        p.id != target.id &&
-        sharedTagCount(target, p) >= minSharedTagsForCluster).toList();
+  static List<Project> findSimilar(
+    Project target,
+    List<Project> all, {
+    Map<String, Set<String>>? tagIndex,
+  }) {
+    return all
+        .where((p) =>
+            p.id != target.id &&
+            sharedTagCount(target, p, tagIndex: tagIndex) >=
+                minSharedTagsForCluster)
+        .toList();
   }
 
   /// Returns the count of projects similar to [target].
-  static int similarCount(Project target, List<Project> all) {
-    return findSimilar(target, all).length;
+  ///
+  /// Calling this once per row in a list (as opposed to
+  /// [computeSimilarityCounts] once for the whole list) repeats an O(n) scan
+  /// for every row — fine for a handful of projects, but avoid it once the
+  /// list is in the hundreds.
+  static int similarCount(
+    Project target,
+    List<Project> all, {
+    Map<String, Set<String>>? tagIndex,
+  }) {
+    return findSimilar(target, all, tagIndex: tagIndex).length;
+  }
+
+  /// Computes every project's similar-project count in a single O(n^2) pass,
+  /// keyed by id. Prefer this over calling [similarCount] per row when
+  /// rendering a list, since that would repeat the O(n) scan per row.
+  static Map<String, int> computeSimilarityCounts(
+    List<Project> projects, {
+    Map<String, Set<String>>? tagIndex,
+  }) {
+    final index = tagIndex ?? buildTagIndex(projects);
+    final counts = <String, int>{for (final p in projects) p.id: 0};
+    for (int i = 0; i < projects.length; i++) {
+      for (int j = i + 1; j < projects.length; j++) {
+        if (sharedTagCount(projects[i], projects[j], tagIndex: index) >=
+            minSharedTagsForCluster) {
+          final aId = projects[i].id;
+          final bId = projects[j].id;
+          counts[aId] = (counts[aId] ?? 0) + 1;
+          counts[bId] = (counts[bId] ?? 0) + 1;
+        }
+      }
+    }
+    return counts;
   }
 
   /// Groups projects into clusters where each pair in a cluster shares
   /// [minSharedTagsForCluster] or more tags. Uses union-find so transitive
   /// relationships are included (A~B, B~C => A, B, C in same cluster).
-  static List<RedundancyCluster> buildClusters(List<Project> projects) {
+  static List<RedundancyCluster> buildClusters(
+    List<Project> projects, {
+    Map<String, Set<String>>? tagIndex,
+  }) {
     if (projects.length < 2) return [];
 
+    final index = tagIndex ?? buildTagIndex(projects);
     final n = projects.length;
     final parent = List<int>.generate(n, (i) => i);
 
@@ -120,7 +184,7 @@ class ProjectSimilarity {
 
     for (int i = 0; i < n; i++) {
       for (int j = i + 1; j < n; j++) {
-        if (sharedTagCount(projects[i], projects[j]) >=
+        if (sharedTagCount(projects[i], projects[j], tagIndex: index) >=
             minSharedTagsForCluster) {
           union(i, j);
         }
@@ -138,7 +202,8 @@ class ProjectSimilarity {
         .map((indices) {
           final clusterProjects =
               indices.map((i) => projects[i]).toList(growable: false);
-          final sharedTags = _sharedTagsAcrossCluster(clusterProjects);
+          final sharedTags =
+              _sharedTagsAcrossCluster(clusterProjects, tagIndex: index);
           return RedundancyCluster(
             projects: clusterProjects,
             sharedTags: sharedTags,
@@ -152,11 +217,14 @@ class ProjectSimilarity {
 
   /// Intersects tag sets across all projects in a cluster to find
   /// tags shared by every member.
-  static List<String> _sharedTagsAcrossCluster(List<Project> cluster) {
+  static List<String> _sharedTagsAcrossCluster(
+    List<Project> cluster, {
+    Map<String, Set<String>>? tagIndex,
+  }) {
     if (cluster.isEmpty) return [];
-    var intersection = tagSet(cluster.first);
+    var intersection = _tagsFor(cluster.first, tagIndex);
     for (final p in cluster.skip(1)) {
-      intersection = intersection.intersection(tagSet(p));
+      intersection = intersection.intersection(_tagsFor(p, tagIndex));
     }
     return intersection.toList()..sort();
   }
