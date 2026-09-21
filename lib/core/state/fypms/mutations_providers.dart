@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../supabase/fypms_rpc_service.dart';
 import '../expo/service_providers.dart';
 import 'coordinator_providers.dart';
 import 'record_resources_providers.dart';

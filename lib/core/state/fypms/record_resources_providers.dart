@@ -11,6 +11,7 @@ import '../../domain/models/fypms/fyp_report_submission.dart';
 import '../../domain/models/fypms/fyp_rubric_template.dart';
 import '../../domain/models/fypms/fyp_supervision_request.dart';
 import '../../domain/models/fypms/fyp_expo_publication.dart';
+import '../../supabase/fypms_database_service.dart';
 import '../../utils/fypms_key_normalizer.dart';
 import '../expo/service_providers.dart';
 

@@ -3,6 +3,8 @@ import '../../domain/models/fypms/fyp_audit_log.dart';
 import '../../domain/models/fypms/fyp_presentation_session.dart';
 import '../../domain/models/fypms/fyp_presentation_slot.dart';
 import '../../domain/models/fypms/fyp_supervision_request.dart';
+import '../../supabase/fypms_database_service.dart';
+import '../../supabase/fypms_rpc_service.dart';
 import '../../utils/fypms_key_normalizer.dart';
 import '../expo/service_providers.dart';
 

@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/fypms/academic_course.dart';
 import '../../domain/models/fypms/academic_semester.dart';
 import '../../domain/models/fypms/fyp_course_offering.dart';
+import '../../supabase/fypms_database_service.dart';
 import '../../supabase/supabase_client_provider.dart';
 import '../../utils/fypms_key_normalizer.dart';
 import '../expo/service_providers.dart';
