@@ -83,6 +83,18 @@ class ProjectSimilarity {
     return raw;
   }
 
+  /// Category tags inferred PURELY from [p.title], ignoring any existing
+  /// `technologyTags` — regardless of cohort. CSP650 projects normally get
+  /// their category tags straight from the (already-standardized) DB field
+  /// via [categoryTags]/[displayTags] and never run through title
+  /// inference unless the tag is missing; this is an independent,
+  /// title-only signal for CSP650 too (e.g. as a cross-check, or as input
+  /// to title-based redundancy tooling that wants a topic label rather
+  /// than a raw shared-word list — see TitleSimilarity.buildTitleClusters).
+  static Set<String> titleInferredCategoryTags(Project p) {
+    return inferTagsFromTitle(p.title).toSet();
+  }
+
   /// The fixed set of category buckets [inferTagsFromTitle] can produce.
   /// Used by [categoryTags] to tell an already-standardized tag (Expo Hub
   /// projects are seeded with these directly) apart from genuinely raw,

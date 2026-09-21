@@ -155,6 +155,23 @@ void main() {
     });
   });
 
+  group('ProjectSimilarity - titleInferredCategoryTags', () {
+    test('infers categories from title regardless of existing tags — even '
+        'when the project already carries an unrelated real tag (CSP650 '
+        'projects normally never run title inference unless the tag is '
+        'the legacy placeholder)', () {
+      final p = _project(
+        id: 'a',
+        tags: ['Web / Dashboard'], // a real, unrelated existing tag
+        title: 'BLOCKCHAIN-BASED VOTING SYSTEM FOR STUDENT ELECTIONS',
+      );
+      expect(ProjectSimilarity.titleInferredCategoryTags(p), contains('Blockchain'));
+      // Ignores the existing tag entirely — this is a title-only signal.
+      expect(ProjectSimilarity.titleInferredCategoryTags(p),
+          isNot(contains('Web / Dashboard')));
+    });
+  });
+
   group('ProjectSimilarity - categoryTags', () {
     test('passes through tags already in knownCategories unchanged', () {
       final p = _project(id: 'a', tags: ['Machine Learning', 'AI / XAI']);
