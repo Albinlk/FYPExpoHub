@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/project.dart';
 import '../../../../core/state/state_providers.dart';
@@ -46,9 +47,22 @@ class _JuniorProjectBrowserPageState
   String _selectedCategory = 'All';
   String _selectedTechStack = 'All';
   String _selectedSupervisor = 'All';
+  String _selectedSession = 'All';
   String _selectedRedundancy = 'All'; // 'All' | 'Unique' | 'Has Similar'
   bool _industryOnly = false;
   bool _mobileFiltersExpanded = false;
+  bool _appliedDeepLinkFilters = false;
+
+  // Similarity cache: recomputing tag normalization + the O(n^2) pairwise
+  // pass on every rebuild is wasted work when only a dropdown/chip filter
+  // changed and the underlying project data didn't — so this is only
+  // recomputed when the source provider lists actually change (see
+  // _ensureSimilarityCache), not on every setState.
+  List<Project>? _cachedCsp650;
+  List<Project>? _cachedCsp600;
+  List<Project> _cachedFullProjList = const [];
+  Map<String, Set<String>> _cachedTagIndex = const {};
+  Map<String, int> _cachedSimilarityCounts = const {};
 
   /// Number of collapsed filters currently active (drives the toggle badge).
   int get _activeFilterCount {
@@ -57,6 +71,7 @@ class _JuniorProjectBrowserPageState
     if (_selectedCategory != 'All') count++;
     if (_selectedTechStack != 'All') count++;
     if (_selectedSupervisor != 'All') count++;
+    if (_selectedSession != 'All') count++;
     if (_selectedRedundancy != 'All') count++;
     if (_industryOnly) count++;
     return count;
@@ -70,6 +85,7 @@ class _JuniorProjectBrowserPageState
       _selectedCategory = 'All';
       _selectedTechStack = 'All';
       _selectedSupervisor = 'All';
+      _selectedSession = 'All';
       _selectedRedundancy = 'All';
       _industryOnly = false;
     });
@@ -82,6 +98,52 @@ class _JuniorProjectBrowserPageState
     });
   }
 
+  /// Recomputes the similarity cache only when the source project lists
+  /// actually changed (by identity — Riverpod keeps the same List instance
+  /// across rebuilds unless the provider's data was refetched/refreshed).
+  void _ensureSimilarityCache(
+    List<Project> csp650,
+    List<Project> csp600,
+    List<SectionedProject> combined,
+  ) {
+    if (identical(csp650, _cachedCsp650) && identical(csp600, _cachedCsp600)) {
+      return;
+    }
+    _cachedCsp650 = csp650;
+    _cachedCsp600 = csp600;
+    _cachedFullProjList = combined.map((sp) => sp.project).toList();
+    _cachedTagIndex = ProjectSimilarity.buildTagIndex(_cachedFullProjList);
+    _cachedSimilarityCounts = ProjectSimilarity.computeSimilarityCounts(
+      _cachedFullProjList,
+      tagIndex: _cachedTagIndex,
+    );
+  }
+
+  /// Applies filters passed via deep-link query parameters (e.g. a link from
+  /// another page pre-scoped to a supervisor), mirroring the read-only
+  /// pattern ProjectsPage already uses for `?search=`. This only reads the
+  /// URL once on mount — filter changes made in this page are not written
+  /// back to the address bar.
+  void _applyDeepLinkFilters() {
+    if (_appliedDeepLinkFilters) return;
+    _appliedDeepLinkFilters = true;
+    final params = GoRouterState.of(context).uri.queryParameters;
+    if (params.isEmpty) return;
+
+    setState(() {
+      final search = params['search'];
+      if (search != null && search.isNotEmpty) _searchController.text = search;
+      _selectedSection = params['section'] ?? _selectedSection;
+      _selectedProgramme = params['programme'] ?? _selectedProgramme;
+      _selectedCategory = params['category'] ?? _selectedCategory;
+      _selectedTechStack = params['techStack'] ?? _selectedTechStack;
+      _selectedSupervisor = params['supervisor'] ?? _selectedSupervisor;
+      _selectedSession = params['session'] ?? _selectedSession;
+      _selectedRedundancy = params['redundancy'] ?? _selectedRedundancy;
+      _industryOnly = params['industry'] == 'true' || _industryOnly;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -91,6 +153,9 @@ class _JuniorProjectBrowserPageState
     // that computation actually happens once the user lands on it.
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging) setState(() {});
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _applyDeepLinkFilters();
     });
   }
 
@@ -154,25 +219,27 @@ class _JuniorProjectBrowserPageState
     bool isDesktop,
   ) {
     // CSP600: use data if loaded, empty list otherwise. Never block CSP650.
+    // `const` so this stays the SAME list instance across rebuilds while
+    // still loading — _ensureSimilarityCache compares by identity below.
     final csp600Projects = csp600Async.hasValue
         ? csp600Async.value!
-        : <Project>[];
+        : const <Project>[];
 
     final combined = _buildCombined(csp650Projects, csp600Projects);
-    final fullProjList = combined.map((sp) => sp.project).toList();
 
-    // Computed once per build, against the FULL (unfiltered) corpus — not
-    // the filtered/visible list — and shared by every comparison below.
+    // Computed against the FULL (unfiltered) corpus — not the
+    // filtered/visible list — and shared by every comparison below.
     // Similarity is a fact about a project relative to the whole guide, so
     // it must not change depending on which other filters (Programme,
     // Supervisor, ...) happen to be active; computing it off the filtered
     // list would let a project's "Unique" badge flip on and off as the
     // comparison pool shrinks, defeating the point of a redundancy check.
-    final tagIndex = ProjectSimilarity.buildTagIndex(fullProjList);
-    final similarityCounts = ProjectSimilarity.computeSimilarityCounts(
-      fullProjList,
-      tagIndex: tagIndex,
-    );
+    // Cached at the State level so a filter/dropdown change alone (with no
+    // change to the underlying project data) doesn't repeat the O(n^2) pass.
+    _ensureSimilarityCache(csp650Projects, csp600Projects, combined);
+    final fullProjList = _cachedFullProjList;
+    final tagIndex = _cachedTagIndex;
+    final similarityCounts = _cachedSimilarityCounts;
 
     final visible = _applyFilters(combined, similarityCounts);
 
@@ -270,6 +337,9 @@ class _JuniorProjectBrowserPageState
       final matchesSupervisor = _selectedSupervisor == 'All' ||
           p.supervisorDisplayName == _selectedSupervisor;
 
+      final matchesSession =
+          _selectedSession == 'All' || p.presentationDay == _selectedSession;
+
       final simCount = similarityCounts[p.id] ?? 0;
       final matchesRedundancy = switch (_selectedRedundancy) {
         'Unique' => simCount == 0,
@@ -285,6 +355,7 @@ class _JuniorProjectBrowserPageState
           matchesCategory &&
           matchesTechStack &&
           matchesSupervisor &&
+          matchesSession &&
           matchesRedundancy &&
           matchesIndustry;
     }).toList();
@@ -300,9 +371,16 @@ class _JuniorProjectBrowserPageState
     return seen.toList()..sort();
   }
 
+  /// Scoped to the currently selected Section — with both cohorts combined,
+  /// the supervisor list would otherwise mix CSP650 and CSP600 names the
+  /// user isn't browsing, making it longer and less relevant than it needs
+  /// to be once a section is picked.
   List<String> _allSupervisors(List<SectionedProject> all) {
+    final scoped = _selectedSection == 'all'
+        ? all
+        : all.where((sp) => sp.section == _selectedSection);
     final seen = <String>{};
-    for (final sp in all) {
+    for (final sp in scoped) {
       if (sp.project.supervisorDisplayName.isNotEmpty) {
         seen.add(sp.project.supervisorDisplayName);
       }
@@ -330,6 +408,19 @@ class _JuniorProjectBrowserPageState
     return seen.toList()..sort();
   }
 
+  /// Session/time-slot values, populated for CSP600 proposals via
+  /// [Project.presentationDay] (see Csp600CsvLoader). CSP650 projects
+  /// generally don't carry a session string, so this filter is only
+  /// meaningful once CSP600 data is in view.
+  List<String> _allSessions(List<SectionedProject> all) {
+    final seen = <String>{};
+    for (final sp in all) {
+      final day = sp.project.presentationDay;
+      if (day != null && day.isNotEmpty) seen.add(day);
+    }
+    return seen.toList()..sort();
+  }
+
   Widget _buildSearchAndFilters(
     bool isDesktop,
     List<SectionedProject> all,
@@ -338,6 +429,7 @@ class _JuniorProjectBrowserPageState
     final categories = _allCategories(all);
     final techStacks = _allTechStacks(all);
     final supervisors = _allSupervisors(all);
+    final sessions = _allSessions(all);
 
     if (isDesktop) {
       return Card(
@@ -377,7 +469,8 @@ class _JuniorProjectBrowserPageState
                 ),
               ),
               const SizedBox(height: DesignSystem.spaceMd),
-              _buildDesktopFilters(programmes, categories, techStacks, supervisors),
+              _buildDesktopFilters(
+                  programmes, categories, techStacks, supervisors, sessions),
             ],
           ),
         ),
@@ -452,6 +545,13 @@ class _JuniorProjectBrowserPageState
             ['All', ...supervisors],
             (v) => setState(() => _selectedSupervisor = v!),
           ),
+          if (sessions.isNotEmpty)
+            _buildDropdownFilter(
+              'Session',
+              _selectedSession,
+              ['All', ...sessions],
+              (v) => setState(() => _selectedSession = v!),
+            ),
           _buildDropdownFilter(
             'Redundancy Status',
             _selectedRedundancy,
@@ -477,6 +577,7 @@ class _JuniorProjectBrowserPageState
     List<String> categories,
     List<String> techStacks,
     List<String> supervisors,
+    List<String> sessions,
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -540,6 +641,17 @@ class _JuniorProjectBrowserPageState
                 (v) => setState(() => _selectedSupervisor = v!),
               ),
             ),
+            if (sessions.isNotEmpty) ...[
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildDropdownFilter(
+                  'Session',
+                  _selectedSession,
+                  ['All', ...sessions],
+                  (v) => setState(() => _selectedSession = v!),
+                ),
+              ),
+            ],
             const SizedBox(width: 16),
             Expanded(
               child: _buildDropdownFilter(
@@ -563,12 +675,23 @@ class _JuniorProjectBrowserPageState
   }
 
   Widget _buildIndustryToggle() {
+    // calonIndustri is only ever set on CSP650 rows (via the admin panel);
+    // Csp600CsvLoader always parses CSP600 proposals with calonIndustri:
+    // false, since the CSV has no equivalent column — surface that here
+    // rather than leave students wondering why CSP600 never matches.
+    final csp600InView =
+        _selectedSection == 'all' || _selectedSection == 'CSP600';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Industry Candidate',
-          style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSurfaceVariant),
+        Tooltip(
+          message: csp600InView
+              ? 'Only CSP650 projects can be flagged as an industry candidate — CSP600 proposals never match this filter.'
+              : 'Industry Candidate',
+          child: Text(
+            'Industry Candidate',
+            style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSurfaceVariant),
+          ),
         ),
         const SizedBox(height: 6),
         FilterChip(
