@@ -48,50 +48,63 @@ class _MatchTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = match.project;
+    // CSP600 proposals only exist in csp600ProposalsProvider — they were
+    // never migrated into publicProjectsProvider/projectsMapProvider, which
+    // is what ProjectDetailPage resolves '/projects/<slug>' against (see
+    // csp600_csv_loader.dart's synthetic 'csp600-{row}' id/slug). Routing
+    // there would land on "Project not found", so those matches are shown
+    // read-only instead of as a dead link.
+    final hasDetailPage = !p.id.startsWith('csp600-');
+
+    final content = Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: DesignSystem.surfaceContainerLowest,
+        borderRadius: DesignSystem.radiusLg,
+        border: Border.all(color: DesignSystem.surfaceContainer, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            p.title,
+            style: DesignSystem.bodyMd.copyWith(
+              fontWeight: FontWeight.w700,
+              color: DesignSystem.primary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            p.teamDisplayNames.join(', '),
+            style: DesignSystem.bodySm
+                .copyWith(color: DesignSystem.onSurfaceVariant),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              if (match.byCategory)
+                _reasonChip(
+                  'Shared categories: ${match.sharedCategories.join(', ')}',
+                ),
+              if (match.byTitle)
+                _reasonChip(
+                  'Shared title words: ${match.sharedTitleWords.join(', ')}',
+                ),
+              if (!hasDetailPage)
+                _reasonChip('CSP600 proposal — no detail page yet'),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    if (!hasDetailPage) return content;
     return InkWell(
       borderRadius: DesignSystem.radiusLg,
       onTap: () => context.go('/projects/${p.slug}'),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: DesignSystem.surfaceContainerLowest,
-          borderRadius: DesignSystem.radiusLg,
-          border: Border.all(color: DesignSystem.surfaceContainer, width: 1),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              p.title,
-              style: DesignSystem.bodyMd.copyWith(
-                fontWeight: FontWeight.w700,
-                color: DesignSystem.primary,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              p.teamDisplayNames.join(', '),
-              style: DesignSystem.bodySm
-                  .copyWith(color: DesignSystem.onSurfaceVariant),
-            ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: [
-                if (match.byCategory)
-                  _reasonChip(
-                    'Shared categories: ${match.sharedCategories.join(', ')}',
-                  ),
-                if (match.byTitle)
-                  _reasonChip(
-                    'Shared title words: ${match.sharedTitleWords.join(', ')}',
-                  ),
-              ],
-            ),
-          ],
-        ),
-      ),
+      child: content,
     );
   }
 
