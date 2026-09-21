@@ -31,21 +31,21 @@ class ProjectSimilarity {
     if (t.contains('retrieval-augmented') || t.contains(' rag ') || t.contains('generative ai')) add('Generative AI / RAG');
     if (t.contains('llm') || t.contains('deepseek') || t.contains('large language model')) add('LLM');
     if (t.contains('reinforcement learning')) add('Reinforcement Learning');
-    if (t.contains('deep learning') || t.contains('cnn') || t.contains('efficientnet') || t.contains('mobilenet') || t.contains('yolov') || t.contains('sasrec')) add('Deep Learning / CV');
+    if (t.contains('deep learning') || t.contains('cnn') || t.contains('efficientnet') || t.contains('mobilenet') || t.contains('yolov') || t.contains('sasrec') || t.contains('deepfake')) add('Deep Learning / CV');
     if (t.contains('lstm') || t.contains('random forest') || t.contains('support vector') || t.contains('svm') || t.contains('whale optimization') || t.contains('decision tree') || t.contains(' aco ') || t.contains(' pso ') || t.contains('machine learning')) add('Machine Learning');
     if (t.contains('artificial intelligence') || t.contains('explainable ai') || t.contains(' xai ')) add('AI / XAI');
     if (t.contains('recommender') || t.contains('recommendation') || t.contains('collaborative') || t.contains('content-based') || t.contains('clustering') || t.contains('scent fingerprint')) add('Recommender System');
     if (t.contains('sentiment analysis') || (t.contains('sentiment') && !t.contains('transformer')) ) add('Sentiment Analysis');
     if (t.contains('knowledge graph') || t.contains('lexgraph') || t.contains('hierarchical knowledge')) add('Knowledge Graph');
     if (t.contains('blockchain') || t.contains('distributed ledger')) add('Blockchain');
-    if (t.contains('intrusion detection') || t.contains('anomaly detection') || t.contains('network traffic analysis')) add('Network Security / IDS');
-    if (t.contains('mqtt') || t.contains('esp32') || t.contains(' iot ') || t.contains('lora') || t.contains('b.a.t.m.a.n')) add('IoT / Embedded');
-    if (t.contains('zero trust') || t.contains('honeypot') || t.contains('vulnerability scanning') || t.contains('penetration testing') || t.contains('phishing') || t.contains('ransomware') || t.contains('malware')) add('Cybersecurity');
-    if (t.contains(' sdn ') || t.contains('ryu controller') || t.contains('gns3') || t.contains('vlan') || t.contains('load balancing') || t.contains(' ospf ') || t.contains(' vpn ') || t.contains(' 5g ')) add('Networking');
+    if (t.contains('intrusion detection') || t.contains('anomaly detection') || t.contains('network traffic analysis') || t.contains('ddos') || t.contains('network forensics') || t.contains(' nids ') || t.contains('snort') || t.contains('wireshark')) add('Network Security / IDS');
+    if (t.contains('mqtt') || t.contains('esp32') || t.contains(' iot ') || t.contains('lora') || t.contains('b.a.t.m.a.n') || t.contains('cyber-physical') || t.contains('cyber physical')) add('IoT / Embedded');
+    if (t.contains('zero trust') || t.contains('honeypot') || t.contains('vulnerability scanning') || t.contains('penetration testing') || t.contains('phishing') || t.contains('ransomware') || t.contains('malware') || t.contains('digital forensics') || t.contains('email security') || t.contains('qr code') || t.contains('smishing')) add('Cybersecurity');
+    if (t.contains(' sdn ') || t.contains('ryu controller') || t.contains('gns3') || t.contains('vlan') || t.contains('load balancing') || t.contains(' ospf ') || t.contains(' vpn ') || t.contains(' 5g ') || t.contains(' dns ') || t.contains('http/3') || t.contains('mininet') || t.contains(' tcp ') || t.contains(' udp ') || t.contains('voip') || t.contains('wi-fi') || t.contains('wifi') || t.contains('radio-over-ip') || t.contains('radio over ip')) add('Networking');
     if (t.contains('virtual reality') || t.contains(' vr ') || t.contains('vr:') || t.contains('game-based') || t.contains('mobile legends') || t.contains('congkak') || t.contains('avialearn')) add('AR/VR / Game');
-    if (t.contains('web-based') || t.contains('web application') || t.contains('dashboard')) add('Web / Dashboard');
-    if (t.contains('mobile application') || t.contains(' android ') || t.contains('period tracker') || t.contains('fingerprint') || t.contains('face recognition')) add('Mobile App');
-    if (t.contains('nas') || t.contains('cloud storage') || t.contains('cloud-native') || t.contains('docker swarm')) add('Cloud / DevOps');
+    if (t.contains('web-based') || t.contains('web application') || t.contains('dashboard') || t.contains('document management') || t.contains('nestjs') || t.contains('nest.js')) add('Web / Dashboard');
+    if (t.contains('mobile application') || t.contains('mobile app') || t.contains(' android ') || t.contains('period tracker') || t.contains('fingerprint') || t.contains('face recognition')) add('Mobile App');
+    if (t.contains('nas') || t.contains('cloud storage') || t.contains('cloud-native') || t.contains('cloud computing') || t.contains('docker')) add('Cloud / DevOps');
     if (t.contains('portfolio optimization') || t.contains('price and trend') || t.contains('crime hotspot') || t.contains('expense tracking') || t.contains(' halal ') || t.contains('dropout risk')) add('Data Analytics');
     if (t.contains('apnrs') || t.contains('navigation routing') || t.contains('path optimization')) add('GIS / Navigation');
     if (out.isEmpty) {
@@ -61,6 +61,59 @@ class ProjectSimilarity {
     final isPlaceholder = raw.length == 1 && raw.first.toUpperCase() == 'FYP';
     if (isPlaceholder) return inferTagsFromTitle(p.title);
     return raw;
+  }
+
+  /// The fixed set of category buckets [inferTagsFromTitle] can produce.
+  /// Used by [categoryTags] to tell an already-standardized tag (Expo Hub
+  /// projects are seeded with these directly) apart from genuinely raw,
+  /// free-text tags (CSP600 CSV proposals, e.g. "MQTT", "OSPF", "Snort")
+  /// that still need keyword categorization.
+  static const Set<String> knownCategories = {
+    'NLP / Transformer',
+    'Generative AI / RAG',
+    'LLM',
+    'Reinforcement Learning',
+    'Deep Learning / CV',
+    'Machine Learning',
+    'AI / XAI',
+    'Recommender System',
+    'Sentiment Analysis',
+    'Knowledge Graph',
+    'Blockchain',
+    'Network Security / IDS',
+    'IoT / Embedded',
+    'Cybersecurity',
+    'Networking',
+    'AR/VR / Game',
+    'Web / Dashboard',
+    'Mobile App',
+    'Cloud / DevOps',
+    'Data Analytics',
+    'GIS / Navigation',
+    'AI / General',
+    'General CS',
+  };
+
+  /// Tags collapsed onto the same standardized category vocabulary
+  /// regardless of source: a tag that's already one of [knownCategories]
+  /// (how Expo Hub projects are seeded) passes through unchanged, while a
+  /// genuinely raw/free-text tag (how CSP600 CSV proposals are authored —
+  /// e.g. "MQTT", "VLAN", "Snort") is keyword-categorized via
+  /// [inferTagsFromTitle]. Intended for filter/browse UIs that need one
+  /// consistent tech-stack vocabulary across both sources; [displayTags]
+  /// remains the source of truth for showing a project's actual tags.
+  static Set<String> categoryTags(Project p) {
+    final raw = displayTags(p);
+    final result = <String>{};
+    for (final tag in raw) {
+      if (knownCategories.contains(tag)) {
+        result.add(tag);
+      } else {
+        result.addAll(inferTagsFromTitle(tag));
+      }
+    }
+    if (result.isEmpty) result.addAll(inferTagsFromTitle(p.title));
+    return result;
   }
 
   /// Precomputes each project's normalized tag set once, keyed by id.

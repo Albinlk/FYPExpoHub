@@ -331,7 +331,7 @@ class _JuniorProjectBrowserPageState
           _selectedCategory == 'All' || p.category == _selectedCategory;
 
       final matchesTechStack = _selectedTechStack == 'All' ||
-          ProjectSimilarity.displayTags(p)
+          ProjectSimilarity.categoryTags(p)
               .any((t) => t.toLowerCase() == _selectedTechStack.toLowerCase());
 
       final matchesSupervisor = _selectedSupervisor == 'All' ||
@@ -398,12 +398,19 @@ class _JuniorProjectBrowserPageState
     return seen.toList()..sort();
   }
 
+  /// Uses [ProjectSimilarity.categoryTags], not the raw [ProjectSimilarity.
+  /// displayTags] shown on project cards: CSP650 projects are already
+  /// tagged with a standardized category vocabulary (e.g. "Machine
+  /// Learning"), but CSP600 CSV proposals carry genuinely raw tags (e.g.
+  /// "MQTT", "OSPF", "Snort"). Merging both verbatim would flood this
+  /// dropdown with ~80 mixed-vocabulary entries where a broad category and
+  /// a specific tool never match each other — categoryTags collapses both
+  /// onto the same ~23-term vocabulary so e.g. selecting "Networking"
+  /// finds both cohorts' networking projects.
   List<String> _allTechStacks(List<SectionedProject> all) {
     final seen = <String>{};
     for (final sp in all) {
-      for (final tag in ProjectSimilarity.displayTags(sp.project)) {
-        seen.add(tag);
-      }
+      seen.addAll(ProjectSimilarity.categoryTags(sp.project));
     }
     return seen.toList()..sort();
   }
