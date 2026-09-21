@@ -61,8 +61,9 @@ class _JuniorProjectBrowserPageState
   List<Project>? _cachedCsp650;
   List<Project>? _cachedCsp600;
   List<Project> _cachedFullProjList = const [];
-  Map<String, Set<String>> _cachedTagIndex = const {};
+  Map<String, Set<String>> _cachedCategoryTagIndex = const {};
   Map<String, int> _cachedSimilarityCounts = const {};
+  Map<String, String> _cachedIdToSection = const {};
 
   /// Number of collapsed filters currently active (drives the toggle badge).
   int get _activeFilterCount {
@@ -112,11 +113,16 @@ class _JuniorProjectBrowserPageState
     _cachedCsp650 = csp650;
     _cachedCsp600 = csp600;
     _cachedFullProjList = combined.map((sp) => sp.project).toList();
-    _cachedTagIndex = ProjectSimilarity.buildTagIndex(_cachedFullProjList);
+    _cachedCategoryTagIndex =
+        ProjectSimilarity.buildCategoryTagIndex(_cachedFullProjList);
     _cachedSimilarityCounts = ProjectSimilarity.computeSimilarityCounts(
       _cachedFullProjList,
-      tagIndex: _cachedTagIndex,
+      tagIndex: _cachedCategoryTagIndex,
+      minShared: ProjectSimilarity.minSharedCategoriesForCluster,
     );
+    _cachedIdToSection = {
+      for (final sp in combined) sp.project.id: sp.section,
+    };
   }
 
   /// Applies filters passed via deep-link query parameters (e.g. a link from
@@ -238,8 +244,9 @@ class _JuniorProjectBrowserPageState
     // change to the underlying project data) doesn't repeat the O(n^2) pass.
     _ensureSimilarityCache(csp650Projects, csp600Projects, combined);
     final fullProjList = _cachedFullProjList;
-    final tagIndex = _cachedTagIndex;
+    final categoryTagIndex = _cachedCategoryTagIndex;
     final similarityCounts = _cachedSimilarityCounts;
+    final idToSection = _cachedIdToSection;
 
     final visible = _applyFilters(combined, similarityCounts);
 
@@ -283,8 +290,8 @@ class _JuniorProjectBrowserPageState
               // to the full corpus (not the Browse-tab filters) so the
               // report always reflects redundancy across the whole guide.
               _tabController.index == 1
-                  ? _buildReportTab(
-                      fullProjList, tagIndex, similarityCounts, isDesktop)
+                  ? _buildReportTab(fullProjList, categoryTagIndex,
+                      similarityCounts, idToSection, isDesktop)
                   : const SizedBox.shrink(),
             ],
           ),
@@ -955,12 +962,27 @@ class _JuniorProjectBrowserPageState
 
   Widget _buildReportTab(
     List<Project> projList,
-    Map<String, Set<String>> tagIndex,
+    Map<String, Set<String>> categoryTagIndex,
     Map<String, int> similarityCounts,
+    Map<String, String> idToSection,
     bool isDesktop,
   ) {
-    final clusters =
-        ProjectSimilarity.buildClusters(projList, tagIndex: tagIndex);
+    final clusters = ProjectSimilarity.buildClusters(
+      projList,
+      tagIndex: categoryTagIndex,
+      minShared: ProjectSimilarity.minSharedCategoriesForCluster,
+    )
+      // Cross-cohort clusters (a CSP600 proposal overlapping a completed
+      // CSP650 project) are the highest-value signal this report can show —
+      // surface them first, ahead of same-cohort clusters of equal size.
+      // buildClusters already sorts by size descending; this is a stable
+      // secondary key on top of that.
+      ..sort((a, b) {
+        final aCross = isCrossCohortCluster(a, idToSection) ? 1 : 0;
+        final bCross = isCrossCohortCluster(b, idToSection) ? 1 : 0;
+        if (aCross != bCross) return bCross - aCross;
+        return b.count.compareTo(a.count);
+      });
 
     if (clusters.isEmpty) {
       return Center(
@@ -986,7 +1008,7 @@ class _JuniorProjectBrowserPageState
               ),
               const SizedBox(height: 8),
               Text(
-                'No groups of projects share 3+ technology tags.',
+                'No groups of projects share 2+ technology categories.',
                 style: DesignSystem.bodyMd
                     .copyWith(color: DesignSystem.onSurfaceVariant),
                 textAlign: TextAlign.center,
@@ -1012,7 +1034,8 @@ class _JuniorProjectBrowserPageState
         return RedundancyClusterWidget(
           cluster: cluster,
           similarityCounts: similarityCounts,
-          showSection: true,
+          categoryTagIndex: categoryTagIndex,
+          idToSection: idToSection,
           isDesktop: isDesktop,
         );
       },

@@ -6,6 +6,18 @@ import '../../../core/domain/models/project.dart';
 class ProjectSimilarity {
   static const minSharedTagsForCluster = 3;
 
+  /// Threshold for category-based clustering (see [categoryTags]) —
+  /// deliberately lower than [minSharedTagsForCluster] because categoryTags
+  /// operates on a coarse, 19-entry vocabulary where most projects carry
+  /// only 1-2 tags (capped via inferTagsFromTitle's .take(4)); requiring 3
+  /// identical broad categories out of that budget is nearly unreachable.
+  /// 2 shared categories is still a specific, meaningful topical match at
+  /// this vocabulary's granularity, and is safe against a mega-cluster from
+  /// the catch-all 'General CS'/'AI / General' buckets: 82% of CSP650
+  /// projects carry exactly one tag, so they can never reach an
+  /// intersection of 2 with anyone (intersection <= min(|A|, |B|)).
+  static const minSharedCategoriesForCluster = 2;
+
   /// Normalizes a tag to lowercase for case-insensitive comparison.
   static String _normalizeTag(String tag) => tag.toLowerCase().trim();
 
@@ -138,6 +150,14 @@ class ProjectSimilarity {
     return {for (final p in projects) p.id: tagSet(p)};
   }
 
+  /// Precomputes each project's normalized CATEGORY tag set once, keyed by
+  /// id — mirrors [buildTagIndex] but backed by [categoryTags] instead of
+  /// [tagSet], so cross-cohort comparisons (CSP650's pre-seeded category
+  /// tags vs CSP600's raw free-text tags) are done on the same vocabulary.
+  static Map<String, Set<String>> buildCategoryTagIndex(List<Project> projects) {
+    return {for (final p in projects) p.id: categoryTags(p)};
+  }
+
   static Set<String> _tagsFor(Project p, Map<String, Set<String>>? tagIndex) {
     return tagIndex?[p.id] ?? tagSet(p);
   }
@@ -203,13 +223,15 @@ class ProjectSimilarity {
   static Map<String, int> computeSimilarityCounts(
     List<Project> projects, {
     Map<String, Set<String>>? tagIndex,
+    int? minShared,
   }) {
     final index = tagIndex ?? buildTagIndex(projects);
+    final threshold = minShared ?? minSharedTagsForCluster;
     final counts = <String, int>{for (final p in projects) p.id: 0};
     for (int i = 0; i < projects.length; i++) {
       for (int j = i + 1; j < projects.length; j++) {
         if (sharedTagCount(projects[i], projects[j], tagIndex: index) >=
-            minSharedTagsForCluster) {
+            threshold) {
           final aId = projects[i].id;
           final bId = projects[j].id;
           counts[aId] = (counts[aId] ?? 0) + 1;
@@ -226,10 +248,12 @@ class ProjectSimilarity {
   static List<RedundancyCluster> buildClusters(
     List<Project> projects, {
     Map<String, Set<String>>? tagIndex,
+    int? minShared,
   }) {
     if (projects.length < 2) return [];
 
     final index = tagIndex ?? buildTagIndex(projects);
+    final threshold = minShared ?? minSharedTagsForCluster;
     final n = projects.length;
     final parent = List<int>.generate(n, (i) => i);
 
@@ -251,7 +275,7 @@ class ProjectSimilarity {
     for (int i = 0; i < n; i++) {
       for (int j = i + 1; j < n; j++) {
         if (sharedTagCount(projects[i], projects[j], tagIndex: index) >=
-            minSharedTagsForCluster) {
+            threshold) {
           union(i, j);
         }
       }
@@ -293,6 +317,28 @@ class ProjectSimilarity {
       intersection = intersection.intersection(_tagsFor(p, tagIndex));
     }
     return intersection.toList()..sort();
+  }
+
+  /// Average pairwise Jaccard similarity across all members of [cluster] —
+  /// a "how strongly overlapping is this group" signal, as opposed to
+  /// [RedundancyCluster.sharedTags] which only says *which* tags are common
+  /// to every member. Cheap: clusters are small (single-digit membership),
+  /// so this is nowhere near the O(n^2) cost of the corpus-wide passes
+  /// above (e.g. a 6-member cluster is only 15 pairs).
+  static double clusterCohesion(
+    List<Project> cluster, {
+    Map<String, Set<String>>? tagIndex,
+  }) {
+    if (cluster.length < 2) return 0.0;
+    var total = 0.0;
+    var pairs = 0;
+    for (int i = 0; i < cluster.length; i++) {
+      for (int j = i + 1; j < cluster.length; j++) {
+        total += jaccardSimilarity(cluster[i], cluster[j], tagIndex: tagIndex);
+        pairs++;
+      }
+    }
+    return pairs == 0 ? 0.0 : total / pairs;
   }
 }
 

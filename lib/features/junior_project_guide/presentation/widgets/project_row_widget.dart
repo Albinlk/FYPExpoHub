@@ -12,6 +12,12 @@ class ProjectRowWidget extends ConsumerWidget {
   final String? section;
   final int? rowIndex; // for alternating stripe
 
+  /// Max pairwise Jaccard similarity (0.0-1.0) against other members of the
+  /// same redundancy cluster. Null in the plain Browse tab (keeps today's
+  /// simple badge there); non-null when rendered inside a
+  /// RedundancyClusterWidget, where it appends a qualitative overlap label.
+  final double? strength;
+
   const ProjectRowWidget({
     super.key,
     required this.project,
@@ -19,6 +25,7 @@ class ProjectRowWidget extends ConsumerWidget {
     this.showSection = false,
     this.section,
     this.rowIndex,
+    this.strength,
   });
 
   @override
@@ -382,6 +389,16 @@ class ProjectRowWidget extends ConsumerWidget {
     );
   }
 
+  /// Bands the cluster-relative strength (0.0-1.0 Jaccard) into a short
+  /// qualitative suffix. Provisional cutoffs — not yet validated against
+  /// the real cohesion-value distribution.
+  String? _strengthSuffix() {
+    if (strength == null) return null;
+    if (strength! >= 0.5) return 'High overlap';
+    if (strength! >= 0.25) return 'Medium overlap';
+    return 'Low overlap';
+  }
+
   Widget _buildSimilarityBadge(int count, bool isUnique) {
     if (isUnique) {
       return Container(
@@ -408,7 +425,8 @@ class ProjectRowWidget extends ConsumerWidget {
         ),
       );
     }
-    final label = '$count similar';
+    final suffix = _strengthSuffix();
+    final label = suffix == null ? '$count similar' : '$count similar · $suffix';
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
