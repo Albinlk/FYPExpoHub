@@ -73,64 +73,87 @@ class CollapsibleFilterPanel extends StatelessWidget {
               curve: Curves.easeInOut,
               alignment: Alignment.topCenter,
               child: expanded
-                  ? Padding(
-                      padding:
-                          const EdgeInsets.only(top: DesignSystem.spaceSm),
-                      child: Builder(
-                        builder: (fieldContext) {
-                          // Adaptive columns: 2-up only when there's
-                          // genuinely room (~200px+ per dropdown after
-                          // paddings/gaps) — otherwise full-width stacked
-                          // fields so labels like "Software Engineering &
-                          // Applications" never crush on phones.
-                          final available =
-                              MediaQuery.sizeOf(fieldContext).width;
-                          final useTwoColumns = available >= 480;
+                  ? Builder(
+                      builder: (fieldContext) {
+                        // A growing filterFields list (some pages now have
+                        // 6+ entries) can exceed the viewport height on
+                        // short phones once expanded — cap the panel and
+                        // let it scroll internally instead of pushing the
+                        // page's own Column past the bottom of the screen.
+                        final maxHeight =
+                            MediaQuery.sizeOf(fieldContext).height * 0.45;
+                        return ConstrainedBox(
+                          constraints: BoxConstraints(maxHeight: maxHeight),
+                          child: SingleChildScrollView(
+                            // shrinkWrap: without it, SingleChildScrollView
+                            // fills all available space up to maxHeight
+                            // regardless of content size — this keeps a
+                            // short filter list (most pages) compact and
+                            // only engages scrolling once content actually
+                            // exceeds maxHeight (this page, with 6+ fields).
+                            shrinkWrap: true,
+                            padding: const EdgeInsets.only(
+                                top: DesignSystem.spaceSm),
+                            child: Builder(
+                              builder: (fieldContext) {
+                                // Adaptive columns: 2-up only when there's
+                                // genuinely room (~200px+ per dropdown after
+                                // paddings/gaps) — otherwise full-width
+                                // stacked fields so labels like "Software
+                                // Engineering & Applications" never crush on
+                                // phones.
+                                final available =
+                                    MediaQuery.sizeOf(fieldContext).width;
+                                final useTwoColumns = available >= 480;
 
-                          final fields = [
-                            for (var i = 0;
-                                i < filterFields.length;
-                                i += useTwoColumns ? 2 : 1) ...[
-                              if (useTwoColumns) ...[
-                                Row(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
+                                final fields = [
+                                  for (var i = 0;
+                                      i < filterFields.length;
+                                      i += useTwoColumns ? 2 : 1) ...[
+                                    if (useTwoColumns) ...[
+                                      Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Expanded(child: filterFields[i]),
+                                          if (i + 1 < filterFields.length) ...[
+                                            const SizedBox(
+                                                width: DesignSystem.spaceSm),
+                                            Expanded(
+                                                child: filterFields[i + 1]),
+                                          ],
+                                        ],
+                                      ),
+                                    ] else
+                                      filterFields[i],
+                                    SizedBox(
+                                      height: i + (useTwoColumns ? 2 : 1) <
+                                              filterFields.length
+                                          ? DesignSystem.spaceSm
+                                          : 0,
+                                    ),
+                                  ],
+                                ];
+
+                                return Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Expanded(child: filterFields[i]),
-                                    if (i + 1 < filterFields.length) ...[
+                                    ...fields,
+                                    if (resetControl != null) ...[
                                       const SizedBox(
-                                          width: DesignSystem.spaceSm),
-                                      Expanded(
-                                          child: filterFields[i + 1]),
+                                          height: DesignSystem.spaceSm),
+                                      SizedBox(
+                                          width: double.infinity,
+                                          child: resetControl!),
                                     ],
                                   ],
-                                ),
-                              ] else
-                                filterFields[i],
-                              SizedBox(
-                                height: i + (useTwoColumns ? 2 : 1) <
-                                        filterFields.length
-                                    ? DesignSystem.spaceSm
-                                    : 0,
-                              ),
-                            ],
-                          ];
-
-                          return Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              ...fields,
-                              if (resetControl != null) ...[
-                                const SizedBox(height: DesignSystem.spaceSm),
-                                SizedBox(
-                                    width: double.infinity,
-                                    child: resetControl!),
-                              ],
-                            ],
-                          );
-                        },
-                      ),
+                                );
+                              },
+                            ),
+                          ),
+                        );
+                      },
                     )
                   : const SizedBox(width: double.infinity),
             ),
