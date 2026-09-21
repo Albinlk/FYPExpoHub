@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' show ClientException;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../utils/logger.dart';
@@ -76,7 +76,7 @@ final currentProfileProvider = FutureProvider<UserProfile?>((ref) async {
 
     if (data == null) return null;
     return UserProfile.fromJson(data);
-  } on SocketException catch (e) {
+  } on ClientException catch (e) {
     logDebug('Profile fetch failed (offline): $e');
     return _profileFromMetadataFallback(user);
   } on TimeoutException catch (e) {
