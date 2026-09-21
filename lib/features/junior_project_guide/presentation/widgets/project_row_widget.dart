@@ -399,7 +399,34 @@ class ProjectRowWidget extends ConsumerWidget {
     return 'Low overlap';
   }
 
+  // The pill (Unique / N similar) is its own line, with the qualitative
+  // overlap-strength label — when present — stacked as a smaller caption
+  // underneath rather than appended onto the same line. Concatenating
+  // "N similar · High overlap" into one string forced a long line into the
+  // fixed-width STATUS column, which either wrapped mid-word or overflowed;
+  // stacking keeps each piece legible at the column's actual width.
   Widget _buildSimilarityBadge(int count, bool isUnique) {
+    final pill = _buildStatusPill(count, isUnique);
+    final suffix = _strengthSuffix();
+    if (suffix == null) return pill;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        pill,
+        const SizedBox(height: 3),
+        Text(
+          suffix,
+          style: DesignSystem.labelCaps.copyWith(
+            color: DesignSystem.onSurfaceVariant,
+            fontSize: 8,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStatusPill(int count, bool isUnique) {
     if (isUnique) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -409,7 +436,7 @@ class ProjectRowWidget extends ConsumerWidget {
           border: Border.all(color: Colors.green.shade200, width: 1),
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.check_circle,
                 size: 12, color: Colors.green.shade700),
@@ -425,8 +452,6 @@ class ProjectRowWidget extends ConsumerWidget {
         ),
       );
     }
-    final suffix = _strengthSuffix();
-    final label = suffix == null ? '$count similar' : '$count similar · $suffix';
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
@@ -435,12 +460,12 @@ class ProjectRowWidget extends ConsumerWidget {
         border: Border.all(color: DesignSystem.error, width: 1),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Icon(Icons.warning_amber, size: 12, color: DesignSystem.error),
           const SizedBox(width: 4),
           Text(
-            label,
+            '$count similar',
             style: DesignSystem.labelCaps.copyWith(
               color: DesignSystem.error,
               fontSize: 9,
