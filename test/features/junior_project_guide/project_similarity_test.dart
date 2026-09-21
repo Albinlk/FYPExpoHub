@@ -153,6 +153,23 @@ void main() {
       expect(clusters.first.count, 4);
       expect(clusters.last.count, 2);
     });
+
+    test('drops a transitively-joined cluster left with no tag common to '
+        'every member (union-find only guarantees each PAIR met the '
+        'threshold, not the whole group)', () {
+      // a~b share {3,4}, b~c share {5,6}, a~c share {1,2} — each pairwise
+      // overlap meets the 2-tag threshold, transitively joining a, b, c
+      // into one cluster, but no single tag is common to all three.
+      final a = _project(id: 'a', tags: ['1', '2', '3', '4']);
+      final b = _project(id: 'b', tags: ['3', '4', '5', '6']);
+      final c = _project(id: 'c', tags: ['5', '6', '1', '2']);
+
+      final clusters = ProjectSimilarity.buildClusters(
+        [a, b, c],
+        minShared: 2,
+      );
+      expect(clusters, isEmpty);
+    });
   });
 
   group('ProjectSimilarity - titleInferredCategoryTags', () {

@@ -148,6 +148,26 @@ void main() {
       expect(TitleSimilarity.buildTitleClusters([a]), isEmpty);
       expect(TitleSimilarity.buildTitleClusters([]), isEmpty);
     });
+
+    test('drops a transitively-joined cluster left with no word common to '
+        'every member (a~b and b~c each meet the threshold, but a and c '
+        'share nothing, and neither of the shared blocks is common to all '
+        'three)', () {
+      final a = _project(id: 'a', title: 'Alpha Bravo Charlie Golf');
+      final b =
+          _project(id: 'b', title: 'Alpha Bravo Charlie Delta Echo Foxtrot');
+      final c = _project(id: 'c', title: 'Delta Echo Foxtrot Hotel');
+
+      // a~b and b~c are each individually valid matches...
+      expect(TitleSimilarity.sharedTitleWordCount(a, b), 3);
+      expect(TitleSimilarity.sharedTitleWordCount(b, c), 3);
+      // ...but a and c share nothing, so no word survives intersection
+      // across the whole transitively-joined {a, b, c} group.
+      expect(TitleSimilarity.sharedTitleWordCount(a, c), 0);
+
+      final clusters = TitleSimilarity.buildTitleClusters([a, b, c]);
+      expect(clusters, isEmpty);
+    });
   });
 
   group('TitleSimilarity - computeCombinedSimilarityCounts', () {

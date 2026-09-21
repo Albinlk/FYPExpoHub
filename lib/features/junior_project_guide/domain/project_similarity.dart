@@ -327,6 +327,13 @@ class ProjectSimilarity {
             sharedTags: sharedTags,
           );
         })
+        // Union-find only guarantees each PAIR in a cluster met the
+        // threshold, not that every tag survives intersection across the
+        // whole (transitively-joined) group — a 3+ member cluster can end
+        // up with zero tags common to all members. Such a cluster has
+        // nothing concrete to show a reader, so it's dropped rather than
+        // rendered as an unexplained "shares nothing" group.
+        .where((c) => c.sharedTags.isNotEmpty)
         .toList()
       ..sort((a, b) => b.projects.length.compareTo(a.projects.length));
 

@@ -173,6 +173,11 @@ class TitleSimilarity {
             impliedCategories: _impliedCategories(members),
           );
         })
+        // Same transitivity gap as ProjectSimilarity.buildClusters: union-
+        // find only guarantees each PAIR met the threshold, not that any
+        // word survives intersection across the whole group — drop a
+        // cluster left with no words common to every member.
+        .where((c) => c.sharedWords.isNotEmpty)
         .toList()
       ..sort((a, b) => b.projects.length.compareTo(a.projects.length));
 
