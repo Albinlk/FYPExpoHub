@@ -84,18 +84,21 @@ class CollapsibleFilterPanel extends StatelessWidget {
                             MediaQuery.sizeOf(fieldContext).height * 0.45;
                         return ConstrainedBox(
                           constraints: BoxConstraints(maxHeight: maxHeight),
-                          child: SingleChildScrollView(
-                            // shrinkWrap: without it, SingleChildScrollView
-                            // fills all available space up to maxHeight
-                            // regardless of content size — this keeps a
-                            // short filter list (most pages) compact and
-                            // only engages scrolling once content actually
-                            // exceeds maxHeight (this page, with 6+ fields).
+                          child: ListView(
+                            // shrinkWrap: without it, a scroll view fills
+                            // all available space up to maxHeight regardless
+                            // of content size — this keeps a short filter
+                            // list (most pages) compact and only engages
+                            // scrolling once content actually exceeds
+                            // maxHeight (this page, with 6+ fields).
+                            // SingleChildScrollView has no shrinkWrap param,
+                            // hence ListView with a single child here.
                             shrinkWrap: true,
                             padding: const EdgeInsets.only(
                                 top: DesignSystem.spaceSm),
-                            child: Builder(
-                              builder: (fieldContext) {
+                            children: [
+                              Builder(
+                                builder: (fieldContext) {
                                 // Adaptive columns: 2-up only when there's
                                 // genuinely room (~200px+ per dropdown after
                                 // paddings/gaps) — otherwise full-width
@@ -150,7 +153,8 @@ class CollapsibleFilterPanel extends StatelessWidget {
                                   ],
                                 );
                               },
-                            ),
+                              ),
+                            ],
                           ),
                         );
                       },
