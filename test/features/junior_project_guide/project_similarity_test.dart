@@ -154,6 +154,124 @@ void main() {
       expect(clusters.last.count, 2);
     });
   });
+
+  group('ProjectSimilarity - categoryTags', () {
+    test('passes through tags already in knownCategories unchanged', () {
+      final p = _project(id: 'a', tags: ['Machine Learning', 'AI / XAI']);
+      expect(
+        ProjectSimilarity.categoryTags(p),
+        {'Machine Learning', 'AI / XAI'},
+      );
+    });
+
+    // Every raw tag actually used in assets/data/csp600-proposals.csv,
+    // mapped to the category bucket it must resolve to so the Tech Stack
+    // filter shows one consistent vocabulary across CSP650 (already
+    // category-tagged) and CSP600 (raw free-text tags) projects.
+    const rawTagToCategory = {
+      '5G': 'Networking',
+      'AI': 'AI / General',
+      'Android': 'Mobile App',
+      'Anomaly Detection': 'Network Security / IDS',
+      'Artificial Intelligence': 'AI / XAI',
+      'Blockchain': 'Blockchain',
+      'Cloud Computing': 'Cloud / DevOps',
+      'Cyber-Physical Systems': 'IoT / Embedded',
+      'Dashboard': 'Web / Dashboard',
+      'DDoS': 'Network Security / IDS',
+      'Decision Tree': 'Machine Learning',
+      'Deepfake': 'Deep Learning / CV',
+      'Digital Forensics': 'Cybersecurity',
+      'DNS': 'Networking',
+      'Docker': 'Cloud / DevOps',
+      'Document Management': 'Web / Dashboard',
+      'Email Security': 'Cybersecurity',
+      'ESP32': 'IoT / Embedded',
+      'Explainable AI': 'AI / XAI',
+      'Face Recognition': 'Mobile App',
+      'Fingerprint': 'Mobile App',
+      'GNS3': 'Networking',
+      'Honeypot': 'Cybersecurity',
+      'HTTP/3': 'Networking',
+      'Intrusion Detection': 'Network Security / IDS',
+      'IoT': 'IoT / Embedded',
+      'IoT Mesh': 'IoT / Embedded',
+      'LLM': 'LLM',
+      'Load Balancing': 'Networking',
+      'LoRa': 'IoT / Embedded',
+      'Machine Learning': 'Machine Learning',
+      'Malware': 'Cybersecurity',
+      'Mininet': 'Networking',
+      'Mobile App': 'Mobile App',
+      'Monitoring Dashboard': 'Web / Dashboard',
+      'MQTT': 'IoT / Embedded',
+      'NAS': 'Cloud / DevOps',
+      'NestJS': 'Web / Dashboard',
+      'Network Forensics': 'Network Security / IDS',
+      'Network Traffic Analysis': 'Network Security / IDS',
+      'NIDS': 'Network Security / IDS',
+      'OSPF': 'Networking',
+      'Phishing': 'Cybersecurity',
+      'QR Code Security': 'Cybersecurity',
+      'Radio-over-IP': 'Networking',
+      'Random Forest': 'Machine Learning',
+      'Ransomware': 'Cybersecurity',
+      'SDN': 'Networking',
+      'Smishing Detection': 'Cybersecurity',
+      'Snort': 'Network Security / IDS',
+      'TCP': 'Networking',
+      'UDP': 'Networking',
+      'VLAN': 'Networking',
+      'VoIP': 'Networking',
+      'VPN': 'Networking',
+      'Vulnerability Scanning': 'Cybersecurity',
+      'Web Application': 'Web / Dashboard',
+      'Wi-Fi': 'Networking',
+      'Wireshark': 'Network Security / IDS',
+      'Zero Trust': 'Cybersecurity',
+    };
+
+    rawTagToCategory.forEach((rawTag, expectedCategory) {
+      test('"$rawTag" categorizes to "$expectedCategory"', () {
+        final p = _project(id: 'a', tags: [rawTag]);
+        expect(ProjectSimilarity.categoryTags(p), contains(expectedCategory));
+      });
+    });
+
+    test('a project with no tags falls back to title inference', () {
+      final p = _project(id: 'a', tags: const [], title: 'Blockchain Voting App');
+      expect(ProjectSimilarity.categoryTags(p), contains('Blockchain'));
+    });
+
+    // These four category names existed in the live dataset (1-4 projects
+    // each) before being folded into a larger neighbor. They're no longer
+    // in knownCategories, so a project still carrying one of these exact
+    // legacy tags must be re-bucketed via inferTagsFromTitle, not passed
+    // through unchanged.
+    const mergedLegacyTagToCategory = {
+      'Reinforcement Learning': 'Machine Learning',
+      'Generative AI / RAG': 'LLM',
+      'Knowledge Graph': 'NLP / Transformer',
+      'GIS / Navigation': 'Data Analytics',
+    };
+
+    mergedLegacyTagToCategory.forEach((legacyTag, expectedCategory) {
+      test('legacy tag "$legacyTag" is re-bucketed to "$expectedCategory"', () {
+        final p = _project(id: 'a', tags: [legacyTag]);
+        final tags = ProjectSimilarity.categoryTags(p);
+        expect(tags, contains(expectedCategory));
+        expect(tags, isNot(contains(legacyTag)),
+            reason: 'merged category should not pass through unchanged');
+      });
+    });
+
+    test('knownCategories no longer contains the four merged categories', () {
+      expect(ProjectSimilarity.knownCategories, hasLength(19));
+      for (final legacyTag in mergedLegacyTagToCategory.keys) {
+        expect(ProjectSimilarity.knownCategories.contains(legacyTag), isFalse);
+      }
+    });
+  });
 }
 
 Project _project({

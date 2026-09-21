@@ -241,7 +241,7 @@ class _AdminImportsPageState extends ConsumerState<AdminImportsPage> {
 
             if (_isProcessing && _statusMessage != null) ...[
               Card(
-                color: DesignSystem.secondaryContainer.withOpacity(0.3),
+                color: DesignSystem.secondaryContainer.withValues(alpha: 0.3),
                 child: Padding(
                   padding: const EdgeInsets.all(DesignSystem.spaceMd),
                   child: Row(

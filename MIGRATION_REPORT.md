@@ -3,6 +3,8 @@
 > **Status: COMPLETE & SUPERSEDED (August 2026).** This is a historical
 > record of the one-time Firebase-to-Supabase migration. The `tools/` and
 > `scripts/` paths it references have since been removed from the repository.
+> For the step-by-step runbook this report followed, see
+> [SUPABASE_MIGRATION.md](SUPABASE_MIGRATION.md).
 
 Date: 2026-08-14
 Project Ref: `siedglubjcedkbrpdzgi`

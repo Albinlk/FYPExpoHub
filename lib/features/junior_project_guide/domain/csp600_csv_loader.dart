@@ -73,6 +73,18 @@ class Csp600CsvLoader {
     final projects = <Project>[];
     final now = DateTime.now();
 
+    // Headers never change per row — resolve column indices once.
+    final titleCol = colIndex['title'] ?? -1;
+    final tagsCol = colIndex['technology_tags'] ?? -1;
+    final supervisorCol = colIndex['supervisor_display_name'] ?? -1;
+    final progCol = colIndex['programme_code'] ?? -1;
+    final descCol = colIndex['short_description'] ?? -1;
+    final catCol = colIndex['category'] ?? -1;
+    final teamCol = colIndex['team_display_names'] ?? -1;
+    final examinerCol = colIndex['examiner'] ?? -1;
+    final sessionCol = colIndex['session'] ?? -1;
+    final timeCol = colIndex['time_slot'] ?? -1;
+
     for (int r = 1; r < csv.length; r++) {
       final row = csv[r];
       if (row.length < headers.length) continue;
@@ -80,17 +92,6 @@ class Csp600CsvLoader {
 
       String cell(int idx) =>
           idx >= 0 && idx < row.length ? row[idx].toString().trim() : '';
-
-      final titleCol = colIndex['title'] ?? -1;
-      final tagsCol = colIndex['technology_tags'] ?? -1;
-      final supervisorCol = colIndex['supervisor_display_name'] ?? -1;
-      final progCol = colIndex['programme_code'] ?? -1;
-      final descCol = colIndex['short_description'] ?? -1;
-      final catCol = colIndex['category'] ?? -1;
-      final teamCol = colIndex['team_display_names'] ?? -1;
-      final examinerCol = colIndex['examiner'] ?? -1;
-      final sessionCol = colIndex['session'] ?? -1;
-      final timeCol = colIndex['time_slot'] ?? -1;
 
       final title = cell(titleCol);
       if (title.isEmpty) continue;

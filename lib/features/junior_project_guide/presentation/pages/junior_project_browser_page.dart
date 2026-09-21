@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/project.dart';
 import '../../../../core/state/state_providers.dart';
@@ -8,6 +11,11 @@ import '../../domain/csp600_csv_loader.dart';
 import '../../domain/project_similarity.dart';
 import '../widgets/project_row_widget.dart';
 import '../widgets/redundancy_cluster_widget.dart';
+
+/// Debounce delay for the search field: filtering + re-deriving the
+/// similarity index on every keystroke is wasted work once the projects
+/// list is in the hundreds — this coalesces bursts of typing into one pass.
+const _searchDebounce = Duration(milliseconds: 250);
 
 /// Wraps a [Project] with the section it belongs to.
 class SectionedProject {
@@ -29,13 +37,32 @@ class JuniorProjectBrowserPage extends ConsumerStatefulWidget {
 }
 
 class _JuniorProjectBrowserPageState
-    extends ConsumerState<JuniorProjectBrowserPage> {
+    extends ConsumerState<JuniorProjectBrowserPage>
+    with SingleTickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
+  late final TabController _tabController;
+  Timer? _searchDebounceTimer;
   String _selectedSection = 'all';
   String _selectedProgramme = 'All';
   String _selectedCategory = 'All';
   String _selectedTechStack = 'All';
+  String _selectedSupervisor = 'All';
+  String _selectedSession = 'All';
+  String _selectedRedundancy = 'All'; // 'All' | 'Unique' | 'Has Similar'
+  bool _industryOnly = false;
   bool _mobileFiltersExpanded = false;
+  bool _appliedDeepLinkFilters = false;
+
+  // Similarity cache: recomputing tag normalization + the O(n^2) pairwise
+  // pass on every rebuild is wasted work when only a dropdown/chip filter
+  // changed and the underlying project data didn't — so this is only
+  // recomputed when the source provider lists actually change (see
+  // _ensureSimilarityCache), not on every setState.
+  List<Project>? _cachedCsp650;
+  List<Project>? _cachedCsp600;
+  List<Project> _cachedFullProjList = const [];
+  Map<String, Set<String>> _cachedTagIndex = const {};
+  Map<String, int> _cachedSimilarityCounts = const {};
 
   /// Number of collapsed filters currently active (drives the toggle badge).
   int get _activeFilterCount {
@@ -43,6 +70,10 @@ class _JuniorProjectBrowserPageState
     if (_selectedProgramme != 'All') count++;
     if (_selectedCategory != 'All') count++;
     if (_selectedTechStack != 'All') count++;
+    if (_selectedSupervisor != 'All') count++;
+    if (_selectedSession != 'All') count++;
+    if (_selectedRedundancy != 'All') count++;
+    if (_industryOnly) count++;
     return count;
   }
 
@@ -53,12 +84,86 @@ class _JuniorProjectBrowserPageState
       _selectedProgramme = 'All';
       _selectedCategory = 'All';
       _selectedTechStack = 'All';
+      _selectedSupervisor = 'All';
+      _selectedSession = 'All';
+      _selectedRedundancy = 'All';
+      _industryOnly = false;
+    });
+  }
+
+  void _onSearchChanged(String _) {
+    _searchDebounceTimer?.cancel();
+    _searchDebounceTimer = Timer(_searchDebounce, () {
+      if (mounted) setState(() {});
+    });
+  }
+
+  /// Recomputes the similarity cache only when the source project lists
+  /// actually changed (by identity — Riverpod keeps the same List instance
+  /// across rebuilds unless the provider's data was refetched/refreshed).
+  void _ensureSimilarityCache(
+    List<Project> csp650,
+    List<Project> csp600,
+    List<SectionedProject> combined,
+  ) {
+    if (identical(csp650, _cachedCsp650) && identical(csp600, _cachedCsp600)) {
+      return;
+    }
+    _cachedCsp650 = csp650;
+    _cachedCsp600 = csp600;
+    _cachedFullProjList = combined.map((sp) => sp.project).toList();
+    _cachedTagIndex = ProjectSimilarity.buildTagIndex(_cachedFullProjList);
+    _cachedSimilarityCounts = ProjectSimilarity.computeSimilarityCounts(
+      _cachedFullProjList,
+      tagIndex: _cachedTagIndex,
+    );
+  }
+
+  /// Applies filters passed via deep-link query parameters (e.g. a link from
+  /// another page pre-scoped to a supervisor), mirroring the read-only
+  /// pattern ProjectsPage already uses for `?search=`. This only reads the
+  /// URL once on mount — filter changes made in this page are not written
+  /// back to the address bar.
+  void _applyDeepLinkFilters() {
+    if (_appliedDeepLinkFilters) return;
+    _appliedDeepLinkFilters = true;
+    final params = GoRouterState.of(context).uri.queryParameters;
+    if (params.isEmpty) return;
+
+    setState(() {
+      final search = params['search'];
+      if (search != null && search.isNotEmpty) _searchController.text = search;
+      _selectedSection = params['section'] ?? _selectedSection;
+      _selectedProgramme = params['programme'] ?? _selectedProgramme;
+      _selectedCategory = params['category'] ?? _selectedCategory;
+      _selectedTechStack = params['techStack'] ?? _selectedTechStack;
+      _selectedSupervisor = params['supervisor'] ?? _selectedSupervisor;
+      _selectedSession = params['session'] ?? _selectedSession;
+      _selectedRedundancy = params['redundancy'] ?? _selectedRedundancy;
+      _industryOnly = params['industry'] == 'true' || _industryOnly;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+    // The Redundancy Report tab's clusters are only computed while it's
+    // selected (see _buildBody) — this listener rebuilds on tab switch so
+    // that computation actually happens once the user lands on it.
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) setState(() {});
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _applyDeepLinkFilters();
     });
   }
 
   @override
   void dispose() {
+    _searchDebounceTimer?.cancel();
     _searchController.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 
@@ -69,44 +174,42 @@ class _JuniorProjectBrowserPageState
     final csp650Async = ref.watch(publicProjectsProvider);
     final csp600Async = ref.watch(csp600ProposalsProvider);
 
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: DesignSystem.primary,
-          foregroundColor: Colors.white,
-          title: Text(
-            'Past Sem Projects',
-            style: (isDesktop ? DesignSystem.h3 : DesignSystem.h3Mobile)
-                .copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-          ),
-          bottom: const TabBar(
-            indicatorColor: Colors.white70,
-            labelColor: Colors.white,
-            unselectedLabelColor: Colors.white70,
-            labelStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-            unselectedLabelStyle: TextStyle(fontSize: 14),
-            tabs: [
-              Tab(text: 'Browse'),
-              Tab(text: 'Redundancy Report'),
-            ],
-          ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              tooltip: 'Refresh',
-              onPressed: () {
-                ref.invalidate(publicProjectsProvider);
-                ref.invalidate(csp600ProposalsProvider);
-              },
-            ),
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: DesignSystem.primary,
+        foregroundColor: Colors.white,
+        title: Text(
+          'Past Sem Projects',
+          style: (isDesktop ? DesignSystem.h3 : DesignSystem.h3Mobile)
+              .copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+        ),
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorColor: Colors.white70,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
+          labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+          unselectedLabelStyle: const TextStyle(fontSize: 14),
+          tabs: const [
+            Tab(text: 'Browse'),
+            Tab(text: 'Redundancy Report'),
           ],
         ),
-        body: _buildBody(csp650Async, csp600Async, isDesktop),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Refresh',
+            onPressed: () {
+              ref.invalidate(publicProjectsProvider);
+              ref.invalidate(csp600ProposalsProvider);
+            },
+          ),
+        ],
       ),
+      body: _buildBody(csp650Async, csp600Async, isDesktop),
     );
   }
 
@@ -116,13 +219,29 @@ class _JuniorProjectBrowserPageState
     bool isDesktop,
   ) {
     // CSP600: use data if loaded, empty list otherwise. Never block CSP650.
+    // `const` so this stays the SAME list instance across rebuilds while
+    // still loading — _ensureSimilarityCache compares by identity below.
     final csp600Projects = csp600Async.hasValue
         ? csp600Async.value!
-        : <Project>[];
+        : const <Project>[];
 
     final combined = _buildCombined(csp650Projects, csp600Projects);
-    final visible = _applyFilters(combined);
-    final projList = visible.map((sp) => sp.project).toList();
+
+    // Computed against the FULL (unfiltered) corpus — not the
+    // filtered/visible list — and shared by every comparison below.
+    // Similarity is a fact about a project relative to the whole guide, so
+    // it must not change depending on which other filters (Programme,
+    // Supervisor, ...) happen to be active; computing it off the filtered
+    // list would let a project's "Unique" badge flip on and off as the
+    // comparison pool shrinks, defeating the point of a redundancy check.
+    // Cached at the State level so a filter/dropdown change alone (with no
+    // change to the underlying project data) doesn't repeat the O(n^2) pass.
+    _ensureSimilarityCache(csp650Projects, csp600Projects, combined);
+    final fullProjList = _cachedFullProjList;
+    final tagIndex = _cachedTagIndex;
+    final similarityCounts = _cachedSimilarityCounts;
+
+    final visible = _applyFilters(combined, similarityCounts);
 
     return Column(
       children: [
@@ -155,9 +274,18 @@ class _JuniorProjectBrowserPageState
           ),
         Expanded(
           child: TabBarView(
+            controller: _tabController,
             children: [
-              _buildBrowseTab(visible, projList, isDesktop),
-              _buildReportTab(projList, isDesktop),
+              _buildBrowseTab(visible, similarityCounts, isDesktop),
+              // Clusters are the expensive O(n^2) part of this feature —
+              // only compute them while this tab is actually selected, so
+              // typing in search while on Browse doesn't pay for it. Scoped
+              // to the full corpus (not the Browse-tab filters) so the
+              // report always reflects redundancy across the whole guide.
+              _tabController.index == 1
+                  ? _buildReportTab(
+                      fullProjList, tagIndex, similarityCounts, isDesktop)
+                  : const SizedBox.shrink(),
             ],
           ),
         ),
@@ -169,19 +297,19 @@ class _JuniorProjectBrowserPageState
     List<Project> csp650Projects,
     List<Project> csp600Projects,
   ) {
-    final result = <SectionedProject>[];
-    for (final p in csp650Projects) {
-      if (p.publicationStatus == 'published') {
-        result.add(SectionedProject(project: p, section: 'CSP650'));
-      }
-    }
-    for (final p in csp600Projects) {
-      result.add(SectionedProject(project: p, section: 'CSP600'));
-    }
+    // csp650Projects comes from publicProjectsProvider, which already
+    // queries published-only rows — no need to re-check publicationStatus.
+    final result = <SectionedProject>[
+      for (final p in csp650Projects) SectionedProject(project: p, section: 'CSP650'),
+      for (final p in csp600Projects) SectionedProject(project: p, section: 'CSP600'),
+    ];
     return result;
   }
 
-  List<SectionedProject> _applyFilters(List<SectionedProject> all) {
+  List<SectionedProject> _applyFilters(
+    List<SectionedProject> all,
+    Map<String, int> similarityCounts,
+  ) {
     final searchLower = _searchController.text.toLowerCase();
 
     return all.where((sp) {
@@ -203,14 +331,33 @@ class _JuniorProjectBrowserPageState
           _selectedCategory == 'All' || p.category == _selectedCategory;
 
       final matchesTechStack = _selectedTechStack == 'All' ||
-          ProjectSimilarity.displayTags(p)
+          ProjectSimilarity.categoryTags(p)
               .any((t) => t.toLowerCase() == _selectedTechStack.toLowerCase());
+
+      final matchesSupervisor = _selectedSupervisor == 'All' ||
+          p.supervisorDisplayName == _selectedSupervisor;
+
+      final matchesSession =
+          _selectedSession == 'All' || p.presentationDay == _selectedSession;
+
+      final simCount = similarityCounts[p.id] ?? 0;
+      final matchesRedundancy = switch (_selectedRedundancy) {
+        'Unique' => simCount == 0,
+        'Has Similar' => simCount > 0,
+        _ => true,
+      };
+
+      final matchesIndustry = !_industryOnly || p.calonIndustri;
 
       return matchesSection &&
           matchesSearch &&
           matchesProgramme &&
           matchesCategory &&
-          matchesTechStack;
+          matchesTechStack &&
+          matchesSupervisor &&
+          matchesSession &&
+          matchesRedundancy &&
+          matchesIndustry;
     }).toList();
   }
 
@@ -219,6 +366,23 @@ class _JuniorProjectBrowserPageState
     for (final sp in all) {
       if (sp.project.programmeCode.isNotEmpty) {
         seen.add(sp.project.programmeCode);
+      }
+    }
+    return seen.toList()..sort();
+  }
+
+  /// Scoped to the currently selected Section — with both cohorts combined,
+  /// the supervisor list would otherwise mix CSP650 and CSP600 names the
+  /// user isn't browsing, making it longer and less relevant than it needs
+  /// to be once a section is picked.
+  List<String> _allSupervisors(List<SectionedProject> all) {
+    final scoped = _selectedSection == 'all'
+        ? all
+        : all.where((sp) => sp.section == _selectedSection);
+    final seen = <String>{};
+    for (final sp in scoped) {
+      if (sp.project.supervisorDisplayName.isNotEmpty) {
+        seen.add(sp.project.supervisorDisplayName);
       }
     }
     return seen.toList()..sort();
@@ -234,12 +398,32 @@ class _JuniorProjectBrowserPageState
     return seen.toList()..sort();
   }
 
+  /// Uses [ProjectSimilarity.categoryTags], not the raw [ProjectSimilarity.
+  /// displayTags] shown on project cards: CSP650 projects are already
+  /// tagged with a standardized category vocabulary (e.g. "Machine
+  /// Learning"), but CSP600 CSV proposals carry genuinely raw tags (e.g.
+  /// "MQTT", "OSPF", "Snort"). Merging both verbatim would flood this
+  /// dropdown with ~80 mixed-vocabulary entries where a broad category and
+  /// a specific tool never match each other — categoryTags collapses both
+  /// onto the same ~23-term vocabulary so e.g. selecting "Networking"
+  /// finds both cohorts' networking projects.
   List<String> _allTechStacks(List<SectionedProject> all) {
     final seen = <String>{};
     for (final sp in all) {
-      for (final tag in ProjectSimilarity.displayTags(sp.project)) {
-        seen.add(tag);
-      }
+      seen.addAll(ProjectSimilarity.categoryTags(sp.project));
+    }
+    return seen.toList()..sort();
+  }
+
+  /// Session/time-slot values, populated for CSP600 proposals via
+  /// [Project.presentationDay] (see Csp600CsvLoader). CSP650 projects
+  /// generally don't carry a session string, so this filter is only
+  /// meaningful once CSP600 data is in view.
+  List<String> _allSessions(List<SectionedProject> all) {
+    final seen = <String>{};
+    for (final sp in all) {
+      final day = sp.project.presentationDay;
+      if (day != null && day.isNotEmpty) seen.add(day);
     }
     return seen.toList()..sort();
   }
@@ -251,6 +435,8 @@ class _JuniorProjectBrowserPageState
     final programmes = _allProgrammes(all);
     final categories = _allCategories(all);
     final techStacks = _allTechStacks(all);
+    final supervisors = _allSupervisors(all);
+    final sessions = _allSessions(all);
 
     if (isDesktop) {
       return Card(
@@ -262,27 +448,36 @@ class _JuniorProjectBrowserPageState
           padding: const EdgeInsets.all(DesignSystem.spaceMd),
           child: Column(
             children: [
-              TextField(
-                controller: _searchController,
-                onChanged: (_) => setState(() {}),
-                decoration: InputDecoration(
-                  hintText: 'Search by project title, supervisor, or tech tags...',
-                  prefixIcon:
-                      const Icon(Icons.search, color: DesignSystem.primary),
-                  suffixIcon: _searchController.text.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(Icons.clear, size: 18),
-                          onPressed: () {
-                            setState(() {
-                              _searchController.clear();
-                            });
-                          },
-                        )
-                      : null,
+              // The clear (x) icon needs to react to every keystroke, but
+              // filtering the (possibly hundreds-long) list is debounced —
+              // listening on the controller directly keeps the icon instant
+              // without forcing the expensive parent rebuild on every key.
+              ListenableBuilder(
+                listenable: _searchController,
+                builder: (context, _) => TextField(
+                  controller: _searchController,
+                  onChanged: _onSearchChanged,
+                  decoration: InputDecoration(
+                    hintText: 'Search by project title, supervisor, or tech tags...',
+                    prefixIcon:
+                        const Icon(Icons.search, color: DesignSystem.primary),
+                    suffixIcon: _searchController.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, size: 18),
+                            tooltip: 'Clear search',
+                            onPressed: () {
+                              setState(() {
+                                _searchController.clear();
+                              });
+                            },
+                          )
+                        : null,
+                  ),
                 ),
               ),
               const SizedBox(height: DesignSystem.spaceMd),
-              _buildDesktopFilters(programmes, categories, techStacks),
+              _buildDesktopFilters(
+                  programmes, categories, techStacks, supervisors, sessions),
             ],
           ),
         ),
@@ -297,23 +492,27 @@ class _JuniorProjectBrowserPageState
         vertical: DesignSystem.spaceMd,
       ),
       child: CollapsibleFilterPanel(
-        header: TextField(
-          controller: _searchController,
-          onChanged: (_) => setState(() {}),
-          decoration: InputDecoration(
-            hintText: 'Search title, supervisor, tags...',
-            prefixIcon: const Icon(Icons.search, color: DesignSystem.primary),
-            isDense: true,
-            suffixIcon: _searchController.text.isNotEmpty
-                ? IconButton(
-                    icon: const Icon(Icons.clear, size: 18),
-                    onPressed: () {
-                      setState(() {
-                        _searchController.clear();
-                      });
-                    },
-                  )
-                : null,
+        header: ListenableBuilder(
+          listenable: _searchController,
+          builder: (context, _) => TextField(
+            controller: _searchController,
+            onChanged: _onSearchChanged,
+            decoration: InputDecoration(
+              hintText: 'Search title, supervisor, tags...',
+              prefixIcon: const Icon(Icons.search, color: DesignSystem.primary),
+              isDense: true,
+              suffixIcon: _searchController.text.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear, size: 18),
+                      tooltip: 'Clear search',
+                      onPressed: () {
+                        setState(() {
+                          _searchController.clear();
+                        });
+                      },
+                    )
+                  : null,
+            ),
           ),
         ),
         headerTrailing: Wrap(
@@ -347,6 +546,26 @@ class _JuniorProjectBrowserPageState
             ['All', ...techStacks],
             (v) => setState(() => _selectedTechStack = v!),
           ),
+          _buildDropdownFilter(
+            'Supervisor',
+            _selectedSupervisor,
+            ['All', ...supervisors],
+            (v) => setState(() => _selectedSupervisor = v!),
+          ),
+          if (sessions.isNotEmpty)
+            _buildDropdownFilter(
+              'Session',
+              _selectedSession,
+              ['All', ...sessions],
+              (v) => setState(() => _selectedSession = v!),
+            ),
+          _buildDropdownFilter(
+            'Redundancy Status',
+            _selectedRedundancy,
+            const ['All', 'Unique', 'Has Similar'],
+            (v) => setState(() => _selectedRedundancy = v!),
+          ),
+          _buildIndustryToggle(),
         ],
         resetControl: TextButton.icon(
           onPressed: () {
@@ -364,56 +583,141 @@ class _JuniorProjectBrowserPageState
     List<String> programmes,
     List<String> categories,
     List<String> techStacks,
+    List<String> supervisors,
+    List<String> sessions,
   ) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Text('Section', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSurfaceVariant)),
-            const SizedBox(height: 6),
-            Wrap(
-              spacing: 8,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildSectionPill('All', 'all'),
-                _buildSectionPill('CSP650', 'CSP650'),
-                _buildSectionPill('CSP600', 'CSP600'),
+                Text('Section', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSurfaceVariant)),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 8,
+                  children: [
+                    _buildSectionPill('All', 'all'),
+                    _buildSectionPill('CSP650', 'CSP650'),
+                    _buildSectionPill('CSP600', 'CSP600'),
+                  ],
+                ),
               ],
+            ),
+            const SizedBox(width: DesignSystem.spaceLg),
+            Expanded(
+              child: _buildDropdownFilter(
+                'Academic Program',
+                _selectedProgramme,
+                ['All', ...programmes],
+                (v) => setState(() => _selectedProgramme = v!),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildDropdownFilter(
+                'Project Category',
+                _selectedCategory,
+                ['All', ...categories],
+                (v) => setState(() => _selectedCategory = v!),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildDropdownFilter(
+                'Tech Stack',
+                _selectedTechStack,
+                ['All', ...techStacks],
+                (v) => setState(() => _selectedTechStack = v!),
+              ),
             ),
           ],
         ),
-        const SizedBox(width: DesignSystem.spaceLg),
-        Expanded(
-          child: _buildDropdownFilter(
-            'Academic Program',
-            _selectedProgramme,
-            ['All', ...programmes],
-            (v) => setState(() => _selectedProgramme = v!),
+        const SizedBox(height: 16),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Expanded(
+              child: _buildDropdownFilter(
+                'Supervisor',
+                _selectedSupervisor,
+                ['All', ...supervisors],
+                (v) => setState(() => _selectedSupervisor = v!),
+              ),
+            ),
+            if (sessions.isNotEmpty) ...[
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildDropdownFilter(
+                  'Session',
+                  _selectedSession,
+                  ['All', ...sessions],
+                  (v) => setState(() => _selectedSession = v!),
+                ),
+              ),
+            ],
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildDropdownFilter(
+                'Redundancy Status',
+                _selectedRedundancy,
+                const ['All', 'Unique', 'Has Similar'],
+                (v) => setState(() => _selectedRedundancy = v!),
+              ),
+            ),
+            const SizedBox(width: 16),
+            _buildIndustryToggle(),
+            const SizedBox(width: 12),
+            TextButton(
+              onPressed: _resetFilters,
+              child: const Text('Reset Filters'),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildIndustryToggle() {
+    // calonIndustri is only ever set on CSP650 rows (via the admin panel);
+    // Csp600CsvLoader always parses CSP600 proposals with calonIndustri:
+    // false, since the CSV has no equivalent column — surface that here
+    // rather than leave students wondering why CSP600 never matches.
+    final csp600InView =
+        _selectedSection == 'all' || _selectedSection == 'CSP600';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Tooltip(
+          message: csp600InView
+              ? 'Only CSP650 projects can be flagged as an industry candidate — CSP600 proposals never match this filter.'
+              : 'Industry Candidate',
+          child: Text(
+            'Industry Candidate',
+            style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSurfaceVariant),
           ),
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildDropdownFilter(
-            'Project Category',
-            _selectedCategory,
-            ['All', ...categories],
-            (v) => setState(() => _selectedCategory = v!),
+        const SizedBox(height: 6),
+        FilterChip(
+          selected: _industryOnly,
+          onSelected: (val) => setState(() => _industryOnly = val),
+          label: Text(_industryOnly ? 'Showing only' : 'Show only'),
+          avatar: Icon(
+            Icons.business_center_outlined,
+            size: 16,
+            color: _industryOnly ? Colors.white : DesignSystem.tertiary,
           ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildDropdownFilter(
-            'Tech Stack',
-            _selectedTechStack,
-            ['All', ...techStacks],
-            (v) => setState(() => _selectedTechStack = v!),
+          selectedColor: DesignSystem.tertiary,
+          checkmarkColor: Colors.white,
+          showCheckmark: false,
+          labelStyle: DesignSystem.bodySm.copyWith(
+            color: _industryOnly ? Colors.white : DesignSystem.onSurfaceVariant,
           ),
-        ),
-        const SizedBox(width: 12),
-        TextButton(
-          onPressed: _resetFilters,
-          child: const Text('Reset Filters'),
+          backgroundColor: DesignSystem.surfaceContainerLowest,
+          side: BorderSide(color: DesignSystem.outlineVariant),
         ),
       ],
     );
@@ -548,7 +852,7 @@ class _JuniorProjectBrowserPageState
 
   Widget _buildBrowseTab(
     List<SectionedProject> visible,
-    List<Project> projList,
+    Map<String, int> similarityCounts,
     bool isDesktop,
   ) {
     if (visible.isEmpty) {
@@ -576,7 +880,7 @@ class _JuniorProjectBrowserPageState
               final sp = visible[index];
               return ProjectRowWidget(
                 project: sp.project,
-                allProjects: projList,
+                simCount: similarityCounts[sp.project.id] ?? 0,
                 showSection: true,
                 section: sp.section,
                 rowIndex: index,
@@ -651,9 +955,12 @@ class _JuniorProjectBrowserPageState
 
   Widget _buildReportTab(
     List<Project> projList,
+    Map<String, Set<String>> tagIndex,
+    Map<String, int> similarityCounts,
     bool isDesktop,
   ) {
-    final clusters = ProjectSimilarity.buildClusters(projList);
+    final clusters =
+        ProjectSimilarity.buildClusters(projList, tagIndex: tagIndex);
 
     if (clusters.isEmpty) {
       return Center(
@@ -704,7 +1011,7 @@ class _JuniorProjectBrowserPageState
         final cluster = clusters[index];
         return RedundancyClusterWidget(
           cluster: cluster,
-          allProjects: projList,
+          similarityCounts: similarityCounts,
           showSection: true,
           isDesktop: isDesktop,
         );

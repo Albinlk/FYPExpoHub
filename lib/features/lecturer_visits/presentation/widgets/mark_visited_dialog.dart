@@ -31,7 +31,7 @@ Future<Map<String, String>?> showMarkVisitedDialog(
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: role == 'supervisor' ? DesignSystem.primary.withOpacity(0.1) : DesignSystem.tertiary.withOpacity(0.1),
+                    color: role == 'supervisor' ? DesignSystem.primary.withValues(alpha: 0.1) : DesignSystem.tertiary.withValues(alpha: 0.1),
                     borderRadius: DesignSystem.radiusSm,
                   ),
                   child: Text(

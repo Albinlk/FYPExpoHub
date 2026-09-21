@@ -295,10 +295,12 @@ class AdminAnnouncementsPage extends ConsumerWidget {
                                     const SizedBox(width: 16),
                                     IconButton(
                                       icon: const Icon(Icons.edit, size: 18),
+                                      tooltip: 'Edit announcement',
                                       onPressed: () => _showAddEditDialog(context, ref, item),
                                     ),
                                     IconButton(
                                       icon: const Icon(Icons.delete, size: 18, color: DesignSystem.error),
+                                      tooltip: 'Delete announcement',
                                       onPressed: () {
                                         ref.read(announcementsProvider.notifier).deleteAnnouncement(item.id);
                                         ScaffoldMessenger.of(context).showSnackBar(

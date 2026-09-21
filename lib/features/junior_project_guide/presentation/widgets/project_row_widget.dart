@@ -7,7 +7,7 @@ import '../../domain/project_similarity.dart';
 
 class ProjectRowWidget extends ConsumerWidget {
   final Project project;
-  final List<Project> allProjects;
+  final int simCount;
   final bool showSection;
   final String? section;
   final int? rowIndex; // for alternating stripe
@@ -15,7 +15,7 @@ class ProjectRowWidget extends ConsumerWidget {
   const ProjectRowWidget({
     super.key,
     required this.project,
-    required this.allProjects,
+    required this.simCount,
     this.showSection = false,
     this.section,
     this.rowIndex,
@@ -24,7 +24,6 @@ class ProjectRowWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDesktop = MediaQuery.of(context).size.width >= 768;
-    final simCount = ProjectSimilarity.similarCount(project, allProjects);
     final isUnique = simCount == 0;
     final bg = (rowIndex != null && rowIndex! % 2 == 1)
         ? DesignSystem.surfaceContainerLow

@@ -1,20 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
-import '../../../../core/domain/models/project.dart';
 import '../../domain/project_similarity.dart';
 import 'project_row_widget.dart';
 
 class RedundancyClusterWidget extends ConsumerWidget {
   final RedundancyCluster cluster;
-  final List<Project> allProjects;
+  final Map<String, int> similarityCounts;
   final bool showSection;
   final bool isDesktop;
 
   const RedundancyClusterWidget({
     super.key,
     required this.cluster,
-    required this.allProjects,
+    required this.similarityCounts,
     this.showSection = false,
     required this.isDesktop,
   });
@@ -69,7 +68,7 @@ class RedundancyClusterWidget extends ConsumerWidget {
                       const EdgeInsets.symmetric(horizontal: DesignSystem.spaceMd),
                   child: ProjectRowWidget(
                     project: p,
-                    allProjects: allProjects,
+                    simCount: similarityCounts[p.id] ?? 0,
                     showSection: showSection,
                   ),
                 );

@@ -309,10 +309,12 @@ class AdminAwardsPage extends ConsumerWidget {
                                     const SizedBox(width: 16),
                                     IconButton(
                                       icon: const Icon(Icons.edit, size: 18),
+                                      tooltip: 'Edit award winner',
                                       onPressed: () => _showAddEditDialog(context, ref, item),
                                     ),
                                     IconButton(
                                       icon: const Icon(Icons.delete, size: 18, color: DesignSystem.error),
+                                      tooltip: 'Delete award winner',
                                       onPressed: () {
                                         ref.read(awardsProvider.notifier).deleteWinner(item.id);
                                         ScaffoldMessenger.of(context).showSnackBar(

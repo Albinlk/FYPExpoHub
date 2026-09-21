@@ -1,5 +1,15 @@
 # Supabase Migration Guide — FYP Expo Hub
 
+> **Status: COMPLETE (August 2026), kept as a historical/reference runbook.**
+> The Firebase → Supabase migration described here has already been applied
+> to the live project. For a record of what was actually run and verified,
+> see [MIGRATION_REPORT.md](MIGRATION_REPORT.md). The current production
+> deploy path is the GitHub Actions workflow at
+> [.github/workflows/deploy.yml](.github/workflows/deploy.yml), which builds
+> and pushes to GitHub Pages automatically on every push to `main` — the
+> manual "Step 6: Deploy" options below are historical alternatives, not the
+> path actually in use.
+
 ## Overview
 
 This document describes the complete migration from Google Firebase to Supabase Free Tier for the FYP Expo Hub project. The migration preserves all functionality while eliminating all Firebase dependencies and maintaining a $0 cost baseline.
@@ -103,7 +113,10 @@ If you need to revert:
 1. **Database**: Use Supabase's built-in backup/restore in the dashboard
 2. **Application**: Switch `pubspec.yaml` back to Firebase dependencies
 3. **Auth**: Recreate Firebase Auth users from Supabase backup
-4. See `rollback_plan.md` for detailed steps
+
+(No separate rollback runbook exists — the Firebase-era code and config
+were removed from this repository once the migration completed; see
+`409fd4b3 chore: remove Firebase-era leftovers` in git history.)
 
 ## Cost Summary
 

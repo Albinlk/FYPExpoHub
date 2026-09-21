@@ -106,6 +106,7 @@ class _RecordMilestonesSection extends ConsumerWidget {
                           FypStatusBadge.milestone(m.status),
                           IconButton(
                             icon: const Icon(Icons.edit, size: 20),
+                            tooltip: 'Edit milestone',
                             onPressed: () => _showMilestoneDialog(context, ref, m),
                           ),
                         ],
@@ -162,6 +163,7 @@ class _RecordMilestonesSection extends ConsumerWidget {
                       title: Text('Target Date: ${formatFypDate(selectedDate)}', style: DesignSystem.bodySm),
                       trailing: IconButton(
                         icon: const Icon(Icons.calendar_today),
+                        tooltip: 'Pick target date',
                         onPressed: () async {
                           final picked = await showDatePicker(
                             context: context,

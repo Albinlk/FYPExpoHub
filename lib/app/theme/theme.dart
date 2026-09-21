@@ -183,7 +183,7 @@ class AppTheme {
       cardTheme: CardThemeData(
         color: DesignSystem.surfaceContainerLowest,
         elevation: 1,
-        shadowColor: Colors.black.withOpacity(0.04),
+        shadowColor: Colors.black.withValues(alpha: 0.04),
         shape: RoundedRectangleBorder(
           borderRadius: DesignSystem.radiusLg,
           side: const BorderSide(color: DesignSystem.surfaceContainer, width: 1),
