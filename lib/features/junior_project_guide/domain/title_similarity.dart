@@ -179,6 +179,51 @@ class TitleSimilarity {
     return clusters;
   }
 
+  /// Combines this class's title-based signal with [ProjectSimilarity]'s
+  /// category-tag-based signal into ONE set of "N similar" counts, so a
+  /// project that only matches via title wording (or only via tech-stack
+  /// category) is reflected identically wherever a count drives UI — the
+  /// Browse-tab badge and the Unique/Has Similar filter — matching what the
+  /// Redundancy Report's two cluster sections already show independently.
+  /// Without this, a pair meeting the title-similarity criterion but
+  /// sharing fewer than [ProjectSimilarity.minSharedCategoriesForCluster]
+  /// categories would appear together in the report's title-cluster section
+  /// while each row is still marked "Unique" and hidden by "Has Similar".
+  ///
+  /// Runs a single combined O(n^2) pass — rather than computing the two
+  /// signals' counts separately and summing them — because a pair that
+  /// satisfies BOTH signals must still only increment each project's count
+  /// once; summing separate counts would double-count such pairs.
+  static Map<String, int> computeCombinedSimilarityCounts(
+    List<Project> projects, {
+    Map<String, Set<String>>? categoryTagIndex,
+    Map<String, Set<String>>? titleTokenIndex,
+  }) {
+    final catIndex =
+        categoryTagIndex ?? ProjectSimilarity.buildCategoryTagIndex(projects);
+    final titleIndex = titleTokenIndex ?? buildTitleTokenIndex(projects);
+    final counts = <String, int>{for (final p in projects) p.id: 0};
+    for (int i = 0; i < projects.length; i++) {
+      for (int j = i + 1; j < projects.length; j++) {
+        final a = projects[i];
+        final b = projects[j];
+        final tagSimilar = ProjectSimilarity.sharedTagCount(a, b,
+                tagIndex: catIndex) >=
+            ProjectSimilarity.minSharedCategoriesForCluster;
+        final titleSimilar = tagSimilar
+            ? false
+            : sharedTitleWordCount(a, b, tokenIndex: titleIndex) >=
+                    minSharedTitleWords &&
+                titleJaccard(a, b, tokenIndex: titleIndex) >= minTitleJaccard;
+        if (tagSimilar || titleSimilar) {
+          counts[a.id] = (counts[a.id] ?? 0) + 1;
+          counts[b.id] = (counts[b.id] ?? 0) + 1;
+        }
+      }
+    }
+    return counts;
+  }
+
   /// The categories every member's FULL title independently infers to
   /// (via [ProjectSimilarity.titleInferredCategoryTags]), intersected —
   /// i.e. "what topic do all of these titles agree on". Deliberately NOT

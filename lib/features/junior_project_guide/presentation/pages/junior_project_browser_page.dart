@@ -118,16 +118,20 @@ class _JuniorProjectBrowserPageState
     _cachedFullProjList = combined.map((sp) => sp.project).toList();
     _cachedCategoryTagIndex =
         ProjectSimilarity.buildCategoryTagIndex(_cachedFullProjList);
-    _cachedSimilarityCounts = ProjectSimilarity.computeSimilarityCounts(
+    _cachedTitleTokenIndex =
+        TitleSimilarity.buildTitleTokenIndex(_cachedFullProjList);
+    // Combined (category-tag OR title-wording) so the Browse-tab badge and
+    // the Unique/Has Similar filter agree with both Redundancy Report
+    // sections — see computeCombinedSimilarityCounts's doc for why a plain
+    // category-only count would miss title-only matches.
+    _cachedSimilarityCounts = TitleSimilarity.computeCombinedSimilarityCounts(
       _cachedFullProjList,
-      tagIndex: _cachedCategoryTagIndex,
-      minShared: ProjectSimilarity.minSharedCategoriesForCluster,
+      categoryTagIndex: _cachedCategoryTagIndex,
+      titleTokenIndex: _cachedTitleTokenIndex,
     );
     _cachedIdToSection = {
       for (final sp in combined) sp.project.id: sp.section,
     };
-    _cachedTitleTokenIndex =
-        TitleSimilarity.buildTitleTokenIndex(_cachedFullProjList);
   }
 
   /// Applies filters passed via deep-link query parameters (e.g. a link from

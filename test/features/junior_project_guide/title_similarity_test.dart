@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fyp_expo_hub/core/domain/models/project.dart';
+import 'package:fyp_expo_hub/features/junior_project_guide/domain/project_similarity.dart';
 import 'package:fyp_expo_hub/features/junior_project_guide/domain/title_similarity.dart';
 
 void main() {
@@ -148,9 +149,61 @@ void main() {
       expect(TitleSimilarity.buildTitleClusters([]), isEmpty);
     });
   });
+
+  group('TitleSimilarity - computeCombinedSimilarityCounts', () {
+    test('counts a title-only match (below the category-tag threshold) so '
+        'the Browse badge / Unique filter agree with the title-cluster '
+        'section of the Redundancy Report', () {
+      // Inferred categories only overlap on {Cybersecurity} (1 < the
+      // category threshold of 2), so this pair would never be flagged
+      // "similar" by category tags alone — but it clusters by title (same
+      // pair used in the buildTitleClusters test above: shared=3, jaccard
+      // 0.5).
+      final a = _project(
+          id: 'a', title: 'AUTOMATED PENETRATION TESTING FOR WEB APPLICATION');
+      final b = _project(
+          id: 'b',
+          title: 'WEB VULNERABILITY SCANNING AND PENETRATION TESTING SYSTEM');
+
+      expect(
+        ProjectSimilarity.sharedTagCount(a, b,
+            tagIndex: ProjectSimilarity.buildCategoryTagIndex([a, b])),
+        lessThan(ProjectSimilarity.minSharedCategoriesForCluster),
+      );
+
+      final counts = TitleSimilarity.computeCombinedSimilarityCounts([a, b]);
+      expect(counts['a'], 1);
+      expect(counts['b'], 1);
+    });
+
+    test('a pair matching by category tags but not by title still counts',
+        () {
+      final a = _project(id: 'a', tags: ['MQTT', 'SDN'], title: 'Smart Home Hub');
+      final b = _project(
+          id: 'b',
+          tags: ['IoT / Embedded', 'Networking'],
+          title: 'Campus Parking Sensor');
+
+      final counts = TitleSimilarity.computeCombinedSimilarityCounts([a, b]);
+      expect(counts['a'], 1);
+      expect(counts['b'], 1);
+    });
+
+    test('a pair matching neither signal counts zero', () {
+      final a = _project(id: 'a', title: 'Mobile Banking App');
+      final b = _project(id: 'b', title: 'Blockchain Voting Ledger');
+      final counts = TitleSimilarity.computeCombinedSimilarityCounts([a, b]);
+      expect(counts['a'], 0);
+      expect(counts['b'], 0);
+    });
+  });
 }
 
-Project _project({required String id, required String title}) {
+Project _project({
+  required String id,
+  required String title,
+  List<String> tags = const [],
+}) {
   return Project(
     id: id,
     eventId: 'fskm-fyp-2026',
@@ -161,7 +214,7 @@ Project _project({required String id, required String title}) {
     programmeName: 'Computer Science',
     shortDescription: 'Test description',
     category: 'Computer Science',
-    technologyTags: const [],
+    technologyTags: tags,
     coverImageUrl: 'assets/images/project_placeholder.jpg',
     teamDisplayNames: const ['Tester'],
     supervisorDisplayName: 'Dr. Test',
