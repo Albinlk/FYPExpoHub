@@ -217,6 +217,56 @@ void main() {
       expect(counts['b'], 0);
     });
   });
+
+  group('TitleSimilarity - findCombinedSimilar', () {
+    test('returns one match per project counted by '
+        'computeCombinedSimilarityCounts, tagged with why it matched — '
+        'this is what the STATUS badge\'s "N similar" tap opens, so its '
+        'length must never disagree with the number already shown', () {
+      final titleOnly = _project(
+          id: 'a', title: 'AUTOMATED PENETRATION TESTING FOR WEB APPLICATION');
+      final titleOnlyPartner = _project(
+          id: 'b',
+          title: 'WEB VULNERABILITY SCANNING AND PENETRATION TESTING SYSTEM');
+      final categoryOnly =
+          _project(id: 'c', tags: ['MQTT', 'SDN'], title: 'Smart Home Hub');
+      final categoryOnlyPartner = _project(
+          id: 'd',
+          tags: ['IoT / Embedded', 'Networking'],
+          title: 'Campus Parking Sensor');
+      final unrelated = _project(id: 'e', title: 'Totally Unrelated Widget');
+
+      final all = [
+        titleOnly,
+        titleOnlyPartner,
+        categoryOnly,
+        categoryOnlyPartner,
+        unrelated,
+      ];
+      final counts = TitleSimilarity.computeCombinedSimilarityCounts(all);
+
+      for (final target in all) {
+        final matches = TitleSimilarity.findCombinedSimilar(target, all);
+        expect(matches.length, counts[target.id],
+            reason: '${target.id}: findCombinedSimilar length must match '
+                'its computeCombinedSimilarityCounts count');
+      }
+
+      final aMatches = TitleSimilarity.findCombinedSimilar(titleOnly, all);
+      expect(aMatches.single.project.id, 'b');
+      expect(aMatches.single.byTitle, isTrue);
+      expect(aMatches.single.byCategory, isFalse);
+      expect(aMatches.single.sharedTitleWords,
+          containsAll(['web', 'penetration', 'testing']));
+
+      final cMatches = TitleSimilarity.findCombinedSimilar(categoryOnly, all);
+      expect(cMatches.single.project.id, 'd');
+      expect(cMatches.single.byCategory, isTrue);
+      expect(cMatches.single.byTitle, isFalse);
+
+      expect(TitleSimilarity.findCombinedSimilar(unrelated, all), isEmpty);
+    });
+  });
 }
 
 Project _project({

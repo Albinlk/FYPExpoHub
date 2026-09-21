@@ -13,6 +13,7 @@ import '../../domain/title_similarity.dart';
 import '../widgets/project_row_widget.dart';
 import '../widgets/redundancy_cluster_widget.dart';
 import '../widgets/title_similar_cluster_widget.dart';
+import 'similar_projects_page.dart';
 
 /// Debounce delay for the search field: filtering + re-deriving the
 /// similarity index on every keystroke is wasted work once the projects
@@ -132,6 +133,25 @@ class _JuniorProjectBrowserPageState
     _cachedIdToSection = {
       for (final sp in combined) sp.project.id: sp.section,
     };
+  }
+
+  /// Opens the full list of projects [target] was flagged similar to —
+  /// the STATUS badge's "N similar" tap action. Recomputed on demand
+  /// (cheap: one O(n) scan against the already-cached indices) rather than
+  /// cached alongside [_cachedSimilarityCounts], since a reader only opens
+  /// this for a handful of rows per session.
+  void _openSimilarProjects(BuildContext context, Project target) {
+    final matches = TitleSimilarity.findCombinedSimilar(
+      target,
+      _cachedFullProjList,
+      categoryTagIndex: _cachedCategoryTagIndex,
+      titleTokenIndex: _cachedTitleTokenIndex,
+    );
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => SimilarProjectsPage(target: target, matches: matches),
+      ),
+    );
   }
 
   /// Applies filters passed via deep-link query parameters (e.g. a link from
@@ -900,12 +920,16 @@ class _JuniorProjectBrowserPageState
             separatorBuilder: (context, index) => const SizedBox(height: 8),
             itemBuilder: (context, index) {
               final sp = visible[index];
+              final simCount = similarityCounts[sp.project.id] ?? 0;
               return ProjectRowWidget(
                 project: sp.project,
-                simCount: similarityCounts[sp.project.id] ?? 0,
+                simCount: simCount,
                 showSection: true,
                 section: sp.section,
                 rowIndex: index,
+                onStatusTap: simCount > 0
+                    ? () => _openSimilarProjects(context, sp.project)
+                    : null,
               );
             },
           ),
