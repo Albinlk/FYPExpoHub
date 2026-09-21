@@ -18,6 +18,11 @@ class ProjectRowWidget extends ConsumerWidget {
   /// RedundancyClusterWidget, where it appends a qualitative overlap label.
   final double? strength;
 
+  /// Opens the full list of projects this one was flagged similar to.
+  /// Only wired up (and only rendered as tappable) when [simCount] > 0 —
+  /// there is nothing to show for a project marked "Unique".
+  final VoidCallback? onStatusTap;
+
   const ProjectRowWidget({
     super.key,
     required this.project,
@@ -26,6 +31,7 @@ class ProjectRowWidget extends ConsumerWidget {
     this.section,
     this.rowIndex,
     this.strength,
+    this.onStatusTap,
   });
 
   @override
@@ -408,21 +414,29 @@ class ProjectRowWidget extends ConsumerWidget {
   Widget _buildSimilarityBadge(int count, bool isUnique) {
     final pill = _buildStatusPill(count, isUnique);
     final suffix = _strengthSuffix();
-    if (suffix == null) return pill;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        pill,
-        const SizedBox(height: 3),
-        Text(
-          suffix,
-          style: DesignSystem.labelCaps.copyWith(
-            color: DesignSystem.onSurfaceVariant,
-            fontSize: 8,
-          ),
-        ),
-      ],
+    final content = suffix == null
+        ? pill
+        : Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              pill,
+              const SizedBox(height: 3),
+              Text(
+                suffix,
+                style: DesignSystem.labelCaps.copyWith(
+                  color: DesignSystem.onSurfaceVariant,
+                  fontSize: 8,
+                ),
+              ),
+            ],
+          );
+
+    if (isUnique || onStatusTap == null) return content;
+    return InkWell(
+      onTap: onStatusTap,
+      borderRadius: DesignSystem.radiusSm,
+      child: content,
     );
   }
 

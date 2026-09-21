@@ -229,6 +229,54 @@ class TitleSimilarity {
     return counts;
   }
 
+  /// Finds every project flagged similar to [target] by EITHER signal —
+  /// the same per-pair test [computeCombinedSimilarityCounts] uses, just
+  /// returning the actual matches (with what they matched on) instead of a
+  /// bare count. Powers the "N similar" STATUS badge's tap action: the
+  /// count on the badge is exactly `findCombinedSimilar(...).length` when
+  /// given the same indices, so the list shown never disagrees with the
+  /// number a reader already saw.
+  static List<SimilarProjectMatch> findCombinedSimilar(
+    Project target,
+    List<Project> all, {
+    Map<String, Set<String>>? categoryTagIndex,
+    Map<String, Set<String>>? titleTokenIndex,
+  }) {
+    final catIndex =
+        categoryTagIndex ?? ProjectSimilarity.buildCategoryTagIndex(all);
+    final titleIndex = titleTokenIndex ?? buildTitleTokenIndex(all);
+    final targetCats =
+        catIndex[target.id] ?? ProjectSimilarity.categoryTags(target);
+    final targetWords = titleIndex[target.id] ?? titleTokens(target);
+
+    final matches = <SimilarProjectMatch>[];
+    for (final p in all) {
+      if (p.id == target.id) continue;
+
+      final otherCats = catIndex[p.id] ?? ProjectSimilarity.categoryTags(p);
+      final sharedCats = targetCats.intersection(otherCats).toList()..sort();
+      final byCategory =
+          sharedCats.length >= ProjectSimilarity.minSharedCategoriesForCluster;
+
+      final otherWords = titleIndex[p.id] ?? titleTokens(p);
+      final sharedWords = targetWords.intersection(otherWords).toList()
+        ..sort();
+      final union = targetWords.length + otherWords.length - sharedWords.length;
+      final byTitle = sharedWords.length >= minSharedTitleWords &&
+          union > 0 &&
+          sharedWords.length / union >= minTitleJaccard;
+
+      if (byCategory || byTitle) {
+        matches.add(SimilarProjectMatch(
+          project: p,
+          sharedCategories: byCategory ? sharedCats : const [],
+          sharedTitleWords: byTitle ? sharedWords : const [],
+        ));
+      }
+    }
+    return matches;
+  }
+
   /// The categories every member's FULL title independently infers to
   /// (via [ProjectSimilarity.titleInferredCategoryTags]), intersected —
   /// i.e. "what topic do all of these titles agree on". Deliberately NOT
@@ -263,4 +311,23 @@ class TitleSimilarCluster {
   });
 
   int get count => projects.length;
+}
+
+/// One project flagged similar to a given target by
+/// [TitleSimilarity.findCombinedSimilar] — carries which signal(s) matched
+/// and what specifically was shared, so a reader isn't just told "similar"
+/// but shown why.
+class SimilarProjectMatch {
+  final Project project;
+  final List<String> sharedCategories;
+  final List<String> sharedTitleWords;
+
+  const SimilarProjectMatch({
+    required this.project,
+    required this.sharedCategories,
+    required this.sharedTitleWords,
+  });
+
+  bool get byCategory => sharedCategories.isNotEmpty;
+  bool get byTitle => sharedTitleWords.isNotEmpty;
 }
