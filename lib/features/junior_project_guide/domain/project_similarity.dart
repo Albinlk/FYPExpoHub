@@ -27,16 +27,21 @@ class ProjectSimilarity {
     final out = <String>[];
     void add(String tag) { if (!out.contains(tag)) out.add(tag); }
 
-    if (t.contains('multilingual transformer') || t.contains('malay transformer') || t.contains(' bert ') || t.contains('transformer') || t.contains('stance detection') || t.contains('emotion recognition')) add('NLP / Transformer');
-    if (t.contains('retrieval-augmented') || t.contains(' rag ') || t.contains('generative ai')) add('Generative AI / RAG');
-    if (t.contains('llm') || t.contains('deepseek') || t.contains('large language model')) add('LLM');
-    if (t.contains('reinforcement learning')) add('Reinforcement Learning');
+    // NLP / Transformer also absorbs Knowledge Graph — this dataset's
+    // knowledge-graph projects are consistently built from text, and 3
+    // projects didn't warrant a separate bucket from the other 8.
+    if (t.contains('multilingual transformer') || t.contains('malay transformer') || t.contains(' bert ') || t.contains('transformer') || t.contains('stance detection') || t.contains('emotion recognition') || t.contains('knowledge graph') || t.contains('lexgraph') || t.contains('hierarchical knowledge')) add('NLP / Transformer');
+    // LLM also absorbs Generative AI / RAG — both are modern generative-
+    // language-AI work; distinguishing "RAG pipeline" from "LLM project"
+    // isn't a distinction worth a dedicated bucket for 4 projects.
+    if (t.contains('retrieval-augmented') || t.contains(' rag ') || t.contains('generative ai') || t.contains('llm') || t.contains('deepseek') || t.contains('large language model')) add('LLM');
+    // Machine Learning also absorbs Reinforcement Learning (a standard ML
+    // subfield; 1 project doesn't warrant its own bucket).
+    if (t.contains('lstm') || t.contains('random forest') || t.contains('support vector') || t.contains('svm') || t.contains('whale optimization') || t.contains('decision tree') || t.contains(' aco ') || t.contains(' pso ') || t.contains('machine learning') || t.contains('reinforcement learning')) add('Machine Learning');
     if (t.contains('deep learning') || t.contains('cnn') || t.contains('efficientnet') || t.contains('mobilenet') || t.contains('yolov') || t.contains('sasrec') || t.contains('deepfake')) add('Deep Learning / CV');
-    if (t.contains('lstm') || t.contains('random forest') || t.contains('support vector') || t.contains('svm') || t.contains('whale optimization') || t.contains('decision tree') || t.contains(' aco ') || t.contains(' pso ') || t.contains('machine learning')) add('Machine Learning');
     if (t.contains('artificial intelligence') || t.contains('explainable ai') || t.contains(' xai ')) add('AI / XAI');
     if (t.contains('recommender') || t.contains('recommendation') || t.contains('collaborative') || t.contains('content-based') || t.contains('clustering') || t.contains('scent fingerprint')) add('Recommender System');
     if (t.contains('sentiment analysis') || (t.contains('sentiment') && !t.contains('transformer')) ) add('Sentiment Analysis');
-    if (t.contains('knowledge graph') || t.contains('lexgraph') || t.contains('hierarchical knowledge')) add('Knowledge Graph');
     if (t.contains('blockchain') || t.contains('distributed ledger')) add('Blockchain');
     if (t.contains('intrusion detection') || t.contains('anomaly detection') || t.contains('network traffic analysis') || t.contains('ddos') || t.contains('network forensics') || t.contains(' nids ') || t.contains('snort') || t.contains('wireshark')) add('Network Security / IDS');
     if (t.contains('mqtt') || t.contains('esp32') || t.contains(' iot ') || t.contains('lora') || t.contains('b.a.t.m.a.n') || t.contains('cyber-physical') || t.contains('cyber physical')) add('IoT / Embedded');
@@ -46,8 +51,11 @@ class ProjectSimilarity {
     if (t.contains('web-based') || t.contains('web application') || t.contains('dashboard') || t.contains('document management') || t.contains('nestjs') || t.contains('nest.js')) add('Web / Dashboard');
     if (t.contains('mobile application') || t.contains('mobile app') || t.contains(' android ') || t.contains('period tracker') || t.contains('fingerprint') || t.contains('face recognition')) add('Mobile App');
     if (t.contains('nas') || t.contains('cloud storage') || t.contains('cloud-native') || t.contains('cloud computing') || t.contains('docker')) add('Cloud / DevOps');
-    if (t.contains('portfolio optimization') || t.contains('price and trend') || t.contains('crime hotspot') || t.contains('expense tracking') || t.contains(' halal ') || t.contains('dropout risk')) add('Data Analytics');
-    if (t.contains('apnrs') || t.contains('navigation routing') || t.contains('path optimization')) add('GIS / Navigation');
+    // Data Analytics also absorbs GIS / Navigation — the weakest semantic
+    // fit of the four merges, but 2 projects is too sparse to stand alone.
+    // ' gis ' / 'navigation' alone (not just 'navigation routing') so the
+    // legacy literal tag "GIS / Navigation" itself still round-trips here.
+    if (t.contains('portfolio optimization') || t.contains('price and trend') || t.contains('crime hotspot') || t.contains('expense tracking') || t.contains(' halal ') || t.contains('dropout risk') || t.contains('apnrs') || t.contains('navigation') || t.contains('path optimization') || t.contains(' gis ')) add('Data Analytics');
     if (out.isEmpty) {
       if (t.contains(' ai ') || t.trim().startsWith('ai ') || t.contains(' ai-')) add('AI / General');
       else add('General CS');
@@ -68,17 +76,23 @@ class ProjectSimilarity {
   /// projects are seeded with these directly) apart from genuinely raw,
   /// free-text tags (CSP600 CSV proposals, e.g. "MQTT", "OSPF", "Snort")
   /// that still need keyword categorization.
+  ///
+  /// Deliberately excludes 'Reinforcement Learning', 'Generative AI / RAG',
+  /// 'Knowledge Graph', and 'GIS / Navigation': those four were each used
+  /// by only 1-4 projects (see project history), so inferTagsFromTitle now
+  /// folds them into 'Machine Learning', 'LLM', 'NLP / Transformer', and
+  /// 'Data Analytics' respectively. Leaving them in this set would make a
+  /// legacy project literally tagged e.g. "Reinforcement Learning" pass
+  /// through unmerged instead of being re-bucketed — this list must stay in
+  /// sync with which add(...) calls exist in inferTagsFromTitle.
   static const Set<String> knownCategories = {
     'NLP / Transformer',
-    'Generative AI / RAG',
     'LLM',
-    'Reinforcement Learning',
     'Deep Learning / CV',
     'Machine Learning',
     'AI / XAI',
     'Recommender System',
     'Sentiment Analysis',
-    'Knowledge Graph',
     'Blockchain',
     'Network Security / IDS',
     'IoT / Embedded',
@@ -89,7 +103,6 @@ class ProjectSimilarity {
     'Mobile App',
     'Cloud / DevOps',
     'Data Analytics',
-    'GIS / Navigation',
     'AI / General',
     'General CS',
   };

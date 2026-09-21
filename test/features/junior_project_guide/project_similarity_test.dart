@@ -242,6 +242,35 @@ void main() {
       final p = _project(id: 'a', tags: const [], title: 'Blockchain Voting App');
       expect(ProjectSimilarity.categoryTags(p), contains('Blockchain'));
     });
+
+    // These four category names existed in the live dataset (1-4 projects
+    // each) before being folded into a larger neighbor. They're no longer
+    // in knownCategories, so a project still carrying one of these exact
+    // legacy tags must be re-bucketed via inferTagsFromTitle, not passed
+    // through unchanged.
+    const mergedLegacyTagToCategory = {
+      'Reinforcement Learning': 'Machine Learning',
+      'Generative AI / RAG': 'LLM',
+      'Knowledge Graph': 'NLP / Transformer',
+      'GIS / Navigation': 'Data Analytics',
+    };
+
+    mergedLegacyTagToCategory.forEach((legacyTag, expectedCategory) {
+      test('legacy tag "$legacyTag" is re-bucketed to "$expectedCategory"', () {
+        final p = _project(id: 'a', tags: [legacyTag]);
+        final tags = ProjectSimilarity.categoryTags(p);
+        expect(tags, contains(expectedCategory));
+        expect(tags, isNot(contains(legacyTag)),
+            reason: 'merged category should not pass through unchanged');
+      });
+    });
+
+    test('knownCategories no longer contains the four merged categories', () {
+      expect(ProjectSimilarity.knownCategories, hasLength(19));
+      for (final legacyTag in mergedLegacyTagToCategory.keys) {
+        expect(ProjectSimilarity.knownCategories.contains(legacyTag), isFalse);
+      }
+    });
   });
 }
 
