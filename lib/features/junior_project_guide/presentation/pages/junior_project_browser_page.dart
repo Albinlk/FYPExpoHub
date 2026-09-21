@@ -45,6 +45,9 @@ class _JuniorProjectBrowserPageState
   String _selectedProgramme = 'All';
   String _selectedCategory = 'All';
   String _selectedTechStack = 'All';
+  String _selectedSupervisor = 'All';
+  String _selectedRedundancy = 'All'; // 'All' | 'Unique' | 'Has Similar'
+  bool _industryOnly = false;
   bool _mobileFiltersExpanded = false;
 
   /// Number of collapsed filters currently active (drives the toggle badge).
@@ -53,6 +56,9 @@ class _JuniorProjectBrowserPageState
     if (_selectedProgramme != 'All') count++;
     if (_selectedCategory != 'All') count++;
     if (_selectedTechStack != 'All') count++;
+    if (_selectedSupervisor != 'All') count++;
+    if (_selectedRedundancy != 'All') count++;
+    if (_industryOnly) count++;
     return count;
   }
 
@@ -63,6 +69,9 @@ class _JuniorProjectBrowserPageState
       _selectedProgramme = 'All';
       _selectedCategory = 'All';
       _selectedTechStack = 'All';
+      _selectedSupervisor = 'All';
+      _selectedRedundancy = 'All';
+      _industryOnly = false;
     });
   }
 
@@ -150,17 +159,22 @@ class _JuniorProjectBrowserPageState
         : <Project>[];
 
     final combined = _buildCombined(csp650Projects, csp600Projects);
-    final visible = _applyFilters(combined);
-    final projList = visible.map((sp) => sp.project).toList();
+    final fullProjList = combined.map((sp) => sp.project).toList();
 
-    // Computed once per build and shared by every comparison below, instead
-    // of ProjectSimilarity re-normalizing the same project's tags on every
-    // pairwise check (see ProjectSimilarity.buildTagIndex).
-    final tagIndex = ProjectSimilarity.buildTagIndex(projList);
+    // Computed once per build, against the FULL (unfiltered) corpus — not
+    // the filtered/visible list — and shared by every comparison below.
+    // Similarity is a fact about a project relative to the whole guide, so
+    // it must not change depending on which other filters (Programme,
+    // Supervisor, ...) happen to be active; computing it off the filtered
+    // list would let a project's "Unique" badge flip on and off as the
+    // comparison pool shrinks, defeating the point of a redundancy check.
+    final tagIndex = ProjectSimilarity.buildTagIndex(fullProjList);
     final similarityCounts = ProjectSimilarity.computeSimilarityCounts(
-      projList,
+      fullProjList,
       tagIndex: tagIndex,
     );
+
+    final visible = _applyFilters(combined, similarityCounts);
 
     return Column(
       children: [
@@ -198,10 +212,12 @@ class _JuniorProjectBrowserPageState
               _buildBrowseTab(visible, similarityCounts, isDesktop),
               // Clusters are the expensive O(n^2) part of this feature —
               // only compute them while this tab is actually selected, so
-              // typing in search while on Browse doesn't pay for it.
+              // typing in search while on Browse doesn't pay for it. Scoped
+              // to the full corpus (not the Browse-tab filters) so the
+              // report always reflects redundancy across the whole guide.
               _tabController.index == 1
                   ? _buildReportTab(
-                      projList, tagIndex, similarityCounts, isDesktop)
+                      fullProjList, tagIndex, similarityCounts, isDesktop)
                   : const SizedBox.shrink(),
             ],
           ),
@@ -223,7 +239,10 @@ class _JuniorProjectBrowserPageState
     return result;
   }
 
-  List<SectionedProject> _applyFilters(List<SectionedProject> all) {
+  List<SectionedProject> _applyFilters(
+    List<SectionedProject> all,
+    Map<String, int> similarityCounts,
+  ) {
     final searchLower = _searchController.text.toLowerCase();
 
     return all.where((sp) {
@@ -248,11 +267,26 @@ class _JuniorProjectBrowserPageState
           ProjectSimilarity.displayTags(p)
               .any((t) => t.toLowerCase() == _selectedTechStack.toLowerCase());
 
+      final matchesSupervisor = _selectedSupervisor == 'All' ||
+          p.supervisorDisplayName == _selectedSupervisor;
+
+      final simCount = similarityCounts[p.id] ?? 0;
+      final matchesRedundancy = switch (_selectedRedundancy) {
+        'Unique' => simCount == 0,
+        'Has Similar' => simCount > 0,
+        _ => true,
+      };
+
+      final matchesIndustry = !_industryOnly || p.calonIndustri;
+
       return matchesSection &&
           matchesSearch &&
           matchesProgramme &&
           matchesCategory &&
-          matchesTechStack;
+          matchesTechStack &&
+          matchesSupervisor &&
+          matchesRedundancy &&
+          matchesIndustry;
     }).toList();
   }
 
@@ -261,6 +295,16 @@ class _JuniorProjectBrowserPageState
     for (final sp in all) {
       if (sp.project.programmeCode.isNotEmpty) {
         seen.add(sp.project.programmeCode);
+      }
+    }
+    return seen.toList()..sort();
+  }
+
+  List<String> _allSupervisors(List<SectionedProject> all) {
+    final seen = <String>{};
+    for (final sp in all) {
+      if (sp.project.supervisorDisplayName.isNotEmpty) {
+        seen.add(sp.project.supervisorDisplayName);
       }
     }
     return seen.toList()..sort();
@@ -293,6 +337,7 @@ class _JuniorProjectBrowserPageState
     final programmes = _allProgrammes(all);
     final categories = _allCategories(all);
     final techStacks = _allTechStacks(all);
+    final supervisors = _allSupervisors(all);
 
     if (isDesktop) {
       return Card(
@@ -332,7 +377,7 @@ class _JuniorProjectBrowserPageState
                 ),
               ),
               const SizedBox(height: DesignSystem.spaceMd),
-              _buildDesktopFilters(programmes, categories, techStacks),
+              _buildDesktopFilters(programmes, categories, techStacks, supervisors),
             ],
           ),
         ),
@@ -401,6 +446,19 @@ class _JuniorProjectBrowserPageState
             ['All', ...techStacks],
             (v) => setState(() => _selectedTechStack = v!),
           ),
+          _buildDropdownFilter(
+            'Supervisor',
+            _selectedSupervisor,
+            ['All', ...supervisors],
+            (v) => setState(() => _selectedSupervisor = v!),
+          ),
+          _buildDropdownFilter(
+            'Redundancy Status',
+            _selectedRedundancy,
+            const ['All', 'Unique', 'Has Similar'],
+            (v) => setState(() => _selectedRedundancy = v!),
+          ),
+          _buildIndustryToggle(),
         ],
         resetControl: TextButton.icon(
           onPressed: () {
@@ -418,56 +476,118 @@ class _JuniorProjectBrowserPageState
     List<String> programmes,
     List<String> categories,
     List<String> techStacks,
+    List<String> supervisors,
   ) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Text('Section', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSurfaceVariant)),
-            const SizedBox(height: 6),
-            Wrap(
-              spacing: 8,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildSectionPill('All', 'all'),
-                _buildSectionPill('CSP650', 'CSP650'),
-                _buildSectionPill('CSP600', 'CSP600'),
+                Text('Section', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSurfaceVariant)),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 8,
+                  children: [
+                    _buildSectionPill('All', 'all'),
+                    _buildSectionPill('CSP650', 'CSP650'),
+                    _buildSectionPill('CSP600', 'CSP600'),
+                  ],
+                ),
               ],
+            ),
+            const SizedBox(width: DesignSystem.spaceLg),
+            Expanded(
+              child: _buildDropdownFilter(
+                'Academic Program',
+                _selectedProgramme,
+                ['All', ...programmes],
+                (v) => setState(() => _selectedProgramme = v!),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildDropdownFilter(
+                'Project Category',
+                _selectedCategory,
+                ['All', ...categories],
+                (v) => setState(() => _selectedCategory = v!),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildDropdownFilter(
+                'Tech Stack',
+                _selectedTechStack,
+                ['All', ...techStacks],
+                (v) => setState(() => _selectedTechStack = v!),
+              ),
             ),
           ],
         ),
-        const SizedBox(width: DesignSystem.spaceLg),
-        Expanded(
-          child: _buildDropdownFilter(
-            'Academic Program',
-            _selectedProgramme,
-            ['All', ...programmes],
-            (v) => setState(() => _selectedProgramme = v!),
-          ),
+        const SizedBox(height: 16),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Expanded(
+              child: _buildDropdownFilter(
+                'Supervisor',
+                _selectedSupervisor,
+                ['All', ...supervisors],
+                (v) => setState(() => _selectedSupervisor = v!),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildDropdownFilter(
+                'Redundancy Status',
+                _selectedRedundancy,
+                const ['All', 'Unique', 'Has Similar'],
+                (v) => setState(() => _selectedRedundancy = v!),
+              ),
+            ),
+            const SizedBox(width: 16),
+            _buildIndustryToggle(),
+            const SizedBox(width: 12),
+            TextButton(
+              onPressed: _resetFilters,
+              child: const Text('Reset Filters'),
+            ),
+          ],
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildDropdownFilter(
-            'Project Category',
-            _selectedCategory,
-            ['All', ...categories],
-            (v) => setState(() => _selectedCategory = v!),
-          ),
+      ],
+    );
+  }
+
+  Widget _buildIndustryToggle() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Industry Candidate',
+          style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSurfaceVariant),
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildDropdownFilter(
-            'Tech Stack',
-            _selectedTechStack,
-            ['All', ...techStacks],
-            (v) => setState(() => _selectedTechStack = v!),
+        const SizedBox(height: 6),
+        FilterChip(
+          selected: _industryOnly,
+          onSelected: (val) => setState(() => _industryOnly = val),
+          label: Text(_industryOnly ? 'Showing only' : 'Show only'),
+          avatar: Icon(
+            Icons.business_center_outlined,
+            size: 16,
+            color: _industryOnly ? Colors.white : DesignSystem.tertiary,
           ),
-        ),
-        const SizedBox(width: 12),
-        TextButton(
-          onPressed: _resetFilters,
-          child: const Text('Reset Filters'),
+          selectedColor: DesignSystem.tertiary,
+          checkmarkColor: Colors.white,
+          showCheckmark: false,
+          labelStyle: DesignSystem.bodySm.copyWith(
+            color: _industryOnly ? Colors.white : DesignSystem.onSurfaceVariant,
+          ),
+          backgroundColor: DesignSystem.surfaceContainerLowest,
+          side: BorderSide(color: DesignSystem.outlineVariant),
         ),
       ],
     );
