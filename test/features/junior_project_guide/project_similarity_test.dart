@@ -164,6 +164,25 @@ void main() {
       );
     });
 
+    test('a differently-cased known category resolves to its canonical '
+        'form, not the "General CS" catch-all (Admin Projects has an '
+        'unrestricted free-text tag field, so admin-entered casing can '
+        'vary)', () {
+      final lower = _project(id: 'a', tags: ['machine learning', 'data analytics', 'networking']);
+      final canonical = _project(
+          id: 'b', tags: ['Machine Learning', 'Data Analytics', 'Networking']);
+
+      expect(
+        ProjectSimilarity.categoryTags(lower),
+        ProjectSimilarity.categoryTags(canonical),
+        reason: 'a lowercase duplicate of an existing tag set must '
+            'resolve to the exact same category set as the canonical one, '
+            'so the two are still detected as redundant',
+      );
+      expect(ProjectSimilarity.categoryTags(lower),
+          {'Machine Learning', 'Data Analytics', 'Networking'});
+    });
+
     // Every raw tag actually used in assets/data/csp600-proposals.csv,
     // mapped to the category bucket it must resolve to so the Tech Stack
     // filter shows one consistent vocabulary across CSP650 (already
@@ -270,6 +289,129 @@ void main() {
       for (final legacyTag in mergedLegacyTagToCategory.keys) {
         expect(ProjectSimilarity.knownCategories.contains(legacyTag), isFalse);
       }
+    });
+  });
+
+  group('ProjectSimilarity - category-based clustering (cross-cohort fix)', () {
+    test(
+        'a CSP600-style raw-tag project and a CSP650-style category-tag '
+        'project are seen as sharing 2 categories, despite zero raw-string '
+        'overlap', () {
+      // CSP600 style: genuinely raw, free-text tags. MQTT -> IoT / Embedded,
+      // Wi-Fi -> Networking (two DISTINCT categories from two raw tags).
+      final csp600Style = _project(id: 'a', tags: ['MQTT', 'Wi-Fi']);
+      // CSP650 style: already-standardized category tags.
+      final csp650Style =
+          _project(id: 'b', tags: ['IoT / Embedded', 'Networking']);
+
+      // Raw literal tags never intersect.
+      expect(ProjectSimilarity.tagSet(csp600Style),
+          isNot(containsAll(ProjectSimilarity.tagSet(csp650Style))));
+
+      final categoryIndex = ProjectSimilarity.buildCategoryTagIndex(
+          [csp600Style, csp650Style]);
+      expect(
+        ProjectSimilarity.sharedTagCount(csp600Style, csp650Style,
+            tagIndex: categoryIndex),
+        greaterThanOrEqualTo(ProjectSimilarity.minSharedCategoriesForCluster),
+      );
+    });
+
+    test('buildClusters with a category index and minShared clusters the '
+        'cross-cohort pair', () {
+      final csp600Style = _project(id: 'a', tags: ['MQTT', 'Wi-Fi']);
+      final csp650Style =
+          _project(id: 'b', tags: ['IoT / Embedded', 'Networking']);
+      final categoryIndex = ProjectSimilarity.buildCategoryTagIndex(
+          [csp600Style, csp650Style]);
+
+      final clusters = ProjectSimilarity.buildClusters(
+        [csp600Style, csp650Style],
+        tagIndex: categoryIndex,
+        minShared: ProjectSimilarity.minSharedCategoriesForCluster,
+      );
+
+      expect(clusters, hasLength(1));
+      expect(clusters.first.count, 2);
+      expect(clusters.first.sharedTags,
+          containsAll(['IoT / Embedded', 'Networking']));
+    });
+
+    test('two projects sharing exactly 1 category are NOT clustered', () {
+      final a = _project(id: 'a', tags: ['IoT / Embedded']);
+      final b = _project(id: 'b', tags: ['IoT / Embedded', 'Networking']);
+      final categoryIndex = ProjectSimilarity.buildCategoryTagIndex([a, b]);
+
+      final clusters = ProjectSimilarity.buildClusters(
+        [a, b],
+        tagIndex: categoryIndex,
+        minShared: ProjectSimilarity.minSharedCategoriesForCluster,
+      );
+
+      expect(clusters, isEmpty);
+    });
+
+    test('buildClusters/computeSimilarityCounts default to raw-tag, '
+        'threshold-3 behavior when minShared/category index are omitted '
+        '(backward compatibility)', () {
+      final a = _project(id: 'a', tags: ['X', 'Y', 'Z', 'A']);
+      final b = _project(id: 'b', tags: ['X', 'Y', 'Z', 'B']);
+      final c = _project(id: 'c', tags: ['X', 'Y']); // only 2 shared with a/b
+
+      final clusters = ProjectSimilarity.buildClusters([a, b, c]);
+      expect(clusters, hasLength(1));
+      expect(clusters.first.count, 2); // only a+b (3 shared), not c (2 shared)
+
+      final counts = ProjectSimilarity.computeSimilarityCounts([a, b, c]);
+      expect(counts['a'], 1);
+      expect(counts['c'], 0);
+    });
+
+    test('computeSimilarityCounts finds the cross-cohort pair only when '
+        'given the category index + threshold 2, not with the raw-tag '
+        'default', () {
+      final csp600Style = _project(id: 'a', tags: ['MQTT', 'Wi-Fi']);
+      final csp650Style =
+          _project(id: 'b', tags: ['IoT / Embedded', 'Networking']);
+
+      final rawCounts =
+          ProjectSimilarity.computeSimilarityCounts([csp600Style, csp650Style]);
+      expect(rawCounts['a'], 0);
+      expect(rawCounts['b'], 0);
+
+      final categoryIndex = ProjectSimilarity.buildCategoryTagIndex(
+          [csp600Style, csp650Style]);
+      final categoryCounts = ProjectSimilarity.computeSimilarityCounts(
+        [csp600Style, csp650Style],
+        tagIndex: categoryIndex,
+        minShared: ProjectSimilarity.minSharedCategoriesForCluster,
+      );
+      expect(categoryCounts['a'], 1);
+      expect(categoryCounts['b'], 1);
+    });
+  });
+
+  group('ProjectSimilarity - clusterCohesion', () {
+    test('identical tag sets have cohesion 1.0', () {
+      final a = _project(id: 'a', tags: ['Networking', 'IoT / Embedded']);
+      final b = _project(id: 'b', tags: ['Networking', 'IoT / Embedded']);
+      expect(ProjectSimilarity.clusterCohesion([a, b]), 1.0);
+    });
+
+    test('partial overlap averages correctly across a 3-member cluster', () {
+      final a = _project(id: 'a', tags: ['X', 'Y']);
+      final b = _project(id: 'b', tags: ['X', 'Y']);
+      final c = _project(id: 'c', tags: ['X', 'Z']);
+      // a-b: intersection 2, union 2 -> 1.0
+      // a-c: intersection 1, union 3 -> 1/3
+      // b-c: intersection 1, union 3 -> 1/3
+      final expected = (1.0 + 1 / 3 + 1 / 3) / 3;
+      expect(ProjectSimilarity.clusterCohesion([a, b, c]), closeTo(expected, 0.0001));
+    });
+
+    test('a single-member list has cohesion 0.0 (defensive)', () {
+      final a = _project(id: 'a', tags: ['X']);
+      expect(ProjectSimilarity.clusterCohesion([a]), 0.0);
     });
   });
 }
