@@ -436,7 +436,7 @@ class ProjectRowWidget extends ConsumerWidget {
           border: Border.all(color: Colors.green.shade200, width: 1),
         ),
         child: Row(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.end,
           children: [
             Icon(Icons.check_circle,
                 size: 12, color: Colors.green.shade700),
@@ -460,7 +460,7 @@ class ProjectRowWidget extends ConsumerWidget {
         border: Border.all(color: DesignSystem.error, width: 1),
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.end,
         children: [
           Icon(Icons.warning_amber, size: 12, color: DesignSystem.error),
           const SizedBox(width: 4),
