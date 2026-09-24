@@ -246,10 +246,11 @@ class ProjectRowWidget extends ConsumerWidget {
               }),
             ),
             const SizedBox(width: 12),
-            // Redundancy badge (fixed width)
+            // Redundancy badge (fixed width) — centered to match the
+            // STATUS column header, which is itself centered.
             SizedBox(
               width: 110,
-              child: _buildSimilarityBadge(simCount, isUnique),
+              child: _buildSimilarityBadge(simCount, isUnique, center: true),
             ),
           ],
         ),
@@ -411,13 +412,18 @@ class ProjectRowWidget extends ConsumerWidget {
   // "N similar · High overlap" into one string forced a long line into the
   // fixed-width STATUS column, which either wrapped mid-word or overflowed;
   // stacking keeps each piece legible at the column's actual width.
-  Widget _buildSimilarityBadge(int count, bool isUnique) {
-    final pill = _buildStatusPill(count, isUnique);
+  // [center]: true for the desktop table's fixed-width STATUS column (whose
+  // header is itself centered — see _buildTableHeader), false (the
+  // pre-existing right-aligned look) for the mobile card, where the badge
+  // sits inline next to the title rather than in its own column.
+  Widget _buildSimilarityBadge(int count, bool isUnique, {bool center = false}) {
+    final pill = _buildStatusPill(count, isUnique, center: center);
     final suffix = _strengthSuffix();
     final content = suffix == null
         ? pill
         : Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+            crossAxisAlignment:
+                center ? CrossAxisAlignment.center : CrossAxisAlignment.end,
             mainAxisSize: MainAxisSize.min,
             children: [
               pill,
@@ -440,7 +446,9 @@ class ProjectRowWidget extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatusPill(int count, bool isUnique) {
+  Widget _buildStatusPill(int count, bool isUnique, {bool center = false}) {
+    final alignment =
+        center ? MainAxisAlignment.center : MainAxisAlignment.end;
     if (isUnique) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -450,7 +458,7 @@ class ProjectRowWidget extends ConsumerWidget {
           border: Border.all(color: Colors.green.shade200, width: 1),
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
+          mainAxisAlignment: alignment,
           children: [
             Icon(Icons.check_circle,
                 size: 12, color: Colors.green.shade700),
@@ -474,7 +482,7 @@ class ProjectRowWidget extends ConsumerWidget {
         border: Border.all(color: DesignSystem.error, width: 1),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
+        mainAxisAlignment: alignment,
         children: [
           Icon(Icons.warning_amber, size: 12, color: DesignSystem.error),
           const SizedBox(width: 4),
