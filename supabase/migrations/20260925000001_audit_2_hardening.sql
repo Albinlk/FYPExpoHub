@@ -316,6 +316,24 @@ begin
     raise exception 'invalid-argument: The previous FYP record must belong to the same student.'
       using errcode = '22023';
   end if;
+
+  -- A student registering THEMSELVES for CSP650 must continue their own
+  -- CSP600 record (create_fyp_record let them skip straight to CSP650).
+  -- Coordinators/admins can still create a CSP650 record without one — for
+  -- students whose CSP600 predates this system.
+  if tg_op = 'INSERT'
+     and upper(new.current_course_code) = 'CSP650'
+     and auth.uid() = new.student_id
+     and not (public.is_admin() or public.is_fyp_coordinator())
+     and not exists (
+       select 1 from public.fyp_records p
+       where p.id = new.previous_record_id
+         and p.student_id = new.student_id
+         and upper(p.current_course_code) = 'CSP600'
+     ) then
+    raise exception 'failed-precondition: To register for CSP650 yourself, continue your CSP600 record. If you did CSP600 before this system, ask your FYP coordinator to create your CSP650 record.'
+      using errcode = '55000';
+  end if;
   return new;
 end;
 $$;
@@ -348,6 +366,14 @@ as $$
     where d.file_url = p_path or d.file_url like '%/' || p_path
   );
 $$;
+
+-- The storage policies below run these as the signed-in user. Older
+-- projects got EXECUTE from permissive default privileges; granting it
+-- explicitly keeps FYPMS file access working on a fresh project too.
+revoke execute on function public.fyp_storage_object_is_submitted(text) from public, anon;
+grant execute on function public.fyp_storage_object_is_submitted(text) to authenticated;
+grant execute on function public.can_read_fyp_storage_path(text) to authenticated;
+grant execute on function public.can_write_fyp_storage_path(text) to authenticated;
 
 drop policy if exists "FYPMS update objects" on storage.objects;
 drop policy if exists "FYPMS delete objects" on storage.objects;

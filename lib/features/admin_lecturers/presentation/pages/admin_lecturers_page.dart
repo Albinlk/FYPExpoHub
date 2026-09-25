@@ -338,7 +338,7 @@ class AdminLecturersPage extends ConsumerWidget {
                               final email = (doc['email'] as String?) ?? '';
                               final name = (doc['display_name'] as String?) ?? '';
                               final uid = (doc['id'] as String?) ?? '';
-                              return _buildLecturerRow(context, ref, email, name, uid, false);
+                              return _buildLecturerRow(context, ref, email, name, uid);
                             }),
                           ],
                         );
@@ -375,7 +375,6 @@ class AdminLecturersPage extends ConsumerWidget {
     String email,
     String name,
     String uid,
-    bool isHardcoded,
   ) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
@@ -384,16 +383,12 @@ class AdminLecturersPage extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: isHardcoded
-                  ? DesignSystem.surfaceContainer
-                  : DesignSystem.secondaryContainer,
+              color: DesignSystem.secondaryContainer,
               borderRadius: DesignSystem.radiusLg,
             ),
             child: Icon(
               Icons.person,
-              color: isHardcoded
-                  ? DesignSystem.onSurfaceVariant
-                  : DesignSystem.onSecondaryContainer,
+              color: DesignSystem.onSecondaryContainer,
               size: 20,
             ),
           ),
@@ -416,23 +411,7 @@ class AdminLecturersPage extends ConsumerWidget {
               ],
             ),
           ),
-          if (isHardcoded)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: DesignSystem.surfaceContainer,
-                borderRadius: DesignSystem.radiusSm,
-              ),
-              child: Text(
-                'DEFAULT',
-                style: DesignSystem.labelCaps.copyWith(
-                  color: DesignSystem.onSurfaceVariant,
-                  fontSize: 10,
-                ),
-              ),
-            ),
-          if (!isHardcoded) ...[
-            const SizedBox(width: 8),
+          const SizedBox(width: 8),
             IconButton(
               icon: const Icon(Icons.delete, size: 18, color: DesignSystem.error),
               tooltip: 'Delete lecturer',
@@ -443,7 +422,6 @@ class AdminLecturersPage extends ConsumerWidget {
                 });
               },
             ),
-          ],
         ],
       ),
     );
