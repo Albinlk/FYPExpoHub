@@ -39,8 +39,23 @@ revoke execute on function public.can_publish_fyp_record_to_expo(uuid) from publ
 revoke execute on function public.is_active_profile() from public, anon;
 revoke execute on function public.has_academic_role_for_programme(text, text) from public, anon;
 
--- Unrelated content-scheduler template leftovers (see header).
-revoke execute on function public.get_content_filtered(uuid, text, integer) from public, anon;
-revoke execute on function public.get_dashboard_stats(uuid) from public, anon;
-revoke execute on function public.publish_scheduled_content() from public, anon;
-revoke execute on function public.cleanup_oauth_states() from public, anon;
+-- Unrelated content-scheduler template leftovers (see header). No migration
+-- in this repo creates them — they exist only on the live project — so the
+-- revokes are conditional; unconditional ones aborted a fresh
+-- `supabase db reset` here with 42883 (function does not exist).
+do $$
+declare
+  v_sig text;
+begin
+  foreach v_sig in array array[
+    'public.get_content_filtered(uuid, text, integer)',
+    'public.get_dashboard_stats(uuid)',
+    'public.publish_scheduled_content()',
+    'public.cleanup_oauth_states()'
+  ] loop
+    if to_regprocedure(v_sig) is not null then
+      execute format('revoke execute on function %s from public, anon', v_sig);
+    end if;
+  end loop;
+end;
+$$;
