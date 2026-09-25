@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/student_visit.dart';
+import '../../supabase/supabase_client_provider.dart';
 import '../../utils/fypms_key_normalizer.dart' show normalizeKeys;
 import 'lecturer_providers.dart';
 import 'service_providers.dart';
@@ -7,7 +8,11 @@ import 'service_providers.dart';
 // ==========================================
 // STUDENT VISITS STATE
 // ==========================================
+// Keyed on the signed-in user: RLS scopes what this returns, so a result
+// fetched while signed out (empty) must not be reused after sign-in.
 final allVisitsProvider = FutureProvider<List<StudentVisit>>((ref) async {
+  final uid = ref.watch(currentAuthUserProvider.select((u) => u?.id));
+  if (uid == null) return const [];
   final db = ref.read(supabaseDbServiceProvider);
   final list = await db.getVisitsOnce();
   return list.map((m) => StudentVisit.fromJson(normalizeKeys(m))).toList();

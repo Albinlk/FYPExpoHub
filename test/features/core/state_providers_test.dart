@@ -488,6 +488,34 @@ void main() {
           reason: 'lecturers table must not be queried for anonymous users');
     });
 
+    test('a signed-in user who is NOT a lecturer is not treated as one',
+        () async {
+      final db = _StubDatabaseService();
+      final container = ProviderContainer(
+        overrides: [
+          supabaseDbServiceProvider.overrideWithValue(db),
+          currentAuthUserProvider.overrideWith(
+            (ref) => User(
+              id: 'user-2',
+              email: 'student@student.uitm.edu.my',
+              aud: 'authenticated',
+              appMetadata: const {},
+              userMetadata: const {},
+              createdAt: DateTime(2026, 1, 1).toIso8601String(),
+            ),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final sub = container.listen(lecturerAuthProvider, (_, __) {},
+          fireImmediately: true);
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      expect(container.read(lecturerAuthProvider), isNull,
+          reason: 'only emails with a lecturer profile get the lecturer workspace');
+      sub.close();
+    });
+
     test('signed-in lecturer resolves display name from config', () async {
       final db = _StubDatabaseService();
       final container = _container(db);

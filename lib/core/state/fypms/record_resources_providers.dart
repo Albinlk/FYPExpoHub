@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'user_scope.dart';
 import '../../domain/models/fypms/fyp_correction_item.dart';
 import '../../domain/models/fypms/fyp_deliverable.dart';
 import '../../domain/models/fypms/fyp_form_submission.dart';
@@ -21,6 +22,7 @@ import '../expo/service_providers.dart';
 
 final fypRecordAssignmentsProvider =
     FutureProvider.family<List<FypRecordAssignment>, String>((ref, recordId) async {
+  ref.watch(fypmsUserScopeProvider);
   final db = ref.watch(supabaseDbServiceProvider);
   final data = await db.getAssignmentsForRecordOnce(recordId);
   return data
@@ -30,6 +32,7 @@ final fypRecordAssignmentsProvider =
 
 final fypSupervisionRequestsProvider =
     FutureProvider.family<List<FypSupervisionRequest>, String>((ref, recordId) async {
+  ref.watch(fypmsUserScopeProvider);
   final db = ref.watch(supabaseDbServiceProvider);
   final data = await db.getSupervisionRequestsForRecordOnce(recordId);
   return data
@@ -39,6 +42,7 @@ final fypSupervisionRequestsProvider =
 
 final fypProgressLogsProvider =
     FutureProvider.family<List<FypProgressLog>, String>((ref, recordId) async {
+  ref.watch(fypmsUserScopeProvider);
   final db = ref.watch(supabaseDbServiceProvider);
   final data = await db.getProgressLogsForRecordOnce(recordId);
   return data.map((m) => FypProgressLog.fromJson(normalizeFypmsKeys(m))).toList();
@@ -46,6 +50,7 @@ final fypProgressLogsProvider =
 
 final fypFormSubmissionsProvider =
     FutureProvider.family<List<FypFormSubmission>, String>((ref, recordId) async {
+  ref.watch(fypmsUserScopeProvider);
   final db = ref.watch(supabaseDbServiceProvider);
   final data = await db.getFormSubmissionsForRecordOnce(recordId);
   return data.map((m) => FypFormSubmission.fromJson(normalizeFypmsKeys(m))).toList();
@@ -53,6 +58,7 @@ final fypFormSubmissionsProvider =
 
 final fypReportSubmissionsProvider =
     FutureProvider.family<List<FypReportSubmission>, String>((ref, recordId) async {
+  ref.watch(fypmsUserScopeProvider);
   final db = ref.watch(supabaseDbServiceProvider);
   final data = await db.getReportSubmissionsForRecordOnce(recordId);
   return data.map((m) => FypReportSubmission.fromJson(normalizeFypmsKeys(m))).toList();
@@ -62,6 +68,7 @@ final fypReportSubmissionsProvider =
 /// public Expo Hub `projects` catalogue).
 final fypDeliverablesProvider =
     FutureProvider.family<List<FypDeliverable>, String>((ref, recordId) async {
+  ref.watch(fypmsUserScopeProvider);
   final db = ref.watch(supabaseDbServiceProvider);
   final data = await db.getDeliverablesForRecordOnce(recordId);
   return data.map((m) => FypDeliverable.fromJson(normalizeFypmsKeys(m))).toList();
@@ -70,6 +77,7 @@ final fypDeliverablesProvider =
 /// Latest Lean Canvas revision (F13) for a record, if one exists.
 final fypLeanCanvasProvider =
     FutureProvider.family<FypLeanCanvas?, String>((ref, recordId) async {
+  ref.watch(fypmsUserScopeProvider);
   final db = ref.watch(supabaseDbServiceProvider);
   final data = await db.getLeanCanvasForRecordOnce(recordId);
   if (data == null) return null;
@@ -78,6 +86,7 @@ final fypLeanCanvasProvider =
 
 final fypMilestonesProvider =
     FutureProvider.family<List<FypMilestone>, String>((ref, recordId) async {
+  ref.watch(fypmsUserScopeProvider);
   final db = ref.watch(supabaseDbServiceProvider);
   final data = await db.getMilestonesForRecordOnce(recordId);
   return data.map((m) => FypMilestone.fromJson(normalizeFypmsKeys(m))).toList();
@@ -85,6 +94,7 @@ final fypMilestonesProvider =
 
 final fypCorrectionItemsProvider =
     FutureProvider.family<List<FypCorrectionItem>, String>((ref, recordId) async {
+  ref.watch(fypmsUserScopeProvider);
   final db = ref.watch(supabaseDbServiceProvider);
   final data = await db.getCorrectionItemsForRecordOnce(recordId);
   return data.map((m) => FypCorrectionItem.fromJson(normalizeFypmsKeys(m))).toList();
@@ -92,6 +102,7 @@ final fypCorrectionItemsProvider =
 
 final fypMarksSummariesProvider =
     FutureProvider.family<List<FypMarksSummary>, String>((ref, recordId) async {
+  ref.watch(fypmsUserScopeProvider);
   final db = ref.watch(supabaseDbServiceProvider);
   final data = await db.getMarksSummariesForRecordOnce(recordId);
   return data.map((m) => FypMarksSummary.fromJson(normalizeFypmsKeys(m))).toList();
@@ -99,6 +110,7 @@ final fypMarksSummariesProvider =
 
 final fypExpoPublicationsProvider =
     FutureProvider<List<FypExpoPublication>>((ref) async {
+  ref.watch(fypmsUserScopeProvider);
   final db = ref.watch(supabaseDbServiceProvider);
   final data = await db.getExpoPublicationsOnce();
   return data.map((m) => FypExpoPublication.fromJson(normalizeFypmsKeys(m))).toList();
@@ -106,6 +118,7 @@ final fypExpoPublicationsProvider =
 
 final fypRubricTemplatesProvider =
     FutureProvider<List<FypRubricTemplate>>((ref) async {
+  ref.watch(fypmsUserScopeProvider);
   final db = ref.watch(supabaseDbServiceProvider);
   final data = await db.getRubricTemplatesOnce();
   return data.map((m) => FypRubricTemplate.fromJson(normalizeFypmsKeys(m))).toList();

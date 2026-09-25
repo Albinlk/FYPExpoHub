@@ -59,6 +59,7 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
         setState(() => _isMarking = false);
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() => _isMarking = false);
       final msg = e.toString().contains('already-exists')
           ? 'Visit has already been recorded.'
@@ -100,6 +101,7 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
         setState(() => _isUndoing = false);
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() => _isUndoing = false);
       final msg = e.toString().contains('permission-denied')
           ? 'You are not allowed to cancel this visit.'

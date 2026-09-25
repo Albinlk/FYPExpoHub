@@ -480,6 +480,17 @@ class SupabaseDatabaseService {
     }
   }
 
+  /// Bulk upsert in a single request.
+  Future<void> setAssignments(List<Map<String, dynamic>> rows) async {
+    if (rows.isEmpty) return;
+    try {
+      await _client.from('lecturer_assignments').upsert(rows);
+    } catch (e) {
+      logDebug('Supabase setAssignments error: $e');
+      rethrow;
+    }
+  }
+
   Future<void> setAssignment(String id, Map<String, dynamic> data) async {
     try {
       await _client.from('lecturer_assignments').upsert(data);

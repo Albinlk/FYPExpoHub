@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:fyp_expo_hub/app/router.dart';
+import 'package:fyp_expo_hub/app/router_guards.dart' show safeReturnPath;
 import 'package:fyp_expo_hub/core/supabase/supabase_client_provider.dart';
 import 'package:fyp_expo_hub/core/domain/models/lecturer.dart';
 import 'package:fyp_expo_hub/core/state/state_providers.dart';
@@ -62,6 +63,17 @@ Future<String> _resolve(
   User? user,
   bool isAdmin = false,
   Lecturer? lecturer,
+}) async =>
+    (await _resolveUri(tester,
+            target: target, user: user, isAdmin: isAdmin, lecturer: lecturer))
+        .path;
+
+Future<Uri> _resolveUri(
+  WidgetTester tester, {
+  required String target,
+  User? user,
+  bool isAdmin = false,
+  Lecturer? lecturer,
 }) async {
   tester.view.physicalSize = const Size(1920, 1080);
   tester.view.devicePixelRatio = 1.0;
@@ -85,7 +97,7 @@ Future<String> _resolve(
   for (var i = 0; i < 10; i++) {
     await tester.pump(const Duration(milliseconds: 50));
   }
-  return router.routerDelegate.currentConfiguration.uri.path;
+  return router.routerDelegate.currentConfiguration.uri;
 }
 
 void main() {
@@ -102,6 +114,23 @@ void main() {
     };
   });
   tearDown(() => FlutterError.onError = originalErrorHandler);
+
+  group('safeReturnPath (open-redirect guard)', () {
+    test('accepts same-origin app paths', () {
+      expect(safeReturnPath('/fypms/student'), '/fypms/student');
+      expect(safeReturnPath('/projects?search=ai'), '/projects?search=ai');
+    });
+
+    test('rejects anything that could leave the site', () {
+      expect(safeReturnPath('//evil.example/x'), isNull);
+      expect(safeReturnPath('https://evil.example'), isNull);
+      expect(safeReturnPath(r'/\evil.example'), isNull);
+      expect(safeReturnPath('evil'), isNull);
+      expect(safeReturnPath(null), isNull);
+      // and never loops back to the sign-in page itself
+      expect(safeReturnPath('/admin/sign-in?from=/x'), isNull);
+    });
+  });
 
   group('Admin auth gate', () {
     testWidgets('unauthenticated user hitting /admin routes is sent to sign-in',
@@ -183,6 +212,39 @@ void main() {
           lecturer: _lecturer(),
         ),
         '/lecturer/visits',
+      );
+    });
+
+    testWidgets('signed-in NON-lecturer is kept out of My Visits',
+        (tester) async {
+      // e.g. an FYPMS student — previously every signed-in user counted as
+      // a lecturer and was routed here.
+      expect(
+        await _resolve(
+          tester,
+          target: '/lecturer/visits',
+          user: _user('student@student.uitm.edu.my'),
+        ),
+        '/',
+      );
+    });
+
+    testWidgets('signed-out My Visits goes to sign-in, keeping the deep link',
+        (tester) async {
+      final uri = await _resolveUri(tester, target: '/lecturer/visits/p1');
+      expect(uri.path, '/admin/sign-in');
+      expect(uri.queryParameters['from'], '/lecturer/visits/p1');
+    });
+
+    testWidgets('after sign-in the user lands back on the page they wanted',
+        (tester) async {
+      expect(
+        await _resolve(
+          tester,
+          target: '/admin/sign-in?from=%2Fprojects%3Fsearch%3Dai',
+          user: _user('someone@uitm.edu.my'),
+        ),
+        '/projects',
       );
     });
 

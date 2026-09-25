@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'user_scope.dart';
 import '../../domain/models/fypms/fyp_record.dart';
 import '../../supabase/fypms_database_service.dart';
 import '../../supabase/supabase_client_provider.dart';
@@ -11,6 +12,7 @@ import '../expo/service_providers.dart';
 
 /// All FYP records the current user can see (RLS-scoped).
 final fypRecordsProvider = FutureProvider<List<FypRecord>>((ref) async {
+  ref.watch(fypmsUserScopeProvider);
   final db = ref.watch(supabaseDbServiceProvider);
   final data = await db.getFypRecordsOnce();
   return data.map((m) => FypRecord.fromJson(normalizeFypmsKeys(m))).toList();
@@ -18,6 +20,7 @@ final fypRecordsProvider = FutureProvider<List<FypRecord>>((ref) async {
 
 /// FYP records owned by the current student.
 final myFypRecordsProvider = FutureProvider<List<FypRecord>>((ref) async {
+  ref.watch(fypmsUserScopeProvider);
   final user = ref.watch(currentAuthUserProvider);
   if (user == null) return const [];
   final db = ref.watch(supabaseDbServiceProvider);
@@ -29,6 +32,7 @@ final myFypRecordsProvider = FutureProvider<List<FypRecord>>((ref) async {
 /// Optimized: fetches only assigned ids via `inFilter`, not full table.
 final assignedFypRecordsProvider =
     FutureProvider.family<List<FypRecord>, String?>((ref, role) async {
+  ref.watch(fypmsUserScopeProvider);
   final user = ref.watch(currentAuthUserProvider);
   if (user == null) return const [];
   final db = ref.watch(supabaseDbServiceProvider);
