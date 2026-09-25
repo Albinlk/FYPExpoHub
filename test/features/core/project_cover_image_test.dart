@@ -48,7 +48,7 @@ void main() {
   });
 
   group('ProjectCoverImage widget', () {
-    Future<void> _pump(
+    Future<void> pump(
       WidgetTester tester,
       String? imageUrl, {
       String title = 'AI Health Assistant',
@@ -73,7 +73,7 @@ void main() {
     }
 
   /// Finder for the cover's own CustomPaint (Material injects others).
-  Finder _coverPainter() => find
+  Finder coverPainter() => find
       .descendant(
         of: find.byType(SizedBox),
         matching: find.byType(CustomPaint),
@@ -82,25 +82,25 @@ void main() {
 
     testWidgets('placeholder url renders the generated cover (no network)',
         (tester) async {
-      await _pump(tester, 'assets/images/project_placeholder.jpg');
+      await pump(tester, 'assets/images/project_placeholder.jpg');
       // Generated content shows the title initials ("AH").
       expect(find.text('AH'), findsOneWidget);
-      expect(_coverPainter(), findsOneWidget);
+      expect(coverPainter(), findsOneWidget);
     });
 
     testWidgets('empty url renders the generated cover', (tester) async {
-      await _pump(tester, null);
+      await pump(tester, null);
       expect(find.text('AH'), findsOneWidget);
-      expect(_coverPainter(), findsOneWidget);
+      expect(coverPainter(), findsOneWidget);
     });
 
     testWidgets('different titles produce different initials', (tester) async {
-      await _pump(tester, null, title: 'Machine Learning Router');
+      await pump(tester, null, title: 'Machine Learning Router');
       expect(find.text('ML'), findsOneWidget);
     });
 
     testWidgets('single-word title uses the first two letters', (tester) async {
-      await _pump(tester, null, title: 'Jelajah');
+      await pump(tester, null, title: 'Jelajah');
       expect(find.text('JE'), findsOneWidget);
     });
 
@@ -108,12 +108,12 @@ void main() {
         (tester) async {
       // Two titles in the same category should hash to different painter
       // seeds -> distinct geometry even when palettes collide.
-      await _pump(tester, null, title: 'Alpha Project One');
+      await pump(tester, null, title: 'Alpha Project One');
       final painter1 =
-          tester.widget<CustomPaint>(_coverPainter()).painter;
-      await _pump(tester, null, title: 'Beta Project Two');
+          tester.widget<CustomPaint>(coverPainter()).painter;
+      await pump(tester, null, title: 'Beta Project Two');
       final painter2 =
-          tester.widget<CustomPaint>(_coverPainter()).painter;
+          tester.widget<CustomPaint>(coverPainter()).painter;
       expect(painter1.hashCode, isNot(painter2.hashCode));
     });
   });

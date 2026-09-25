@@ -313,7 +313,7 @@ class SupabaseDatabaseService {
     required List<Map<String, dynamic>> privacySkips,
   }) async {
     try {
-      await _client.rpc('stage_import', params: {
+      await _client.rpc<dynamic>('stage_import', params: {
         'p_import': importRow,
         'p_schedule_candidates': scheduleCandidates,
         'p_award_candidates': awardCandidates,

@@ -53,7 +53,7 @@ class _AdminFeedbackPageState extends ConsumerState<AdminFeedbackPage> {
     final statusController = TextEditingController(text: entry.status);
     final noteController = TextEditingController(text: entry.adminNote ?? '');
 
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (dialogContext) {
         final isDesktop = MediaQuery.of(context).size.width >= 768;

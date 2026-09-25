@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:fyp_expo_hub/core/domain/models/project.dart';
 import 'package:fyp_expo_hub/core/state/state_providers.dart';
-import 'package:fyp_expo_hub/core/supabase/supabase_client_provider.dart';
 import 'package:fyp_expo_hub/core/supabase/supabase_database_service.dart';
 import 'package:fyp_expo_hub/core/widgets/collapsible_filter_panel.dart';
 import 'package:fyp_expo_hub/features/junior_project_guide/presentation/pages/junior_project_browser_page.dart';
@@ -31,7 +30,7 @@ void main() {
   });
   tearDown(() => FlutterError.onError = originalErrorHandler);
 
-  Future<void> _pumpMobile(WidgetTester tester, Widget child) async {
+  Future<void> pumpMobile(WidgetTester tester, Widget child) async {
     tester.view.physicalSize = const Size(390, 844);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -39,10 +38,10 @@ void main() {
     final router = GoRouter(
       initialLocation: '/',
       routes: [
-        GoRoute(path: '/', builder: (_, __) => child),
+        GoRoute(path: '/', builder: (_, _) => child),
         GoRoute(
           path: '/projects',
-          builder: (_, __) => child,
+          builder: (_, _) => child,
         ),
       ],
     );
@@ -60,7 +59,7 @@ void main() {
   }
 
   group('CollapsibleFilterPanel (unit)', () {
-    Future<void> _pumpPanel(
+    Future<void> pumpPanel(
       WidgetTester tester,
       Size viewport,
     ) async {
@@ -100,7 +99,7 @@ void main() {
     testWidgets(
         'phone viewport (390px): fields stack FULL WIDTH — no crushed '
         'two-column dropdowns', (tester) async {
-      await _pumpPanel(tester, const Size(390, 844));
+      await pumpPanel(tester, const Size(390, 844));
 
       // All three fields visible.
       expect(find.text('Field A'), findsOneWidget);
@@ -118,7 +117,7 @@ void main() {
     });
 
     testWidgets('wide viewport (600px): fields pair two-up', (tester) async {
-      await _pumpPanel(tester, const Size(600, 900));
+      await pumpPanel(tester, const Size(600, 900));
 
       expect(find.text('Field A'), findsOneWidget);
       expect(find.text('Field B'), findsOneWidget);
@@ -154,7 +153,7 @@ void main() {
 
   testWidgets('JuniorProjectBrowserPage mobile: collapsed by default with pills visible',
       (tester) async {
-    await _pumpMobile(tester, const JuniorProjectBrowserPage());
+    await pumpMobile(tester, const JuniorProjectBrowserPage());
 
     // Search + section pills + toggle visible. (The list rows below also
     // carry CSP650/CSP600 section badges, so findsWidgets is correct.)
@@ -169,7 +168,7 @@ void main() {
 
   testWidgets('JuniorProjectBrowserPage mobile: toggle expands and shows filters',
       (tester) async {
-    await _pumpMobile(tester, const JuniorProjectBrowserPage());
+    await pumpMobile(tester, const JuniorProjectBrowserPage());
 
     await tester.tap(find.text('Filters'));
     await tester.pumpAndSettle();
@@ -182,7 +181,7 @@ void main() {
 
   testWidgets('ProjectsPage mobile: collapsed by default, chip visible, dropdowns hidden',
       (tester) async {
-    await _pumpMobile(tester, const ProjectsPage());
+    await pumpMobile(tester, const ProjectsPage());
 
     expect(find.text('Industry Candidate'), findsOneWidget);
     expect(find.text('Filters'), findsOneWidget);
@@ -214,7 +213,7 @@ void main() {
 
   testWidgets('BoothsPage mobile: Day stays visible, Venue/Program collapse',
       (tester) async {
-    await _pumpMobile(tester, const BoothsPage());
+    await pumpMobile(tester, const BoothsPage());
 
     // Day dropdown (the page's organizing principle) stays visible.
     expect(find.text('Day'), findsOneWidget);

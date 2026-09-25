@@ -109,7 +109,7 @@ class StudentReportsPage extends ConsumerWidget {
     PlatformFile? pickedFile;
     var isUploading = false;
 
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (dialogContext) {
         return StatefulBuilder(

@@ -20,6 +20,11 @@ import '../../../core/utils/logger.dart';
 ///   category, team_display_names (semicolon-separated),
 ///   examiner, session, time_slot, student_id
 class Csp600CsvLoader {
+  /// CSP600 proposals exist only in the CSV (see the synthetic `csp600-{row}`
+  /// ids below), never in the projects table that ProjectDetailPage reads —
+  /// so they have no `/projects/<slug>` page to link to.
+  static bool isCsp600(Project p) => p.id.startsWith('csp600-');
+
   static const csvAssetPath = 'assets/data/csp600-proposals.csv';
   static const storageBucket = 'csp600-proposals';
   static const storageObject = 'csp600-proposals.csv';

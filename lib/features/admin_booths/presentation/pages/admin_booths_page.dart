@@ -57,7 +57,7 @@ class AdminBoothsPage extends ConsumerWidget {
                       Text('Allocated Project:', style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold)),
                       const SizedBox(height: DesignSystem.spaceSm),
                       DropdownButtonFormField<String?>(
-                        value: selectedProjectId,
+                        initialValue: selectedProjectId,
                         decoration: const InputDecoration(contentPadding: EdgeInsets.symmetric(horizontal: 12)),
                         hint: const Text('No Project Allocated / Vacant'),
                         items: [

@@ -275,9 +275,13 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
               label: Text(opt, style: TextStyle(fontSize: 11, color: selected ? Colors.white : DesignSystem.onSurfaceVariant)),
               selected: selected,
               onSelected: (_) => setState(() {
-                if (label.contains('Role')) _roleFilter = opt;
-                else if (label.contains('Day')) _dayFilter = opt;
-                else _statusFilter = opt;
+                if (label.contains('Role')) {
+                  _roleFilter = opt;
+                } else if (label.contains('Day')) {
+                  _dayFilter = opt;
+                } else {
+                  _statusFilter = opt;
+                }
               }),
               selectedColor: label.contains('Role') ? DesignSystem.primary : label.contains('Day') ? DesignSystem.secondary : DesignSystem.tertiary,
               visualDensity: VisualDensity.compact,

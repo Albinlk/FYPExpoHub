@@ -56,7 +56,7 @@ class AdminAwardsPage extends ConsumerWidget {
                       Text('Winning Project:', style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold)),
                       const SizedBox(height: DesignSystem.spaceSm),
                       DropdownButtonFormField<String?>(
-                        value: selectedProjectId,
+                        initialValue: selectedProjectId,
                         decoration: const InputDecoration(contentPadding: EdgeInsets.symmetric(horizontal: 12)),
                         hint: const Text('Select Project'),
                         items: [

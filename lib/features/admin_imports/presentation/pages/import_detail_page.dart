@@ -142,7 +142,7 @@ class _ImportDetailPageState extends ConsumerState<ImportDetailPage> {
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
                           itemCount: list.length,
-                          separatorBuilder: (_, __) => const Divider(),
+                          separatorBuilder: (_, _) => const Divider(),
                           itemBuilder: (context, i) {
                             final c = list[i];
                             final idKey = 'sch_${c.id}';
@@ -193,7 +193,7 @@ class _ImportDetailPageState extends ConsumerState<ImportDetailPage> {
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
                           itemCount: list.length,
-                          separatorBuilder: (_, __) => const Divider(),
+                          separatorBuilder: (_, _) => const Divider(),
                           itemBuilder: (context, i) {
                             final c = list[i];
                             final idKey = 'aw_${c.id}';

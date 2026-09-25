@@ -69,7 +69,7 @@ void main() {
 
       expect(template.rubricCode, 'PROPOSAL_SUPERVISOR');
       expect(template.formCode, 'F7');
-      expect(template.criteria, isA<List>());
+      expect(template.criteria, isA<List<dynamic>>());
       expect(template.isActive, isTrue);
     });
   });

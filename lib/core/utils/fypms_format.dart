@@ -96,19 +96,16 @@ class FypStatusBadge extends StatelessWidget {
   });
 
   /// Badge for the 17 fyp_records workflow statuses.
-  const FypStatusBadge.workflow(String status, {super.key})
-      : status = status,
-        colorFor = workflowStatusColor;
+  const FypStatusBadge.workflow(this.status, {super.key})
+      : colorFor = workflowStatusColor;
 
   /// Badge for milestone statuses.
-  const FypStatusBadge.milestone(String status, {super.key})
-      : status = status,
-        colorFor = milestoneStatusColor;
+  const FypStatusBadge.milestone(this.status, {super.key})
+      : colorFor = milestoneStatusColor;
 
   /// Badge for correction statuses.
-  const FypStatusBadge.correction(String status, {super.key})
-      : status = status,
-        colorFor = correctionStatusColor;
+  const FypStatusBadge.correction(this.status, {super.key})
+      : colorFor = correctionStatusColor;
 
   @override
   Widget build(BuildContext context) {

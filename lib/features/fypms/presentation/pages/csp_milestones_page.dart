@@ -58,7 +58,7 @@ class _CspMilestonesPageState extends ConsumerState<CspMilestonesPage> {
                     Text('Record: ', style: DesignSystem.bodyMd),
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        value: selected.id,
+                        initialValue: selected.id,
                         isExpanded: true,
                         decoration: const InputDecoration(
                           isDense: true,
@@ -246,8 +246,9 @@ class _MilestonesList extends ConsumerWidget {
                             firstDate: DateTime(2020),
                             lastDate: DateTime(2100),
                           );
-                          if (picked != null)
+                          if (picked != null) {
                             setState(() => selectedDate = picked);
+                          }
                         },
                       ),
                     ),
@@ -301,8 +302,9 @@ class _MilestonesList extends ConsumerWidget {
                               targetDate: selectedDate,
                               status: status,
                             );
-                            if (dialogContext.mounted)
+                            if (dialogContext.mounted) {
                               Navigator.pop(dialogContext);
+                            }
                             ref.invalidate(fypMilestonesProvider(recordId));
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(

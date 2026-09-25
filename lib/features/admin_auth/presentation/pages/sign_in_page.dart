@@ -5,7 +5,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/supabase/supabase_client_provider.dart';
-import '../../../../core/state/state_providers.dart';
 
 void _goToMainSite() {
   launchUrlString('https://fskmjasinfypexhibition.site/');

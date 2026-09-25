@@ -3,12 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:fyp_expo_hub/core/domain/models/announcement.dart';
 import 'package:fyp_expo_hub/core/domain/models/event.dart';
 import 'package:fyp_expo_hub/core/domain/models/project.dart';
 import 'package:fyp_expo_hub/core/domain/models/schedule_item.dart';
 import 'package:fyp_expo_hub/core/state/state_providers.dart';
-import 'package:fyp_expo_hub/core/supabase/supabase_client_provider.dart';
 import 'package:fyp_expo_hub/core/supabase/supabase_database_service.dart';
 import 'package:fyp_expo_hub/features/public_home/presentation/pages/home_page.dart';
 import 'package:fyp_expo_hub/features/public_schedule/presentation/pages/schedule_page.dart';
@@ -30,7 +28,7 @@ void main() {
   });
   tearDown(() => FlutterError.onError = originalErrorHandler);
 
-  Future<void> _pumpMobile(
+  Future<void> pumpMobile(
     WidgetTester tester,
     Widget child, {
     bool concludedEvent = false,
@@ -42,7 +40,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     final router = GoRouter(
       initialLocation: '/',
-      routes: [GoRoute(path: '/', builder: (_, __) => child)],
+      routes: [GoRoute(path: '/', builder: (_, _) => child)],
     );
     final db = _StubDb()
       ..announcements = emptyData ? <Map<String, dynamic>>[] : null
@@ -65,7 +63,7 @@ void main() {
   }
 
   testWidgets('home hero detail labels are centered on mobile', (tester) async {
-    await _pumpMobile(tester, const HomePage());
+    await pumpMobile(tester, const HomePage());
 
     final dateLabel = tester.widget<Text>(find.text('DATE').first);
     expect(dateLabel.textAlign, TextAlign.center);
@@ -75,7 +73,7 @@ void main() {
   });
 
   testWidgets('concluded badge text centers and wraps on mobile', (tester) async {
-    await _pumpMobile(tester, const HomePage(), concludedEvent: true);
+    await pumpMobile(tester, const HomePage(), concludedEvent: true);
 
     final badge = tester
         .widget<Text>(find.text('Exhibition Concluded — Thank You for Visiting').first);
@@ -86,7 +84,7 @@ void main() {
 
   testWidgets('mobile detail-box separators span the full box width',
       (tester) async {
-    await _pumpMobile(tester, const HomePage());
+    await pumpMobile(tester, const HomePage());
 
     // The two hairline Containers in the mobile details box.
     final lines = tester
@@ -106,7 +104,7 @@ void main() {
 
   testWidgets('Featured Projects header is centered on mobile, left on desktop title',
       (tester) async {
-    await _pumpMobile(tester, const HomePage());
+    await pumpMobile(tester, const HomePage());
 
     final title = tester.widget<Text>(find.text('Featured Projects').first);
     expect(title.textAlign, TextAlign.center);
@@ -114,7 +112,7 @@ void main() {
 
   testWidgets('schedule day tabs are not scrollable on mobile (even split)',
       (tester) async {
-    await _pumpMobile(tester, const SchedulePage());
+    await pumpMobile(tester, const SchedulePage());
 
     final tabBar = tester.widget<TabBar>(find.byType(TabBar));
     expect(tabBar.isScrollable, isFalse);

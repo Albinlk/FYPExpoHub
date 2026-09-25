@@ -82,7 +82,7 @@ class _AdminEventPageState extends ConsumerState<AdminEventPage> {
     // Refill from the provider when the live event arrives — but never over
     // the admin's unsaved edits. (This used to re-run on EVERY frame, which
     // wiped whatever was being typed whenever the page rebuilt.)
-    ref.listen(eventProvider, (_, __) {
+    ref.listen(eventProvider, (_, _) {
       if (!_dirty) _loadEvent();
     });
 

@@ -121,7 +121,7 @@ class StudentDeliverablesPage extends ConsumerWidget {
     FypRecord record,
     ({int completed, int total, bool ready}) readiness,
   ) {
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (dialogContext) {
         final isDesktop = MediaQuery.of(context).size.width >= 768;
@@ -203,7 +203,7 @@ class StudentDeliverablesPage extends ConsumerWidget {
     final fileUrlController = TextEditingController();
     String? selectedType = fypmsDeliverableChecklist.first.type;
 
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (dialogContext) {
         return StatefulBuilder(

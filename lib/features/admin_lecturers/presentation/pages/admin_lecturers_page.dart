@@ -13,7 +13,7 @@ class AdminLecturersPage extends ConsumerWidget {
     final nameController = TextEditingController();
     var creating = false;
 
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (dialogContext) {
         return StatefulBuilder(
@@ -126,7 +126,7 @@ class AdminLecturersPage extends ConsumerWidget {
     final name = (lecturer['displayName'] ?? lecturer['display_name']) as String? ?? '';
     final uid = (lecturer['id'] ?? lecturer['uid']) as String? ?? '';
 
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(

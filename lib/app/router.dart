@@ -68,6 +68,7 @@ import '../features/public_projects/presentation/pages/project_detail_page.dart'
 import '../features/public_projects/presentation/pages/projects_page.dart';
 import '../features/public_schedule/presentation/pages/schedule_page.dart';
 import '../features/junior_project_guide/presentation/pages/junior_project_browser_page.dart';
+import '../features/junior_project_guide/presentation/pages/similar_projects_page.dart';
 import 'widgets/admin_shell.dart';
 import 'widgets/fypms_shell.dart';
 import 'widgets/public_shell.dart';
@@ -78,7 +79,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
   // navigation (a user whose session ended could otherwise stay on an
   // admin page).
   final authChanges = ValueNotifier<int>(0);
-  ref.listen(currentAuthUserProvider.select((u) => u?.id), (_, __) {
+  ref.listen(currentAuthUserProvider.select((u) => u?.id), (_, _) {
     authChanges.value++;
   });
   ref.onDispose(authChanges.dispose);
@@ -117,6 +118,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/projects/junior-guide',
             builder: (context, state) => const JuniorProjectBrowserPage(),
+            routes: [
+              GoRoute(
+                path: 'similar/:projectId',
+                builder: (context, state) => SimilarProjectsPage(
+                  projectId: state.pathParameters['projectId'] ?? '',
+                ),
+              ),
+            ],
           ),
           GoRoute(
             path: '/booths',

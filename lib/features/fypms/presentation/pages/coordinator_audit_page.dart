@@ -84,7 +84,7 @@ class CoordinatorAuditPage extends ConsumerWidget {
 
   String _formatDate(DateTime dt) {
     final local = dt.toLocal();
-    final two = (int v) => v.toString().padLeft(2, '0');
+    String two(int v) => v.toString().padLeft(2, '0');
     return '${two(local.day)}-${two(local.month)}-${local.year} '
         '${two(local.hour)}:${two(local.minute)}';
   }

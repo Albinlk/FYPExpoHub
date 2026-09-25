@@ -57,7 +57,7 @@ class LecturerAuthNotifier extends Notifier<Lecturer?> {
     );
     // Re-resolve the display name once the config arrives (only possible
     // when signed in — the gated provider is a no-op otherwise).
-    ref.listen(_lecturerConfigWhenSignedIn, (_, __) {
+    ref.listen(_lecturerConfigWhenSignedIn, (_, _) {
       state = _evaluate(user: ref.read(currentAuthUserProvider));
     });
     return initial;

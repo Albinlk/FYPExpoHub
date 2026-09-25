@@ -23,8 +23,10 @@ const LONG_CACHED = [
   /\/flutter\.js$/,
   /\/flutter_bootstrap\.js$/,
   /\/flutter_service_worker\.js$/,
-  // Fonts
+  // Fonts: splash woff2 + the app's bundled TTFs (and FontManifest)
   /\/fonts\/[^/]+\.woff2$/,
+  /\/assets\/assets\/fonts\/[^/]+\.ttf$/,
+  /\/assets\/FontManifest\.json$/,
   // Datasets + metadata
   /\/assets\/assets\/data\/[^/]+$/,
   /\/manifest\.json$/,

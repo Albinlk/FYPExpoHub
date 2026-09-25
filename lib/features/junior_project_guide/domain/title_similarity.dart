@@ -39,7 +39,7 @@ class TitleSimilarity {
 
   /// Whether [title] is placeholder text rather than a real project title.
   /// Confirmed against the real dataset: 35/103 CSP600 CSV rows (34%) have
-  /// title literally set to "CS251 PROPOSAL - <student name>", and 2
+  /// title literally set to `CS251 PROPOSAL - <student name>`, and 2
   /// CSP650 projects are "TBD (Project Title Pending)" — neither carries
   /// any real topical information, so comparing them would either produce
   /// meaningless matches (two students' names sharing common words) or

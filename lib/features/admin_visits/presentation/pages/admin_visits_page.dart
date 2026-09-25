@@ -372,8 +372,11 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
               label: Text(opt, style: TextStyle(fontSize: 11, color: selected ? Colors.white : DesignSystem.onSurfaceVariant)),
               selected: selected,
               onSelected: (_) => setState(() {
-                if (label == 'Role') _roleFilter = opt;
-                else _statusFilter = opt;
+                if (label == 'Role') {
+                  _roleFilter = opt;
+                } else {
+                  _statusFilter = opt;
+                }
               }),
               selectedColor: DesignSystem.primary,
               visualDensity: VisualDensity.compact,

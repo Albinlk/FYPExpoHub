@@ -12,7 +12,7 @@ class SupabaseRpcService {
     String? visitNote,
   }) async {
     try {
-      final response = await _client.rpc(
+      final response = await _client.rpc<dynamic>(
         'mark_student_project_visited',
         params: {
           'p_assignment_id': assignmentId,
@@ -33,7 +33,7 @@ class SupabaseRpcService {
     required String reason,
   }) async {
     try {
-      final response = await _client.rpc(
+      final response = await _client.rpc<dynamic>(
         'void_student_project_visit',
         params: {
           'p_visit_id': visitId,
@@ -52,7 +52,7 @@ class SupabaseRpcService {
     required String importId,
   }) async {
     try {
-      final response = await _client.rpc(
+      final response = await _client.rpc<dynamic>(
         'publish_approved_import_changes',
         params: {
           'p_import_id': importId,
@@ -72,7 +72,7 @@ class SupabaseRpcService {
     required String displayName,
   }) async {
     try {
-      final response = await _client.rpc(
+      final response = await _client.rpc<dynamic>(
         'create_lecturer_account_profile',
         params: {
           'p_user_id': userId,
@@ -93,7 +93,7 @@ class SupabaseRpcService {
     required Map<String, dynamic> payload,
   }) async {
     try {
-      final response = await _client.rpc(
+      final response = await _client.rpc<dynamic>(
         'update_event_configuration',
         params: {
           'p_event_id': eventId,

@@ -200,7 +200,7 @@ String? _fypmsWorkspaceForPath(String path) {
 
 /// Whether the given role codes permit access to the given workspace.
 bool _roleAllowsWorkspace(List<String> roles, String workspace) {
-  final has = (String code) => roles.contains(code);
+  bool has(String code) => roles.contains(code);
   switch (workspace) {
     case 'student':
       return has('student');

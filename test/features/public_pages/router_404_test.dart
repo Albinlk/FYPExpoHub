@@ -22,7 +22,7 @@ void main() {
   });
   tearDown(() => FlutterError.onError = originalErrorHandler);
 
-  Future<GoRouter> _pumpWithBadUri(WidgetTester tester, String uri) async {
+  Future<GoRouter> pumpWithBadUri(WidgetTester tester, String uri) async {
     tester.view.physicalSize = const Size(390, 844);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -56,7 +56,7 @@ void main() {
   }
 
   testWidgets('unknown URL renders branded 404 with actions', (tester) async {
-    final router = await _pumpWithBadUri(tester, '/does-not-exist');
+    final router = await pumpWithBadUri(tester, '/does-not-exist');
 
     expect(find.text('Page Not Found'), findsOneWidget);
     expect(
@@ -73,14 +73,14 @@ void main() {
   });
 
   testWidgets('deeply unknown nested URL also 404s', (tester) async {
-    await _pumpWithBadUri(tester, '/projects/abc/xyz/nested');
+    await pumpWithBadUri(tester, '/projects/abc/xyz/nested');
 
     expect(find.text('Page Not Found'), findsOneWidget);
   });
 
   testWidgets('route titles map paths to labels', (tester) async {
     // Pure logic check of the observer's mapping.
-    final router = await _pumpWithBadUri(tester, '/');
+    final router = await pumpWithBadUri(tester, '/');
     expect(router.routerDelegate.currentConfiguration.uri.path, '/');
   });
 }

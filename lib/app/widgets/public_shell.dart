@@ -221,7 +221,7 @@ class _MobileBottomNavBar extends StatelessWidget {
   }
 
   void _showMobileMenu(BuildContext context) {
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,

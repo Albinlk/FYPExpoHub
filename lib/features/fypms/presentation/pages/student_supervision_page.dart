@@ -151,7 +151,7 @@ class StudentSupervisionPage extends ConsumerWidget {
                           textAlign: TextAlign.center,
                         ),
                         data: (supervisors) => DropdownButtonFormField<String>(
-                          value: selectedSupervisorId,
+                          initialValue: selectedSupervisorId,
                           isExpanded: true,
                           decoration: const InputDecoration(
                             labelText: 'Preferred Supervisor (optional)',

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/project.dart';
 import '../../../../core/state/state_providers.dart';
+import '../../../../core/widgets/project_cover_image.dart';
 
 class ProjectDetailPage extends ConsumerStatefulWidget {
   final String slug;
@@ -23,8 +24,11 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
     final from = GoRouterState.of(context).uri.queryParameters['from'];
     if (from == 'lecturer') {
       context.go('/lecturer');
-    } else {
+    } else if (context.canPop()) {
       context.pop();
+    } else {
+      // Opened directly (shared link / refresh): nothing to pop back to.
+      context.go('/projects');
     }
   }
 
@@ -54,6 +58,22 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
           ref.read(projectVisitCountsProvider.notifier).recordVisit(project.id);
         }
       });
+    }
+
+    // Nothing loaded yet (refreshed deep link): the list is filled first by
+    // the bundled fallback, then live rows — so an empty list means
+    // "loading", not "not found".
+    if (project == null && allProjects.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            tooltip: 'Back',
+            onPressed: () => _goBack(context),
+          ),
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      );
     }
 
     if (project == null) {
@@ -99,22 +119,19 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Cover Image
+            // Same cached, decode-size-capped cover (with the generated
+            // fallback) the catalogue cards use, instead of a raw
+            // Image.network that re-downloaded and fully decoded the image.
             ClipRRect(
               borderRadius: DesignSystem.radiusLg,
-              child: Image.network(
-                project.coverImageUrl,
-                fit: BoxFit.cover,
+              child: SizedBox(
                 width: double.infinity,
                 height: 200,
-                errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return Container(
-                    height: 200,
-                    color: DesignSystem.primary.withValues(alpha: 0.04),
-                    child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-                  );
-                },
+                child: ProjectCoverImage(
+                  title: project.title,
+                  category: project.category,
+                  imageUrl: project.coverImageUrl,
+                ),
               ),
             ),
             const SizedBox(height: DesignSystem.spaceLg),
@@ -268,7 +285,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                       ],
                     ),
                   );
-                }).toList(),
+                }),
                 const Divider(height: 24),
                 Row(
                   children: const [

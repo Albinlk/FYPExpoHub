@@ -278,7 +278,7 @@ class CoordinatorPresentationsPage extends ConsumerWidget {
 
   String _formatTime(DateTime dt) {
     final local = dt.toLocal();
-    final two = (int v) => v.toString().padLeft(2, '0');
+    String two(int v) => v.toString().padLeft(2, '0');
     return '${two(local.hour)}:${two(local.minute)}';
   }
 }

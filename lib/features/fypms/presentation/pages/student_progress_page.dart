@@ -117,7 +117,7 @@ class StudentProgressPage extends ConsumerWidget {
         ? 1
         : ((DateTime.now().difference(DateTime(DateTime.now().year, 3, 1)).inDays / 7).floor() + 1).clamp(1, 16);
 
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (dialogContext) {
         return StatefulBuilder(

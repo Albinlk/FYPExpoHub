@@ -120,7 +120,7 @@ class _RequestCardState extends ConsumerState<_RequestCard> {
             ),
             if (record != null)
               Text(
-                '${record!.currentCourseCode} | ${record!.programmeCode}',
+                '${record.currentCourseCode} | ${record.programmeCode}',
                 style: DesignSystem.bodySm,
               ),
             const SizedBox(height: DesignSystem.spaceSm),
