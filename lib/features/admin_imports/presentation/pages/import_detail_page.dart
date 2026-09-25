@@ -33,15 +33,17 @@ class _ImportDetailPageState extends ConsumerState<ImportDetailPage> {
 
     try {
       final db = ref.read(supabaseDbServiceProvider);
+      // Keys are 'sch_<uuid>' / 'aw_<uuid>' (see the two list builders);
+      // the prefix carries the candidate type, the rest is the row id.
       final decisionList = _decisions.entries.map((e) {
+        final isSchedule = e.key.startsWith('sch_');
         return {
           'id': const Uuid().v4(),
           'import_id': widget.importId,
-          'candidate_id': e.key,
-          'candidate_type': e.key.startsWith('sch_') ? 'schedule' : 'award',
+          'candidate_id': e.key.substring(isSchedule ? 4 : 3),
+          'candidate_type': isSchedule ? 'schedule' : 'award',
           'action': e.value,
-          'decided_by': user.id,
-          'created_at': DateTime.now().toIso8601String(),
+          'reviewed_by': user.id,
         };
       }).toList();
 
@@ -143,7 +145,7 @@ class _ImportDetailPageState extends ConsumerState<ImportDetailPage> {
                           separatorBuilder: (_, __) => const Divider(),
                           itemBuilder: (context, i) {
                             final c = list[i];
-                            final idKey = c.id;
+                            final idKey = 'sch_${c.id}';
                             final currentDecision = _decisions[idKey] ?? 'publish';
                             if (!_decisions.containsKey(idKey)) {
                               _decisions[idKey] = 'publish';
@@ -194,7 +196,7 @@ class _ImportDetailPageState extends ConsumerState<ImportDetailPage> {
                           separatorBuilder: (_, __) => const Divider(),
                           itemBuilder: (context, i) {
                             final c = list[i];
-                            final idKey = c.id;
+                            final idKey = 'aw_${c.id}';
                             final currentDecision = _decisions[idKey] ?? 'publish';
                             if (!_decisions.containsKey(idKey)) {
                               _decisions[idKey] = 'publish';

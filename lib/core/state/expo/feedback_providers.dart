@@ -1,25 +1,40 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/feedback_entry.dart';
+import '../../supabase/row_mappers.dart';
 import '../../supabase/supabase_client_provider.dart';
-import '../../utils/fypms_key_normalizer.dart' show normalizeKeys;
 import '../../utils/logger.dart';
+import 'optimistic_list.dart';
 import 'service_providers.dart';
 
 // ==========================================
 // FEEDBACK ENTRIES STATE
 // ==========================================
-class FeedbackEntriesNotifier extends Notifier<List<FeedbackEntry>> {
+class FeedbackEntriesNotifier extends Notifier<List<FeedbackEntry>>
+    with OptimisticList<FeedbackEntry> {
   @override
   List<FeedbackEntry> build() {
     _loadFeedback();
     return [];
   }
 
+  List<FeedbackEntry> _parse(List<Map<String, dynamic>> rows) {
+    final out = <FeedbackEntry>[];
+    for (final m in rows) {
+      try {
+        out.add(feedbackFromRow(m));
+      } catch (e) {
+        logDebug('Skipping unparseable feedback row ${m['id']}: $e');
+      }
+    }
+    return out;
+  }
+
   void _loadFeedback() async {
     try {
-      final db = ref.read(supabaseDbServiceProvider);
-      final data = await db.getFeedbackEntriesOnce();
-      state = data.map((m) => FeedbackEntry.fromJson(normalizeKeys(m))).toList();
+      await loadRemote(() async {
+        final db = ref.read(supabaseDbServiceProvider);
+        return _parse(await db.getFeedbackEntriesOnce());
+      });
     } catch (e) {
       logDebug('Feedback load warning: $e');
     }
@@ -28,50 +43,51 @@ class FeedbackEntriesNotifier extends Notifier<List<FeedbackEntry>> {
   Future<void> refresh() async {
     try {
       final db = ref.read(supabaseDbServiceProvider);
-      final data = await db.getFeedbackEntriesOnce();
-      state = data.map((m) => FeedbackEntry.fromJson(normalizeKeys(m))).toList();
+      state = _parse(await db.getFeedbackEntriesOnce());
     } catch (e) {
       logDebug('Feedback refresh failed: $e');
     }
   }
 
-  void addFeedbackEntry(FeedbackEntry entry) {
-    state = [entry, ...state];
-    ref.read(supabaseDbServiceProvider).setFeedbackEntry(entry.id, entry.toJson());
+  /// A visitor's submission. Awaited so the form can tell the visitor
+  /// whether it actually arrived; only the columns visitors may set are
+  /// sent (see [feedbackSubmissionRow]).
+  Future<void> submit(FeedbackEntry entry) async {
+    final db = ref.read(supabaseDbServiceProvider);
+    final eventId = await db.resolveEventId(entry.eventId);
+    await db.submitFeedbackEntry(feedbackSubmissionRow(entry, eventId: eventId));
   }
 
-  void updateFeedbackEntry(FeedbackEntry updated) {
+  Future<void> _save(FeedbackEntry f) async {
+    final db = ref.read(supabaseDbServiceProvider);
+    final eventId =
+        f.eventId.isEmpty ? null : await db.resolveEventId(f.eventId);
+    await db.setFeedbackEntry(f.id, feedbackToRow(f, eventId: eventId));
+  }
+
+  Future<void> updateFeedbackEntry(FeedbackEntry updated) {
     final data = updated.copyWith(updatedAt: DateTime.now());
-    state = [
-      for (final f in state)
-        if (f.id == updated.id) data else f,
-    ];
-    ref.read(supabaseDbServiceProvider).setFeedbackEntry(updated.id, data.toJson());
+    return commit(
+      [for (final f in state) if (f.id == updated.id) data else f],
+      () => _save(data),
+    );
   }
 
-  void deleteFeedbackEntry(String id) {
-    state = state.where((f) => f.id != id).toList();
-    ref.read(supabaseDbServiceProvider).deleteFeedbackEntry(id);
-  }
+  Future<void> deleteFeedbackEntry(String id) => commit(
+        state.where((f) => f.id != id).toList(),
+        () => ref.read(supabaseDbServiceProvider).deleteFeedbackEntry(id),
+      );
 
-  void setStatus(String id, String status) {
+  Future<void> setStatus(String id, String status) async {
     final idx = state.indexWhere((f) => f.id == id);
     if (idx == -1) return;
-    final updated = state[idx].copyWith(
-      status: status,
-      updatedAt: DateTime.now(),
-    );
-    updateFeedbackEntry(updated);
+    await updateFeedbackEntry(state[idx].copyWith(status: status));
   }
 
-  void setAdminNote(String id, String note) {
+  Future<void> setAdminNote(String id, String note) async {
     final idx = state.indexWhere((f) => f.id == id);
     if (idx == -1) return;
-    final updated = state[idx].copyWith(
-      adminNote: note,
-      updatedAt: DateTime.now(),
-    );
-    updateFeedbackEntry(updated);
+    await updateFeedbackEntry(state[idx].copyWith(adminNote: note));
   }
 }
 

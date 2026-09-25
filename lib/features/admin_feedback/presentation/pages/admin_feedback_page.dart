@@ -4,6 +4,7 @@ import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/feedback_entry.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/utils/download_util.dart';
+import '../../../../core/widgets/admin_actions.dart';
 import '../widgets/feedback_csv_export.dart';
 
 class AdminFeedbackPage extends ConsumerStatefulWidget {
@@ -106,28 +107,33 @@ class _AdminFeedbackPageState extends ConsumerState<AdminFeedbackPage> {
               child: const Text('Close'),
             ),
             TextButton(
-              onPressed: () {
-                ref.read(feedbackEntriesProvider.notifier).deleteFeedbackEntry(entry.id);
-                Navigator.of(dialogContext).pop();
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Feedback deleted.')),
-                  );
-                }
+              onPressed: () async {
+                if (!await confirmDelete(dialogContext, 'this feedback')) return;
+                if (!dialogContext.mounted) return;
+                final ok = await runAdminWrite(
+                  dialogContext,
+                  () => ref.read(feedbackEntriesProvider.notifier).deleteFeedbackEntry(entry.id),
+                  success: 'Feedback deleted.',
+                );
+                if (ok && dialogContext.mounted) Navigator.of(dialogContext).pop();
               },
               child: Text('Delete', style: DesignSystem.bodySm.copyWith(color: DesignSystem.error)),
             ),
             ElevatedButton(
-              onPressed: () {
-                final newStatus = statusController.text;
-                ref.read(feedbackEntriesProvider.notifier).setStatus(entry.id, newStatus);
-                ref.read(feedbackEntriesProvider.notifier).setAdminNote(entry.id, noteController.text);
-                Navigator.of(dialogContext).pop();
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Feedback updated.')),
-                  );
-                }
+              onPressed: () async {
+                // One write for both fields (it used to be two separate
+                // unawaited upserts racing each other).
+                final ok = await runAdminWrite(
+                  dialogContext,
+                  () => ref.read(feedbackEntriesProvider.notifier).updateFeedbackEntry(
+                        entry.copyWith(
+                          status: statusController.text,
+                          adminNote: noteController.text,
+                        ),
+                      ),
+                  success: 'Feedback updated.',
+                );
+                if (ok && dialogContext.mounted) Navigator.of(dialogContext).pop();
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: DesignSystem.secondary,

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/schedule_item.dart';
 import '../../../../core/state/state_providers.dart';
+import '../../../../core/utils/schedule_format.dart';
 
 class SchedulePage extends ConsumerStatefulWidget {
   const SchedulePage({super.key});
@@ -11,41 +12,33 @@ class SchedulePage extends ConsumerStatefulWidget {
   ConsumerState<SchedulePage> createState() => _SchedulePageState();
 }
 
-class _SchedulePageState extends ConsumerState<SchedulePage> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-
-  final List<String> _days = ['Day 1 (6 August)', 'Day 2 (7 August)'];
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: _days.length, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
-
+class _SchedulePageState extends ConsumerState<SchedulePage> {
   @override
   Widget build(BuildContext context) {
     final isDesktop = MediaQuery.of(context).size.width >= 768;
     final padding = isDesktop ? DesignSystem.marginDesktop : DesignSystem.marginMobile;
 
+    final event = ref.watch(eventProvider);
     final allScheduleItems = ref.watch(publicScheduleProvider);
-    final publishedItems = allScheduleItems.where((item) => item.publicationStatus == 'published').toList();
+    final publishedItems = allScheduleItems
+        .where((item) => item.publicationStatus == 'published')
+        .toList()
+      ..sort(compareScheduleItems);
 
-    // Group items by day
-    final day1Items = publishedItems.where((item) => item.date.day == 6).toList();
-    final day2Items = publishedItems.where((item) => item.date.day == 7).toList();
+    // Tabs come from the event's real dates (plus any day that has slots)
+    // rather than a hardcoded "6 and 7 August".
+    final days = scheduleDays(event.startAt, event.endAt, publishedItems);
+    final itemsByDay = [
+      for (final day in days)
+        publishedItems.where((item) => isSameDay(item.date, day)).toList(),
+    ];
 
-    // Sort items chronologically by their start time string
-    // In production, we'd use robust time parsing, but simple string sorting is fine for well-formatted times.
-    day1Items.sort((a, b) => a.startAt.compareTo(b.startAt));
-    day2Items.sort((a, b) => a.startAt.compareTo(b.startAt));
-
-    return Scaffold(
+    // DefaultTabController rebuilds its controller when the day count
+    // changes (e.g. the live event loads with different dates).
+    return DefaultTabController(
+      key: ValueKey(days.length),
+      length: days.length,
+      child: Scaffold(
       body: Padding(
         padding: EdgeInsets.symmetric(horizontal: padding, vertical: DesignSystem.spaceXl),
         child: Column(
@@ -64,10 +57,12 @@ class _SchedulePageState extends ConsumerState<SchedulePage> with SingleTickerPr
             // centered labels (matches the Junior Guide tab bar); desktop
             // keeps the centered scrollable style.
             TabBar(
-              controller: _tabController,
-              isScrollable: isDesktop,
-              tabAlignment: isDesktop ? TabAlignment.center : null,
-              tabs: _days.map((day) => Tab(text: day)).toList(),
+              // More than two days won't fit side by side on a phone.
+              isScrollable: isDesktop || days.length > 2,
+              tabAlignment: isDesktop || days.length > 2 ? TabAlignment.center : null,
+              tabs: [
+                for (var i = 0; i < days.length; i++) Tab(text: dayLabel(i, days[i])),
+              ],
               labelStyle: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold),
               unselectedLabelColor: DesignSystem.onSurfaceVariant,
               labelColor: DesignSystem.primary,
@@ -79,15 +74,14 @@ class _SchedulePageState extends ConsumerState<SchedulePage> with SingleTickerPr
             // Tab Content
             Expanded(
               child: TabBarView(
-                controller: _tabController,
                 children: [
-                  _buildDayTimeline(day1Items, isDesktop),
-                  _buildDayTimeline(day2Items, isDesktop),
+                  for (final items in itemsByDay) _buildDayTimeline(items, isDesktop),
                 ],
               ),
             ),
           ],
         ),
+      ),
       ),
     );
   }

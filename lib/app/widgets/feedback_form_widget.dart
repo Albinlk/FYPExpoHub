@@ -4,7 +4,9 @@ import 'package:uuid/uuid.dart';
 import '../../app/theme/theme.dart';
 import '../../core/domain/models/feedback_entry.dart';
 import '../../core/supabase/supabase_client_provider.dart';
+import '../../core/supabase/supabase_database_service.dart' show kEventSlug;
 import '../../core/state/state_providers.dart';
+import '../../core/widgets/admin_actions.dart' show friendlyError;
 
 class FeedbackFormWidget extends ConsumerStatefulWidget {
   const FeedbackFormWidget({super.key});
@@ -12,23 +14,27 @@ class FeedbackFormWidget extends ConsumerStatefulWidget {
   static void show(BuildContext context, WidgetRef ref) {
     final isDesktop = MediaQuery.of(context).size.width >= 768;
 
+    // The form pops `true` only after the submission is confirmed saved, so
+    // closing it with the X no longer shows a "thank you".
+    void thankIfSent(bool? sent) {
+      if (sent == true && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Thank you for your feedback!')),
+        );
+      }
+    }
+
     if (isDesktop) {
-      showDialog(
+      showDialog<bool>(
         context: context,
         builder: (dialogContext) => Dialog(
           backgroundColor: DesignSystem.surfaceContainerLowest,
           shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusXl),
           child: const FeedbackFormWidget(),
         ),
-      ).then((_) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Thank you for your feedback!')),
-          );
-        }
-      });
+      ).then(thankIfSent);
     } else {
-      showModalBottomSheet(
+      showModalBottomSheet<bool>(
         context: context,
         isScrollControlled: true,
         backgroundColor: DesignSystem.surfaceContainerLowest,
@@ -41,13 +47,7 @@ class FeedbackFormWidget extends ConsumerStatefulWidget {
           ),
           child: const FeedbackFormWidget(),
         ),
-      ).then((_) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Thank you for your feedback!')),
-          );
-        }
-      });
+      ).then(thankIfSent);
     }
   }
 
@@ -80,7 +80,7 @@ class _FeedbackFormWidgetState extends ConsumerState<FeedbackFormWidget> {
     final entry = FeedbackEntry(
       id: const Uuid().v4(),
       userId: user?.id,
-      eventId: 'fskm-fyp-2026',
+      eventId: kEventSlug,
       subject: _subjectController.text.trim(),
       message: _messageController.text.trim(),
       rating: _rating > 0 ? _rating : null,
@@ -91,12 +91,15 @@ class _FeedbackFormWidgetState extends ConsumerState<FeedbackFormWidget> {
     );
 
     try {
-      ref.read(feedbackEntriesProvider.notifier).addFeedbackEntry(entry);
-      Navigator.of(context).pop();
+      await ref.read(feedbackEntriesProvider.notifier).submit(entry);
+      if (mounted) Navigator.of(context).pop(true);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to submit feedback: $e'), backgroundColor: DesignSystem.errorContainer),
+          SnackBar(
+            content: Text('Couldn\'t send your feedback: ${friendlyError(e)}'),
+            backgroundColor: DesignSystem.error,
+          ),
         );
       }
     } finally {

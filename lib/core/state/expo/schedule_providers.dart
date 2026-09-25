@@ -1,14 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/offline_fallback.dart';
 import '../../domain/models/schedule_item.dart';
-import '../../utils/fypms_key_normalizer.dart' show normalizeKeys;
+import '../../supabase/row_mappers.dart';
 import '../../utils/logger.dart';
+import 'optimistic_list.dart';
 import 'service_providers.dart';
 
 // ==========================================
 // DAILY SCHEDULE STATE
 // ==========================================
-class ScheduleNotifier extends Notifier<List<ScheduleItem>> {
+class ScheduleNotifier extends Notifier<List<ScheduleItem>>
+    with OptimisticList<ScheduleItem> {
   ScheduleNotifier({this.publishedOnly = false});
 
   final bool publishedOnly;
@@ -19,28 +21,43 @@ class ScheduleNotifier extends Notifier<List<ScheduleItem>> {
     return const [];
   }
 
+  List<ScheduleItem> _parse(List<Map<String, dynamic>> rows) {
+    final out = <ScheduleItem>[];
+    for (final m in rows) {
+      try {
+        out.add(scheduleItemFromRow(m));
+      } catch (e) {
+        logDebug('Skipping unparseable schedule row ${m['id']}: $e');
+      }
+    }
+    return out;
+  }
+
   /// Same pattern as ProjectsNotifier: fallback asset fills state first,
-  /// live Supabase rows overwrite it when they arrive (remote wins).
+  /// live Supabase rows overwrite it when they arrive (remote wins). The
+  /// admin instance skips the fallback — those rows can't be saved.
   void _loadSchedule() async {
     final remote = _fetchRemoteSchedule().catchError(
       (Object e) => <Map<String, dynamic>>[],
     );
-    try {
-      final data = await OfflineFallback.load();
-      final fallback = (data['scheduleItems'] ?? const [])
-          .map((m) => ScheduleItem.fromJson(normalizeKeys(m)))
-          .toList();
-      if (state.isEmpty && fallback.isNotEmpty) {
-        state = fallback;
+    if (publishedOnly) {
+      try {
+        final data = await OfflineFallback.load();
+        final fallback = _parse(data['scheduleItems'] ?? const []);
+        if (state.isEmpty && fallback.isNotEmpty) {
+          state = fallback;
+        }
+      } catch (e) {
+        logDebug('Schedule fallback asset warning: $e');
       }
-    } catch (e) {
-      logDebug('Schedule fallback asset warning: $e');
     }
     try {
-      final data = await remote;
-      if (data.isNotEmpty) {
-        state = data.map((m) => ScheduleItem.fromJson(normalizeKeys(m))).toList();
-      }
+      var first = true;
+      await loadRemote(() async {
+        final data = first ? await remote : await _fetchRemoteSchedule();
+        first = false;
+        return data.isEmpty ? null : _parse(data);
+      });
     } catch (e) {
       logDebug('Schedule load from Supabase warning: $e');
     }
@@ -51,26 +68,33 @@ class ScheduleNotifier extends Notifier<List<ScheduleItem>> {
     return db.getScheduleOnce(publishedOnly: publishedOnly);
   }
 
-  void addScheduleItem(ScheduleItem item) {
-    state = [...state, item];
-    ref.read(supabaseDbServiceProvider).setScheduleItem(item.id, item.toJson());
+  Future<void> _save(ScheduleItem s) async {
+    final db = ref.read(supabaseDbServiceProvider);
+    final eventId = await db.resolveEventId(s.eventId);
+    await db.setScheduleItem(s.id, scheduleItemToRow(s, eventId: eventId));
+    if (!publishedOnly) ref.invalidate(publicScheduleProvider);
   }
 
-  void updateScheduleItem(ScheduleItem updated) {
+  Future<void> addScheduleItem(ScheduleItem item) =>
+      commit([...state, item], () => _save(item));
+
+  Future<void> updateScheduleItem(ScheduleItem updated) {
     final data = updated.copyWith(updatedAt: DateTime.now());
-    state = [
-      for (final s in state)
-        if (s.id == updated.id) data else s,
-    ];
-    ref.read(supabaseDbServiceProvider).setScheduleItem(updated.id, data.toJson());
+    return commit(
+      [for (final s in state) if (s.id == updated.id) data else s],
+      () => _save(data),
+    );
   }
 
-  void deleteScheduleItem(String id) {
-    state = state.where((s) => s.id != id).toList();
-    ref.read(supabaseDbServiceProvider).deleteScheduleItem(id);
-  }
+  Future<void> deleteScheduleItem(String id) => commit(
+        state.where((s) => s.id != id).toList(),
+        () async {
+          await ref.read(supabaseDbServiceProvider).deleteScheduleItem(id);
+          if (!publishedOnly) ref.invalidate(publicScheduleProvider);
+        },
+      );
 
-  void togglePublish(String id) {
+  Future<void> togglePublish(String id) async {
     final idx = state.indexWhere((s) => s.id == id);
     if (idx == -1) return;
     final s = state[idx];
@@ -79,11 +103,10 @@ class ScheduleNotifier extends Notifier<List<ScheduleItem>> {
       publishedAt: s.publicationStatus != 'published' ? DateTime.now() : null,
       updatedAt: DateTime.now(),
     );
-    state = [
-      for (final item in state)
-        if (item.id == id) toggled else item,
-    ];
-    ref.read(supabaseDbServiceProvider).setScheduleItem(id, toggled.toJson());
+    await commit(
+      [for (final item in state) if (item.id == id) toggled else item],
+      () => _save(toggled),
+    );
   }
 }
 

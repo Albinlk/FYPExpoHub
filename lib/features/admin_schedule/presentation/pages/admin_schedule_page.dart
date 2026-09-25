@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:uuid/uuid.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/schedule_item.dart';
 import '../../../../core/state/state_providers.dart';
+import '../../../../core/supabase/supabase_database_service.dart' show kEventSlug;
+import '../../../../core/utils/schedule_format.dart';
+import '../../../../core/widgets/admin_actions.dart';
 
 class AdminSchedulePage extends ConsumerWidget {
   const AdminSchedulePage({super.key});
@@ -17,9 +21,19 @@ class AdminSchedulePage extends ConsumerWidget {
     
     String visibility = item?.visibility ?? 'public';
     String status = item?.publicationStatus ?? 'published';
-    DateTime selectedDate = item?.date ?? DateTime(2026, 8, 6);
+    bool saving = false;
 
-    showDialog(
+    // The event's configured days (plus this slot's own day, if it's
+    // outside them) instead of a hardcoded 6/7 August.
+    final event = ref.read(eventProvider);
+    final days = scheduleDays(
+      event.startAt,
+      event.endAt,
+      item == null ? const <ScheduleItem>[] : [item],
+    );
+    DateTime selectedDate = item != null ? dateOnly(item.date) : days.first;
+
+    showDialog<void>(
       context: context,
       builder: (dialogContext) {
         return StatefulBuilder(
@@ -70,17 +84,20 @@ class AdminSchedulePage extends ConsumerWidget {
                         maxLines: 2,
                       ),
                       const SizedBox(height: DesignSystem.spaceMd),
-                      _dialogDropdown(isDesktop, 'Event Date:', DropdownButton<int>(
-                        value: selectedDate.day,
+                      _dialogDropdown(isDesktop, 'Event Date:', DropdownButton<DateTime>(
+                        value: selectedDate,
                         isExpanded: true,
-                        items: const [
-                          DropdownMenuItem(value: 6, child: Text('6 August 2026 (Day 1)')),
-                          DropdownMenuItem(value: 7, child: Text('7 August 2026 (Day 2)')),
+                        items: [
+                          for (var i = 0; i < days.length; i++)
+                            DropdownMenuItem(
+                              value: days[i],
+                              child: Text('${longDate(days[i])} (Day ${i + 1})'),
+                            ),
                         ],
                         onChanged: (val) {
                           if (val != null) {
                             setState(() {
-                              selectedDate = DateTime(2026, 8, val);
+                              selectedDate = val;
                             });
                           }
                         },
@@ -127,16 +144,16 @@ class AdminSchedulePage extends ConsumerWidget {
                   child: const Text('Cancel'),
                 ),
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: saving ? null : () async {
                     if (titleController.text.trim().isEmpty) return;
 
                     final newItem = ScheduleItem(
-                      id: item?.id ?? 'sch-${DateTime.now().millisecondsSinceEpoch}',
-                      eventId: 'fskm-fyp-2026',
+                      id: item?.id ?? const Uuid().v4(),
+                      eventId: item?.eventId ?? kEventSlug,
                       date: selectedDate,
-                      startAt: startAtController.text,
-                      endAt: endAtController.text,
-                      title: titleController.text,
+                      startAt: startAtController.text.trim(),
+                      endAt: endAtController.text.trim(),
+                      title: titleController.text.trim(),
                       venue: venueController.text,
                       audience: audienceController.text,
                       description: descriptionController.text,
@@ -147,18 +164,20 @@ class AdminSchedulePage extends ConsumerWidget {
                       publishedAt: status == 'published' ? DateTime.now() : null,
                     );
 
-                    if (item == null) {
-                      ref.read(scheduleProvider.notifier).addScheduleItem(newItem);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Tentative slot added successfully!')),
-                      );
-                    } else {
-                      ref.read(scheduleProvider.notifier).updateScheduleItem(newItem);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Tentative slot updated successfully!')),
-                      );
+                    final notifier = ref.read(scheduleProvider.notifier);
+                    setState(() => saving = true);
+                    final ok = await runAdminWrite(
+                      context,
+                      () => item == null
+                          ? notifier.addScheduleItem(newItem)
+                          : notifier.updateScheduleItem(newItem),
+                      success: item == null ? 'Slot added.' : 'Slot updated.',
+                    );
+                    if (ok && dialogContext.mounted) {
+                      Navigator.of(dialogContext).pop();
+                    } else if (context.mounted) {
+                      setState(() => saving = false);
                     }
-                    Navigator.of(dialogContext).pop();
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: DesignSystem.secondary,
@@ -208,7 +227,9 @@ class AdminSchedulePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDesktop = MediaQuery.of(context).size.width >= 768;
-    final scheduleItems = ref.watch(scheduleProvider);
+    final scheduleItems = [...ref.watch(scheduleProvider)]..sort(compareScheduleItems);
+    final event = ref.watch(eventProvider);
+    final days = scheduleDays(event.startAt, event.endAt, scheduleItems);
 
     return Scaffold(
       body: SingleChildScrollView(
@@ -278,7 +299,8 @@ class AdminSchedulePage extends ConsumerWidget {
                         itemBuilder: (context, index) {
                           final item = scheduleItems[index];
                           final isPublished = item.publicationStatus == 'published';
-                          final dayText = item.date.day == 6 ? 'Day 1 (6 August)' : 'Day 2 (7 August)';
+                          final dayIndex = days.indexWhere((d) => isSameDay(d, item.date));
+                          final dayText = dayLabel(dayIndex, days[dayIndex]);
 
                           return Padding(
                             padding: const EdgeInsets.symmetric(vertical: 4.0),
@@ -327,7 +349,11 @@ class AdminSchedulePage extends ConsumerWidget {
                                 Row(
                                   children: [
                                     InkWell(
-                                      onTap: () => ref.read(scheduleProvider.notifier).togglePublish(item.id),
+                                      onTap: () => runAdminWrite(
+                                        context,
+                                        () => ref.read(scheduleProvider.notifier).togglePublish(item.id),
+                                        success: isPublished ? 'Slot moved to draft.' : 'Slot published.',
+                                      ),
                                       child: Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                         decoration: BoxDecoration(
@@ -352,10 +378,13 @@ class AdminSchedulePage extends ConsumerWidget {
                                     IconButton(
                                       icon: const Icon(Icons.delete, size: 18, color: DesignSystem.error),
                                       tooltip: 'Delete schedule item',
-                                      onPressed: () {
-                                        ref.read(scheduleProvider.notifier).deleteScheduleItem(item.id);
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(content: Text('Tentative slot deleted successfully!')),
+                                      onPressed: () async {
+                                        if (!await confirmDelete(context, '"${item.title}"')) return;
+                                        if (!context.mounted) return;
+                                        await runAdminWrite(
+                                          context,
+                                          () => ref.read(scheduleProvider.notifier).deleteScheduleItem(item.id),
+                                          success: 'Slot deleted.',
                                         );
                                       },
                                     ),
