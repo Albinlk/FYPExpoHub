@@ -57,11 +57,12 @@ class StudentSupervisionPage extends ConsumerWidget {
                     for (final s in directory.asData?.value ?? [])
                       if (s['id'] is String) s['id'] as String: (s['display_name'] as String? ?? ''),
                   };
-                  return ListView(
+                  return ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: DesignSystem.gutter),
-                    children: [
-                      for (final req in items)
-                        Card(
+                    itemCount: items.length,
+                    itemBuilder: (context, itemIndex) {
+                      final req = items[itemIndex];
+                        return Card(
                           elevation: 1,
                           margin: const EdgeInsets.only(bottom: DesignSystem.spaceMd),
                           shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusXl),
@@ -102,8 +103,8 @@ class StudentSupervisionPage extends ConsumerWidget {
                               ],
                             ),
                           ),
-                        ),
-                    ],
+                        );
+                    },
                   );
                 },
               ),

@@ -38,11 +38,12 @@ class StudentMilestonesPage extends ConsumerWidget {
                       ),
                     );
                   }
-                  return ListView(
+                  return ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: DesignSystem.gutter),
-                    children: [
-                      for (final m in list)
-                        Card(
+                    itemCount: list.length,
+                    itemBuilder: (context, itemIndex) {
+                      final m = list[itemIndex];
+                        return Card(
                           elevation: 1,
                           margin: const EdgeInsets.only(bottom: DesignSystem.spaceMd),
                           shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusXl),
@@ -69,12 +70,12 @@ class StudentMilestonesPage extends ConsumerWidget {
                                     style: DesignSystem.bodySm,
                                   ),
                                 const SizedBox(height: DesignSystem.spaceSm),
-                                _StatusBadge(status: m.status),
+                                FypStatusBadge.milestone(m.status),
                               ],
                             ),
                           ),
-                        ),
-                    ],
+                        );
+                    },
                   );
                 },
               ),
@@ -82,37 +83,6 @@ class StudentMilestonesPage extends ConsumerWidget {
           ],
         );
       },
-    );
-  }
-}
-
-class _StatusBadge extends StatelessWidget {
-  final String status;
-
-  const _StatusBadge({required this.status});
-
-  @override
-  Widget build(BuildContext context) {
-    final label = status.replaceAll('_', ' ');
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: DesignSystem.spaceSm, vertical: 4),
-      decoration: BoxDecoration(
-        color: status == 'completed'
-            ? DesignSystem.secondary.withValues(alpha: 0.15)
-            : status == 'overdue'
-                ? DesignSystem.errorContainer
-                : DesignSystem.surfaceContainer,
-        borderRadius: DesignSystem.radiusLg,
-      ),
-      child: Text(
-        label.toUpperCase(),
-        style: DesignSystem.bodySm.copyWith(
-          color: status == 'overdue'
-              ? DesignSystem.onErrorContainer
-              : DesignSystem.onSecondaryContainer,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
     );
   }
 }

@@ -16,8 +16,11 @@ class EventNotifier extends Notifier<Event> {
       id: kEventSlug,
       title: 'FSKM FYP Expo Hub 2026',
       sessionLabel: 'Semester March - August 2026',
-      startAt: DateTime(2026, 8, 6, 9, 0),
-      endAt: DateTime(2026, 8, 7, 17, 0),
+      // 09:00 and 17:00 Malaysia time (UTC+8), as UTC instants — a local
+      // DateTime would move to a different calendar day for a visitor far
+      // enough from UTC+8, shifting the schedule's day tabs.
+      startAt: DateTime.utc(2026, 8, 6, 1, 0),
+      endAt: DateTime.utc(2026, 8, 7, 9, 0),
       dailyHours: '9:00 AM - 5:00 PM',
       venue: 'Lecture Block, FSKM',
       locationDetails:

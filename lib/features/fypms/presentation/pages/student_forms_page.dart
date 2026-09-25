@@ -79,11 +79,12 @@ class StudentFormsPage extends ConsumerWidget {
                       ),
                     );
                   }
-                  return ListView(
+                  return ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: DesignSystem.gutter),
-                    children: [
-                      for (final sub in items)
-                        Card(
+                    itemCount: items.length,
+                    itemBuilder: (context, itemIndex) {
+                      final sub = items[itemIndex];
+                        return Card(
                           elevation: 1,
                           margin: const EdgeInsets.only(bottom: DesignSystem.spaceSm),
                           shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
@@ -100,8 +101,8 @@ class StudentFormsPage extends ConsumerWidget {
                               style: DesignSystem.bodySm,
                             ),
                           ),
-                        ),
-                    ],
+                        );
+                    },
                   );
                 },
               ),

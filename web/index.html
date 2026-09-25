@@ -21,6 +21,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="FYP Expo Hub - UiTM FSKM Final Year Project Exhibition">
 
+  <!-- Content Security Policy. GitHub Pages can't send response headers, so
+       it's a meta tag (which can't carry frame-ancestors — anti-framing for
+       the admin/lecturer/FYPMS areas is done in flutter_bootstrap.js).
+       No inline scripts are allowed; the Flutter engine (CanvasKit/skwasm)
+       and its fallback fonts come from Google's CDN, data from Supabase.
+       'wasm-unsafe-eval' is required to instantiate the dart2wasm build. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://www.gstatic.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://www.gstatic.com https://fonts.gstatic.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
+
   <!-- Fonts for the HTML splash below ONLY. The Flutter app paints its own
        text and loads Inter/Montserrat from its bundled assets (pubspec.yaml
        `fonts:`); it never uses these CSS fonts. The previous nine preloads

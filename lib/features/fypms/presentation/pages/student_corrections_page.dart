@@ -46,11 +46,12 @@ class StudentCorrectionsPage extends ConsumerWidget {
                       ),
                     );
                   }
-                  return ListView(
+                  return ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: DesignSystem.gutter),
-                    children: [
-                      for (final item in list)
-                        Card(
+                    itemCount: list.length,
+                    itemBuilder: (context, itemIndex) {
+                      final item = list[itemIndex];
+                        return Card(
                           elevation: 1,
                           margin: const EdgeInsets.only(bottom: DesignSystem.spaceMd),
                           shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusXl),
@@ -84,8 +85,8 @@ class StudentCorrectionsPage extends ConsumerWidget {
                             ),
                             trailing: _trailingFor(context, ref, record.id, item),
                           ),
-                        ),
-                    ],
+                        );
+                    },
                   );
                 },
               ),

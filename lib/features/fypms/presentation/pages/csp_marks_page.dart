@@ -29,12 +29,13 @@ class CspMarksPage extends ConsumerWidget {
           if (list.isEmpty) {
             return const Center(child: Text('No records found to finalize marks.'));
           }
-          return ListView(
+          return ListView.builder(
             padding: const EdgeInsets.all(DesignSystem.gutter),
-            children: [
-              for (final record in list)
-                _RecordMarksSection(record: record),
-            ],
+            itemCount: list.length,
+            itemBuilder: (context, itemIndex) {
+              final record = list[itemIndex];
+                return _RecordMarksSection(record: record);
+            },
           );
         },
       ),

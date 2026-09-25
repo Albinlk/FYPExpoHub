@@ -11,6 +11,10 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # Not imported in lib/, but Flutter framework widgets reference
+  # CupertinoIcons glyphs; without this their font is missing from the
+  # build (the web build warns and those icons render as boxes).
+  cupertino_icons: ^1.0.8
   flutter_riverpod: ^3.3.2
   go_router: ^17.3.0
   cached_network_image: ^3.4.1

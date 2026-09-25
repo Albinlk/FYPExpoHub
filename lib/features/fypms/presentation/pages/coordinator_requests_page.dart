@@ -30,17 +30,18 @@ class CoordinatorRequestsPage extends ConsumerWidget {
           if (pending.isEmpty) {
             return const Center(child: Text('No pending supervision requests.'));
           }
-          return ListView(
+          return ListView.builder(
             padding: const EdgeInsets.all(DesignSystem.gutter),
-            children: [
-              for (final request in pending)
-                _RequestCard(
+            itemCount: pending.length,
+            itemBuilder: (context, itemIndex) {
+              final request = pending[itemIndex];
+                return _RequestCard(
                   request: request,
                   record: records.value?.where((r) => r.id == request.fypRecordId).firstOrNull,
                   onDecide: (decision, reason) =>
                       _decide(context, ref, request.id, decision, reason),
-                ),
-            ],
+                );
+            },
           );
         },
       ),

@@ -123,13 +123,14 @@ class _MilestonesList extends ConsumerWidget {
               if (list.isEmpty) {
                 return const Center(child: Text('No milestones defined.'));
               }
-              return ListView(
+              return ListView.builder(
                 padding: const EdgeInsets.symmetric(
                   horizontal: DesignSystem.gutter,
                 ),
-                children: [
-                  for (final m in list)
-                    Card(
+                itemCount: list.length,
+                itemBuilder: (context, itemIndex) {
+                  final m = list[itemIndex];
+                    return Card(
                       elevation: 1,
                       margin: const EdgeInsets.only(
                         bottom: DesignSystem.spaceMd,
@@ -169,8 +170,8 @@ class _MilestonesList extends ConsumerWidget {
                           ],
                         ),
                       ),
-                    ),
-                ],
+                    );
+                },
               );
             },
           ),

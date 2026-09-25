@@ -28,11 +28,12 @@ class CoordinatorPresentationsPage extends ConsumerWidget {
           if (list.isEmpty) {
             return const Center(child: Text('No presentation sessions scheduled yet.'));
           }
-          return ListView(
+          return ListView.builder(
             padding: const EdgeInsets.all(DesignSystem.gutter),
-            children: [
-              for (final session in list)
-                Card(
+            itemCount: list.length,
+            itemBuilder: (context, itemIndex) {
+              final session = list[itemIndex];
+                return Card(
                   elevation: 1,
                   margin: const EdgeInsets.only(bottom: DesignSystem.spaceMd),
                   shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusXl),
@@ -52,8 +53,8 @@ class CoordinatorPresentationsPage extends ConsumerWidget {
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => _showSessionDetail(context, ref, session.id),
                   ),
-                ),
-            ],
+                );
+            },
           );
         },
       ),

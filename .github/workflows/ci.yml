@@ -11,21 +11,34 @@ jobs:
   analyze-and-test:
     runs-on: ubuntu-latest
     steps:
+      # Third-party actions are pinned to a commit SHA (the tag in the
+      # comment is what that SHA was when pinned): a tag can be moved to
+      # different code, a SHA can't.
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           channel: 'stable'
+          # Pinned so a new Flutter release can't change a build between two
+          # runs of the same commit; bump deliberately.
+          flutter-version: '3.44.7'
 
       - name: Install Dependencies
         run: flutter pub get
 
       - name: Analyze
-        # See deploy.yml: only analyzer *errors* gate PRs today. The
-        # pre-existing style/inference lint backlog is a separate cleanup.
-        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+        # Strict: the lint backlog is cleared (0 issues), so any new info or
+        # warning fails the PR instead of silently accumulating again.
+        run: flutter analyze
 
       - name: Run Tests
         run: flutter test
+
+      - name: Build Web (Wasm smoke test)
+        # `flutter test` runs on the Dart VM, so it can't catch web-only
+        # breakage — e.g. a `dart.library.html` conditional import silently
+        # picking a no-op stub under dart2wasm. This compiles exactly what
+        # deploy.yml ships.
+        run: flutter build web --release --wasm --base-href "/"

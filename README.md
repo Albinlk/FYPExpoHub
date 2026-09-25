@@ -49,7 +49,7 @@ The Expo site reads live from **Supabase Postgres** and ships with a bundled off
 | State management | `flutter_riverpod` `^3.3.2` (Notifier / FutureProvider / Provider) |
 | Routing | `go_router` `^17.3.0` (SPA with role-aware redirect guards) |
 | Data models | `freezed` + `json_serializable`, generated via `build_runner` |
-| UI helpers | `google_fonts`, custom `DesignSystem` tokens (Inter / Montserrat, Material 3), `flutter_svg`, `cached_network_image`, `file_picker`, `intl`, `uuid`, `excel` (in-browser Excel parsing), `csv` |
+| UI helpers | custom `DesignSystem` tokens (Inter / Montserrat bundled as TTF in `assets/fonts`, Material 3), `cached_network_image`, `file_picker`, `uuid`, `crypto` (import file hashes), `excel` (in-browser Excel parsing), `csv` |
 | Supabase client | `supabase_flutter` `^2.8.4` (PKCE auth flow) |
 | URL strategy | `usePathUrlStrategy()` (clean paths, no `/#/`) |
 
@@ -147,7 +147,7 @@ lib/
 ├── core/
 │   ├── supabase/              # Client provider + auth/db/rpc/realtime/storage services
 │   │                          #   + FYPMS variants (db, rpc, realtime)
-│   ├── data/excel_data.dart   # Bundled offline fallback dataset (generated)
+│   ├── data/offline_fallback.dart  # Loads assets/data/offline_fallback.json (bundled fallback)
 │   ├── domain/models/         # freezed models (Expo + fypms/ subfolder)
 │   ├── state/                 # state_providers.dart + fypms_state_providers.dart
 │   ├── utils/                 # key normalizer (snake_case → camelCase), logger
@@ -215,7 +215,7 @@ flutter pub run build_runner build --delete-conflicting-outputs
 # Static analysis
 flutter analyze
 
-# Run the test suite (132 tests)
+# Run the test suite
 flutter test
 
 # Release build with credentials
@@ -259,7 +259,7 @@ supabase db push
 ├── assets/data/csp600-proposals.csv # Junior guide dataset
 ├── web/                             # index.html, fonts, icons
 ├── lib/                             # Dart source (see System Architecture)
-├── test/                            # 132 tests (unit + widget + route guards)
+├── test/                            # unit + widget + route-guard tests
 └── *.md                             # Documentation (see below)
 ```
 

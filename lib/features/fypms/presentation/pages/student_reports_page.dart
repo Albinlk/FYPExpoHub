@@ -53,11 +53,12 @@ class StudentReportsPage extends ConsumerWidget {
                       ),
                     );
                   }
-                  return ListView(
+                  return ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: DesignSystem.gutter),
-                    children: [
-                      for (final report in items)
-                        Card(
+                    itemCount: items.length,
+                    itemBuilder: (context, itemIndex) {
+                      final report = items[itemIndex];
+                        return Card(
                           elevation: 1,
                           margin: const EdgeInsets.only(bottom: DesignSystem.spaceMd),
                           shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusXl),
@@ -91,8 +92,8 @@ class StudentReportsPage extends ConsumerWidget {
                               ],
                             ),
                           ),
-                        ),
-                    ],
+                        );
+                    },
                   );
                 },
               ),
