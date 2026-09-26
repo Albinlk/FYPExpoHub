@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'user_scope.dart';
 import '../../domain/fypms_course_marks.dart';
+import '../../domain/fypms_exhibition_evaluation.dart';
 import '../../domain/fypms_special_evaluation.dart';
 import '../../domain/models/fypms/fyp_audit_log.dart';
 import '../../domain/models/fypms/fyp_presentation_session.dart';
@@ -94,6 +95,20 @@ final fypCourseMarksProvider =
   ref.watch(fypmsUserScopeProvider);
   final rpc = ref.watch(supabaseRpcServiceProvider);
   return CourseMarks.fromJson(await rpc.computeFypCourseMarks(fypRecordId: fypRecordId));
+});
+
+/// For the Expo visit page: the project's FYPMS record and the F10 / F15
+/// the signed-in supervisor or examiner scores at the exhibition. Projects not
+/// published from FYPMS (or an older database) read as unlinked.
+final exhibitionEvaluationProvider =
+    FutureProvider.family<ExhibitionEvaluation, String>((ref, projectId) async {
+  ref.watch(fypmsUserScopeProvider);
+  final rpc = ref.watch(supabaseRpcServiceProvider);
+  try {
+    return ExhibitionEvaluation.fromJson(await rpc.getExhibitionEvaluation(projectId: projectId));
+  } catch (_) {
+    return ExhibitionEvaluation.unlinked;
+  }
 });
 
 /// The F14 checks for a CSP650 record (CSP650 lecturer / coordinator).

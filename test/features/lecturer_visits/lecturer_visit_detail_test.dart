@@ -2,9 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:fyp_expo_hub/core/domain/fypms_exhibition_evaluation.dart';
+import 'package:fyp_expo_hub/core/domain/models/fypms/fyp_form_submission.dart';
+import 'package:fyp_expo_hub/core/domain/models/fypms/fyp_rubric_template.dart';
 import 'package:fyp_expo_hub/core/domain/models/project.dart';
 import 'package:fyp_expo_hub/core/domain/models/project_lecturer_assignment.dart';
 import 'package:fyp_expo_hub/core/domain/models/student_visit.dart';
+import 'package:fyp_expo_hub/core/state/fypms_state_providers.dart';
 import 'package:fyp_expo_hub/core/state/state_providers.dart';
 import 'package:fyp_expo_hub/core/supabase/supabase_client_provider.dart';
 import 'package:fyp_expo_hub/core/supabase/supabase_rpc_service.dart';
@@ -110,14 +114,62 @@ class _RecordingRpcService extends SupabaseRpcService {
   }
 }
 
+FypFormSubmission _f10() => FypFormSubmission(
+      id: 'sub-f10',
+      fypRecordId: 'rec-1',
+      formCode: 'F10',
+      formVersion: 1,
+      payload: const {'source': 'exhibition'},
+      status: 'submitted',
+      submittedAt: DateTime(2026, 9, 22),
+      createdAt: DateTime(2026, 9, 22),
+      updatedAt: DateTime(2026, 9, 22),
+    );
+
+ExhibitionEvaluation _exhibition({String role = 'supervisor', double? mine}) => ExhibitionEvaluation(
+      linked: true,
+      fypRecordId: 'rec-1',
+      evaluatorRole: role,
+      formCode: 'F10',
+      myWeightedTotal: mine,
+    );
+
 Widget _app({
   required _RecordingRpcService rpc,
   List<ProjectLecturerAssignment> assignments = const [],
   List<StudentVisit> visits = const [],
   User? user,
+  ExhibitionEvaluation exhibition = ExhibitionEvaluation.unlinked,
+  List<String>? opened,
 }) {
   return ProviderScope(
     overrides: [
+      exhibitionEvaluationProvider.overrideWith((ref, id) async => exhibition),
+      openExhibitionEvaluationProvider.overrideWithValue((id) async {
+        opened?.add(id);
+        return ExhibitionEvaluation(
+          linked: true,
+          fypRecordId: 'rec-1',
+          evaluatorRole: exhibition.evaluatorRole,
+          formCode: 'F10',
+          submission: _f10(),
+        );
+      }),
+      fypRubricTemplatesProvider.overrideWith((ref) async => [
+            FypRubricTemplate(
+              id: 'rub-f10',
+              rubricCode: 'F10_FINAL_PRESENTATION',
+              rubricName: 'F10 - Final Project Presentation',
+              formCode: 'F10',
+              criteria: const [
+                {'key': 'depth_of_knowledge', 'label': 'Depth of knowledge', 'weight': 3, 'max': 10},
+              ],
+              version: 1,
+              isActive: true,
+              createdAt: DateTime(2026, 9, 26),
+              updatedAt: DateTime(2026, 9, 26),
+            ),
+          ]),
       supabaseRpcServiceProvider.overrideWithValue(rpc),
       publicProjectsProvider.overrideWith(() => _ProjectsNotifierStub([_project()])),
       lecturerAssignmentsProvider.overrideWith((ref) => assignments),
@@ -284,6 +336,49 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('You are not allowed to mark this visit.'), findsOneWidget);
+  });
+
+  testWidgets('R9 no F10 action for projects not published from FYPMS', (tester) async {
+    await tester.pumpWidget(_app(rpc: _RecordingRpcService(), assignments: [_svAssignment(), _exAssignment()]));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Score F10'), findsNothing);
+  });
+
+  testWidgets('R9 supervisor scores F10 from the visit at phone width', (tester) async {
+    tester.view.physicalSize = const Size(375, 1400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final opened = <String>[];
+    await tester.pumpWidget(_app(
+      rpc: _RecordingRpcService(),
+      assignments: [_svAssignment(), _exAssignment()],
+      exhibition: _exhibition(),
+      opened: opened,
+    ));
+    await tester.pumpAndSettle();
+
+    // Only in the section of the role the lecturer evaluates the record in.
+    expect(find.byKey(const Key('score-F10-supervisor')), findsOneWidget);
+    expect(find.byKey(const Key('score-F10-examiner')), findsNothing);
+
+    await tester.ensureVisible(find.byKey(const Key('score-F10-supervisor')));
+    await tester.tap(find.byKey(const Key('score-F10-supervisor')));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(opened, ['proj-1']);
+    expect(find.text('Depth of knowledge'), findsOneWidget, reason: 'rubric dialog for F10');
+  });
+
+  testWidgets('R9 shows the lecturer\'s own F10 score once given', (tester) async {
+    await tester.pumpWidget(_app(
+      rpc: _RecordingRpcService(),
+      assignments: [_svAssignment(), _exAssignment()],
+      exhibition: _exhibition(role: 'examiner', mine: 82.5),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.text('F10 scored · 82.5% — update'), findsOneWidget);
+    expect(find.byKey(const Key('score-F10-supervisor')), findsNothing);
   });
 
   testWidgets('project not found renders the fallback scaffold', (tester) async {

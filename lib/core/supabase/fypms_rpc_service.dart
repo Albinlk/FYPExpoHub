@@ -324,6 +324,15 @@ extension FypmsRpcService on SupabaseRpcService {
     return _rpc('get_special_evaluation_checks', {'p_fyp_record_id': fypRecordId});
   }
 
+  /// The Expo project's FYPMS record, the caller's evaluator role and its
+  /// F10 / F15; [create] opens the form when the record has none yet.
+  Future<Map<String, dynamic>> getExhibitionEvaluation({
+    required String projectId,
+    bool create = false,
+  }) async {
+    return _rpc('get_exhibition_evaluation', {'p_project_id': projectId, 'p_create': create});
+  }
+
   /// Records the F14 decision; Progress + LMC is recomputed on the server.
   Future<Map<String, dynamic>> assessSpecialEvaluation({
     required String fypRecordId,
