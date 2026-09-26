@@ -115,6 +115,14 @@ class InfoPage extends ConsumerWidget {
                         label: const Text('Open in Maps'),
                       ),
                     ],
+                    if (safeExternalUri(event.posterUrl) != null) ...[
+                      const SizedBox(height: DesignSystem.spaceSm),
+                      OutlinedButton.icon(
+                        onPressed: () => launchUrl(safeExternalUri(event.posterUrl)!, webOnlyWindowName: '_blank'),
+                        icon: const Icon(Icons.picture_as_pdf_outlined, size: 18),
+                        label: const Text('View event poster'),
+                      ),
+                    ],
                   ],
                 ),
               ),
