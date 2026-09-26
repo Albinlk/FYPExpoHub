@@ -16,6 +16,7 @@ import 'package:fyp_expo_hub/features/fypms/presentation/pages/coordinator_assig
 import 'package:fyp_expo_hub/features/fypms/presentation/pages/coordinator_expo_page.dart';
 import 'package:fyp_expo_hub/features/fypms/presentation/pages/coordinator_presentations_page.dart';
 import 'package:fyp_expo_hub/features/fypms/presentation/pages/coordinator_requests_page.dart';
+import 'package:fyp_expo_hub/features/fypms/presentation/pages/csp_evaluations_page.dart';
 import 'package:fyp_expo_hub/features/fypms/presentation/pages/csp_marks_page.dart';
 import 'package:fyp_expo_hub/features/fypms/presentation/pages/csp_requests_page.dart';
 import 'package:fyp_expo_hub/features/fypms/presentation/pages/examiner_corrections_page.dart';
@@ -69,6 +70,9 @@ FypFormSubmission _submission() => FypFormSubmission(
       createdAt: DateTime(2026, 8, 11),
       updatedAt: DateTime(2026, 8, 11),
     );
+
+/// F3 (literature review) is scored by the course lecturer only.
+FypFormSubmission _lecturerOnlySubmission() => _submission().copyWith(id: 'sub-3', formCode: 'F3');
 
 FypCorrectionItem _correction() => FypCorrectionItem(
       id: 'corr-1',
@@ -162,7 +166,7 @@ Finder _dialogButton(String label) =>
     find.descendant(of: find.byType(AlertDialog), matching: find.text(label));
 
 void main() {
-  baseOverrides() => [
+  baseOverrides({List<FypFormSubmission>? submissions}) => [
         fypRecordsProvider.overrideWith((ref) async => [_record()]),
         fypPendingSupervisionRequestsProvider.overrideWith((ref) async => [_request()]),
         assignedFypRecordsProvider.overrideWith((ref, role) async => [_record()]),
@@ -173,7 +177,7 @@ void main() {
         fypPublishedEventsProvider.overrideWith((ref) async => _events),
         fypRecordAssignmentsProvider.overrideWith((ref, recordId) async => [_assignment()]),
         fypProgressLogsProvider.overrideWith((ref, recordId) async => [_submittedLog()]),
-        fypFormSubmissionsProvider.overrideWith((ref, recordId) async => [_submission()]),
+        fypFormSubmissionsProvider.overrideWith((ref, recordId) async => submissions ?? [_submission()]),
         fypCorrectionItemsProvider.overrideWith((ref, recordId) async => [_correction()]),
         fypMarksSummariesProvider.overrideWith((ref, recordId) async => [_marksSummary()]),
       ];
@@ -415,6 +419,38 @@ void main() {
 
       expect(called, ['sub-1', 'approved', 'rec-1']);
       expect(find.text('Evaluation submitted.'), findsOneWidget);
+    });
+  });
+
+  group('Evaluator per form (textbook)', () {
+    Widget withBothForms(Widget page) => ProviderScope(
+          overrides: baseOverrides(submissions: [_submission(), _lecturerOnlySubmission()]),
+          child: home(page),
+        );
+
+    testWidgets('supervisor gets Evaluate on F8 but not on lecturer-only F3', (tester) async {
+      await _pump(tester, withBothForms(const SupervisorEvaluationsPage()));
+
+      expect(find.text('Form F8'), findsOneWidget);
+      expect(find.text('Form F3'), findsNothing);
+      expect(find.text('Evaluate'), findsOneWidget);
+    });
+
+    testWidgets('CSP lecturer gets Evaluate on F3 only', (tester) async {
+      await _pump(tester, withBothForms(const CspEvaluationsPage()));
+
+      expect(find.text('Course Evaluations'), findsOneWidget);
+      expect(find.text('Form F3'), findsOneWidget);
+      expect(find.text('Form F8'), findsNothing);
+      expect(find.text('Evaluate'), findsOneWidget);
+    });
+
+    test('mapping follows the textbook', () {
+      expect(fypmsCanEvaluate('F7', 'lecturer'), isTrue);
+      expect(fypmsCanEvaluate('F8', 'lecturer'), isFalse);
+      expect(fypmsCanEvaluate('F9', 'coordinator'), isTrue);
+      expect(fypmsCanEvaluate('F13', 'examiner'), isFalse);
+      expect(fypmsCanEvaluate('F5', 'supervisor'), isFalse, reason: 'logbook has its own flow');
     });
   });
 

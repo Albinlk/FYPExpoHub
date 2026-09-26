@@ -7,6 +7,7 @@ import '../app/theme/theme.dart';
 import '../core/supabase/supabase_client_provider.dart' show currentAuthUserProvider;
 import 'router_guards.dart';
 import '../features/fypms/presentation/pages/csp_dashboard_page.dart';
+import '../features/fypms/presentation/pages/csp_evaluations_page.dart';
 import '../features/fypms/presentation/pages/csp_marks_page.dart';
 import '../features/fypms/presentation/pages/csp_milestones_page.dart';
 import '../features/fypms/presentation/pages/csp_offerings_page.dart';
@@ -408,6 +409,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/fypms/csp/milestones',
             builder: (context, state) => const CspMilestonesPage(),
+          ),
+          GoRoute(
+            path: '/fypms/csp/evaluations',
+            builder: (context, state) => const CspEvaluationsPage(),
           ),
           GoRoute(
             path: '/fypms/csp/presentations',
