@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
+import '../../../../core/widgets/public_load_state.dart';
 import '../../../../core/domain/models/schedule_item.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/utils/schedule_format.dart';
@@ -88,7 +89,22 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
 
   Widget _buildDayTimeline(List<ScheduleItem> items, bool isDesktop) {
     if (items.isEmpty) {
-      return Center(
+      // No schedule at all yet: loading or unreachable, not "empty day".
+      if (ref.read(publicScheduleProvider).isEmpty) {
+        return PublicListPlaceholder(
+          dataset: PublicDataset.schedule,
+          what: 'the schedule',
+          onRetry: () => ref.invalidate(publicScheduleProvider),
+          empty: _emptyDay(),
+        );
+      }
+      return _emptyDay();
+    }
+    return _dayList(items, isDesktop);
+  }
+
+  Widget _emptyDay() {
+    return Center(
         child: Padding(
           padding: const EdgeInsets.all(DesignSystem.spaceLg),
           child: Text(
@@ -98,8 +114,9 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
           ),
         ),
       );
-    }
+  }
 
+  Widget _dayList(List<ScheduleItem> items, bool isDesktop) {
     return ListView.builder(
       itemCount: items.length,
       itemBuilder: (context, index) {

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../app/theme/theme.dart';
+import '../../../../core/widgets/public_load_state.dart';
 import '../../../../core/domain/models/project.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/widgets/collapsible_filter_panel.dart';
@@ -353,6 +354,16 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
           ),
           if (hasProjects)
             ..._buildDayGroupSlivers(_selectedDay, filtered, isDesktop, padding)
+          else if (projects.isEmpty)
+            // Nothing loaded at all: loading or unreachable (G-31).
+            SliverToBoxAdapter(
+              child: PublicListPlaceholder(
+                dataset: PublicDataset.projects,
+                what: 'booths',
+                onRetry: () => ref.invalidate(publicProjectsProvider),
+                empty: const SizedBox.shrink(),
+              ),
+            )
           else
             SliverToBoxAdapter(
               // App-standard centered empty state (matches Projects /
@@ -563,6 +574,7 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
                     borderRadius: BorderRadius.circular(12),
                     child: Image.network(
                       '/booth_images/booth-$boothNumber.png',
+                      semanticLabel: 'Booth $boothNumber',
                       width: 44,
                       height: 44,
                       fit: BoxFit.cover,

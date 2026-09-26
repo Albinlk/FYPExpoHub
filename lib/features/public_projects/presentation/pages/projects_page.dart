@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../app/theme/theme.dart';
+import '../../../../core/widgets/public_load_state.dart';
 import '../../../../core/widgets/entrance_animation.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/widgets/collapsible_filter_panel.dart';
@@ -177,6 +178,10 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
                     ),
                     const SizedBox(height: DesignSystem.spaceXl),
 
+                    PublicOfflineBanner(
+                      dataset: PublicDataset.projects,
+                      onRetry: () => ref.invalidate(publicProjectsProvider),
+                    ),
                     // Search & Filter Panel
                     _buildSearchAndFilters(isDesktop),
                   ],
@@ -187,7 +192,18 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
             if (filteredProjects.isEmpty)
               SliverPadding(
                 padding: EdgeInsets.symmetric(horizontal: padding),
-                sliver: SliverToBoxAdapter(child: _buildEmptyState(isDesktop)),
+                // An empty list before anything loaded is "loading" or
+                // "failed", not "no matches" (G-31).
+                sliver: SliverToBoxAdapter(
+                  child: allProjects.isEmpty
+                      ? PublicListPlaceholder(
+                          dataset: PublicDataset.projects,
+                          what: 'projects',
+                          onRetry: () => ref.invalidate(publicProjectsProvider),
+                          empty: _buildEmptyState(isDesktop),
+                        )
+                      : _buildEmptyState(isDesktop),
+                ),
               )
             else
               SliverPadding(

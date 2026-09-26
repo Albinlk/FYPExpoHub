@@ -13,12 +13,17 @@ class ProjectCoverImage extends StatelessWidget {
     required this.category,
     this.imageUrl,
     this.fit = BoxFit.cover,
+    this.semanticLabel,
   });
 
   final String title;
   final String category;
   final String? imageUrl;
   final BoxFit fit;
+
+  /// Screen-reader description. Null (the default) marks the cover as
+  /// decorative — cards already read out the title beside it (G-34).
+  final String? semanticLabel;
 
   // ── Palette bank ──────────────────────────────────────────────────────────
   // 12 visually-distinct, on-brand gradient pairs (start → end)
@@ -105,6 +110,13 @@ class ProjectCoverImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final label = semanticLabel;
+    final cover = _buildCover(context);
+    if (label == null) return ExcludeSemantics(child: cover);
+    return Semantics(image: true, label: label, child: ExcludeSemantics(child: cover));
+  }
+
+  Widget _buildCover(BuildContext context) {
     // Try real network image first — fall back to generated visual on error.
     // Uses CachedNetworkImage for disk + memory caching; decoded size capped
     // to ~400x250 logical px to avoid decoding full-res covers in grid.

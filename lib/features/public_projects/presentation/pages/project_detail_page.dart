@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../app/theme/theme.dart';
+import '../../../../core/widgets/public_load_state.dart';
 import '../../../../core/widgets/entrance_animation.dart';
 import '../../../../core/domain/models/project.dart';
 import '../../../../core/state/state_providers.dart';
@@ -66,7 +67,8 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
     // Nothing loaded yet (refreshed deep link): the list is filled first by
     // the bundled fallback, then live rows — so an empty list means
     // "loading", not "not found".
-    if (project == null && allProjects.isEmpty) {
+    final loadStatus = ref.watch(publicLoadStatusProvider(PublicDataset.projects));
+    if (project == null && allProjects.isEmpty && loadStatus != DataLoadStatus.live) {
       return Scaffold(
         appBar: AppBar(
           leading: IconButton(
@@ -75,7 +77,12 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
             onPressed: () => _goBack(context),
           ),
         ),
-        body: const Center(child: CircularProgressIndicator()),
+        body: PublicListPlaceholder(
+          dataset: PublicDataset.projects,
+          what: 'this project',
+          onRetry: () => ref.invalidate(publicProjectsProvider),
+          empty: const SizedBox.shrink(),
+        ),
       );
     }
 
@@ -137,6 +144,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                     title: project.title,
                     category: project.category,
                     imageUrl: project.coverImageUrl,
+                    semanticLabel: 'Cover image for ${project.title}',
                   ),
                 ),
               ),

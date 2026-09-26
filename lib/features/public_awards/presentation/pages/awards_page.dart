@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../app/theme/theme.dart';
+import '../../../../core/widgets/public_load_state.dart';
 import '../../../../core/domain/models/award.dart';
 import '../../../../core/state/state_providers.dart';
 
@@ -50,14 +51,23 @@ class AwardsPage extends ConsumerWidget {
             Text('Official showcase of outstanding projects and FSKM innovation award winners.', style: (isDesktop ? DesignSystem.bodyLg : DesignSystem.bodyLgMobile).copyWith(color: DesignSystem.onSurfaceVariant), softWrap: true),
             const SizedBox(height: DesignSystem.spaceXl),
 
+            PublicOfflineBanner(
+              dataset: PublicDataset.awards,
+              onRetry: () => ref.invalidate(publicAwardsProvider),
+            ),
             publishedAwards.isEmpty
-                ? Center(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 40.0),
-                      child: Text(
-                        'Award winners have not been published yet. Check back soon!',
-                        textAlign: TextAlign.center,
-                        style: DesignSystem.bodyMd.copyWith(color: DesignSystem.onSurfaceVariant),
+                ? PublicListPlaceholder(
+                    dataset: PublicDataset.awards,
+                    what: 'award winners',
+                    onRetry: () => ref.invalidate(publicAwardsProvider),
+                    empty: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 40.0),
+                        child: Text(
+                          'Award winners have not been published yet. Check back soon!',
+                          textAlign: TextAlign.center,
+                          style: DesignSystem.bodyMd.copyWith(color: DesignSystem.onSurfaceVariant),
+                        ),
                       ),
                     ),
                   )
