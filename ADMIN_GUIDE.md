@@ -168,9 +168,8 @@ The Master File import covers **schedule items and award winners only**
 - Choose **Publish**, **Replace Existing** or **Skip** per row. Sensible
   defaults are pre-selected: for schedule rows Skip when "Already live" or
   "Duplicate in file", Replace Existing for "Changes a live item", otherwise
-  Publish; for award rows Skip when "Duplicate in file", otherwise Publish
-  (an award that is already published is listed in the Checks card — skip or
-  replace it yourself).
+  Publish; for award rows Skip when "Duplicate in file" or already published,
+  otherwise Publish.
 - **Replace Existing really replaces**: it first deletes the live item(s) the
   row matches (schedule: same day and same title, or same venue at an
   overlapping time; awards: same award and team), then inserts the row.

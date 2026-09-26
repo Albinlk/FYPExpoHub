@@ -84,6 +84,8 @@ void main() {
     );
     expect(cands[1]['is_skip'], isTrue);
     expect(cands[2]['comparison_status'], 'unchanged');
+    expect(cands[2]['is_skip'], isTrue, reason: 'an already-published award defaults to Skip');
+    expect(cands[0]['is_skip'], isNull, reason: 'the first new award stays Publish');
     expect(issues, hasLength(2));
   });
 

@@ -157,8 +157,8 @@ a Publish / Replace Existing / Skip choice, pre-selected by
 |---|---|
 | Schedule: `unchanged` or `is_duplicate` | Skip |
 | Schedule: `updated` | Replace existing |
-| Award: `is_skip` (duplicate in file) | Skip |
-| Anything else (incl. an award already published — it is only listed as an `info` check) | Publish |
+| Award: `is_skip` (duplicate in file, or already published) | Skip |
+| Anything else | Publish |
 
 After review the app calls:
 ```sql
