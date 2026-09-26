@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/announcement.dart';
 import '../../../../core/state/state_providers.dart';
+import '../../../../core/utils/schedule_format.dart' show longDate, mytDate;
 import '../../../../core/supabase/supabase_database_service.dart' show kEventSlug;
 import '../../../../core/widgets/admin_actions.dart';
 
@@ -240,7 +241,7 @@ class AdminAnnouncementsPage extends ConsumerWidget {
                           final isPublished = item.publicationStatus == 'published';
 
                           // Format Date helper
-                          final dateText = "${item.createdAt.day} ${item.createdAt.month == 7 ? "July" : "August"} ${item.createdAt.year}";
+                          final dateText = longDate(mytDate(item.createdAt));
 
                           return Padding(
                             padding: const EdgeInsets.symmetric(vertical: 4.0),

@@ -180,6 +180,13 @@ final projectVisitCountsProvider =
       () => ProjectVisitCountsNotifier(),
     );
 
+/// The Home page's "Featured Projects": projects an admin marked Featured
+/// first, then the rest in most-visited order, up to [count].
+List<Project> featuredForHome(List<Project> mostVisited, {int count = 6}) => [
+      ...mostVisited.where((p) => p.featured),
+      ...mostVisited.where((p) => !p.featured),
+    ].take(count).toList();
+
 final mostVisitedProjectsProvider = Provider<List<Project>>((ref) {
   final projects = ref.watch(publicProjectsProvider);
   final counts = ref.watch(projectVisitCountsProvider);

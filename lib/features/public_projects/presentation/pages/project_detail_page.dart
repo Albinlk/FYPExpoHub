@@ -359,7 +359,10 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                     title: Text('Booth ${project.boothNumber}', style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold)),
                     subtitle: Text(project.boothZone ?? 'Zon A', style: DesignSystem.bodySm, softWrap: true),
                     trailing: OutlinedButton(
-                      onPressed: () => context.go('/booths?search=${project.boothNumber}'),
+                      onPressed: () => context.go(Uri(path: '/booths', queryParameters: {
+                        'search': project.boothNumber!,
+                        if (project.presentationDay != null) 'day': project.presentationDay!,
+                      }).toString()),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: DesignSystem.secondary,
                         side: const BorderSide(color: DesignSystem.secondary),

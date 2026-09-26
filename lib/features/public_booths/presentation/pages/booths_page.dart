@@ -52,9 +52,15 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
     // /booths?search=<booth number> — seed the search box once.
     if (!_initializedFromQuery) {
       _initializedFromQuery = true;
-      final q = GoRouterState.of(context).uri.queryParameters['search'] ?? '';
+      final params = GoRouterState.of(context).uri.queryParameters;
+      final q = params['search'] ?? '';
       if (q.isNotEmpty) {
         _searchController.text = q;
+      }
+      // ?day=<presentation day>: open on the booth's day, not always Day 1.
+      final day = params['day'];
+      if (day != null && _dayOrder.contains(day)) {
+        _selectedDay = day;
       }
     }
   }
