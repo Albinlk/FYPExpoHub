@@ -14,6 +14,7 @@ class ProjectCard extends StatelessWidget {
     this.imageHeight,
     this.imageOverlay,
     this.trailingContent,
+    this.heroTag,
   });
 
   final Project project;
@@ -30,6 +31,11 @@ class ProjectCard extends StatelessWidget {
 
   /// Optional trailing chips row rendered below the standard details.
   final Widget? trailingContent;
+
+  /// When set, the cover flies to the detail page's cover (see
+  /// projectCoverHeroTag). Only pass it where each project appears once on
+  /// screen: two Heroes with one tag in the same route crash.
+  final String? heroTag;
 
   String? get _day => project.presentationDay;
 
@@ -125,16 +131,21 @@ class ProjectCard extends StatelessWidget {
     );
   }
 
+  Widget _withHero(Widget cover) {
+    final tag = heroTag;
+    return tag == null ? cover : Hero(tag: tag, child: cover);
+  }
+
   Widget _buildImageArea() {
     final cover = Stack(
       fit: imageHeight == null ? StackFit.expand : StackFit.passthrough,
       children: [
-        ProjectCoverImage(
+        _withHero(ProjectCoverImage(
           title: project.title,
           category: project.category,
           imageUrl: project.coverImageUrl,
           fit: BoxFit.cover,
-        ),
+        )),
         if (project.calonIndustri)
           Positioned(
             top: 8,

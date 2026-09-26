@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../app/theme/theme.dart';
+import '../../../../core/widgets/entrance_animation.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/widgets/collapsible_filter_panel.dart';
 import '../../../../core/widgets/project_card.dart';
@@ -201,9 +202,13 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
                   ),
                   delegate: SliverChildBuilderDelegate((context, index) {
                     final project = filteredProjects[index];
-                    return ProjectCard(
-                      project: project,
-                      onTap: () => context.go('/projects/${project.slug}'),
+                    return StaggeredEntrance(
+                      index: index,
+                      child: ProjectCard(
+                        project: project,
+                        heroTag: projectCoverHeroTag(project.id),
+                        onTap: () => context.go('/projects/${project.slug}'),
+                      ),
                     );
                   }, childCount: filteredProjects.length),
                 ),
