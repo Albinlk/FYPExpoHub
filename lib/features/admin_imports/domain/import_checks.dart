@@ -134,6 +134,9 @@ List<Map<String, dynamic>> checkAwardCandidates({
     }
     if (live.contains(key)) {
       c['comparison_status'] = 'unchanged';
+      // Suggest Skip, as for a schedule row that is already live (the award
+      // review list keys its default off is_skip).
+      c['is_skip'] = true;
       issues.add(_issue(importId, sheet, row, 'duplicate', 'info', '$label is already published.'));
     }
   }
