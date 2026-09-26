@@ -15,6 +15,15 @@ abstract class FypReportSubmission with _$FypReportSubmission {
 
     /// Storage path of the original plagiarism report (F6).
     String? plagiarismReportUrl,
+
+    /// Textbook minimums (proposal 30 pages / 15 refs, final 50 / 30; half academic).
+    int? pageCount,
+    int? referenceCount,
+    int? academicReferenceCount,
+
+    /// REC ethics form, required with a proposal involving human subjects.
+    @Default(false) bool involvesHumanSubjects,
+    String? ethicsFormUrl,
     String? endorsedBy,
     DateTime? endorsedAt,
     required String status, // 'submitted', 'under_review', 'approved', 'rejected'
