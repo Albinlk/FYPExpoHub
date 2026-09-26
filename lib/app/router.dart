@@ -46,6 +46,7 @@ import '../features/fypms/presentation/pages/student_supervision_page.dart';
 import '../features/fypms/presentation/pages/supervisor_dashboard_page.dart';
 import '../features/admin_announcements/presentation/pages/admin_announcements_page.dart';
 import '../features/admin_auth/presentation/pages/sign_in_page.dart';
+import '../features/admin_auth/presentation/pages/reset_password_page.dart';
 import '../features/admin_awards/presentation/pages/admin_awards_page.dart';
 import '../features/admin_booths/presentation/pages/admin_booths_page.dart';
 import '../features/admin_dashboard/presentation/pages/dashboard_page.dart';
@@ -197,6 +198,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/admin/sign-in',
         builder: (context, state) => const SignInPage(),
+      ),
+      // Password-recovery email landing (G-32). Outside /admin so the admin
+      // guard doesn't bounce the short-lived recovery session.
+      GoRoute(
+        path: '/reset-password',
+        builder: (context, state) => const ResetPasswordPage(),
       ),
 
       // -------------------------------------------------------------
