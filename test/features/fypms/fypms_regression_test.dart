@@ -208,8 +208,7 @@ void main() {
   });
 
   group('Regression (e): finalized marks cannot be silently edited', () {
-    testWidgets('re-finalize attempt surfaces the failed-precondition guard',
-        (tester) async {
+    testWidgets('a finalized course offers no Finalize action', (tester) async {
       await _pump(
         tester,
         ProviderScope(
@@ -217,28 +216,14 @@ void main() {
             fypRecordsProvider.overrideWith((ref) async => [_ownRecord()]),
             fypMarksSummariesProvider.overrideWith(
                 (ref, recordId) async => [_finalizedMarks()]),
-            finalizeMarksProvider.overrideWithValue(
-                (recordId, courseCode, breakdown) async {
-              throw Exception(
-                  'failed-precondition: Marks are already finalized for this course.');
-            }),
           ],
           child: MaterialApp(home: const CspMarksPage()),
         ),
       );
 
-      await tester.tap(find.text('Finalize'));
-      await tester.pumpAndSettle();
-      await tester.enterText(
-        find.byType(TextField),
-        '{"proposal": 20, "report": 40, "viva": 40}',
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(_dialogButton('Finalize'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 400));
-
-      expect(find.textContaining('already finalized'), findsOneWidget);
+      expect(find.text('CSP600 — Grade: A'), findsOneWidget);
+      // The server also refuses a second finalize (failed-precondition).
+      expect(find.text('Finalize'), findsNothing);
     });
   });
 }

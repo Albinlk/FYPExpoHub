@@ -1,11 +1,13 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
+import '../../../../core/domain/fypms_course_marks.dart';
 import '../../../../core/domain/models/fypms/fyp_record.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import '../widgets/fypms_loading_widget.dart';
 
+/// Course marks computed from the rubric evaluations (textbook shares), with
+/// a Finalize action once every evaluator has scored.
 class CspMarksPage extends ConsumerWidget {
   const CspMarksPage({super.key});
 
@@ -32,10 +34,7 @@ class CspMarksPage extends ConsumerWidget {
           return ListView.builder(
             padding: const EdgeInsets.all(DesignSystem.gutter),
             itemCount: list.length,
-            itemBuilder: (context, itemIndex) {
-              final record = list[itemIndex];
-                return _RecordMarksSection(record: record);
-            },
+            itemBuilder: (context, index) => _RecordMarksSection(record: list[index]),
           );
         },
       ),
@@ -44,13 +43,17 @@ class CspMarksPage extends ConsumerWidget {
 }
 
 class _RecordMarksSection extends ConsumerWidget {
-  final FypRecord record;
-
   const _RecordMarksSection({required this.record});
+
+  final FypRecord record;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final summaries = ref.watch(fypMarksSummariesProvider(record.id));
+    final finalized = summaries.value?.any(
+          (s) => s.isFinalized && s.courseCode == record.currentCourseCode,
+        ) ??
+        false;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -58,17 +61,22 @@ class _RecordMarksSection extends ConsumerWidget {
         Padding(
           padding: const EdgeInsets.symmetric(vertical: DesignSystem.spaceSm),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                record.projectTitle ?? 'Untitled Project',
-                style: DesignSystem.bodyLg.copyWith(fontWeight: FontWeight.bold, color: DesignSystem.primary),
+              Expanded(
+                child: Text(
+                  record.projectTitle ?? 'Untitled Project',
+                  style: DesignSystem.bodyLg.copyWith(fontWeight: FontWeight.bold, color: DesignSystem.primary),
+                ),
               ),
-              FilledButton.icon(
-                onPressed: () => _showFinalizeMarksDialog(context, ref),
-                icon: const Icon(Icons.grade, size: 18),
-                label: const Text('Finalize'),
-              ),
+              if (!finalized)
+                FilledButton.icon(
+                  onPressed: () => showDialog<void>(
+                    context: context,
+                    builder: (_) => _CourseMarksDialog(record: record),
+                  ),
+                  icon: const Icon(Icons.grade, size: 18),
+                  label: const Text('Finalize'),
+                ),
             ],
           ),
         ),
@@ -108,72 +116,145 @@ class _RecordMarksSection extends ConsumerWidget {
       ],
     );
   }
+}
 
-  void _showFinalizeMarksDialog(BuildContext context, WidgetRef ref) {
-    final marksController = TextEditingController();
+/// The computed breakdown for one record, and Finalize when complete.
+class _CourseMarksDialog extends ConsumerStatefulWidget {
+  const _CourseMarksDialog({required this.record});
 
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              backgroundColor: DesignSystem.surfaceContainerLowest,
-              title: Text('Finalize Course Marks', style: DesignSystem.h2),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: marksController,
-                    onChanged: (_) => setState(() {}),
-                    decoration: const InputDecoration(
-                      labelText: 'Component marks JSON (e.g. {"proposal": 20, "report": 40, "viva": 40})',
-                      hintText: '{"item1": 10, "item2": 20}',
-                    ),
-                  ),
-                ],
+  final FypRecord record;
+
+  @override
+  ConsumerState<_CourseMarksDialog> createState() => _CourseMarksDialogState();
+}
+
+class _CourseMarksDialogState extends ConsumerState<_CourseMarksDialog> {
+  bool _finalizing = false;
+
+  Future<void> _finalize() async {
+    setState(() => _finalizing = true);
+    try {
+      await ref.read(finalizeCourseMarksProvider)(widget.record.id);
+      if (!mounted) return;
+      final messenger = ScaffoldMessenger.of(context);
+      Navigator.pop(context);
+      messenger.showSnackBar(const SnackBar(content: Text('Marks finalized.')));
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _finalizing = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final marks = ref.watch(fypCourseMarksProvider(widget.record.id));
+    final complete = marks.value?.complete ?? false;
+
+    return AlertDialog(
+      backgroundColor: DesignSystem.surfaceContainerLowest,
+      title: Text('Finalize Course Marks', style: DesignSystem.h2),
+      content: SizedBox(
+        width: 560,
+        child: marks.when(
+          loading: () => const SizedBox(height: 120, child: Center(child: CircularProgressIndicator())),
+          error: (e, _) => Text('Could not compute marks: $e'),
+          data: _buildBreakdown,
+        ),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+        FilledButton(
+          onPressed: complete && !_finalizing ? _finalize : null,
+          child: const Text('Finalize'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBreakdown(CourseMarks m) {
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '${m.courseCode}: each evaluator\'s share × their rubric score.',
+            style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant),
+          ),
+          const SizedBox(height: DesignSystem.spaceSm),
+          for (final c in m.components)
+            _row(
+              c.label,
+              '${c.percent!.toStringAsFixed(1)}% of ${_n(c.share)}',
+              c.contribution!.toStringAsFixed(2),
+            ),
+          if (m.missing.isNotEmpty) ...[
+            const SizedBox(height: DesignSystem.spaceSm),
+            Text(
+              'Still missing (${m.missing.length})',
+              style: DesignSystem.bodySm.copyWith(color: DesignSystem.error, fontWeight: FontWeight.bold),
+            ),
+            for (final c in m.missing)
+              _row(
+                c.label,
+                c.reason == 'no_submission' ? 'not submitted' : 'not evaluated',
+                '— / ${_n(c.share)}',
+                muted: true,
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(dialogContext),
-                  child: const Text('Cancel'),
+          ],
+          const Divider(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  m.complete ? 'Total' : 'Total so far',
+                  style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold),
                 ),
-                FilledButton(
-                  onPressed: marksController.text.trim().isEmpty
-                      ? null
-                      : () async {
-                          try {
-                            final marks = jsonDecode(marksController.text);
-                            if (marks is! Map<String, dynamic>) throw Exception('Invalid marks format.');
+              ),
+              Text(
+                '${m.total.toStringAsFixed(2)} / ${_n(m.allocated)}'
+                '${m.complete && m.grade != null ? '  ·  ${m.grade}' : ''}',
+                key: const Key('course-total'),
+                style: DesignSystem.h3Mobile.copyWith(color: DesignSystem.primary),
+              ),
+            ],
+          ),
+          if (!m.complete)
+            Padding(
+              padding: const EdgeInsets.only(top: DesignSystem.spaceSm),
+              child: Text(
+                'Marks can be finalized once every evaluation is in.',
+                style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 
-                            await ref.read(finalizeMarksProvider)(
-                              record.id,
-                              record.currentCourseCode,
-                              marks,
-                            );
-                            if (dialogContext.mounted) {
-                              Navigator.pop(dialogContext);
-                            }
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Marks finalized.')),
-                              );
-                            }
-                          } catch (e) {
-                            if (dialogContext.mounted) {
-                              ScaffoldMessenger.of(dialogContext).showSnackBar(
-                                SnackBar(content: Text('Failed: $e')),
-                              );
-                            }
-                          }
-                        },
-                  child: const Text('Finalize'),
-                ),
-              ],
-            );
-          },
-        );
-      },
+  static String _n(double v) => v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(1);
+
+  Widget _row(String label, String detail, String value, {bool muted = false}) {
+    final color = muted ? DesignSystem.onSurfaceVariant : DesignSystem.onBackground;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 5,
+            child: Text(label, style: DesignSystem.bodySm.copyWith(color: color, fontWeight: FontWeight.w600)),
+          ),
+          Expanded(
+            flex: 4,
+            child: Text(detail, style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant)),
+          ),
+          SizedBox(
+            width: 64,
+            child: Text(value, textAlign: TextAlign.right, style: DesignSystem.bodySm.copyWith(color: color)),
+          ),
+        ],
+      ),
     );
   }
 }

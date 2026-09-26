@@ -15,6 +15,9 @@ _FypRubricTemplate _$FypRubricTemplateFromJson(Map<String, dynamic> json) =>
       criteria: (json['criteria'] as List<dynamic>)
           .map((e) => e as Map<String, dynamic>)
           .toList(),
+      evaluatorShares:
+          json['evaluatorShares'] as Map<String, dynamic>? ??
+          const <String, dynamic>{},
       version: (json['version'] as num).toInt(),
       isActive: json['isActive'] as bool,
       createdAt: DateTime.parse(json['createdAt'] as String),
@@ -28,6 +31,7 @@ Map<String, dynamic> _$FypRubricTemplateToJson(_FypRubricTemplate instance) =>
       'rubricName': instance.rubricName,
       'formCode': instance.formCode,
       'criteria': instance.criteria,
+      'evaluatorShares': instance.evaluatorShares,
       'version': instance.version,
       'isActive': instance.isActive,
       'createdAt': instance.createdAt.toIso8601String(),

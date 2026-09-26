@@ -147,6 +147,30 @@ final finalizeMarksProvider = Provider<
   },
 );
 
+/// Finalizes a record's course marks from its evaluations.
+final finalizeCourseMarksProvider = Provider<Future<void> Function(String fypRecordId)>(
+  (ref) {
+    return (fypRecordId) async {
+      final rpc = ref.read(supabaseRpcServiceProvider);
+      await rpc.finalizeFypCourseMarks(fypRecordId: fypRecordId);
+      ref.invalidate(fypMarksSummariesProvider(fypRecordId));
+      ref.invalidate(fypCourseMarksProvider(fypRecordId));
+      ref.invalidate(fypRecordsProvider);
+    };
+  },
+);
+
+/// Coordinator re-splits the CSP600 formulation 30 % across F2 / F3 / F4.
+final setCsp600FormulationSharesProvider = Provider<Future<void> Function(num f2, num f3, num f4)>(
+  (ref) {
+    return (f2, f3, f4) async {
+      final rpc = ref.read(supabaseRpcServiceProvider);
+      await rpc.setCsp600FormulationShares(f2: f2, f3: f3, f4: f4);
+      ref.invalidate(fypRubricTemplatesProvider);
+    };
+  },
+);
+
 /// Schedules a presentation slot within a session.
 final schedulePresentationSlotProvider = Provider<
     Future<void> Function(

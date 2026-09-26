@@ -272,6 +272,25 @@ extension FypmsRpcService on SupabaseRpcService {
     });
   }
 
+  /// Course marks computed from the record's rubric evaluations.
+  Future<Map<String, dynamic>> computeFypCourseMarks({required String fypRecordId}) async {
+    return _rpc('compute_fyp_course_marks', {'p_fyp_record_id': fypRecordId});
+  }
+
+  /// Finalizes the computed course marks (course lecturer; all evaluations in).
+  Future<Map<String, dynamic>> finalizeFypCourseMarks({required String fypRecordId}) async {
+    return _rpc('finalize_fyp_course_marks', {'p_fyp_record_id': fypRecordId});
+  }
+
+  /// Coordinator splits the CSP600 formulation 30 % across F2 / F3 / F4.
+  Future<Map<String, dynamic>> setCsp600FormulationShares({
+    required num f2,
+    required num f3,
+    required num f4,
+  }) async {
+    return _rpc('set_csp600_formulation_shares', {'p_f2': f2, 'p_f3': f3, 'p_f4': f4});
+  }
+
   Future<Map<String, dynamic>> assignExaminer({
     required String fypRecordId,
     required String examinerId,
