@@ -6,7 +6,7 @@ The FYP Expo Hub is deployed as a **Flutter Web** application on **GitHub Pages*
 The backend is **Supabase** (PostgreSQL with Auth, Realtime, and Row Level Security).
 
 - **Public site**: https://fskmjasinfypexhibition.site (GitHub Pages)
-- **Admin CMS**: https://admin.fskmjasinfypexhibition.site (same GitHub Pages deployment)
+- **Admin CMS**: https://fskmjasinfypexhibition.site/admin — `admin.fskmjasinfypexhibition.site` is a Cloudflare redirect (302) to it
 - **Backend**: Supabase project `siedglubjcedkbrpdzgi`
 
 ## CI/CD Pipeline
@@ -108,7 +108,7 @@ npx supabase gen types typescript --project-id siedglubjcedkbrpdzgi
 
 ### Custom Domain
 - **Public**: `fskmjasinfypexhibition.site` (managed via GitHub Pages, CNAME)
-- **Admin**: `admin.fskmjasinfypexhibition.site` (managed via GitHub Pages, CNAME)
+- **Admin**: `admin.fskmjasinfypexhibition.site` — Cloudflare **Redirect Rule** (Hostname equals `admin.fskmjasinfypexhibition.site` → 302 to `https://fskmjasinfypexhibition.site/admin`). It is **not** a GitHub Pages site: a repo's Pages site serves one custom domain, and this repo's is the apex. (Until 2026-09 it pointed at a separate, stale 6 Aug build that never received deploys.)
 
 ### SPA Handling
 - `404.html` is copied from `index.html` to handle client-side routing
@@ -135,7 +135,7 @@ npx supabase gen types typescript --project-id siedglubjcedkbrpdzgi
 
 ### Post-Deployment
 - [ ] Public site loads: https://fskmjasinfypexhibition.site
-- [ ] Admin sign-in works: https://admin.fskmjasinfypexhibition.site/admin/sign-in
+- [ ] Admin sign-in works: https://fskmjasinfypexhibition.site/admin/sign-in (and https://admin.fskmjasinfypexhibition.site redirects there)
 - [ ] Supabase Realtime is connected (check browser dev tools → Network → WebSocket)
 - [ ] Project data renders on the public site
 - [ ] Schedule data renders
