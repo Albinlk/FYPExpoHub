@@ -163,17 +163,34 @@ extension FypmsRpcService on SupabaseRpcService {
     });
   }
 
+  /// F6(a)/F6(b): report file, similarity index (<= 30 %) and the original
+  /// plagiarism report.
   Future<Map<String, dynamic>> submitReportVersion({
     required String fypRecordId,
     required String reportType,
     required String fileUrl,
     double? similarityIndex,
+    String? plagiarismReportUrl,
   }) async {
     return _rpc('submit_report_version', {
       'p_fyp_record_id': fypRecordId,
       'p_report_type': reportType,
       'p_file_url': fileUrl,
       'p_similarity_index': ?similarityIndex,
+      'p_plagiarism_report_url': ?plagiarismReportUrl,
+    });
+  }
+
+  /// Supervisor endorses ('endorsed') or returns ('returned') an F6 report.
+  Future<Map<String, dynamic>> endorseReportSubmission({
+    required String reportId,
+    required String decision,
+    String? comment,
+  }) async {
+    return _rpc('endorse_report_submission', {
+      'p_report_id': reportId,
+      'p_decision': decision,
+      'p_comment': ?comment,
     });
   }
 
