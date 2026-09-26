@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:fyp_expo_hub/app/router.dart';
@@ -7,6 +8,8 @@ import 'package:fyp_expo_hub/app/router_guards.dart' show safeReturnPath;
 import 'package:fyp_expo_hub/core/supabase/supabase_client_provider.dart';
 import 'package:fyp_expo_hub/core/domain/models/lecturer.dart';
 import 'package:fyp_expo_hub/core/state/state_providers.dart';
+import 'package:fyp_expo_hub/core/domain/models/event.dart';
+import 'package:fyp_expo_hub/core/state/fypms_state_providers.dart';
 
 /// Admin + lecturer route-guard tests for the non-FYPMS halves of the router:
 ///   - unauthenticated `/admin/**` -> `/admin/sign-in`
@@ -63,9 +66,10 @@ Future<String> _resolve(
   User? user,
   bool isAdmin = false,
   Lecturer? lecturer,
+  List<Override> extra = const [],
 }) async =>
     (await _resolveUri(tester,
-            target: target, user: user, isAdmin: isAdmin, lecturer: lecturer))
+            target: target, user: user, isAdmin: isAdmin, lecturer: lecturer, extra: extra))
         .path;
 
 Future<Uri> _resolveUri(
@@ -74,6 +78,7 @@ Future<Uri> _resolveUri(
   User? user,
   bool isAdmin = false,
   Lecturer? lecturer,
+  List<Override> extra = const [],
 }) async {
   tester.view.physicalSize = const Size(1920, 1080);
   tester.view.devicePixelRatio = 1.0;
@@ -86,6 +91,7 @@ Future<Uri> _resolveUri(
         isAdminProvider.overrideWith((ref) async => isAdmin),
         lecturerAuthProvider
             .overrideWith(() => _FixedLecturerNotifier(lecturer)),
+        ...extra,
       ],
       child: const _RouterHost(),
     ),
@@ -203,6 +209,36 @@ void main() {
       );
     });
 
+    testWidgets('staff with FYPMS roles land in FYPMS outside the exhibition', (tester) async {
+      // The default event (6-7 Aug 2026) is over, so FYPMS comes first.
+      expect(
+        await _resolve(
+          tester,
+          target: '/admin/sign-in',
+          user: _user('aminah@uitm.edu.my'),
+          lecturer: _lecturer(),
+          extra: [fypmsCurrentRolesProvider.overrideWith((ref) async => ['supervisor'])],
+        ),
+        '/fypms/supervisor',
+      );
+    });
+
+    testWidgets('during the exhibition, staff land in My Visits', (tester) async {
+      expect(
+        await _resolve(
+          tester,
+          target: '/admin/sign-in',
+          user: _user('aminah@uitm.edu.my'),
+          lecturer: _lecturer(),
+          extra: [
+            fypmsCurrentRolesProvider.overrideWith((ref) async => ['supervisor']),
+            eventProvider.overrideWith(_RunningEvent.new),
+          ],
+        ),
+        '/lecturer/visits',
+      );
+    });
+
     testWidgets('lecturer can reach My Visits directly', (tester) async {
       expect(
         await _resolve(
@@ -260,4 +296,16 @@ void main() {
       );
     });
   });
+}
+
+/// The default event, moved so that it is running now.
+class _RunningEvent extends EventNotifier {
+  @override
+  Event build() {
+    final now = DateTime.now();
+    return super.build().copyWith(
+          startAt: now.subtract(const Duration(hours: 2)),
+          endAt: now.add(const Duration(hours: 6)),
+        );
+  }
 }

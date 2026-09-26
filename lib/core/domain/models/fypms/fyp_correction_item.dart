@@ -13,6 +13,11 @@ abstract class FypCorrectionItem with _$FypCorrectionItem {
     required String severity, // 'minor', 'major'
     required String status, // 'open', 'in_progress', 'evidence_submitted', 'confirmed', 'closed'
     String? createdBy,
+
+    /// What the student says was amended (F12), and the corrected file.
+    String? evidenceNote,
+    String? evidenceUrl,
+    DateTime? evidenceSubmittedAt,
     required DateTime createdAt,
     required DateTime updatedAt,
   }) = _FypCorrectionItem;

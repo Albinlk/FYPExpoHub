@@ -153,17 +153,30 @@ Future<String?> _postLoginRedirect(Ref ref, {String? from}) async {
   if (isAdmin) {
     return '/admin';
   }
-  final lecturer = ref.read(lecturerAuthProvider);
-  if (lecturer != null || await _safeFlag(ref, isLecturerProvider)) {
+  final isLecturer = ref.read(lecturerAuthProvider) != null || await _safeFlag(ref, isLecturerProvider);
+  var roles = const <String>[];
+  try {
+    roles = await ref.read(fypmsCurrentRolesProvider.future);
+  } catch (_) {
+    // No FYPMS access.
+  }
+  // Staff who also hold FYPMS roles work in FYPMS most of the year; during
+  // the exhibition itself their booth visits come first.
+  if (isLecturer && (roles.isEmpty || _exhibitionRunning(ref))) {
     return '/lecturer/visits';
   }
-  try {
-    final roles = await ref.read(fypmsCurrentRolesProvider.future);
-    if (roles.isNotEmpty) return _fypmsHomeForRoles(roles);
-  } catch (_) {
-    // No FYPMS access — stay on the sign-in page, which explains that.
-  }
+  if (roles.isNotEmpty) return _fypmsHomeForRoles(roles);
+  if (isLecturer) return '/lecturer/visits';
+  // Stay on the sign-in page, which explains there's no access.
   return null;
+}
+
+/// True from the day before the exhibition starts to the day after it ends.
+bool _exhibitionRunning(Ref ref) {
+  final event = ref.read(eventProvider);
+  final now = DateTime.now();
+  return now.isAfter(event.startAt.subtract(const Duration(days: 1))) &&
+      now.isBefore(event.endAt.add(const Duration(days: 1)));
 }
 
 /// Resolves the landing workspace for a set of FYPMS role codes.

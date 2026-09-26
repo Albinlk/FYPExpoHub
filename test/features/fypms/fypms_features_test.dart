@@ -4,8 +4,11 @@ import 'package:fyp_expo_hub/core/state/fypms_state_providers.dart';
 void main() {
   group('F14-F16 feature gating', () {
     test('always-enabled form codes are present', () {
-      expect(fypmsAlwaysEnabledFormCodes, contains('F1'));
+      expect(fypmsAlwaysEnabledFormCodes, contains('F2'));
       expect(fypmsAlwaysEnabledFormCodes, contains('F7'));
+      // F1 and F12 have their own flows; submit_fyp_form rejects them.
+      expect(fypmsAlwaysEnabledFormCodes, isNot(contains('F1')));
+      expect(fypmsAlwaysEnabledFormCodes, isNot(contains('F12')));
       expect(fypmsAlwaysEnabledFormCodes, contains('F13'));
     });
 
