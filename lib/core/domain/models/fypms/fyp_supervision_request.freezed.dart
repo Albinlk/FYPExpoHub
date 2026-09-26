@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$FypSupervisionRequest {
 
- String get id; String get fypRecordId; String? get preferredSupervisorId; String? get rationale; String get status;// 'pending', 'approved', 'rejected', 'withdrawn'
+ String get id; String get fypRecordId; String? get preferredSupervisorId; String? get preferredCoSupervisorId; String? get projectArea; String? get projectTitle; String? get rationale; String get status;// 'pending', 'approved', 'rejected', 'withdrawn'
  String? get decidedBy; DateTime? get decidedAt; String? get decisionReason; DateTime get createdAt; DateTime get updatedAt;
 /// Create a copy of FypSupervisionRequest
 /// with the given fields replaced by the non-null parameter values.
@@ -29,16 +29,16 @@ $FypSupervisionRequestCopyWith<FypSupervisionRequest> get copyWith => _$FypSuper
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is FypSupervisionRequest&&(identical(other.id, id) || other.id == id)&&(identical(other.fypRecordId, fypRecordId) || other.fypRecordId == fypRecordId)&&(identical(other.preferredSupervisorId, preferredSupervisorId) || other.preferredSupervisorId == preferredSupervisorId)&&(identical(other.rationale, rationale) || other.rationale == rationale)&&(identical(other.status, status) || other.status == status)&&(identical(other.decidedBy, decidedBy) || other.decidedBy == decidedBy)&&(identical(other.decidedAt, decidedAt) || other.decidedAt == decidedAt)&&(identical(other.decisionReason, decisionReason) || other.decisionReason == decisionReason)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FypSupervisionRequest&&(identical(other.id, id) || other.id == id)&&(identical(other.fypRecordId, fypRecordId) || other.fypRecordId == fypRecordId)&&(identical(other.preferredSupervisorId, preferredSupervisorId) || other.preferredSupervisorId == preferredSupervisorId)&&(identical(other.preferredCoSupervisorId, preferredCoSupervisorId) || other.preferredCoSupervisorId == preferredCoSupervisorId)&&(identical(other.projectArea, projectArea) || other.projectArea == projectArea)&&(identical(other.projectTitle, projectTitle) || other.projectTitle == projectTitle)&&(identical(other.rationale, rationale) || other.rationale == rationale)&&(identical(other.status, status) || other.status == status)&&(identical(other.decidedBy, decidedBy) || other.decidedBy == decidedBy)&&(identical(other.decidedAt, decidedAt) || other.decidedAt == decidedAt)&&(identical(other.decisionReason, decisionReason) || other.decisionReason == decisionReason)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,fypRecordId,preferredSupervisorId,rationale,status,decidedBy,decidedAt,decisionReason,createdAt,updatedAt);
+int get hashCode => Object.hash(runtimeType,id,fypRecordId,preferredSupervisorId,preferredCoSupervisorId,projectArea,projectTitle,rationale,status,decidedBy,decidedAt,decisionReason,createdAt,updatedAt);
 
 @override
 String toString() {
-  return 'FypSupervisionRequest(id: $id, fypRecordId: $fypRecordId, preferredSupervisorId: $preferredSupervisorId, rationale: $rationale, status: $status, decidedBy: $decidedBy, decidedAt: $decidedAt, decisionReason: $decisionReason, createdAt: $createdAt, updatedAt: $updatedAt)';
+  return 'FypSupervisionRequest(id: $id, fypRecordId: $fypRecordId, preferredSupervisorId: $preferredSupervisorId, preferredCoSupervisorId: $preferredCoSupervisorId, projectArea: $projectArea, projectTitle: $projectTitle, rationale: $rationale, status: $status, decidedBy: $decidedBy, decidedAt: $decidedAt, decisionReason: $decisionReason, createdAt: $createdAt, updatedAt: $updatedAt)';
 }
 
 
@@ -49,7 +49,7 @@ abstract mixin class $FypSupervisionRequestCopyWith<$Res>  {
   factory $FypSupervisionRequestCopyWith(FypSupervisionRequest value, $Res Function(FypSupervisionRequest) _then) = _$FypSupervisionRequestCopyWithImpl;
 @useResult
 $Res call({
- String id, String fypRecordId, String? preferredSupervisorId, String? rationale, String status, String? decidedBy, DateTime? decidedAt, String? decisionReason, DateTime createdAt, DateTime updatedAt
+ String id, String fypRecordId, String? preferredSupervisorId, String? preferredCoSupervisorId, String? projectArea, String? projectTitle, String? rationale, String status, String? decidedBy, DateTime? decidedAt, String? decisionReason, DateTime createdAt, DateTime updatedAt
 });
 
 
@@ -66,11 +66,14 @@ class _$FypSupervisionRequestCopyWithImpl<$Res>
 
 /// Create a copy of FypSupervisionRequest
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? fypRecordId = null,Object? preferredSupervisorId = freezed,Object? rationale = freezed,Object? status = null,Object? decidedBy = freezed,Object? decidedAt = freezed,Object? decisionReason = freezed,Object? createdAt = null,Object? updatedAt = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? fypRecordId = null,Object? preferredSupervisorId = freezed,Object? preferredCoSupervisorId = freezed,Object? projectArea = freezed,Object? projectTitle = freezed,Object? rationale = freezed,Object? status = null,Object? decidedBy = freezed,Object? decidedAt = freezed,Object? decisionReason = freezed,Object? createdAt = null,Object? updatedAt = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,fypRecordId: null == fypRecordId ? _self.fypRecordId : fypRecordId // ignore: cast_nullable_to_non_nullable
 as String,preferredSupervisorId: freezed == preferredSupervisorId ? _self.preferredSupervisorId : preferredSupervisorId // ignore: cast_nullable_to_non_nullable
+as String?,preferredCoSupervisorId: freezed == preferredCoSupervisorId ? _self.preferredCoSupervisorId : preferredCoSupervisorId // ignore: cast_nullable_to_non_nullable
+as String?,projectArea: freezed == projectArea ? _self.projectArea : projectArea // ignore: cast_nullable_to_non_nullable
+as String?,projectTitle: freezed == projectTitle ? _self.projectTitle : projectTitle // ignore: cast_nullable_to_non_nullable
 as String?,rationale: freezed == rationale ? _self.rationale : rationale // ignore: cast_nullable_to_non_nullable
 as String?,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as String,decidedBy: freezed == decidedBy ? _self.decidedBy : decidedBy // ignore: cast_nullable_to_non_nullable
@@ -163,10 +166,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String fypRecordId,  String? preferredSupervisorId,  String? rationale,  String status,  String? decidedBy,  DateTime? decidedAt,  String? decisionReason,  DateTime createdAt,  DateTime updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String fypRecordId,  String? preferredSupervisorId,  String? preferredCoSupervisorId,  String? projectArea,  String? projectTitle,  String? rationale,  String status,  String? decidedBy,  DateTime? decidedAt,  String? decisionReason,  DateTime createdAt,  DateTime updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _FypSupervisionRequest() when $default != null:
-return $default(_that.id,_that.fypRecordId,_that.preferredSupervisorId,_that.rationale,_that.status,_that.decidedBy,_that.decidedAt,_that.decisionReason,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.fypRecordId,_that.preferredSupervisorId,_that.preferredCoSupervisorId,_that.projectArea,_that.projectTitle,_that.rationale,_that.status,_that.decidedBy,_that.decidedAt,_that.decisionReason,_that.createdAt,_that.updatedAt);case _:
   return orElse();
 
 }
@@ -184,10 +187,10 @@ return $default(_that.id,_that.fypRecordId,_that.preferredSupervisorId,_that.rat
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String fypRecordId,  String? preferredSupervisorId,  String? rationale,  String status,  String? decidedBy,  DateTime? decidedAt,  String? decisionReason,  DateTime createdAt,  DateTime updatedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String fypRecordId,  String? preferredSupervisorId,  String? preferredCoSupervisorId,  String? projectArea,  String? projectTitle,  String? rationale,  String status,  String? decidedBy,  DateTime? decidedAt,  String? decisionReason,  DateTime createdAt,  DateTime updatedAt)  $default,) {final _that = this;
 switch (_that) {
 case _FypSupervisionRequest():
-return $default(_that.id,_that.fypRecordId,_that.preferredSupervisorId,_that.rationale,_that.status,_that.decidedBy,_that.decidedAt,_that.decisionReason,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.fypRecordId,_that.preferredSupervisorId,_that.preferredCoSupervisorId,_that.projectArea,_that.projectTitle,_that.rationale,_that.status,_that.decidedBy,_that.decidedAt,_that.decisionReason,_that.createdAt,_that.updatedAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -204,10 +207,10 @@ return $default(_that.id,_that.fypRecordId,_that.preferredSupervisorId,_that.rat
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String fypRecordId,  String? preferredSupervisorId,  String? rationale,  String status,  String? decidedBy,  DateTime? decidedAt,  String? decisionReason,  DateTime createdAt,  DateTime updatedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String fypRecordId,  String? preferredSupervisorId,  String? preferredCoSupervisorId,  String? projectArea,  String? projectTitle,  String? rationale,  String status,  String? decidedBy,  DateTime? decidedAt,  String? decisionReason,  DateTime createdAt,  DateTime updatedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _FypSupervisionRequest() when $default != null:
-return $default(_that.id,_that.fypRecordId,_that.preferredSupervisorId,_that.rationale,_that.status,_that.decidedBy,_that.decidedAt,_that.decisionReason,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.fypRecordId,_that.preferredSupervisorId,_that.preferredCoSupervisorId,_that.projectArea,_that.projectTitle,_that.rationale,_that.status,_that.decidedBy,_that.decidedAt,_that.decisionReason,_that.createdAt,_that.updatedAt);case _:
   return null;
 
 }
@@ -219,12 +222,15 @@ return $default(_that.id,_that.fypRecordId,_that.preferredSupervisorId,_that.rat
 @JsonSerializable()
 
 class _FypSupervisionRequest implements FypSupervisionRequest {
-  const _FypSupervisionRequest({required this.id, required this.fypRecordId, this.preferredSupervisorId, this.rationale, required this.status, this.decidedBy, this.decidedAt, this.decisionReason, required this.createdAt, required this.updatedAt});
+  const _FypSupervisionRequest({required this.id, required this.fypRecordId, this.preferredSupervisorId, this.preferredCoSupervisorId, this.projectArea, this.projectTitle, this.rationale, required this.status, this.decidedBy, this.decidedAt, this.decisionReason, required this.createdAt, required this.updatedAt});
   factory _FypSupervisionRequest.fromJson(Map<String, dynamic> json) => _$FypSupervisionRequestFromJson(json);
 
 @override final  String id;
 @override final  String fypRecordId;
 @override final  String? preferredSupervisorId;
+@override final  String? preferredCoSupervisorId;
+@override final  String? projectArea;
+@override final  String? projectTitle;
 @override final  String? rationale;
 @override final  String status;
 // 'pending', 'approved', 'rejected', 'withdrawn'
@@ -247,16 +253,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FypSupervisionRequest&&(identical(other.id, id) || other.id == id)&&(identical(other.fypRecordId, fypRecordId) || other.fypRecordId == fypRecordId)&&(identical(other.preferredSupervisorId, preferredSupervisorId) || other.preferredSupervisorId == preferredSupervisorId)&&(identical(other.rationale, rationale) || other.rationale == rationale)&&(identical(other.status, status) || other.status == status)&&(identical(other.decidedBy, decidedBy) || other.decidedBy == decidedBy)&&(identical(other.decidedAt, decidedAt) || other.decidedAt == decidedAt)&&(identical(other.decisionReason, decisionReason) || other.decisionReason == decisionReason)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FypSupervisionRequest&&(identical(other.id, id) || other.id == id)&&(identical(other.fypRecordId, fypRecordId) || other.fypRecordId == fypRecordId)&&(identical(other.preferredSupervisorId, preferredSupervisorId) || other.preferredSupervisorId == preferredSupervisorId)&&(identical(other.preferredCoSupervisorId, preferredCoSupervisorId) || other.preferredCoSupervisorId == preferredCoSupervisorId)&&(identical(other.projectArea, projectArea) || other.projectArea == projectArea)&&(identical(other.projectTitle, projectTitle) || other.projectTitle == projectTitle)&&(identical(other.rationale, rationale) || other.rationale == rationale)&&(identical(other.status, status) || other.status == status)&&(identical(other.decidedBy, decidedBy) || other.decidedBy == decidedBy)&&(identical(other.decidedAt, decidedAt) || other.decidedAt == decidedAt)&&(identical(other.decisionReason, decisionReason) || other.decisionReason == decisionReason)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,fypRecordId,preferredSupervisorId,rationale,status,decidedBy,decidedAt,decisionReason,createdAt,updatedAt);
+int get hashCode => Object.hash(runtimeType,id,fypRecordId,preferredSupervisorId,preferredCoSupervisorId,projectArea,projectTitle,rationale,status,decidedBy,decidedAt,decisionReason,createdAt,updatedAt);
 
 @override
 String toString() {
-  return 'FypSupervisionRequest(id: $id, fypRecordId: $fypRecordId, preferredSupervisorId: $preferredSupervisorId, rationale: $rationale, status: $status, decidedBy: $decidedBy, decidedAt: $decidedAt, decisionReason: $decisionReason, createdAt: $createdAt, updatedAt: $updatedAt)';
+  return 'FypSupervisionRequest(id: $id, fypRecordId: $fypRecordId, preferredSupervisorId: $preferredSupervisorId, preferredCoSupervisorId: $preferredCoSupervisorId, projectArea: $projectArea, projectTitle: $projectTitle, rationale: $rationale, status: $status, decidedBy: $decidedBy, decidedAt: $decidedAt, decisionReason: $decisionReason, createdAt: $createdAt, updatedAt: $updatedAt)';
 }
 
 
@@ -267,7 +273,7 @@ abstract mixin class _$FypSupervisionRequestCopyWith<$Res> implements $FypSuperv
   factory _$FypSupervisionRequestCopyWith(_FypSupervisionRequest value, $Res Function(_FypSupervisionRequest) _then) = __$FypSupervisionRequestCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String fypRecordId, String? preferredSupervisorId, String? rationale, String status, String? decidedBy, DateTime? decidedAt, String? decisionReason, DateTime createdAt, DateTime updatedAt
+ String id, String fypRecordId, String? preferredSupervisorId, String? preferredCoSupervisorId, String? projectArea, String? projectTitle, String? rationale, String status, String? decidedBy, DateTime? decidedAt, String? decisionReason, DateTime createdAt, DateTime updatedAt
 });
 
 
@@ -284,11 +290,14 @@ class __$FypSupervisionRequestCopyWithImpl<$Res>
 
 /// Create a copy of FypSupervisionRequest
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? fypRecordId = null,Object? preferredSupervisorId = freezed,Object? rationale = freezed,Object? status = null,Object? decidedBy = freezed,Object? decidedAt = freezed,Object? decisionReason = freezed,Object? createdAt = null,Object? updatedAt = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? fypRecordId = null,Object? preferredSupervisorId = freezed,Object? preferredCoSupervisorId = freezed,Object? projectArea = freezed,Object? projectTitle = freezed,Object? rationale = freezed,Object? status = null,Object? decidedBy = freezed,Object? decidedAt = freezed,Object? decisionReason = freezed,Object? createdAt = null,Object? updatedAt = null,}) {
   return _then(_FypSupervisionRequest(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,fypRecordId: null == fypRecordId ? _self.fypRecordId : fypRecordId // ignore: cast_nullable_to_non_nullable
 as String,preferredSupervisorId: freezed == preferredSupervisorId ? _self.preferredSupervisorId : preferredSupervisorId // ignore: cast_nullable_to_non_nullable
+as String?,preferredCoSupervisorId: freezed == preferredCoSupervisorId ? _self.preferredCoSupervisorId : preferredCoSupervisorId // ignore: cast_nullable_to_non_nullable
+as String?,projectArea: freezed == projectArea ? _self.projectArea : projectArea // ignore: cast_nullable_to_non_nullable
+as String?,projectTitle: freezed == projectTitle ? _self.projectTitle : projectTitle // ignore: cast_nullable_to_non_nullable
 as String?,rationale: freezed == rationale ? _self.rationale : rationale // ignore: cast_nullable_to_non_nullable
 as String?,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as String,decidedBy: freezed == decidedBy ? _self.decidedBy : decidedBy // ignore: cast_nullable_to_non_nullable

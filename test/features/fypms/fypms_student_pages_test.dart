@@ -7,6 +7,7 @@ import 'package:fyp_expo_hub/core/domain/models/fypms/fyp_record.dart';
 import 'package:fyp_expo_hub/core/state/fypms_state_providers.dart';
 import 'package:fyp_expo_hub/features/fypms/presentation/pages/student_deliverables_page.dart';
 import 'package:fyp_expo_hub/features/fypms/presentation/pages/student_lean_canvas_page.dart';
+import 'package:fyp_expo_hub/features/fypms/presentation/pages/student_supervision_page.dart';
 
 FypRecord _record() => FypRecord(
       id: 'rec-1',
@@ -46,6 +47,25 @@ Widget _deliverablesApp({List<FypDeliverable> deliverables = const []}) {
     child: MaterialApp(
       theme: ThemeData(splashFactory: InkRipple.splashFactory),
       home: const StudentDeliverablesPage(),
+    ),
+  );
+}
+
+Widget _supervisionApp({FypRecord? record}) {
+  return ProviderScope(
+    overrides: [
+      myFypRecordsProvider.overrideWith((ref) async => [record ?? _record()]),
+      fypSupervisionRequestsProvider.overrideWith((ref, recordId) async => const []),
+      supervisorsDirectoryProvider.overrideWith((ref) async => const [
+            {'id': 'sv-1', 'display_name': 'DR. AMINAH', 'role_code': 'supervisor'},
+            {'id': 'sv-2', 'display_name': 'DR. FARID', 'role_code': 'supervisor'},
+            {'id': 'co-1', 'display_name': 'EN. BADRUL', 'role_code': 'co_supervisor'},
+            {'id': 'ex-1', 'display_name': 'DR. EXAMINER', 'role_code': 'examiner'},
+          ]),
+    ],
+    child: MaterialApp(
+      theme: ThemeData(splashFactory: InkRipple.splashFactory),
+      home: const StudentSupervisionPage(),
     ),
   );
 }
@@ -179,6 +199,47 @@ void main() {
       expect(find.text('Submit Deliverable'), findsWidgets);
       expect(find.text('Deliverable Type'), findsOneWidget);
       expect(find.text('Cancel'), findsOneWidget);
+    });
+  });
+
+  group('StudentSupervisionPage (F1)', () {
+    testWidgets('F1 needs a supervisor and a title; co-supervisor excludes the supervisor', (tester) async {
+      await pumpWithSize(tester, _supervisionApp());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('New Request'));
+      await tester.pumpAndSettle();
+      expect(find.text('F1 — Mutual Acceptance'), findsOneWidget);
+      final submit = find.widgetWithText(ElevatedButton, 'Submit');
+      expect(tester.widget<ElevatedButton>(submit).onPressed, isNull, reason: 'no supervisor yet');
+
+      await tester.tap(find.byKey(const Key('f1-supervisor')));
+      await tester.pumpAndSettle();
+      expect(find.text('DR. EXAMINER'), findsNothing, reason: 'only supervisors can be chosen');
+      await tester.tap(find.text('DR. AMINAH').last);
+      await tester.pumpAndSettle();
+      // Title is pre-filled from the record, so the form is complete.
+      expect(tester.widget<ElevatedButton>(submit).onPressed, isNotNull);
+
+      await tester.tap(find.byKey(const ValueKey('f1-co-supervisor-sv-1')));
+      await tester.pumpAndSettle();
+      expect(find.text('EN. BADRUL'), findsWidgets);
+      expect(find.text('DR. FARID'), findsWidgets);
+      expect(find.text('DR. AMINAH'), findsOneWidget, reason: 'the chosen supervisor is not offered as co-supervisor');
+      await tester.tap(find.text('None').last);
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byKey(const Key('f1-title')), '  ');
+      await tester.pump();
+      expect(tester.widget<ElevatedButton>(submit).onPressed, isNull, reason: 'title required');
+    });
+
+    testWidgets('no new request once a supervisor is assigned', (tester) async {
+      await pumpWithSize(tester, _supervisionApp(record: _record().copyWith(mainSupervisorId: 'sv-1')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('New Request'), findsNothing);
+      expect(find.textContaining('contact the FYP coordinator'), findsOneWidget);
     });
   });
 }

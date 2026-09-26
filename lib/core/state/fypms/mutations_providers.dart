@@ -23,6 +23,7 @@ final decideSupervisionRequestProvider = Provider<
         decisionReason: decisionReason,
       );
       ref.invalidate(fypPendingSupervisionRequestsProvider);
+      ref.invalidate(mySupervisionRequestsProvider);
       ref.invalidate(fypRecordsProvider);
     };
   },

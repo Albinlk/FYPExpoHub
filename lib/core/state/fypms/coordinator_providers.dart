@@ -94,3 +94,39 @@ final fypCourseMarksProvider =
   final rpc = ref.watch(supabaseRpcServiceProvider);
   return CourseMarks.fromJson(await rpc.computeFypCourseMarks(fypRecordId: fypRecordId));
 });
+
+/// An F1 request naming the signed-in lecturer, with the student's details
+/// (from `list_my_supervision_requests`).
+class MySupervisionRequest {
+  const MySupervisionRequest({
+    required this.request,
+    required this.myRole,
+    this.studentName,
+    this.courseCode,
+    this.programmeCode,
+  });
+
+  factory MySupervisionRequest.fromJson(Map<String, dynamic> json) => MySupervisionRequest(
+        request: FypSupervisionRequest.fromJson(normalizeFypmsKeys(json)),
+        myRole: json['my_role'] as String? ?? 'supervisor',
+        studentName: json['student_name'] as String?,
+        courseCode: json['course_code'] as String?,
+        programmeCode: json['programme_code'] as String?,
+      );
+
+  final FypSupervisionRequest request;
+
+  /// `supervisor` (decides) or `co_supervisor` (informed).
+  final String myRole;
+  final String? studentName;
+  final String? courseCode;
+  final String? programmeCode;
+}
+
+/// F1 requests that name the signed-in lecturer as supervisor or co-supervisor.
+final mySupervisionRequestsProvider = FutureProvider<List<MySupervisionRequest>>((ref) async {
+  ref.watch(fypmsUserScopeProvider);
+  final rpc = ref.watch(supabaseRpcServiceProvider);
+  final rows = await rpc.listMySupervisionRequests();
+  return [for (final r in rows) MySupervisionRequest.fromJson(r)];
+});

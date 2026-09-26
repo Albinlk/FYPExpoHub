@@ -5,16 +5,15 @@ import '../../../../core/state/fypms_state_providers.dart';
 import '../widgets/fypms_loading_widget.dart';
 import '../widgets/supervision_request_card.dart';
 
-/// Pending F1 requests for monitoring. Per the FYP Text Book the course lecturer
-/// instructs students to submit F1 but the chosen supervisor signs it, so
-/// this view is read-only.
-class CspRequestsPage extends ConsumerWidget {
-  const CspRequestsPage({super.key});
+/// F1 Mutual Acceptance requests that name the lecturer. The chosen supervisor
+/// accepts or declines (textbook: the supervisor signs F1); a named
+/// co-supervisor sees the request for information.
+class SupervisorRequestsPage extends ConsumerWidget {
+  const SupervisorRequestsPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final requests = ref.watch(fypPendingSupervisionRequestsProvider);
-    final records = ref.watch(fypRecordsProvider).value ?? const [];
+    final requests = ref.watch(mySupervisionRequestsProvider);
 
     return Scaffold(
       backgroundColor: DesignSystem.background,
@@ -28,22 +27,27 @@ class CspRequestsPage extends ConsumerWidget {
       body: requests.when(
         loading: () => const FypmsLoadingWidget(),
         error: (e, _) => Center(child: Text('Error: $e')),
-        data: (pending) {
-          if (pending.isEmpty) {
-            return const Center(child: Text('No pending supervision requests.'));
+        data: (list) {
+          if (list.isEmpty) {
+            return const Center(child: Text('No students have asked you to supervise them yet.'));
           }
           return ListView.builder(
             padding: const EdgeInsets.all(DesignSystem.gutter),
-            itemCount: pending.length,
+            itemCount: list.length,
             itemBuilder: (context, index) {
-              final request = pending[index];
-              final record = records.where((r) => r.id == request.fypRecordId).firstOrNull;
+              final item = list[index];
               return SupervisionRequestCard(
-                key: ValueKey(request.id),
-                request: request,
-                subtitle: record == null ? null : '${record.currentCourseCode} | ${record.programmeCode}',
-                fallbackTitle: record?.projectTitle,
-                canDecide: false,
+                key: ValueKey(item.request.id),
+                request: item.request,
+                subtitle: [
+                  item.studentName ?? 'Student',
+                  ?item.courseCode,
+                  ?item.programmeCode,
+                  if (item.myRole == 'co_supervisor') 'you are named as co-supervisor',
+                ].join(' · '),
+                canDecide: item.myRole == 'supervisor',
+                approveLabel: 'Accept',
+                rejectLabel: 'Decline',
               );
             },
           );

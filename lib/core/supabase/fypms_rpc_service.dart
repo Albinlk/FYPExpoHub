@@ -31,16 +31,35 @@ extension FypmsRpcService on SupabaseRpcService {
     });
   }
 
+  /// F1 Mutual Acceptance: the supervisor who agreed to supervise, an optional
+  /// co-supervisor, and the agreed project area and title.
   Future<Map<String, dynamic>> submitSupervisionRequest({
     required String fypRecordId,
     String? preferredSupervisorId,
     String? rationale,
+    String? preferredCoSupervisorId,
+    String? projectArea,
+    String? projectTitle,
   }) async {
     return _rpc('submit_supervision_request', {
       'p_fyp_record_id': fypRecordId,
       'p_preferred_supervisor_id': ?preferredSupervisorId,
       'p_rationale': ?rationale,
+      'p_preferred_co_supervisor_id': ?preferredCoSupervisorId,
+      'p_project_area': ?projectArea,
+      'p_project_title': ?projectTitle,
     });
+  }
+
+  /// F1 requests that name the caller as supervisor or co-supervisor.
+  Future<List<Map<String, dynamic>>> listMySupervisionRequests() async {
+    try {
+      final res = await Supabase.instance.client.rpc<dynamic>('list_my_supervision_requests');
+      return [for (final r in (res as List? ?? const [])) Map<String, dynamic>.from(r as Map)];
+    } catch (e) {
+      logDebug('Supabase FYPMS RPC list_my_supervision_requests error: $e');
+      rethrow;
+    }
   }
 
   Future<Map<String, dynamic>> decideSupervisionRequest({

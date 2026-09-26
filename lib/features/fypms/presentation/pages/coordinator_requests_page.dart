@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
-import '../../../../core/domain/models/fypms/fyp_record.dart';
-import '../../../../core/domain/models/fypms/fyp_supervision_request.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import '../widgets/fypms_loading_widget.dart';
+import '../widgets/supervision_request_card.dart';
 
+/// Pending F1 requests across all records; the coordinator may decide on the
+/// chosen supervisor's behalf.
 class CoordinatorRequestsPage extends ConsumerWidget {
   const CoordinatorRequestsPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final requests = ref.watch(fypPendingSupervisionRequestsProvider);
-    final records = ref.watch(fypRecordsProvider);
+    final records = ref.watch(fypRecordsProvider).value ?? const [];
 
     return Scaffold(
       backgroundColor: DesignSystem.background,
@@ -33,152 +34,19 @@ class CoordinatorRequestsPage extends ConsumerWidget {
           return ListView.builder(
             padding: const EdgeInsets.all(DesignSystem.gutter),
             itemCount: pending.length,
-            itemBuilder: (context, itemIndex) {
-              final request = pending[itemIndex];
-                return _RequestCard(
-                  request: request,
-                  record: records.value?.where((r) => r.id == request.fypRecordId).firstOrNull,
-                  onDecide: (decision, reason) =>
-                      _decide(context, ref, request.id, decision, reason),
-                );
+            itemBuilder: (context, index) {
+              final request = pending[index];
+              final record = records.where((r) => r.id == request.fypRecordId).firstOrNull;
+              return SupervisionRequestCard(
+                key: ValueKey(request.id),
+                request: request,
+                subtitle: record == null ? null : '${record.currentCourseCode} | ${record.programmeCode}',
+                fallbackTitle: record?.projectTitle,
+                canDecide: true,
+              );
             },
           );
         },
-      ),
-    );
-  }
-
-  Future<void> _decide(
-    BuildContext context,
-    WidgetRef ref,
-    String requestId,
-    String decision,
-    String? reason,
-  ) async {
-    try {
-      await ref.read(decideSupervisionRequestProvider)(requestId, decision, reason);
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Request ${decision.toLowerCase()}.')),
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed: $e')),
-        );
-      }
-    }
-  }
-}
-
-class _RequestCard extends ConsumerStatefulWidget {
-  final FypSupervisionRequest request;
-  final FypRecord? record;
-  final void Function(String decision, String? reason) onDecide;
-
-  const _RequestCard({
-    required this.request,
-    required this.record,
-    required this.onDecide,
-  });
-
-  @override
-  ConsumerState<_RequestCard> createState() => _RequestCardState();
-}
-
-class _RequestCardState extends ConsumerState<_RequestCard> {
-  // Hoisted out of build(): the realtime bridge invalidates the pending-
-  // requests provider on table changes, which rebuilds every card and would
-  // otherwise silently discard the typed decision reason.
-  final TextEditingController _reasonController = TextEditingController();
-
-  @override
-  void dispose() {
-    _reasonController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final request = widget.request;
-    final record = widget.record;
-
-    return Card(
-      elevation: 1,
-      margin: const EdgeInsets.only(bottom: DesignSystem.spaceMd),
-      shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusXl),
-      color: DesignSystem.surfaceContainerLowest,
-      child: Padding(
-        padding: const EdgeInsets.all(DesignSystem.spaceMd),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              record?.projectTitle?.isNotEmpty == true
-                  ? record!.projectTitle!
-                  : 'Untitled Project',
-              style: DesignSystem.bodyLg.copyWith(fontWeight: FontWeight.bold),
-            ),
-            if (record != null)
-              Text(
-                '${record.currentCourseCode} | ${record.programmeCode}',
-                style: DesignSystem.bodySm,
-              ),
-            const SizedBox(height: DesignSystem.spaceSm),
-            if (request.rationale != null && request.rationale!.isNotEmpty)
-              Text('Rationale: ${request.rationale}', style: DesignSystem.bodySm),
-            const SizedBox(height: DesignSystem.spaceSm),
-            Consumer(
-              builder: (context, ref, _) {
-                final staff = ref.watch(fypStaffProvider(const ['supervisor', 'co_supervisor']));
-                final preferred = staff.value?.where(
-                  (s) => s['id'] == request.preferredSupervisorId,
-                ).firstOrNull;
-                return Text(
-                  preferred != null
-                      ? 'Preferred supervisor: ${preferred['display_name']} (${preferred['email']})'
-                      : 'Preferred supervisor: ${request.preferredSupervisorId ?? 'not specified'}',
-                  style: DesignSystem.bodySm,
-                );
-              },
-            ),
-            const SizedBox(height: DesignSystem.spaceSm),
-            TextField(
-              controller: _reasonController,
-              decoration: const InputDecoration(labelText: 'Decision reason (optional)'),
-            ),
-            const SizedBox(height: DesignSystem.spaceMd),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                OutlinedButton(
-                  onPressed: () => widget.onDecide(
-                    'rejected',
-                    _reasonController.text.trim().isEmpty
-                        ? null
-                        : _reasonController.text.trim(),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: DesignSystem.error,
-                    side: const BorderSide(color: DesignSystem.error),
-                  ),
-                  child: const Text('Reject'),
-                ),
-                const SizedBox(width: DesignSystem.spaceSm),
-                FilledButton(
-                  onPressed: () => widget.onDecide(
-                    'approved',
-                    _reasonController.text.trim().isEmpty
-                        ? null
-                        : _reasonController.text.trim(),
-                  ),
-                  child: const Text('Approve'),
-                ),
-              ],
-            ),
-          ],
-        ),
       ),
     );
   }

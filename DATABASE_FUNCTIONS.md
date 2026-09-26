@@ -177,8 +177,9 @@ gate (`42501`), argument validation (`22023`), state-machine preconditions
 | Function | Gate | Purpose |
 |---|---|---|
 | `create_fyp_record` | coordinator/admin or student self-service | Create record; sets initial workflow status by course |
-| `submit_supervision_request` | record owner | F1 supervision request |
-| `decide_supervision_request` | assigned supervisor/co-sup or coordinator/CSP | Approve/reject; sets `main_supervisor_id` on approval |
+| `submit_supervision_request` | record owner | F1 Mutual Acceptance: supervisor (required, active `supervisor` role), optional different co-supervisor, project area, title (required); one pending per record; refused once a supervisor is assigned (`20260926000004`) |
+| `list_my_supervision_requests` | any lecturer | F1 requests naming the caller as supervisor/co-supervisor, with student name and course |
+| `decide_supervision_request` | the named supervisor, an assigned supervisor/co-sup, or coordinator | Approve/reject; approval sets `main_supervisor_id`, `co_supervisor_id`, the project title and both assignments |
 | `update_fyp_record_field` / `admin_override_fyp_record_field` | owner / admin (+reason) | Edit whitelisted project fields (typed CASE branches) |
 | `submit_progress_log` | record owner | F5 weekly log (unique per record+week) |
 | `validate_progress_log` | assigned supervisor/co-sup/coordinator | Validate or reject submitted logs |

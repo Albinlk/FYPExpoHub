@@ -33,6 +33,8 @@ const _snakeToCamel = <String, String>{
   'decided_at': 'decidedAt',
   'decision_comment': 'decisionComment',
   'preferred_supervisor_id': 'preferredSupervisorId',
+  'preferred_co_supervisor_id': 'preferredCoSupervisorId',
+  'project_area': 'projectArea',
   'decision_reason': 'decisionReason',
   'week_number': 'weekNumber',
   'progress_date': 'progressDate',
