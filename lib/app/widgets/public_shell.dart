@@ -19,47 +19,48 @@ class PublicShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final location = GoRouterState.of(context).uri.toString();
     final isDesktop = MediaQuery.of(context).size.width >= 768;
-    final bottomInset = MediaQuery.of(context).padding.bottom;
     // Only rebuild the shell when the sign-in *state* flips, not on every
     // lecturer/auth/Firestore emit (avoids rebuilding the whole nav).
-    final lecturerSignedIn = ref.watch(lecturerAuthProvider.select((l) => l != null));
+    final lecturerSignedIn = ref.watch(
+      lecturerAuthProvider.select((l) => l != null),
+    );
 
     return Scaffold(
       appBar: isDesktop
           ? PreferredSize(
               preferredSize: const Size.fromHeight(64.0),
-              child: _DesktopNavBar(currentPath: location, lecturerSignedIn: lecturerSignedIn),
+              child: _DesktopNavBar(
+                currentPath: location,
+                lecturerSignedIn: lecturerSignedIn,
+              ),
             )
           : null,
       body: Stack(
         children: [
           child,
-          Align(
-            alignment: Alignment.bottomRight,
-            child: Padding(
-              padding: EdgeInsets.only(
-                bottom: isDesktop ? 24.0 : 80.0 + bottomInset,
-                right: 24.0,
+          // Desktop only: on mobile the FAB covered buttons and card text,
+          // so Feedback lives in the bottom-nav Menu sheet instead.
+          if (isDesktop)
+            Positioned(
+              right: 24,
+              bottom: 24,
+              child: FloatingActionButton.extended(
+                onPressed: () => FeedbackFormWidget.show(context, ref),
+                icon: const Icon(Icons.feedback_outlined, size: 20),
+                label: const Text('Feedback'),
+                backgroundColor: DesignSystem.secondary,
+                foregroundColor: Colors.white,
               ),
-              child: isDesktop
-                  ? FloatingActionButton.extended(
-                      onPressed: () => FeedbackFormWidget.show(context, ref),
-                      icon: const Icon(Icons.feedback_outlined, size: 20),
-                      label: const Text('Feedback'),
-                      backgroundColor: DesignSystem.secondary,
-                      foregroundColor: Colors.white,
-                    )
-                  : FloatingActionButton(
-                      onPressed: () => FeedbackFormWidget.show(context, ref),
-                      backgroundColor: DesignSystem.secondary,
-                      foregroundColor: Colors.white,
-                      child: const Icon(Icons.feedback_outlined, size: 24),
-                    ),
             ),
-          ),
         ],
       ),
-      bottomNavigationBar: !isDesktop ? _MobileBottomNavBar(currentPath: location, lecturerSignedIn: lecturerSignedIn) : null,
+      bottomNavigationBar: !isDesktop
+          ? _MobileBottomNavBar(
+              currentPath: location,
+              lecturerSignedIn: lecturerSignedIn,
+              onFeedback: () => FeedbackFormWidget.show(context, ref),
+            )
+          : null,
     );
   }
 }
@@ -68,7 +69,10 @@ class _DesktopNavBar extends StatelessWidget {
   final String currentPath;
   final bool lecturerSignedIn;
 
-  const _DesktopNavBar({required this.currentPath, required this.lecturerSignedIn});
+  const _DesktopNavBar({
+    required this.currentPath,
+    required this.lecturerSignedIn,
+  });
 
   bool _isActive(String path) {
     if (path == '/' && currentPath == '/') return true;
@@ -90,7 +94,9 @@ class _DesktopNavBar extends StatelessWidget {
           bottom: BorderSide(color: DesignSystem.surfaceContainer, width: 1.0),
         ),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: DesignSystem.marginDesktop),
+      padding: const EdgeInsets.symmetric(
+        horizontal: DesignSystem.marginDesktop,
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -118,10 +124,10 @@ class _DesktopNavBar extends StatelessWidget {
               const SizedBox(width: DesignSystem.spaceLg),
               _buildNavLink(context, 'Booths', '/booths'),
               const SizedBox(width: DesignSystem.spaceLg),
-               _buildNavLink(context, 'Projects', '/projects'),
-               const SizedBox(width: DesignSystem.spaceLg),
-               _buildNavLink(context, 'Project Guide', '/projects/junior-guide'),
-               const SizedBox(width: DesignSystem.spaceLg),
+              _buildNavLink(context, 'Projects', '/projects'),
+              const SizedBox(width: DesignSystem.spaceLg),
+              _buildNavLink(context, 'Project Guide', '/projects/junior-guide'),
+              const SizedBox(width: DesignSystem.spaceLg),
               _buildNavLink(context, 'Announcements', '/announcements'),
               const SizedBox(width: DesignSystem.spaceLg),
               _buildNavLink(context, 'Awards', '/awards'),
@@ -171,7 +177,9 @@ class _DesktopNavBar extends StatelessWidget {
             title,
             style: DesignSystem.bodyMd.copyWith(
               fontWeight: active ? FontWeight.bold : FontWeight.normal,
-              color: active ? DesignSystem.primary : DesignSystem.onSurfaceVariant,
+              color: active
+                  ? DesignSystem.primary
+                  : DesignSystem.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 4),
@@ -189,14 +197,20 @@ class _DesktopNavBar extends StatelessWidget {
 class _MobileBottomNavBar extends StatelessWidget {
   final String currentPath;
   final bool lecturerSignedIn;
+  final VoidCallback onFeedback;
 
-  const _MobileBottomNavBar({required this.currentPath, required this.lecturerSignedIn});
+  const _MobileBottomNavBar({
+    required this.currentPath,
+    required this.lecturerSignedIn,
+    required this.onFeedback,
+  });
 
   int _getSelectedIndex() {
     if (currentPath == '/') return 0;
     if (currentPath.startsWith('/booths')) return 1;
     if (currentPath.startsWith('/projects/junior-guide')) return 2;
-    if (currentPath.startsWith('/lecturer')) return 3;
+    final tabFour = lecturerSignedIn ? '/lecturer/visits' : '/lecturer';
+    if (currentPath.startsWith(tabFour)) return 3;
     return 4;
   }
 
@@ -212,7 +226,7 @@ class _MobileBottomNavBar extends StatelessWidget {
         context.go('/projects/junior-guide');
         break;
       case 3:
-        context.go('/lecturer');
+        context.go(lecturerSignedIn ? '/lecturer/visits' : '/lecturer');
         break;
       case 4:
         _showMobileMenu(context);
@@ -242,17 +256,80 @@ class _MobileBottomNavBar extends StatelessWidget {
                 if (!lecturerSignedIn)
                   _buildMenuItemExternal(context, 'Sign In', Icons.login),
                 if (!lecturerSignedIn) const Divider(),
-                 _buildMenuItem(context, 'Booths', Icons.location_pin, '/booths'),
-                 _buildMenuItem(context, 'Schedule', Icons.event_note, '/schedule'),
-                 _buildMenuItem(context, 'Project Guide', Icons.school, '/projects/junior-guide'),
-                 _buildMenuItem(context, 'Announcements', Icons.campaign, '/announcements'),
-                _buildMenuItem(context, 'Award Winners', Icons.emoji_events, '/awards'),
+                _buildMenuItem(
+                  context,
+                  'Project Catalogue',
+                  Icons.grid_view,
+                  '/projects',
+                ),
+                _buildMenuItem(
+                  context,
+                  'Booths',
+                  Icons.location_pin,
+                  '/booths',
+                ),
+                _buildMenuItem(
+                  context,
+                  'Schedule',
+                  Icons.event_note,
+                  '/schedule',
+                ),
+                _buildMenuItem(
+                  context,
+                  'Project Guide',
+                  Icons.school,
+                  '/projects/junior-guide',
+                ),
+                _buildMenuItem(
+                  context,
+                  'Announcements',
+                  Icons.campaign,
+                  '/announcements',
+                ),
+                _buildMenuItem(
+                  context,
+                  'Award Winners',
+                  Icons.emoji_events,
+                  '/awards',
+                ),
+                // The Lecturers tab becomes Visits once signed in, so keep
+                // the directory reachable here.
                 if (lecturerSignedIn)
-                  _buildMenuItem(context, 'My Visits', Icons.visibility, '/lecturer/visits'),
+                  _buildMenuItem(
+                    context,
+                    'Lecturer Portal',
+                    Icons.person,
+                    '/lecturer',
+                  ),
 
                 _buildMenuItem(context, 'Exhibition Info', Icons.info, '/info'),
-                _buildMenuItem(context, 'Frequently Asked Questions', Icons.help_outline, '/faq'),
-                _buildMenuItem(context, 'Privacy Policy', Icons.privacy_tip_outlined, '/privacy'),
+                _buildMenuItem(
+                  context,
+                  'Frequently Asked Questions',
+                  Icons.help_outline,
+                  '/faq',
+                ),
+                _buildMenuItem(
+                  context,
+                  'Privacy Policy',
+                  Icons.privacy_tip_outlined,
+                  '/privacy',
+                ),
+                const Divider(),
+                Material(
+                  type: MaterialType.transparency,
+                  child: ListTile(
+                    leading: const Icon(
+                      Icons.feedback_outlined,
+                      color: DesignSystem.secondary,
+                    ),
+                    title: Text('Send Feedback', style: DesignSystem.bodyMd),
+                    onTap: () {
+                      Navigator.pop(context);
+                      onFeedback();
+                    },
+                  ),
+                ),
               ],
             ),
           ),
@@ -261,7 +338,12 @@ class _MobileBottomNavBar extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuItem(BuildContext context, String title, IconData icon, String route) {
+  Widget _buildMenuItem(
+    BuildContext context,
+    String title,
+    IconData icon,
+    String route,
+  ) {
     return Material(
       type: MaterialType.transparency,
       child: ListTile(
@@ -275,7 +357,11 @@ class _MobileBottomNavBar extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuItemExternal(BuildContext context, String title, IconData icon) {
+  Widget _buildMenuItemExternal(
+    BuildContext context,
+    String title,
+    IconData icon,
+  ) {
     return Material(
       type: MaterialType.transparency,
       child: ListTile(
@@ -292,6 +378,52 @@ class _MobileBottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final selectedIndex = _getSelectedIndex();
+    // Tab 4 is role-aware: visitors get the public lecturer directory,
+    // signed-in lecturers get their visit list.
+    final destinations = [
+      const NavigationDestination(
+        icon: Icon(Icons.home_outlined),
+        selectedIcon: Icon(
+          Icons.home,
+          color: DesignSystem.onSecondaryContainer,
+        ),
+        label: 'Home',
+      ),
+      const NavigationDestination(
+        icon: Icon(Icons.location_on_outlined),
+        selectedIcon: Icon(
+          Icons.location_on,
+          color: DesignSystem.onSecondaryContainer,
+        ),
+        label: 'Map',
+      ),
+      const NavigationDestination(
+        icon: Icon(Icons.school_outlined),
+        selectedIcon: Icon(
+          Icons.school,
+          color: DesignSystem.onSecondaryContainer,
+        ),
+        label: 'Guide',
+      ),
+      lecturerSignedIn
+          ? const NavigationDestination(
+              icon: Icon(Icons.visibility_outlined),
+              selectedIcon: Icon(
+                Icons.visibility,
+                color: DesignSystem.onSecondaryContainer,
+              ),
+              label: 'Visits',
+            )
+          : const NavigationDestination(
+              icon: Icon(Icons.person_outline),
+              selectedIcon: Icon(
+                Icons.person,
+                color: DesignSystem.onSecondaryContainer,
+              ),
+              label: 'Staff',
+            ),
+      const NavigationDestination(icon: Icon(Icons.menu), label: 'Menu'),
+    ];
 
     return Container(
       decoration: BoxDecoration(
@@ -308,86 +440,21 @@ class _MobileBottomNavBar extends StatelessWidget {
       child: SafeArea(
         top: false,
         // On very narrow screens (<360px) the M3 label padding makes even
-        // short words wrap; scale label text down slightly so every label
-        // stays on one centered line.
+        // short words wrap, so labels are hidden (Material icon-only pattern).
         child: Builder(
           builder: (scaleContext) {
-            final narrow =
-                MediaQuery.sizeOf(scaleContext).width < 360;
-            final parent = MediaQuery.of(scaleContext);
-            final bar = NavigationBar(
+            final narrow = MediaQuery.sizeOf(scaleContext).width < 360;
+            return NavigationBar(
+              labelBehavior: narrow
+                  ? NavigationDestinationLabelBehavior.alwaysHide
+                  : null,
+              height: narrow ? 64 : null,
               selectedIndex: selectedIndex,
               onDestinationSelected: (index) => _onItemTapped(context, index),
               backgroundColor: Colors.transparent,
               elevation: 0,
               indicatorColor: DesignSystem.secondaryContainer,
-              destinations: const [
-                NavigationDestination(
-                  icon: Icon(Icons.home_outlined),
-                  selectedIcon: Icon(Icons.home, color: DesignSystem.onSecondaryContainer),
-                  label: 'Home',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.location_on_outlined),
-                  selectedIcon: Icon(Icons.location_on, color: DesignSystem.onSecondaryContainer),
-                  label: 'Map',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.school_outlined),
-                  selectedIcon: Icon(Icons.school, color: DesignSystem.onSecondaryContainer),
-                  label: 'Guide',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.person_outline),
-                  selectedIcon: Icon(Icons.person, color: DesignSystem.onSecondaryContainer),
-                  label: 'Visits',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.menu),
-                  label: 'Menu',
-                ),
-              ],
-            );
-            if (!narrow) return bar;
-            // Very narrow screens: icons only (Material pattern) — labels
-            // would wrap to clipped multi-line text at this slot width.
-            return MediaQuery(
-              data: parent,
-              child: NavigationBar(
-                labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
-                selectedIndex: selectedIndex,
-                onDestinationSelected: (index) => _onItemTapped(context, index),
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                height: 64,
-                indicatorColor: DesignSystem.secondaryContainer,
-                destinations: const [
-                  NavigationDestination(
-                    icon: Icon(Icons.home_outlined),
-                    selectedIcon: Icon(Icons.home, color: DesignSystem.onSecondaryContainer),
-                    label: 'Home',
-                  ),
-                  NavigationDestination(
-                    icon: Icon(Icons.location_on_outlined),
-                    selectedIcon: Icon(Icons.location_on, color: DesignSystem.onSecondaryContainer),
-                    label: 'Map',
-                  ),
-                  NavigationDestination(
-                    icon: Icon(Icons.school_outlined),
-                    selectedIcon: Icon(Icons.school, color: DesignSystem.onSecondaryContainer),
-                    label: 'Guide',
-                  ),
-                  NavigationDestination(
-                    icon: Icon(Icons.person_outline),
-                    selectedIcon: Icon(Icons.person, color: DesignSystem.onSecondaryContainer),
-                    label: 'Visits',
-                  ),
-                  NavigationDestination(
-                    icon: Icon(Icons.menu),
-                    label: 'Menu',
-                  ),
-                ],
-              ),
+              destinations: destinations,
             );
           },
         ),

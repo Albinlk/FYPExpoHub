@@ -66,6 +66,11 @@ class DesignSystem {
     height: 1.2,
   );
 
+  /// Page heading: desktop h1, a 28px heading on phones so titles like
+  /// "Project Catalogue" stay on one line.
+  static TextStyle pageTitle(BuildContext context) =>
+      MediaQuery.sizeOf(context).width >= 768 ? h1 : h1Mobile.copyWith(fontSize: 28);
+
   static const TextStyle h2 = TextStyle(
     fontFamily: 'Montserrat',
     fontSize: 32.0,

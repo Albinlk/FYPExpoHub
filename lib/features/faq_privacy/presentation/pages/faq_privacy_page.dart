@@ -18,9 +18,9 @@ class FaqPrivacyPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (showPrivacyOnly) ...[
-              _buildPrivacyContent(),
+              _buildPrivacyContent(context),
             ] else ...[
-              Text('Frequently Asked Questions (FAQ)', style: DesignSystem.h1.copyWith(color: DesignSystem.primary)),
+              Text('Frequently Asked Questions (FAQ)', style: DesignSystem.pageTitle(context).copyWith(color: DesignSystem.primary)),
               const SizedBox(height: DesignSystem.spaceSm),
               Text('Get quick answers to common questions about the exhibition.', style: DesignSystem.bodyLg.copyWith(color: DesignSystem.onSurfaceVariant), softWrap: true),
               const SizedBox(height: DesignSystem.spaceXl),
@@ -70,11 +70,11 @@ class FaqPrivacyPage extends StatelessWidget {
     );
   }
 
-  Widget _buildPrivacyContent() {
+  Widget _buildPrivacyContent(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Privacy Policy', style: DesignSystem.h1.copyWith(color: DesignSystem.primary)),
+        Text('Privacy Policy', style: DesignSystem.pageTitle(context).copyWith(color: DesignSystem.primary)),
         const SizedBox(height: DesignSystem.spaceSm),
         Text('Last updated: August 2026', style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant)),
         const SizedBox(height: DesignSystem.spaceXl),

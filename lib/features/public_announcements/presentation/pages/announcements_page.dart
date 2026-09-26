@@ -27,7 +27,7 @@ class AnnouncementsPage extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Announcements', style: DesignSystem.h1.copyWith(color: DesignSystem.primary)),
+            Text('Announcements', style: DesignSystem.pageTitle(context).copyWith(color: DesignSystem.primary)),
             const SizedBox(height: DesignSystem.spaceSm),
             Text('Official updates and announcements from the FSKM organising committee.', style: (isDesktop ? DesignSystem.bodyLg : DesignSystem.bodyLgMobile).copyWith(color: DesignSystem.onSurfaceVariant), softWrap: true),
             const SizedBox(height: DesignSystem.spaceXl),

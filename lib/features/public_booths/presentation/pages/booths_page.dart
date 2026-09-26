@@ -254,7 +254,7 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Find Exhibition Booths', style: DesignSystem.h1.copyWith(color: DesignSystem.primary)),
+                  Text('Find Exhibition Booths', style: DesignSystem.pageTitle(context).copyWith(color: DesignSystem.primary)),
                   const SizedBox(height: DesignSystem.spaceSm),
                   Text(
                     'Browse booths organized by presentation day and then venue.',

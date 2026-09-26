@@ -29,6 +29,7 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
     var count = 0;
     if (_selectedProgramme != 'All') count++;
     if (_selectedCategory != 'All') count++;
+    if (_calonIndustriOnly) count++;
     return count;
   }
 
@@ -148,7 +149,7 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
                         Expanded(
                           child: Text(
                             'Project Catalogue',
-                            style: DesignSystem.h1.copyWith(
+                            style: DesignSystem.pageTitle(context).copyWith(
                               color: DesignSystem.primary,
                             ),
                           ),
@@ -194,12 +195,7 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
                   horizontal: padding,
                 ).copyWith(bottom: DesignSystem.spaceXl),
                 sliver: SliverGrid(
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: isDesktop ? 3 : 1,
-                    crossAxisSpacing: DesignSystem.spaceMd,
-                    mainAxisSpacing: DesignSystem.spaceMd,
-                    childAspectRatio: isDesktop ? 1.55 : 1.35,
-                  ),
+                  gridDelegate: ProjectCard.gridDelegate(MediaQuery.sizeOf(context).width),
                   delegate: SliverChildBuilderDelegate((context, index) {
                     final project = filteredProjects[index];
                     return StaggeredEntrance(
@@ -227,19 +223,18 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
         isDense: !isDesktop,
         hintText: isDesktop
             ? 'Search by project title, student, or supervisor...'
-            : 'Search title, student, supervisor...',
+            : 'Search projects...',
         prefixIcon: const Icon(Icons.search, color: DesignSystem.primary),
       ),
     );
 
     if (!isDesktop) {
-      // Mobile: search + Industry chip always visible; programme/category
-      // dropdowns collapse behind a badged Filters toggle.
+      // Mobile: search and a badged Filters toggle on one row; programme,
+      // category and Industry Candidate collapse into the sheet.
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 4),
         child: CollapsibleFilterPanel(
           header: searchField,
-          headerTrailing: _buildCalonChip(),
           activeCount: _activeFilterCount,
           expanded: _mobileFiltersExpanded,
           onToggle: () =>
@@ -257,6 +252,7 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
               _categories,
               (val) => setState(() => _selectedCategory = val!),
             ),
+            _buildCalonChip(),
           ],
           resetControl: TextButton.icon(
             onPressed: () {

@@ -179,19 +179,26 @@ void main() {
     expect(find.text('Reset Filters'), findsOneWidget);
   });
 
-  testWidgets('ProjectsPage mobile: collapsed by default, chip visible, dropdowns hidden',
+  testWidgets('ProjectsPage mobile: search + Filters on one row, all filters in the sheet',
       (tester) async {
     await pumpMobile(tester, const ProjectsPage());
 
-    expect(find.text('Industry Candidate'), findsOneWidget);
     expect(find.text('Filters'), findsOneWidget);
     expect(find.text('Academic Program'), findsNothing);
+    expect(find.text('Industry Candidate'), findsNothing);
+
+    // The toggle shares the search field's row.
+    final search = tester.getRect(find.byType(TextField));
+    final toggle = tester.getRect(find.text('Filters'));
+    expect(toggle.center.dy, closeTo(search.center.dy, 4));
+    expect(toggle.left, greaterThan(search.right));
 
     await tester.tap(find.text('Filters'));
     await tester.pumpAndSettle();
 
     expect(find.text('Academic Program'), findsOneWidget);
     expect(find.text('Project Category'), findsOneWidget);
+    expect(find.text('Industry Candidate'), findsOneWidget);
     expect(find.text('Reset Filters'), findsOneWidget);
 
     // Width contract: the real dropdown fields span the full panel width

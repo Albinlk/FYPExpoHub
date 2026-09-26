@@ -3,9 +3,9 @@ import '../../app/theme/theme.dart';
 
 /// A compact, collapsible filter panel for mobile layouts.
 ///
-/// Keeps [alwaysVisible] controls (search, primary chips/dropdowns) on one
-/// row, hiding the remaining filter controls behind a "Filters" toggle with
-/// an active-count badge. Expands/collapses with a smooth animation.
+/// Keeps the [header] (search) and a "Filters" toggle with an active-count
+/// badge on one row, optional [headerTrailing] controls below it, and hides
+/// the remaining filter controls until the toggle is pressed. Expands/collapses with a smooth animation.
 ///
 /// Desktop layouts should keep their single-row filter bars — this panel is
 /// only wired into the mobile branches.
@@ -51,23 +51,25 @@ class CollapsibleFilterPanel extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            header,
-            const SizedBox(height: DesignSystem.spaceSm),
+            // Search and the Filters toggle share one row.
+            Row(
+              children: [
+                Expanded(child: header),
+                const SizedBox(width: DesignSystem.spaceSm),
+                _FilterToggle(
+                  activeCount: activeCount,
+                  expanded: expanded,
+                  onPressed: onToggle,
+                ),
+              ],
+            ),
             if (headerTrailing != null) ...[
+              const SizedBox(height: DesignSystem.spaceSm),
               Align(
                 alignment: Alignment.centerLeft,
                 child: headerTrailing!,
               ),
-              const SizedBox(height: DesignSystem.spaceSm),
             ],
-            Align(
-              alignment: Alignment.centerRight,
-              child: _FilterToggle(
-                activeCount: activeCount,
-                expanded: expanded,
-                onPressed: onToggle,
-              ),
-            ),
             AnimatedSize(
               duration: const Duration(milliseconds: 200),
               curve: Curves.easeInOut,

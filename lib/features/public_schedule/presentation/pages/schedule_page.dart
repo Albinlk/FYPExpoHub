@@ -44,7 +44,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Event Schedule', style: DesignSystem.h1.copyWith(color: DesignSystem.primary)),
+            Text('Event Schedule', style: DesignSystem.pageTitle(context).copyWith(color: DesignSystem.primary)),
             const SizedBox(height: DesignSystem.spaceSm),
             Text(
               'Full timeline schedule for all exhibition days.',

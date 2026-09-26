@@ -20,7 +20,7 @@ class InfoPage extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Exhibition Information', style: DesignSystem.h1.copyWith(color: DesignSystem.primary)),
+            Text('Exhibition Information', style: DesignSystem.pageTitle(context).copyWith(color: DesignSystem.primary)),
             const SizedBox(height: DesignSystem.spaceSm),
             Text(
               'Discover more details about the FSKM Final Year Project Exhibition.',

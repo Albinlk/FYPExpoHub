@@ -4,8 +4,8 @@ import '../../core/domain/models/project.dart';
 import '../widgets/project_cover_image.dart';
 
 /// Standardized project card used across all pages (projects, home, lecturer,
-/// lecturer-visits). Matches the `/projects` card style: cover image on top
-/// with overlays, full project details below.
+/// lecturer-visits). Cover image on top carrying category and booth, then the
+/// title, one meta line and the student names.
 class ProjectCard extends StatelessWidget {
   const ProjectCard({
     super.key,
@@ -15,6 +15,7 @@ class ProjectCard extends StatelessWidget {
     this.imageOverlay,
     this.trailingContent,
     this.heroTag,
+    this.showStaff = false,
   });
 
   final Project project;
@@ -37,13 +38,36 @@ class ProjectCard extends StatelessWidget {
   /// screen: two Heroes with one tag in the same route crash.
   final String? heroTag;
 
+  /// Show supervisor / examiner lines. Off for public browsing (the detail
+  /// page has them); on where staff assignment is the point (lecturer views).
+  final bool showStaff;
+
+  /// Grid layout for cards: fixed row height (not an aspect ratio) so the
+  /// cover keeps ~180px at every width instead of shrinking to a sliver
+  /// when columns get narrow. [extraBodyHeight] covers staff lines or
+  /// trailing chips.
+  static SliverGridDelegate gridDelegate(double width, {double extraBodyHeight = 0}) {
+    return SliverGridDelegateWithFixedCrossAxisCount(
+      crossAxisCount: width >= 1100 ? 3 : (width >= 768 ? 2 : 1),
+      crossAxisSpacing: DesignSystem.spaceMd,
+      mainAxisSpacing: DesignSystem.spaceMd,
+      mainAxisExtent: 290 + extraBodyHeight,
+    );
+  }
+
   String? get _day => project.presentationDay;
 
   @override
   Widget build(BuildContext context) {
+    final detailStyle = DesignSystem.bodySm.copyWith(
+      color: DesignSystem.onSurfaceVariant,
+      height: 1.3,
+    );
     return Card(
       clipBehavior: Clip.antiAlias,
-      color: project.calonIndustri ? DesignSystem.tertiaryContainer.withValues(alpha: 0.15) : null,
+      color: project.calonIndustri
+          ? DesignSystem.tertiaryContainer.withValues(alpha: 0.15)
+          : null,
       surfaceTintColor: project.calonIndustri ? DesignSystem.tertiary : null,
       child: InkWell(
         onTap: onTap,
@@ -67,56 +91,31 @@ class ProjectCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 6),
+                  _buildMetaLine(),
+                  const SizedBox(height: 4),
                   Text(
-                    project.programmeCode,
-                    style: DesignSystem.labelCaps.copyWith(
-                      color: DesignSystem.secondary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 10,
-                    ),
-                  ),
-                  if (_day != null) ...[
-                    const SizedBox(height: 6),
-                    _buildDayChip(),
-                  ],
-                  const SizedBox(height: 6),
-                  if (project.boothNumber != null) ...[
-                    Row(
-                      children: [
-                        Icon(Icons.room, size: 14, color: DesignSystem.secondary),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${project.boothNumber}${project.boothZone != null ? ' • ${project.boothZone}' : ''}',
-                          style: DesignSystem.bodySm.copyWith(
-                            color: DesignSystem.secondary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                  ],
-                  Text(
-                    'Student(s): ${project.teamDisplayNames.join(', ')}',
-                    style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant, height: 1.3),
+                    project.teamDisplayNames.join(', '),
+                    style: detailStyle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Supervisor: ${project.supervisorDisplayName}',
-                    style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant, height: 1.3),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (project.examinerDisplayName != null) ...[
+                  if (showStaff) ...[
                     const SizedBox(height: 2),
                     Text(
-                      'Examiner: ${project.examinerDisplayName}',
-                      style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant, height: 1.3),
+                      'Supervisor: ${project.supervisorDisplayName}',
+                      style: detailStyle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
+                    if (project.examinerDisplayName != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        'Examiner: ${project.examinerDisplayName}',
+                        style: detailStyle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ],
                   if (trailingContent != null) ...[
                     const SizedBox(height: 8),
@@ -140,113 +139,115 @@ class ProjectCard extends StatelessWidget {
     final cover = Stack(
       fit: imageHeight == null ? StackFit.expand : StackFit.passthrough,
       children: [
-        _withHero(ProjectCoverImage(
-          title: project.title,
-          category: project.category,
-          imageUrl: project.coverImageUrl,
-          fit: BoxFit.cover,
-        )),
+        _withHero(
+          ProjectCoverImage(
+            title: project.title,
+            category: project.category,
+            imageUrl: project.coverImageUrl,
+            fit: BoxFit.cover,
+          ),
+        ),
         if (project.calonIndustri)
           Positioned(
             top: 8,
             left: 8,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: DesignSystem.tertiary,
-                borderRadius: DesignSystem.radiusSm,
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.workspace_premium, size: 13, color: Colors.white),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Industry Candidate',
-                    style: DesignSystem.labelCaps.copyWith(color: Colors.white, fontSize: 10),
-                  ),
-                ],
+            child: _chip(
+              color: DesignSystem.tertiary,
+              icon: Icons.workspace_premium,
+              iconColor: Colors.white,
+              label: Text(
+                'Industry Candidate',
+                style: DesignSystem.labelCaps.copyWith(
+                  color: Colors.white,
+                  fontSize: 10,
+                ),
               ),
             ),
           ),
         Positioned(
           top: 8,
           right: 8,
-          child: Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            direction: Axis.vertical,
-            crossAxisAlignment: WrapCrossAlignment.end,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.black54,
-                  borderRadius: DesignSystem.radiusSm,
-                ),
-                child: Text(
-                  project.category,
-                  style: DesignSystem.labelCaps.copyWith(color: Colors.white, fontSize: 10),
-                ),
+          child: _chip(
+            color: Colors.black54,
+            label: Text(
+              project.category,
+              style: DesignSystem.labelCaps.copyWith(
+                color: Colors.white,
+                fontSize: 10,
               ),
-              if (project.boothNumber != null)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: DesignSystem.secondaryContainer,
-                    borderRadius: DesignSystem.radiusSm,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.room, size: 14, color: DesignSystem.onSecondaryContainer),
-                      const SizedBox(width: 4),
-                      Text(
-                        project.boothNumber!,
-                        style: DesignSystem.bodySm.copyWith(
-                          color: DesignSystem.onSecondaryContainer,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 11,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-            ],
+            ),
           ),
         ),
+        if (project.boothNumber != null)
+          Positioned(
+            bottom: 8,
+            left: 8,
+            child: _chip(
+              color: DesignSystem.secondaryContainer,
+              icon: Icons.room,
+              iconColor: DesignSystem.onSecondaryContainer,
+              label: Text(
+                project.boothNumber!,
+                style: DesignSystem.bodySm.copyWith(
+                  color: DesignSystem.onSecondaryContainer,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 11,
+                ),
+              ),
+            ),
+          ),
         if (imageOverlay != null)
           Positioned(bottom: 8, right: 8, child: imageOverlay!),
       ],
     );
 
     if (imageHeight != null) {
-      return SizedBox(height: imageHeight, width: double.infinity, child: cover);
+      return SizedBox(
+        height: imageHeight,
+        width: double.infinity,
+        child: cover,
+      );
     }
     return Expanded(child: cover);
   }
 
-  Widget _buildDayChip() {
+  Widget _chip({
+    required Color color,
+    required Widget label,
+    IconData? icon,
+    Color? iconColor,
+  }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: DesignSystem.secondaryContainer,
+        color: color,
         borderRadius: DesignSystem.radiusSm,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.calendar_today, size: 13, color: DesignSystem.onSecondaryContainer),
-          const SizedBox(width: 4),
-          Text(
-            _day!,
-            style: DesignSystem.labelCaps.copyWith(
-              color: DesignSystem.onSecondaryContainer,
-              fontSize: 10,
-            ),
-          ),
+          if (icon != null) ...[
+            Icon(icon, size: 13, color: iconColor),
+            const SizedBox(width: 4),
+          ],
+          label,
         ],
       ),
+    );
+  }
+
+  /// Programme and presentation day on one line. The booth sits on the
+  /// cover, so it isn't repeated here.
+  Widget _buildMetaLine() {
+    return Text(
+      [project.programmeCode, ?_day].join(' • '),
+      style: DesignSystem.labelCaps.copyWith(
+        color: DesignSystem.secondary,
+        fontWeight: FontWeight.bold,
+        fontSize: 10,
+      ),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
     );
   }
 }
