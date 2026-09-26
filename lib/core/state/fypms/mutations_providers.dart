@@ -161,6 +161,37 @@ final finalizeCourseMarksProvider = Provider<Future<void> Function(String fypRec
   },
 );
 
+/// Records the CSP650 lecturer's F14 special-evaluation decision.
+final assessSpecialEvaluationProvider = Provider<
+    Future<void> Function({
+      required String fypRecordId,
+      required bool chaptersComplete,
+      required bool presentedAtExhibition,
+      required bool finalSemesterCoursesPassed,
+      String? note,
+    })>(
+  (ref) {
+    return ({
+      required fypRecordId,
+      required chaptersComplete,
+      required presentedAtExhibition,
+      required finalSemesterCoursesPassed,
+      note,
+    }) async {
+      final rpc = ref.read(supabaseRpcServiceProvider);
+      await rpc.assessSpecialEvaluation(
+        fypRecordId: fypRecordId,
+        chaptersComplete: chaptersComplete,
+        presentedAtExhibition: presentedAtExhibition,
+        finalSemesterCoursesPassed: finalSemesterCoursesPassed,
+        note: note,
+      );
+      ref.invalidate(fypSpecialEvaluationProvider(fypRecordId));
+      ref.invalidate(fypSpecialEvaluationChecksProvider(fypRecordId));
+    };
+  },
+);
+
 /// Coordinator re-splits the CSP600 formulation 30 % across F2 / F3 / F4.
 final setCsp600FormulationSharesProvider = Provider<Future<void> Function(num f2, num f3, num f4)>(
   (ref) {

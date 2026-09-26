@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'user_scope.dart';
+import '../../domain/fypms_special_evaluation.dart';
 import '../../domain/models/fypms/fyp_correction_item.dart';
 import '../../domain/models/fypms/fyp_deliverable.dart';
 import '../../domain/models/fypms/fyp_form_submission.dart';
@@ -106,6 +107,15 @@ final fypMarksSummariesProvider =
   final db = ref.watch(supabaseDbServiceProvider);
   final data = await db.getMarksSummariesForRecordOnce(recordId);
   return data.map((m) => FypMarksSummary.fromJson(normalizeFypmsKeys(m))).toList();
+});
+
+/// The record's F14 special-evaluation decision (null until assessed).
+final fypSpecialEvaluationProvider =
+    FutureProvider.family<SpecialEvaluation?, String>((ref, recordId) async {
+  ref.watch(fypmsUserScopeProvider);
+  final db = ref.watch(supabaseDbServiceProvider);
+  final data = await db.getSpecialEvaluationForRecordOnce(recordId);
+  return data == null ? null : SpecialEvaluation.fromJson(data);
 });
 
 final fypExpoPublicationsProvider =

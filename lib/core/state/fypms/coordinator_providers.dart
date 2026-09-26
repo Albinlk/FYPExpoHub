@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'user_scope.dart';
 import '../../domain/fypms_course_marks.dart';
+import '../../domain/fypms_special_evaluation.dart';
 import '../../domain/models/fypms/fyp_audit_log.dart';
 import '../../domain/models/fypms/fyp_presentation_session.dart';
 import '../../domain/models/fypms/fyp_presentation_slot.dart';
@@ -93,6 +94,16 @@ final fypCourseMarksProvider =
   ref.watch(fypmsUserScopeProvider);
   final rpc = ref.watch(supabaseRpcServiceProvider);
   return CourseMarks.fromJson(await rpc.computeFypCourseMarks(fypRecordId: fypRecordId));
+});
+
+/// The F14 checks for a CSP650 record (CSP650 lecturer / coordinator).
+final fypSpecialEvaluationChecksProvider =
+    FutureProvider.family<SpecialEvaluationChecks, String>((ref, fypRecordId) async {
+  ref.watch(fypmsUserScopeProvider);
+  final rpc = ref.watch(supabaseRpcServiceProvider);
+  return SpecialEvaluationChecks.fromJson(
+    await rpc.getSpecialEvaluationChecks(fypRecordId: fypRecordId),
+  );
 });
 
 /// An F1 request naming the signed-in lecturer, with the student's details

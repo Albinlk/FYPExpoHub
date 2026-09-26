@@ -113,12 +113,12 @@ const List<String> fypmsAlwaysEnabledFormCodes = [
 
 /// Who scores each form with its rubric (FYP Text Book, 4th ed.) — mirrors
 /// `public.fyp_form_evaluator_roles`, which the server enforces. Forms not
-/// listed (F1, F5, F6a, F6b, F12) have their own flows, not a rubric.
+/// listed (F1, F5, F6a, F6b, F12, F14) have their own flows, not a rubric;
+/// F14 is the CSP650 lecturer's special-evaluation qualification.
 const Map<String, Set<String>> fypmsFormEvaluatorRoles = {
   'F2': {'lecturer'},
   'F3': {'lecturer'},
   'F4': {'lecturer'},
-  'F14': {'lecturer'},
   'F7': {'supervisor', 'examiner', 'lecturer'},
   'F8': {'supervisor', 'examiner'},
   'F10': {'supervisor', 'examiner'},
@@ -134,16 +134,25 @@ const Map<String, Set<String>> fypmsFormEvaluatorRoles = {
 bool fypmsCanEvaluate(String formCode, String role) =>
     fypmsFormEvaluatorRoles[formCode]?.contains(role) ?? false;
 
-/// Form codes that are only available when `special_evaluation_enabled` is true.
+/// Special-evaluation forms: F14 (the application, open while
+/// `special_evaluation_enabled` is on) and F15 / F16 (only for a student the
+/// CSP650 lecturer qualified on F14).
 const List<String> fypmsSpecialEvaluationFormCodes = ['F14', 'F15', 'F16'];
 
-/// The full list of form codes the current user can submit/see, honouring the
-/// `fypms_features.special_evaluation_enabled` flag (F14-F16 gate).
+/// Form codes a student can submit, given whether F14 applications are open
+/// and whether their record qualified for special evaluation. The server
+/// enforces the same rules in `submit_fyp_form`.
+List<String> fypmsFormCodesFor({required bool applicationsOpen, required bool qualified}) => [
+      ...fypmsAlwaysEnabledFormCodes,
+      if (applicationsOpen) 'F14',
+      if (qualified) ...['F15', 'F16'],
+    ];
+
+/// Form codes open to every student: the regular forms, plus F14 while
+/// `fypms_features.special_evaluation_enabled` is on. F15 / F16 depend on the
+/// record (see [fypmsFormCodesFor]).
 final fypmsAvailableFormCodesProvider = Provider<List<String>>((ref) {
   final features = ref.watch(fypmsFeaturesProvider);
   final specialEnabled = features.value?.specialEvaluationEnabled ?? false;
-  return [
-    ...fypmsAlwaysEnabledFormCodes,
-    if (specialEnabled) ...fypmsSpecialEvaluationFormCodes,
-  ];
+  return fypmsFormCodesFor(applicationsOpen: specialEnabled, qualified: false);
 });

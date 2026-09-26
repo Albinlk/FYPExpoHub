@@ -318,6 +318,29 @@ extension FypmsRpcService on SupabaseRpcService {
     return _rpc('finalize_fyp_course_marks', {'p_fyp_record_id': fypRecordId});
   }
 
+  /// The four F14 checks for a record as far as the system can tell
+  /// (CSP650 lecturer / coordinator).
+  Future<Map<String, dynamic>> getSpecialEvaluationChecks({required String fypRecordId}) async {
+    return _rpc('get_special_evaluation_checks', {'p_fyp_record_id': fypRecordId});
+  }
+
+  /// Records the F14 decision; Progress + LMC is recomputed on the server.
+  Future<Map<String, dynamic>> assessSpecialEvaluation({
+    required String fypRecordId,
+    required bool chaptersComplete,
+    required bool presentedAtExhibition,
+    required bool finalSemesterCoursesPassed,
+    String? note,
+  }) async {
+    return _rpc('assess_special_evaluation', {
+      'p_fyp_record_id': fypRecordId,
+      'p_chapters_complete': chaptersComplete,
+      'p_presented_at_exhibition': presentedAtExhibition,
+      'p_final_semester_courses_passed': finalSemesterCoursesPassed,
+      'p_note': note,
+    });
+  }
+
   /// Coordinator splits the CSP600 formulation 30 % across F2 / F3 / F4.
   Future<Map<String, dynamic>> setCsp600FormulationShares({
     required num f2,

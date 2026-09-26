@@ -5,6 +5,7 @@ import '../../../../core/domain/models/fypms/fyp_record.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import 'fypms_loading_widget.dart';
 import 'rubric_evaluation_dialog.dart';
+import 'special_evaluation_dialog.dart';
 
 /// The evaluations list shared by the supervisor, examiner and CSP-lecturer
 /// workspaces. Only forms [role] evaluates (see [fypmsFormEvaluatorRoles])
@@ -63,6 +64,10 @@ class _RecordEvaluationSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final submissions = ref.watch(fypFormSubmissionsProvider(record.id));
+    final special = ref.watch(fypSpecialEvaluationProvider(record.id));
+    final qualified = special.value?.eligible ?? false;
+    // F14 is decided by the CSP650 lecturer, not scored with a rubric.
+    final showF14 = role == 'lecturer' && record.currentCourseCode == 'CSP650';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -74,6 +79,29 @@ class _RecordEvaluationSection extends ConsumerWidget {
             style: DesignSystem.bodyLg.copyWith(fontWeight: FontWeight.bold, color: DesignSystem.primary),
           ),
         ),
+        if (showF14)
+          Card(
+            elevation: 1,
+            margin: const EdgeInsets.only(bottom: DesignSystem.spaceXs),
+            shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
+            color: DesignSystem.surfaceContainerLowest,
+            child: ListTile(
+              dense: true,
+              leading: Icon(
+                qualified ? Icons.verified : Icons.fact_check_outlined,
+                color: qualified ? DesignSystem.secondary : DesignSystem.primary,
+              ),
+              title: Text('F14 — Special evaluation', style: DesignSystem.bodySm.copyWith(fontWeight: FontWeight.bold)),
+              subtitle: Text(specialEvaluationStatusLabel(special.value), style: DesignSystem.bodySm),
+              trailing: OutlinedButton(
+                onPressed: () => showDialog<void>(
+                  context: context,
+                  builder: (_) => SpecialEvaluationDialog(record: record),
+                ),
+                child: const Text('Check'),
+              ),
+            ),
+          ),
         submissions.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => Text('Error: $e'),
@@ -98,13 +126,18 @@ class _RecordEvaluationSection extends ConsumerWidget {
                       leading: const Icon(Icons.description, color: DesignSystem.primary),
                       title: Text('Form ${sub.formCode}', style: DesignSystem.bodySm.copyWith(fontWeight: FontWeight.bold)),
                       subtitle: Text('Submitted: ${_formatDate(sub.createdAt)}', style: DesignSystem.bodySm),
-                      trailing: FilledButton(
-                        onPressed: () => showDialog<void>(
-                          context: context,
-                          builder: (_) => RubricEvaluationDialog(submission: sub, role: role),
-                        ),
-                        child: const Text('Evaluate'),
-                      ),
+                      trailing: _isSpecial(sub.formCode) && !qualified
+                          ? const Tooltip(
+                              message: 'The CSP650 lecturer has not qualified this student on F14.',
+                              child: FilledButton(onPressed: null, child: Text('Not qualified')),
+                            )
+                          : FilledButton(
+                              onPressed: () => showDialog<void>(
+                                context: context,
+                                builder: (_) => RubricEvaluationDialog(submission: sub, role: role),
+                              ),
+                              child: const Text('Evaluate'),
+                            ),
                     ),
                   ),
               ],
@@ -115,6 +148,8 @@ class _RecordEvaluationSection extends ConsumerWidget {
       ],
     );
   }
+
+  static bool _isSpecial(String formCode) => formCode == 'F15' || formCode == 'F16';
 
   String _formatDate(DateTime dt) {
     final local = dt.toLocal();

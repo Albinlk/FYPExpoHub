@@ -116,7 +116,7 @@ void main() {
       expect(codes, isNot(contains('F16')));
     });
 
-    test('includes F14-F16 when special evaluation is enabled', () async {
+    test('includes only F14 when applications are open (F15/F16 are per record)', () async {
       final container = ProviderContainer(
         overrides: [
           fypmsFeaturesProvider.overrideWith(
@@ -129,7 +129,9 @@ void main() {
 
       final codes = container.read(fypmsAvailableFormCodesProvider);
       expect(codes, containsAll(fypmsAlwaysEnabledFormCodes));
-      expect(codes, containsAll(fypmsSpecialEvaluationFormCodes));
+      expect(codes, contains('F14'));
+      expect(codes, isNot(contains('F15')));
+      expect(codes, isNot(contains('F16')));
     });
   });
 }
