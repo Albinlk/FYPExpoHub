@@ -43,6 +43,7 @@ final fypmsRealtimeProvider =
     subs.add(realtime.subscribeToFypmsLive(onTableChange: {
       'fyp_supervision_requests': () {
         ref.invalidate(fypPendingSupervisionRequestsProvider);
+        ref.invalidate(mySupervisionRequestsProvider);
         ref.invalidate(fypSupervisionRequestsProvider);
       },
       'fyp_progress_logs': () => ref.invalidate(fypProgressLogsProvider),

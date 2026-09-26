@@ -186,6 +186,7 @@ List<({String title, IconData icon, String route})> _navItems({
     items.addAll([
       (title: 'Supervisor Dashboard', icon: Icons.dashboard, route: '/fypms/supervisor'),
       (title: 'Assigned Records', icon: Icons.folder_open, route: '/fypms/supervisor/records'),
+      (title: 'Supervision Requests', icon: Icons.mail, route: '/fypms/supervisor/requests'),
       (title: 'Progress Reviews', icon: Icons.timeline, route: '/fypms/supervisor/progress'),
       (title: 'Evaluations', icon: Icons.description, route: '/fypms/supervisor/evaluations'),
       (title: 'Corrections', icon: Icons.fact_check, route: '/fypms/supervisor/corrections'),

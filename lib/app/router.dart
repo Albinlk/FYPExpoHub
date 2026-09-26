@@ -24,6 +24,7 @@ import '../features/fypms/presentation/pages/supervisor_corrections_page.dart';
 import '../features/fypms/presentation/pages/supervisor_evaluations_page.dart';
 import '../features/fypms/presentation/pages/supervisor_milestones_page.dart';
 import '../features/fypms/presentation/pages/supervisor_progress_page.dart';
+import '../features/fypms/presentation/pages/supervisor_requests_page.dart';
 import '../features/fypms/presentation/pages/examiner_dashboard_page.dart';
 import '../features/fypms/presentation/pages/examiner_corrections_page.dart';
 import '../features/fypms/presentation/pages/examiner_evaluations_page.dart';
@@ -351,6 +352,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                 },
               ),
             ],
+          ),
+          GoRoute(
+            path: '/fypms/supervisor/requests',
+            builder: (context, state) => const SupervisorRequestsPage(),
           ),
           GoRoute(
             path: '/fypms/supervisor/progress',

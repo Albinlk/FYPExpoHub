@@ -26,6 +26,7 @@ import 'package:fyp_expo_hub/features/fypms/presentation/pages/examiner_evaluati
 import 'package:fyp_expo_hub/features/fypms/presentation/pages/supervisor_corrections_page.dart';
 import 'package:fyp_expo_hub/features/fypms/presentation/pages/supervisor_evaluations_page.dart';
 import 'package:fyp_expo_hub/features/fypms/presentation/pages/supervisor_progress_page.dart';
+import 'package:fyp_expo_hub/features/fypms/presentation/pages/supervisor_requests_page.dart';
 
 FypRecord _record() => FypRecord(
       id: 'rec-1',
@@ -189,6 +190,20 @@ FypRecordAssignment _assignment() => FypRecordAssignment(
       updatedAt: DateTime(2026, 8, 1),
     );
 
+/// Public staff directory rows (list_supervisors_public: no emails).
+const _directory = [
+  {'id': 'staff-1', 'display_name': 'Dr. Aminah', 'role_code': 'supervisor'},
+  {'id': 'staff-2', 'display_name': 'En. Badrul', 'role_code': 'co_supervisor'},
+];
+
+/// An F1 request with the Mutual Acceptance fields filled in.
+FypSupervisionRequest _f1Request() => _request().copyWith(
+      id: 'req-2',
+      preferredCoSupervisorId: 'staff-2',
+      projectArea: 'Natural Language Processing',
+      projectTitle: 'Malay Hate Speech Detection',
+    );
+
 const _staff = [
   {'id': 'staff-1', 'display_name': 'Dr. Aminah', 'email': 'aminah@example.com'},
 ];
@@ -210,11 +225,15 @@ Finder _dialogButton(String label) =>
     find.descendant(of: find.byType(AlertDialog), matching: find.text(label));
 
 void main() {
-  baseOverrides({List<FypFormSubmission>? submissions, List<FypMarksSummary>? marks, CourseMarks? courseMarks}) => [
+  baseOverrides({List<FypFormSubmission>? submissions, List<FypMarksSummary>? marks, CourseMarks? courseMarks, List<MySupervisionRequest>? mine}) => [
         fypRecordsProvider.overrideWith((ref) async => [_record()]),
         fypPendingSupervisionRequestsProvider.overrideWith((ref) async => [_request()]),
         assignedFypRecordsProvider.overrideWith((ref, role) async => [_record()]),
         fypStaffProvider.overrideWith((ref, roles) async => _staff),
+        supervisorsDirectoryProvider.overrideWith((ref) async => _directory),
+        mySupervisionRequestsProvider.overrideWith((ref) async => mine ?? [
+              MySupervisionRequest(request: _f1Request(), myRole: 'supervisor', studentName: 'ALI BIN ABU', courseCode: 'CSP600'),
+            ]),
         fypPresentationSessionsProvider.overrideWith((ref) async => [_session()]),
         fypPresentationSlotsProvider.overrideWith((ref, sessionId) async => [_slot()]),
         fypExpoPublicationsProvider.overrideWith((ref) async => [_readyPublication()]),
@@ -237,24 +256,23 @@ void main() {
         overrides: baseOverrides(),
         child: home(page),
       );
-  group('Supervision requests (coordinator & CSP)', () {
-    testWidgets('shows preferred supervisor and Approve/Reject', (tester) async {
+  group('Supervision requests (F1)', () {
+    testWidgets('coordinator sees the request and can decide', (tester) async {
       await _pump(tester, app(const CoordinatorRequestsPage()));
 
       expect(find.text('Supervision Requests'), findsOneWidget);
-      expect(find.text('AI Health Assistant'), findsOneWidget);
-      expect(find.text('Preferred supervisor: Dr. Aminah (aminah@example.com)'),
-          findsOneWidget);
+      expect(find.text('AI Health Assistant'), findsOneWidget, reason: 'falls back to the record title');
+      expect(find.text('Supervisor: Dr. Aminah'), findsOneWidget);
       expect(find.text('Approve'), findsOneWidget);
       expect(find.text('Reject'), findsOneWidget);
-      expect(find.text('Assign Supervisor'), findsNothing);
     });
 
-    testWidgets('CSP page renders the same pending request card', (tester) async {
+    testWidgets('CSP page is read-only (the supervisor signs F1)', (tester) async {
       await _pump(tester, app(const CspRequestsPage()));
 
       expect(find.text('AI Health Assistant'), findsOneWidget);
-      expect(find.text('Approve'), findsOneWidget);
+      expect(find.text('Approve'), findsNothing);
+      expect(find.text('Reject'), findsNothing);
     });
 
     testWidgets('approve invokes decideSupervisionRequestProvider', (tester) async {
@@ -279,7 +297,49 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
 
       expect(called, ['req-1', 'approved', '']);
-      expect(find.text('Request approved.'), findsOneWidget);
+      expect(find.text('Supervision accepted.'), findsOneWidget);
+    });
+
+    testWidgets('named supervisor accepts from their own inbox', (tester) async {
+      final called = <String>[];
+      await _pump(
+        tester,
+        ProviderScope(
+          overrides: [
+            ...baseOverrides(),
+            decideSupervisionRequestProvider.overrideWithValue(
+              (requestId, decision, reason) async => called.addAll([requestId, decision, reason ?? '']),
+            ),
+          ],
+          child: home(const SupervisorRequestsPage()),
+        ),
+      );
+
+      expect(find.text('Malay Hate Speech Detection'), findsOneWidget);
+      expect(find.text('ALI BIN ABU · CSP600'), findsOneWidget);
+      expect(find.text('Area: Natural Language Processing'), findsOneWidget);
+      expect(find.text('Co-supervisor: En. Badrul'), findsOneWidget);
+
+      await tester.enterText(find.byType(TextField), 'Happy to supervise');
+      await tester.tap(find.text('Accept'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(called, ['req-2', 'approved', 'Happy to supervise']);
+    });
+
+    testWidgets('a named co-supervisor sees the request but cannot decide', (tester) async {
+      await _pump(
+        tester,
+        ProviderScope(
+          overrides: baseOverrides(mine: [
+            MySupervisionRequest(request: _f1Request(), myRole: 'co_supervisor', studentName: 'ALI BIN ABU'),
+          ]),
+          child: home(const SupervisorRequestsPage()),
+        ),
+      );
+
+      expect(find.textContaining('you are named as co-supervisor'), findsOneWidget);
+      expect(find.text('Accept'), findsNothing);
     });
   });
 

@@ -9,6 +9,9 @@ abstract class FypSupervisionRequest with _$FypSupervisionRequest {
     required String id,
     required String fypRecordId,
     String? preferredSupervisorId,
+    String? preferredCoSupervisorId,
+    String? projectArea,
+    String? projectTitle,
     String? rationale,
     required String status, // 'pending', 'approved', 'rejected', 'withdrawn'
     String? decidedBy,
