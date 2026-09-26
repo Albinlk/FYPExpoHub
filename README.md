@@ -3,7 +3,7 @@
 The official web portal for the **Final Year Project Exhibition (FYP Expo)** of the Faculty of Computer and Mathematical Sciences (FSKM), UiTM — plus **FYPMS**, an integrated FYP Management System used across the semester. The Expo site showcases final-semester student projects, schedules, booths, announcements and award winners, with a "My Visits" tracking system for lecturers. FYPMS digitises the full FYP workflow (records, supervision, forms, progress logs, reports, corrections, marks, presentations) for students, supervisors, examiners, CSP lecturers and coordinators.
 
 - **Public site:** https://fskmjasinfypexhibition.site (GitHub Pages)
-- **Admin CMS:** https://admin.fskmjasinfypexhibition.site (GitHub Pages)
+- **Admin CMS:** https://fskmjasinfypexhibition.site/admin (`admin.fskmjasinfypexhibition.site` redirects here via Cloudflare)
 - **Backend:** Supabase Project `siedglubjcedkbrpdzgi` — https://siedglubjcedkbrpdzgi.supabase.co
 - **Event:** FSKM FYP Expo Hub 2026 — Semester March–August 2026, 6–7 August 2026 (completed; site remains live as the project archive)
 
