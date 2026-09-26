@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/state/fypms_state_providers.dart';
+import '../../../../core/domain/models/fypms/fyp_record.dart';
+import '../../../../core/domain/models/fypms/fyp_supervision_request.dart';
 import '../widgets/fypms_loading_widget.dart';
+import '../widgets/supervisor_change_widgets.dart';
 import '../widgets/supervision_request_card.dart';
 
 /// Pending F1 requests across all records; the coordinator may decide on the
@@ -24,7 +27,17 @@ class CoordinatorRequestsPage extends ConsumerWidget {
           style: DesignSystem.h3.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
         ),
       ),
-      body: requests.when(
+      body: Column(
+        children: [
+          const SupervisorChangeRequestsPanel(),
+          Expanded(child: _f1Requests(requests, records)),
+        ],
+      ),
+    );
+  }
+
+  Widget _f1Requests(AsyncValue<List<FypSupervisionRequest>> requests, List<FypRecord> records) {
+    return requests.when(
         loading: () => const FypmsLoadingWidget(),
         error: (e, _) => Center(child: Text('Error: $e')),
         data: (pending) {
@@ -47,7 +60,6 @@ class CoordinatorRequestsPage extends ConsumerWidget {
             },
           );
         },
-      ),
-    );
+      );
   }
 }

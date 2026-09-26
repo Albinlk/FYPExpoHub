@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'user_scope.dart';
 import '../../domain/fypms_milestone_extension.dart';
 import '../../domain/fypms_special_evaluation.dart';
+import '../../domain/fypms_supervisor_change.dart';
 import '../../domain/models/fypms/fyp_correction_item.dart';
 import '../../domain/models/fypms/fyp_deliverable.dart';
 import '../../domain/models/fypms/fyp_form_submission.dart';
@@ -108,6 +109,15 @@ final fypMarksSummariesProvider =
   final db = ref.watch(supabaseDbServiceProvider);
   final data = await db.getMarksSummariesForRecordOnce(recordId);
   return data.map((m) => FypMarksSummary.fromJson(normalizeFypmsKeys(m))).toList();
+});
+
+/// Supervisor change requests on a record (newest first).
+final fypSupervisorChangesProvider =
+    FutureProvider.family<List<SupervisorChangeRequest>, String>((ref, recordId) async {
+  ref.watch(fypmsUserScopeProvider);
+  final db = ref.watch(supabaseDbServiceProvider);
+  final data = await db.getSupervisorChangeRequestsForRecordOnce(recordId);
+  return data.map(SupervisorChangeRequest.fromJson).toList();
 });
 
 /// Extension requests on a record's milestones (newest first).

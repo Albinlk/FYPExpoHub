@@ -3,6 +3,7 @@ import 'user_scope.dart';
 import '../../domain/fypms_course_marks.dart';
 import '../../domain/fypms_exhibition_evaluation.dart';
 import '../../domain/fypms_special_evaluation.dart';
+import '../../domain/fypms_supervisor_change.dart';
 import '../../domain/models/fypms/fyp_audit_log.dart';
 import '../../domain/models/fypms/fyp_presentation_session.dart';
 import '../../domain/models/fypms/fyp_presentation_slot.dart';
@@ -109,6 +110,21 @@ final exhibitionEvaluationProvider =
   } catch (_) {
     return ExhibitionEvaluation.unlinked;
   }
+});
+
+/// Pending supervisor change requests (coordinator).
+final pendingSupervisorChangesProvider = FutureProvider<List<SupervisorChangeRequest>>((ref) async {
+  ref.watch(fypmsUserScopeProvider);
+  final db = ref.watch(supabaseDbServiceProvider);
+  final data = await db.getPendingSupervisorChangesOnce();
+  return data.map(SupervisorChangeRequest.fromJson).toList();
+});
+
+/// Nominations awaiting the signed-in PU.
+final pendingNominationsProvider = FutureProvider<List<PendingNomination>>((ref) async {
+  ref.watch(fypmsUserScopeProvider);
+  final rpc = ref.watch(supabaseRpcServiceProvider);
+  return (await rpc.listPendingNominations()).map(PendingNomination.fromJson).toList();
 });
 
 /// The F14 checks for a CSP650 record (CSP650 lecturer / coordinator).

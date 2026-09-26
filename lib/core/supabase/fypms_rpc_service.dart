@@ -391,6 +391,58 @@ extension FypmsRpcService on SupabaseRpcService {
     return _rpc('get_exhibition_evaluation', {'p_project_id': projectId, 'p_create': create});
   }
 
+  /// Student (or current supervisor) asks the coordinator for a new supervisor.
+  Future<Map<String, dynamic>> requestSupervisorChange({
+    required String fypRecordId,
+    required String reason,
+    String? proposedSupervisorId,
+  }) async {
+    return _rpc('request_supervisor_change', {
+      'p_fyp_record_id': fypRecordId,
+      'p_reason': reason,
+      'p_proposed_supervisor_id': proposedSupervisorId,
+    });
+  }
+
+  /// Coordinator approves (reassigning) or rejects a supervisor change.
+  Future<Map<String, dynamic>> decideSupervisorChange({
+    required String requestId,
+    required String decision,
+    String? comment,
+    String? newSupervisorId,
+  }) async {
+    return _rpc('decide_supervisor_change', {
+      'p_request_id': requestId,
+      'p_decision': decision,
+      'p_comment': comment,
+      'p_new_supervisor_id': newSupervisorId,
+    });
+  }
+
+  /// Supervisor / examiner nominations awaiting the caller (PU).
+  Future<List<Map<String, dynamic>>> listPendingNominations() async {
+    try {
+      final response = await Supabase.instance.client.rpc<dynamic>('list_pending_nominations');
+      return [for (final m in (response as List? ?? const [])) Map<String, dynamic>.from(m as Map)];
+    } catch (e) {
+      logDebug('Supabase FYPMS RPC list_pending_nominations error: $e');
+      rethrow;
+    }
+  }
+
+  /// The PU approves or rejects (with a reason) a nomination.
+  Future<Map<String, dynamic>> decideNomination({
+    required String assignmentId,
+    required String decision,
+    String? comment,
+  }) async {
+    return _rpc('decide_nomination', {
+      'p_assignment_id': assignmentId,
+      'p_decision': decision,
+      'p_comment': comment,
+    });
+  }
+
   /// Records the F14 decision; Progress + LMC is recomputed on the server.
   Future<Map<String, dynamic>> assessSpecialEvaluation({
     required String fypRecordId,

@@ -74,6 +74,13 @@ final isFypExaminerProvider = Provider<bool>((ref) {
   return roles.value?.contains('examiner') == true;
 });
 
+/// True when the current user is a Programme Unit (PU) head, who approves
+/// supervisor / examiner nominations.
+final isFypProgrammeHeadProvider = Provider<bool>((ref) {
+  final roles = ref.watch(fypmsCurrentRolesProvider);
+  return roles.value?.contains('programme_head') == true;
+});
+
 /// True when the current user is a CSP lecturer (CSP600 or CSP650).
 final isCspLecturerProvider = Provider<bool>((ref) {
   final roles = ref.watch(fypmsCurrentRolesProvider);

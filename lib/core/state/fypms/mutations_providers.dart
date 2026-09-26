@@ -179,6 +179,59 @@ final openExhibitionEvaluationProvider = Provider<Future<ExhibitionEvaluation> F
   },
 );
 
+/// Student asks for a supervisor change.
+final requestSupervisorChangeProvider =
+    Provider<Future<void> Function(String fypRecordId, String reason, String? proposedSupervisorId)>(
+  (ref) {
+    return (fypRecordId, reason, proposedSupervisorId) async {
+      final rpc = ref.read(supabaseRpcServiceProvider);
+      await rpc.requestSupervisorChange(
+        fypRecordId: fypRecordId,
+        reason: reason,
+        proposedSupervisorId: proposedSupervisorId,
+      );
+      ref.invalidate(fypSupervisorChangesProvider(fypRecordId));
+    };
+  },
+);
+
+/// Coordinator decides a supervisor change.
+final decideSupervisorChangeProvider = Provider<
+    Future<void> Function({
+      required String requestId,
+      required String fypRecordId,
+      required String decision,
+      String? comment,
+      String? newSupervisorId,
+    })>(
+  (ref) {
+    return ({required requestId, required fypRecordId, required decision, comment, newSupervisorId}) async {
+      final rpc = ref.read(supabaseRpcServiceProvider);
+      await rpc.decideSupervisorChange(
+        requestId: requestId,
+        decision: decision,
+        comment: comment,
+        newSupervisorId: newSupervisorId,
+      );
+      ref.invalidate(pendingSupervisorChangesProvider);
+      ref.invalidate(fypSupervisorChangesProvider(fypRecordId));
+      ref.invalidate(fypRecordsProvider);
+    };
+  },
+);
+
+/// The PU approves or rejects a nomination.
+final decideNominationProvider =
+    Provider<Future<void> Function(String assignmentId, String decision, String? comment)>(
+  (ref) {
+    return (assignmentId, decision, comment) async {
+      final rpc = ref.read(supabaseRpcServiceProvider);
+      await rpc.decideNomination(assignmentId: assignmentId, decision: decision, comment: comment);
+      ref.invalidate(pendingNominationsProvider);
+    };
+  },
+);
+
 /// Student requests a milestone extension.
 final requestMilestoneExtensionProvider = Provider<
     Future<void> Function({

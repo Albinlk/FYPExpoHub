@@ -391,6 +391,38 @@ extension FypmsDatabaseService on SupabaseDatabaseService {
   }
 
   // ---------------------------------------------------
+  // SUPERVISOR CHANGE REQUESTS
+  // ---------------------------------------------------
+  Future<List<Map<String, dynamic>>> getSupervisorChangeRequestsForRecordOnce(String fypRecordId) async {
+    try {
+      final res = await Supabase.instance.client
+          .from('fyp_supervisor_change_requests')
+          .select()
+          .eq('fyp_record_id', fypRecordId)
+          .order('created_at', ascending: false);
+      return List<Map<String, dynamic>>.from(res);
+    } catch (e) {
+      logDebug('Supabase getSupervisorChangeRequestsForRecordOnce error: $e');
+      return [];
+    }
+  }
+
+  /// Pending change requests with their record (coordinator).
+  Future<List<Map<String, dynamic>>> getPendingSupervisorChangesOnce() async {
+    try {
+      final res = await Supabase.instance.client
+          .from('fyp_supervisor_change_requests')
+          .select('*, fyp_records(project_title, matric_id)')
+          .eq('status', 'pending')
+          .order('created_at');
+      return List<Map<String, dynamic>>.from(res);
+    } catch (e) {
+      logDebug('Supabase getPendingSupervisorChangesOnce error: $e');
+      return [];
+    }
+  }
+
+  // ---------------------------------------------------
   // SPECIAL EVALUATION (F14)
   // ---------------------------------------------------
   /// The record's F14 qualification row, or null when not assessed yet.
