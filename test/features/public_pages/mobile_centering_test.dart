@@ -160,8 +160,11 @@ class _EventNotifierStub extends EventNotifier {
       id: 'fskm-fyp-2026',
       title: 'FSKM FYP Expo Hub 2026',
       sessionLabel: 'Semester March - August 2026',
-      startAt: concluded ? DateTime(2026, 8, 6, 9) : DateTime(2027, 8, 6, 9),
-      endAt: concluded ? DateTime(2026, 8, 7, 17) : DateTime(2027, 8, 7, 17),
+      // 09:00-17:00 Malaysia time as UTC instants: local DateTimes made the
+      // day tabs depend on the test machine's timezone (on UTC CI, 17:00
+      // "local" became 01:00 the next day in MYT and added a third tab).
+      startAt: concluded ? DateTime.utc(2026, 8, 6, 1) : DateTime.utc(2027, 8, 6, 1),
+      endAt: concluded ? DateTime.utc(2026, 8, 7, 9) : DateTime.utc(2027, 8, 7, 9),
       dailyHours: '9:00 AM - 5:00 PM',
       venue: 'Blok Kuliah, FSKM',
       locationDetails: 'FSKM',
