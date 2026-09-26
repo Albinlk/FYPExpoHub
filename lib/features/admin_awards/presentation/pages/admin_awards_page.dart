@@ -288,13 +288,15 @@ class AdminAwardsPage extends ConsumerWidget {
                                 Row(
                                   children: [
                                     InkWell(
-                                      onTap: () {
+                                      onTap: () async {
+                                        if (isPublished && !await confirmUnpublish(context, 'this award')) return;
+                                        if (!context.mounted) return;
                                         final updated = item.copyWith(
                                           publicationStatus: isPublished ? 'draft' : 'published',
                                           publishedAt: !isPublished ? DateTime.now() : null,
                                           updatedAt: DateTime.now(),
                                         );
-                                        runAdminWrite(
+                                        await runAdminWrite(
                                           context,
                                           () => ref.read(awardsProvider.notifier).updateWinner(updated),
                                           success: isPublished ? 'Award moved to draft.' : 'Award published.',

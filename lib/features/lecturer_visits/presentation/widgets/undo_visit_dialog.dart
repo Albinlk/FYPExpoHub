@@ -18,15 +18,17 @@ Future<String?> showUndoVisitDialog(BuildContext context) {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'You are about to cancel a visit that has been marked. This action cannot be undone.',
+                  'The visit will be recorded as cancelled. You can mark it as visited again later.',
                   style: DesignSystem.bodyMd.copyWith(color: DesignSystem.onSurfaceVariant),
                 ),
                 const SizedBox(height: DesignSystem.spaceMd),
                 TextField(
                   controller: reasonController,
                   maxLines: 3,
+                  onChanged: (_) => setDialogState(() {}),
                   decoration: const InputDecoration(
-                    labelText: 'Cancellation reason (optional)',
+                    // The server refuses a cancellation without a reason.
+                    labelText: 'Cancellation reason *',
                     hintText: 'Example: Student not at booth',
                     alignLabelWithHint: true,
                   ),
@@ -39,7 +41,7 @@ Future<String?> showUndoVisitDialog(BuildContext context) {
                 child: Text('Close', style: DesignSystem.bodyMd.copyWith(color: DesignSystem.onSurfaceVariant)),
               ),
               ElevatedButton(
-                onPressed: isSubmitting
+                onPressed: isSubmitting || reasonController.text.trim().isEmpty
                     ? null
                     : () {
                         setDialogState(() => isSubmitting = true);

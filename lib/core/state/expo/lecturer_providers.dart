@@ -24,6 +24,10 @@ final lecturerConfigProvider = Provider<Map<String, String>>((ref) {
   for (final doc in list) {
     final email = doc['email'] as String?;
     if (email == null || email.trim().isEmpty) continue;
+    // Deactivated lecturers are refused by every visit RPC; don't let them
+    // through the client guard either.
+    final active = (doc['isActive'] ?? doc['is_active']) as bool?;
+    if (active == false) continue;
     final name = (doc['displayName'] ?? doc['display_name']) as String?;
     result[email.trim().toLowerCase()] =
         (name == null || name.trim().isEmpty) ? email.split('@').first.toUpperCase() : name;

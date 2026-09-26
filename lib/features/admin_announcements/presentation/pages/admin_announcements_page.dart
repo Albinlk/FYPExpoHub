@@ -282,11 +282,15 @@ class AdminAnnouncementsPage extends ConsumerWidget {
                                 Row(
                                   children: [
                                     InkWell(
-                                      onTap: () => runAdminWrite(
+                                      onTap: () async {
+                                        if (isPublished && !await confirmUnpublish(context, 'this announcement')) return;
+                                        if (!context.mounted) return;
+                                        await runAdminWrite(
                                         context,
                                         () => ref.read(announcementsProvider.notifier).togglePublish(item.id),
                                         success: isPublished ? 'Announcement moved to draft.' : 'Announcement published.',
-                                      ),
+                                        );
+                                      },
                                       child: Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                         decoration: BoxDecoration(

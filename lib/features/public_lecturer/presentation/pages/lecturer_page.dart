@@ -123,7 +123,7 @@ class _LecturerPageState extends ConsumerState<LecturerPage> {
                                 const SizedBox(width: DesignSystem.spaceMd),
                                 Expanded(child: _buildDropdown('Day', _selectedDay, ['All', 'Day 1 - 06 Aug 2026', 'Day 2 - 07 Aug 2026'], (val) => setState(() => _selectedDay = val!))),
                                 const SizedBox(width: DesignSystem.spaceMd),
-                                Expanded(child: _buildDropdown('Type', _calonIndustriOnly ? 'Industry' : 'All', ['All', 'Industry Candidate'], (val) => setState(() => _calonIndustriOnly = val == 'Industry Candidate'))),
+                                Expanded(child: _buildDropdown('Type', _calonIndustriOnly ? 'Industry Candidate' : 'All', ['All', 'Industry Candidate'], (val) => setState(() => _calonIndustriOnly = val == 'Industry Candidate'))),
                               ],
                             )
                           else
@@ -133,7 +133,7 @@ class _LecturerPageState extends ConsumerState<LecturerPage> {
                                 const SizedBox(height: DesignSystem.spaceSm),
                                 _buildDropdown('Day', _selectedDay, ['All', 'Day 1 - 06 Aug 2026', 'Day 2 - 07 Aug 2026'], (val) => setState(() => _selectedDay = val!)),
                                 const SizedBox(height: DesignSystem.spaceSm),
-                                _buildDropdown('Type', _calonIndustriOnly ? 'Industry' : 'All', ['All', 'Industry Candidate'], (val) => setState(() => _calonIndustriOnly = val == 'Industry Candidate')),
+                                _buildDropdown('Type', _calonIndustriOnly ? 'Industry Candidate' : 'All', ['All', 'Industry Candidate'], (val) => setState(() => _calonIndustriOnly = val == 'Industry Candidate')),
                               ],
                             ),
                         ],

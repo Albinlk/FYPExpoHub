@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../admin_feedback/presentation/widgets/feedback_csv_export.dart' show escapeCsv;
 import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/project.dart';
 import '../../../../core/domain/models/project_lecturer_assignment.dart';
@@ -182,7 +183,7 @@ String exportVisitsCsv(
       _escapeCsv(project?.teamDisplayNames.join('; ') ?? ''),
       _escapeCsv(project?.title ?? ''),
       _escapeCsv(project?.programmeCode ?? ''),
-      project?.boothNumber ?? '',
+      _escapeCsv(project?.boothNumber ?? ''),
       status,
       timeStr,
       _escapeCsv(note),
@@ -192,9 +193,6 @@ String exportVisitsCsv(
   return buffer.toString();
 }
 
-String _escapeCsv(String value) {
-  if (value.contains(',') || value.contains('"') || value.contains('\n')) {
-    return '"${value.replaceAll('"', '""')}"';
-  }
-  return value;
-}
+/// Quotes CSV cells and neutralises spreadsheet formulas (same guard as the
+/// feedback export: notes and names are typed by users).
+String _escapeCsv(String value) => escapeCsv(value);

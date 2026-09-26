@@ -60,3 +60,39 @@ Future<bool> confirmDelete(BuildContext context, String what) async {
   );
   return ok ?? false;
 }
+
+/// Asks before an action with public or bulk effect; resolves to false if
+/// dismissed.
+Future<bool> confirmAction(
+  BuildContext context, {
+  required String title,
+  required String message,
+  required String confirmLabel,
+}) async {
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: Text(title),
+      content: Text(message),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(dialogContext).pop(false),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(dialogContext).pop(true),
+          child: Text(confirmLabel),
+        ),
+      ],
+    ),
+  );
+  return ok ?? false;
+}
+
+/// Confirms taking an item off the public site (publishing needs no prompt).
+Future<bool> confirmUnpublish(BuildContext context, String what) => confirmAction(
+      context,
+      title: 'Unpublish $what?',
+      message: 'It will disappear from the public site until you publish it again.',
+      confirmLabel: 'Unpublish',
+    );

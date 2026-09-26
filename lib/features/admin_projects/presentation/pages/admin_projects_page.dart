@@ -390,11 +390,15 @@ class AdminProjectsPage extends ConsumerWidget {
                                 Row(
                                   children: [
                                     InkWell(
-                                      onTap: () => runAdminWrite(
+                                      onTap: () async {
+                                        if (isPublished && !await confirmUnpublish(context, '"${item.title}"')) return;
+                                        if (!context.mounted) return;
+                                        await runAdminWrite(
                                         context,
                                         () => ref.read(projectsProvider.notifier).togglePublishStatus(item.id),
                                         success: isPublished ? 'Project moved to draft.' : 'Project published.',
-                                      ),
+                                        );
+                                      },
                                       child: Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                         decoration: BoxDecoration(

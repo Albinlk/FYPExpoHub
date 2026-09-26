@@ -349,11 +349,15 @@ class AdminSchedulePage extends ConsumerWidget {
                                 Row(
                                   children: [
                                     InkWell(
-                                      onTap: () => runAdminWrite(
+                                      onTap: () async {
+                                        if (isPublished && !await confirmUnpublish(context, '"${item.title}"')) return;
+                                        if (!context.mounted) return;
+                                        await runAdminWrite(
                                         context,
                                         () => ref.read(scheduleProvider.notifier).togglePublish(item.id),
                                         success: isPublished ? 'Slot moved to draft.' : 'Slot published.',
-                                      ),
+                                        );
+                                      },
                                       child: Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                         decoration: BoxDecoration(

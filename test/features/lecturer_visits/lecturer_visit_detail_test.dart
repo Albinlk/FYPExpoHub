@@ -249,6 +249,8 @@ void main() {
       ),
       'Student not at booth',
     );
+    // The button enables once a reason is typed.
+    await tester.pump();
     // Dialog button is the ElevatedButton (the TextButton is "Close").
     await tester.tap(find.descendant(
       of: find.byType(ElevatedButton),

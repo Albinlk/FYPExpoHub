@@ -58,17 +58,18 @@ class AdminBoothsPage extends ConsumerWidget {
                       const SizedBox(height: DesignSystem.spaceSm),
                       DropdownButtonFormField<String?>(
                         initialValue: selectedProjectId,
+                        isExpanded: true,
                         decoration: const InputDecoration(contentPadding: EdgeInsets.symmetric(horizontal: 12)),
                         hint: const Text('No Project Allocated / Vacant'),
                         items: [
                           const DropdownMenuItem<String?>(
                             value: null,
-                            child: Text('No Project Allocated / Vacant'),
+                            child: Text('No Project Allocated / Vacant', overflow: TextOverflow.ellipsis),
                           ),
                           ...projects.map((p) {
                             return DropdownMenuItem<String?>(
                               value: p.id,
-                              child: Text(p.title.length > 30 ? '${p.title.substring(0, 30)}...' : p.title),
+                              child: Text(p.title, overflow: TextOverflow.ellipsis),
                             );
                           }),
                         ],
@@ -91,22 +92,38 @@ class AdminBoothsPage extends ConsumerWidget {
                   onPressed: saving ? null : () async {
                     if (numberController.text.trim().isEmpty) return;
 
-                    final newItem = Booth(
-                      id: item?.id ?? const Uuid().v4(),
-                      eventId: item?.eventId ?? kEventSlug,
-                      boothNumber: numberController.text.trim(),
-                      zone: zoneController.text,
-                      locationNote: noteController.text,
-                      projectId: selectedProjectId,
-                      publicationStatus: 'published',
-                      createdAt: item?.createdAt ?? DateTime.now(),
-                      updatedAt: DateTime.now(),
-                      publishedAt: DateTime.now(),
-                    );
+                    // Editing starts from the stored booth so fields this form
+                    // doesn't show (presentation day, floor plan) survive.
+                    final now = DateTime.now();
+                    final newItem = item != null
+                        ? item.copyWith(
+                            boothNumber: numberController.text.trim(),
+                            zone: zoneController.text,
+                            locationNote: noteController.text,
+                            projectId: selectedProjectId,
+                            updatedAt: now,
+                          )
+                        : Booth(
+                            id: const Uuid().v4(),
+                            eventId: kEventSlug,
+                            boothNumber: numberController.text.trim(),
+                            zone: zoneController.text,
+                            locationNote: noteController.text,
+                            projectId: selectedProjectId,
+                            publicationStatus: 'published',
+                            createdAt: now,
+                            updatedAt: now,
+                            publishedAt: now,
+                          );
 
                     final booths = ref.read(boothsProvider.notifier);
                     final projectsNotifier = ref.read(projectsProvider.notifier);
                     final linked = projects.where((p) => p.id == selectedProjectId).firstOrNull;
+                    // Projects that held this booth before and no longer do.
+                    final released = [
+                      for (final p in projects)
+                        if (p.id != selectedProjectId && item != null && (p.boothId == item.id || p.id == item.projectId)) p,
+                    ];
                     setState(() => saving = true);
                     final ok = await runAdminWrite(
                       context,
@@ -114,6 +131,11 @@ class AdminBoothsPage extends ConsumerWidget {
                         // The booth row must exist before a project can point
                         // at it (projects.booth_id is a foreign key).
                         await (item == null ? booths.addBooth(newItem) : booths.updateBooth(newItem));
+                        for (final p in released) {
+                          await projectsNotifier.updateProject(
+                            p.copyWith(boothId: null, boothNumber: null, boothZone: null),
+                          );
+                        }
                         if (linked != null) {
                           await projectsNotifier.updateProject(
                             linked.copyWith(
@@ -301,7 +323,19 @@ class AdminBoothsPage extends ConsumerWidget {
                                         if (!context.mounted) return;
                                         await runAdminWrite(
                                           context,
-                                          () => ref.read(boothsProvider.notifier).deleteBooth(item.id),
+                                          () async {
+                                            // Clear the booth from the projects that showed it, so the
+                                            // catalogue and booth finder don't list a deleted booth.
+                                            final projectsNotifier = ref.read(projectsProvider.notifier);
+                                            for (final p in ref.read(projectsProvider)) {
+                                              if (p.boothId == item.id || p.id == item.projectId) {
+                                                await projectsNotifier.updateProject(
+                                                  p.copyWith(boothId: null, boothNumber: null, boothZone: null),
+                                                );
+                                              }
+                                            }
+                                            await ref.read(boothsProvider.notifier).deleteBooth(item.id);
+                                          },
                                           success: 'Booth deleted.',
                                         );
                                       },
