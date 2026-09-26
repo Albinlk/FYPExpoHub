@@ -7,6 +7,7 @@ import '../../../../core/state/state_providers.dart';
 import '../../../../core/supabase/fypms_rpc_service.dart';
 import '../../../../core/utils/fypms_format.dart';
 import '../widgets/fypms_loading_widget.dart';
+import '../widgets/milestone_extension_widgets.dart';
 
 class CspMilestonesPage extends ConsumerStatefulWidget {
   const CspMilestonesPage({super.key});
@@ -80,6 +81,7 @@ class _CspMilestonesPageState extends ConsumerState<CspMilestonesPage> {
                   ],
                 ),
               ),
+              ExtensionRequestsPanel(fypRecordId: selected.id),
               Expanded(child: _MilestonesList(recordId: selected.id)),
             ],
           );

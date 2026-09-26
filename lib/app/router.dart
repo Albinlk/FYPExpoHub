@@ -29,7 +29,6 @@ import '../features/fypms/presentation/pages/supervisor_requests_page.dart';
 import '../features/fypms/presentation/pages/examiner_dashboard_page.dart';
 import '../features/fypms/presentation/pages/examiner_corrections_page.dart';
 import '../features/fypms/presentation/pages/examiner_evaluations_page.dart';
-import '../features/fypms/presentation/pages/fypms_placeholder_page.dart';
 import '../features/fypms/presentation/pages/lecturer_record_detail_page.dart';
 import '../features/fypms/presentation/pages/student_corrections_page.dart';
 import '../features/fypms/presentation/pages/student_dashboard_page.dart';
@@ -38,6 +37,7 @@ import '../features/fypms/presentation/pages/student_forms_page.dart';
 import '../features/fypms/presentation/pages/student_lean_canvas_page.dart';
 import '../features/fypms/presentation/pages/student_marks_page.dart';
 import '../features/fypms/presentation/pages/student_milestones_page.dart';
+import '../features/fypms/presentation/pages/student_presentations_page.dart';
 import '../features/fypms/presentation/pages/student_progress_page.dart';
 import '../features/fypms/presentation/pages/student_record_detail_page.dart';
 import '../features/fypms/presentation/pages/student_records_page.dart';
@@ -327,10 +327,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/fypms/student/presentations',
-            builder: (context, state) => const FypmsPlaceholderPage(
-              title: 'Presentations',
-              icon: Icons.event,
-            ),
+            builder: (context, state) => const StudentPresentationsPage(),
           ),
           GoRoute(
             path: '/fypms/student/marks',
@@ -427,10 +424,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/fypms/csp/presentations',
-            builder: (context, state) => const FypmsPlaceholderPage(
-              title: 'Presentations',
-              icon: Icons.event,
-            ),
+            builder: (context, state) => const CoordinatorPresentationsPage(),
           ),
           GoRoute(
             path: '/fypms/csp/marks',

@@ -4,6 +4,7 @@ import '../../../../app/theme/theme.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import '../../../../core/utils/fypms_format.dart';
 import '../widgets/fypms_loading_widget.dart';
+import '../widgets/milestone_extension_widgets.dart';
 import '../widgets/student_record_workspace.dart';
 
 class StudentMilestonesPage extends ConsumerWidget {
@@ -15,6 +16,7 @@ class StudentMilestonesPage extends ConsumerWidget {
       title: 'Milestones',
       builder: (context, ref, record) {
         final milestones = ref.watch(fypMilestonesProvider(record.id));
+        final extensions = ref.watch(fypMilestoneExtensionsProvider(record.id)).value ?? const [];
         return Column(
           children: [
             Padding(
@@ -43,6 +45,9 @@ class StudentMilestonesPage extends ConsumerWidget {
                     itemCount: list.length,
                     itemBuilder: (context, itemIndex) {
                       final m = list[itemIndex];
+                      // Newest first, so the first match is the latest request.
+                      final latest = extensions.where((e) => e.milestoneId == m.id).firstOrNull;
+                      final canRequest = m.status != 'completed' && latest?.isPending != true;
                         return Card(
                           elevation: 1,
                           margin: const EdgeInsets.only(bottom: DesignSystem.spaceMd),
@@ -71,6 +76,23 @@ class StudentMilestonesPage extends ConsumerWidget {
                                   ),
                                 const SizedBox(height: DesignSystem.spaceSm),
                                 FypStatusBadge.milestone(m.status),
+                                if (latest != null)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: DesignSystem.spaceXs),
+                                    child: Text(extensionStatusText(latest), style: DesignSystem.bodySm),
+                                  ),
+                                if (canRequest)
+                                  Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: TextButton.icon(
+                                      onPressed: () => showDialog<void>(
+                                        context: context,
+                                        builder: (_) => RequestExtensionDialog(fypRecordId: record.id, milestone: m),
+                                      ),
+                                      icon: const Icon(Icons.update, size: 18),
+                                      label: const Text('Request extension'),
+                                    ),
+                                  ),
                               ],
                             ),
                           ),

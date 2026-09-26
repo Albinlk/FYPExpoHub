@@ -199,6 +199,10 @@ gate (`42501`), argument validation (`22023`), state-machine preconditions
 | `assess_special_evaluation` | CSP650 lecturer or coordinator | Records the F14 decision in `fyp_special_evaluations`; Progress + LMC recomputed server-side; eligible only when all four checks pass; audited (`20260926000010`) |
 | `fyp_is_special_evaluation_eligible` | authenticated | Whether a record qualified on F14 (gates F15/F16) (`20260926000010`) |
 | `get_exhibition_evaluation` | record supervisor / co-supervisor / examiner | Expo project → FYPMS record (via `fyp_expo_publications`), caller's evaluator role and the record's F10 (F15 when qualified on F14) with the caller's own score; `p_create` opens the form when missing (audited). Unlinked projects return `linked: false`; non-evaluators get no record details (`20260926000011`) |
+| `request_milestone_extension` | record owner | Extension request: reason required, new date after the current target and not in the past (MYT), one pending per milestone, not for completed milestones; audited (`20260926000012`) |
+| `decide_milestone_extension` | CSP lecturer of the course or coordinator | Approves/rejects the pending request in place (reject needs a comment); approval moves the milestone target date; audited (`20260926000012`) |
+| `create_presentation_session` | course lecturer or coordinator | Creates a session for an offering: code (upper-cased, unique per offering), title, start < end, defence/expo; event date from MYT; audited (`20260926000012`) |
+| `fyp_can_read_presentation_session` | authenticated (RLS helper) | Whether the caller can read a record slotted in the session, so students see their own session (`20260926000012`) |
 | `finalize_fyp_course_marks` | course lecturer | Refuses while evaluations are missing or already finalized; stores breakdown, total and grade |
 | `set_csp600_formulation_shares` | coordinator | Splits CSP600's formulation 30 % across F2 / F3 / F4 (must sum to 30) |
 | `fyp_grade_for`, `fyp_evaluation_percent` | helpers | UiTM grade bands; an evaluation's % over a role's (and CLO's) criteria |

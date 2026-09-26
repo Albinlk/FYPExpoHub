@@ -179,6 +179,109 @@ final openExhibitionEvaluationProvider = Provider<Future<ExhibitionEvaluation> F
   },
 );
 
+/// Student requests a milestone extension.
+final requestMilestoneExtensionProvider = Provider<
+    Future<void> Function({
+      required String fypRecordId,
+      required String milestoneId,
+      required String reason,
+      required DateTime requestedDueDate,
+    })>(
+  (ref) {
+    return ({required fypRecordId, required milestoneId, required reason, required requestedDueDate}) async {
+      final rpc = ref.read(supabaseRpcServiceProvider);
+      await rpc.requestMilestoneExtension(
+        milestoneId: milestoneId,
+        reason: reason,
+        requestedDueDate: requestedDueDate,
+      );
+      ref.invalidate(fypMilestoneExtensionsProvider(fypRecordId));
+    };
+  },
+);
+
+/// CSP lecturer / coordinator decides a pending extension request.
+final decideMilestoneExtensionProvider = Provider<
+    Future<void> Function({
+      required String fypRecordId,
+      required String extensionId,
+      required String decision,
+      String? comment,
+    })>(
+  (ref) {
+    return ({required fypRecordId, required extensionId, required decision, comment}) async {
+      final rpc = ref.read(supabaseRpcServiceProvider);
+      await rpc.decideMilestoneExtension(extensionId: extensionId, decision: decision, comment: comment);
+      ref.invalidate(fypMilestoneExtensionsProvider(fypRecordId));
+      ref.invalidate(fypMilestonesProvider(fypRecordId));
+    };
+  },
+);
+
+/// Course lecturer / coordinator creates a presentation session.
+final createPresentationSessionProvider = Provider<
+    Future<void> Function({
+      required String offeringId,
+      required String sessionCode,
+      required String sessionTitle,
+      required DateTime startAt,
+      required DateTime endAt,
+      String? venue,
+      String sessionType,
+    })>(
+  (ref) {
+    return ({
+      required offeringId,
+      required sessionCode,
+      required sessionTitle,
+      required startAt,
+      required endAt,
+      venue,
+      sessionType = 'defence',
+    }) async {
+      final rpc = ref.read(supabaseRpcServiceProvider);
+      await rpc.createPresentationSession(
+        offeringId: offeringId,
+        sessionCode: sessionCode,
+        sessionTitle: sessionTitle,
+        startAt: startAt,
+        endAt: endAt,
+        venue: venue,
+        sessionType: sessionType,
+      );
+      ref.invalidate(fypPresentationSessionsProvider);
+    };
+  },
+);
+
+/// Coordinator archives a record (reason kept in the audit log).
+final archiveFypRecordProvider = Provider<Future<void> Function(String fypRecordId, String reason)>(
+  (ref) {
+    return (fypRecordId, reason) async {
+      final rpc = ref.read(supabaseRpcServiceProvider);
+      await rpc.archiveFypRecord(fypRecordId: fypRecordId, reason: reason);
+      ref.invalidate(fypRecordsProvider);
+    };
+  },
+);
+
+/// Coordinator overrides one record field, with a mandatory reason.
+final overrideFypRecordFieldProvider =
+    Provider<Future<void> Function(String fypRecordId, String field, String value, String reason)>(
+  (ref) {
+    return (fypRecordId, field, value, reason) async {
+      final rpc = ref.read(supabaseRpcServiceProvider);
+      await rpc.adminOverrideFypRecordField(
+        fypRecordId: fypRecordId,
+        field: field,
+        value: value,
+        reason: reason,
+      );
+      ref.invalidate(fypRecordsProvider);
+    };
+  },
+);
+
 /// Records the CSP650 lecturer's F14 special-evaluation decision.
 final assessSpecialEvaluationProvider = Provider<
     Future<void> Function({

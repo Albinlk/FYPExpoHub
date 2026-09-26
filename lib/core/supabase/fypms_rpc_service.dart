@@ -278,6 +278,53 @@ extension FypmsRpcService on SupabaseRpcService {
     });
   }
 
+  /// Student asks to move a milestone's target date.
+  Future<Map<String, dynamic>> requestMilestoneExtension({
+    required String milestoneId,
+    required String reason,
+    required DateTime requestedDueDate,
+  }) async {
+    return _rpc('request_milestone_extension', {
+      'p_milestone_id': milestoneId,
+      'p_reason': reason,
+      'p_requested_due_date': requestedDueDate.toIso8601String().substring(0, 10),
+    });
+  }
+
+  /// CSP lecturer / coordinator approves or rejects a pending request.
+  Future<Map<String, dynamic>> decideMilestoneExtension({
+    required String extensionId,
+    required String decision,
+    String? comment,
+  }) async {
+    return _rpc('decide_milestone_extension', {
+      'p_extension_id': extensionId,
+      'p_decision': decision,
+      'p_comment': comment,
+    });
+  }
+
+  /// Course lecturer / coordinator creates a presentation session.
+  Future<Map<String, dynamic>> createPresentationSession({
+    required String offeringId,
+    required String sessionCode,
+    required String sessionTitle,
+    required DateTime startAt,
+    required DateTime endAt,
+    String? venue,
+    String sessionType = 'defence',
+  }) async {
+    return _rpc('create_presentation_session', {
+      'p_offering_id': offeringId,
+      'p_session_code': sessionCode,
+      'p_session_title': sessionTitle,
+      'p_start_at': startAt.toUtc().toIso8601String(),
+      'p_end_at': endAt.toUtc().toIso8601String(),
+      'p_venue': venue,
+      'p_session_type': sessionType,
+    });
+  }
+
   Future<Map<String, dynamic>> schedulePresentationSlot({
     required String sessionId,
     required String fypRecordId,
