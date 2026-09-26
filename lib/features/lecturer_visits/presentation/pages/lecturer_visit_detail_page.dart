@@ -6,8 +6,11 @@ import '../../../../core/domain/models/project.dart';
 import '../../../../core/domain/models/project_lecturer_assignment.dart';
 import '../../../../core/domain/models/student_visit.dart';
 import '../../../../core/supabase/supabase_client_provider.dart';
+import '../../../../core/domain/fypms_exhibition_evaluation.dart';
+import '../../../../core/state/fypms_state_providers.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/widgets/project_cover_image.dart';
+import '../../../fypms/presentation/widgets/rubric_evaluation_dialog.dart';
 import '../widgets/mark_visited_dialog.dart';
 import '../widgets/undo_visit_dialog.dart';
 
@@ -23,6 +26,7 @@ class LecturerVisitDetailPage extends ConsumerStatefulWidget {
 class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPage> {
   bool _isMarking = false;
   bool _isUndoing = false;
+  bool _isOpeningScore = false;
 
   void _goBack() {
     if (context.canPop()) {
@@ -77,6 +81,30 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
           SnackBar(content: Text(msg), backgroundColor: DesignSystem.error),
         );
       }
+    }
+  }
+
+  /// R9: the supervisor / examiner scores F10 (or F15 for a student qualified
+  /// on F14) with its textbook rubric right from the exhibition visit.
+  Future<void> _scoreExhibitionForm(String role) async {
+    setState(() => _isOpeningScore = true);
+    try {
+      final opened = await ref.read(openExhibitionEvaluationProvider)(widget.projectId);
+      final submission = opened.submission;
+      if (!mounted) return;
+      setState(() => _isOpeningScore = false);
+      if (submission == null) throw Exception('The form could not be opened.');
+      await showDialog<void>(
+        context: context,
+        builder: (_) => RubricEvaluationDialog(submission: submission, role: opened.evaluatorRole ?? role),
+      );
+      ref.invalidate(exhibitionEvaluationProvider(widget.projectId));
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isOpeningScore = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not open the evaluation: $e'), backgroundColor: DesignSystem.error),
+      );
     }
   }
 
@@ -142,6 +170,7 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
     final exAssignment = assignments.where((a) => a.projectId == project.id && a.role == 'examiner').firstOrNull;
     final svVisit = visits.where((v) => v.projectId == project.id && v.visitRole == 'supervisor').firstOrNull;
     final exVisit = visits.where((v) => v.projectId == project.id && v.visitRole == 'examiner').firstOrNull;
+    final exhibition = ref.watch(exhibitionEvaluationProvider(project.id)).value;
 
     return Scaffold(
       appBar: AppBar(
@@ -228,9 +257,9 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
               ),
             ),
             const SizedBox(height: DesignSystem.spaceMd),
-            _buildVisitSection('Supervisor (SV)', svAssignment, svVisit, project, _isMarking, _isUndoing),
+            _buildVisitSection('Supervisor (SV)', svAssignment, svVisit, project, _isMarking, _isUndoing, exhibition),
             const SizedBox(height: DesignSystem.spaceSm),
-            _buildVisitSection('Examiner (EX)', exAssignment, exVisit, project, _isMarking, _isUndoing),
+            _buildVisitSection('Examiner (EX)', exAssignment, exVisit, project, _isMarking, _isUndoing, exhibition),
           ],
         ),
       ),
@@ -244,8 +273,11 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
     Project project,
     bool isMarking,
     bool isUndoing,
+    ExhibitionEvaluation? exhibition,
   ) {
     final role = title.contains('SV') ? 'supervisor' : 'examiner';
+    final canScore =
+        assignment != null && exhibition != null && exhibition.canScore && exhibition.evaluatorRole == role;
     final hasAssignment = assignment != null;
     final hasVisit = visit != null && visit.status == 'completed';
     final isVoided = visit != null && visit.status == 'voided';
@@ -258,18 +290,29 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
           children: [
             Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: role == 'supervisor' ? DesignSystem.primary.withValues(alpha: 0.1) : DesignSystem.tertiary.withValues(alpha: 0.1),
-                    borderRadius: DesignSystem.radiusSm,
+                // The role chip gives way on narrow phones rather than
+                // pushing the status chip off the card.
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: role == 'supervisor' ? DesignSystem.primary.withValues(alpha: 0.1) : DesignSystem.tertiary.withValues(alpha: 0.1),
+                        borderRadius: DesignSystem.radiusSm,
+                      ),
+                      child: Text(
+                        title,
+                        overflow: TextOverflow.ellipsis,
+                        style: DesignSystem.labelCaps.copyWith(
+                          color: role == 'supervisor' ? DesignSystem.primary : DesignSystem.tertiary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
                   ),
-                  child: Text(title, style: DesignSystem.labelCaps.copyWith(
-                    color: role == 'supervisor' ? DesignSystem.primary : DesignSystem.tertiary,
-                    fontWeight: FontWeight.bold,
-                  )),
                 ),
-                const Spacer(),
+                const SizedBox(width: DesignSystem.spaceSm),
                 if (hasVisit)
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -351,7 +394,36 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
               const SizedBox(height: DesignSystem.spaceMd),
               Text('You are not assigned to this role.', style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant)),
             ],
+            if (canScore) _buildScoreRow(exhibition, role),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildScoreRow(ExhibitionEvaluation exhibition, String role) {
+    final form = exhibition.formCode!;
+    final mine = exhibition.myWeightedTotal;
+    return Padding(
+      padding: const EdgeInsets.only(top: DesignSystem.spaceSm),
+      child: SizedBox(
+        width: double.infinity,
+        child: OutlinedButton.icon(
+          key: Key('score-$form-$role'),
+          onPressed: _isOpeningScore ? null : () => _scoreExhibitionForm(role),
+          icon: _isOpeningScore
+              ? const SizedBox(height: 16, width: 16, child: CircularProgressIndicator(strokeWidth: 2))
+              : Icon(mine == null ? Icons.grading : Icons.edit_note, size: 18),
+          label: Text(
+            mine == null
+                ? 'Score $form (${form == 'F15' ? 'special evaluation' : 'final presentation'})'
+                : '$form scored · ${mine.toStringAsFixed(1)}% — update',
+            overflow: TextOverflow.ellipsis,
+          ),
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: DesignSystem.spaceSm),
+            shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
+          ),
         ),
       ),
     );

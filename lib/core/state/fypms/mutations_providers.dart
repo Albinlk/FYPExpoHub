@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../domain/fypms_exhibition_evaluation.dart';
 import '../../supabase/fypms_rpc_service.dart';
 import '../expo/service_providers.dart';
 import 'coordinator_providers.dart';
@@ -157,6 +158,23 @@ final finalizeCourseMarksProvider = Provider<Future<void> Function(String fypRec
       ref.invalidate(fypMarksSummariesProvider(fypRecordId));
       ref.invalidate(fypCourseMarksProvider(fypRecordId));
       ref.invalidate(fypRecordsProvider);
+    };
+  },
+);
+
+/// Opens (creating when needed) the F10 / F15 an evaluator scores at the
+/// exhibition for an Expo project.
+final openExhibitionEvaluationProvider = Provider<Future<ExhibitionEvaluation> Function(String projectId)>(
+  (ref) {
+    return (projectId) async {
+      final rpc = ref.read(supabaseRpcServiceProvider);
+      final result = ExhibitionEvaluation.fromJson(
+        await rpc.getExhibitionEvaluation(projectId: projectId, create: true),
+      );
+      if (result.fypRecordId != null) {
+        ref.invalidate(fypFormSubmissionsProvider(result.fypRecordId!));
+      }
+      return result;
     };
   },
 );
