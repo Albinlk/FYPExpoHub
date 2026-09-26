@@ -357,6 +357,40 @@ extension FypmsDatabaseService on SupabaseDatabaseService {
   }
 
   // ---------------------------------------------------
+  // MILESTONE EXTENSIONS / PRESENTATION SCHEDULE
+  // ---------------------------------------------------
+  /// Extension requests on a record's milestones, newest first, each with
+  /// its milestone code and title.
+  Future<List<Map<String, dynamic>>> getMilestoneExtensionsForRecordOnce(String fypRecordId) async {
+    try {
+      final res = await Supabase.instance.client
+          .from('fyp_milestone_extensions')
+          .select('*, fyp_milestones!inner(fyp_record_id, milestone_code, milestone_title)')
+          .eq('fyp_milestones.fyp_record_id', fypRecordId)
+          .order('created_at', ascending: false);
+      return List<Map<String, dynamic>>.from(res);
+    } catch (e) {
+      logDebug('Supabase getMilestoneExtensionsForRecordOnce error: $e');
+      return [];
+    }
+  }
+
+  /// A record's presentation slots with their sessions.
+  Future<List<Map<String, dynamic>>> getPresentationSlotsForRecordOnce(String fypRecordId) async {
+    try {
+      final res = await Supabase.instance.client
+          .from('fyp_presentation_slots')
+          .select('*, fyp_presentation_sessions(*)')
+          .eq('fyp_record_id', fypRecordId)
+          .order('start_at');
+      return List<Map<String, dynamic>>.from(res);
+    } catch (e) {
+      logDebug('Supabase getPresentationSlotsForRecordOnce error: $e');
+      return [];
+    }
+  }
+
+  // ---------------------------------------------------
   // SPECIAL EVALUATION (F14)
   // ---------------------------------------------------
   /// The record's F14 qualification row, or null when not assessed yet.

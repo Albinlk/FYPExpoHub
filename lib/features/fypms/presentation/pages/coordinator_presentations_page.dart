@@ -3,14 +3,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/fypms/fyp_presentation_session.dart';
 import '../../../../core/state/fypms_state_providers.dart';
+import '../widgets/create_session_dialog.dart';
 import '../widgets/fypms_loading_widget.dart';
 
+/// Presentation sessions and slots, for the coordinator (all courses) and
+/// the CSP lecturers (their own course offerings, per RLS).
 class CoordinatorPresentationsPage extends ConsumerWidget {
   const CoordinatorPresentationsPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final sessions = ref.watch(fypPresentationSessionsProvider);
+    final offerings = ref.watch(
+          ref.watch(isFypCoordinatorProvider) ? fypmsOfferingsProvider : myFypmsOfferingsProvider,
+        ).value ??
+        const [];
 
     return Scaffold(
       backgroundColor: DesignSystem.background,
@@ -21,6 +28,16 @@ class CoordinatorPresentationsPage extends ConsumerWidget {
           style: DesignSystem.h3.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
         ),
       ),
+      floatingActionButton: offerings.isEmpty
+          ? null
+          : FloatingActionButton.extended(
+              onPressed: () => showDialog<void>(
+                context: context,
+                builder: (_) => CreateSessionDialog(offerings: offerings),
+              ),
+              icon: const Icon(Icons.add),
+              label: const Text('New Session'),
+            ),
       body: sessions.when(
         loading: () => const FypmsLoadingWidget(),
         error: (e, _) => Center(child: Text('Error: $e')),

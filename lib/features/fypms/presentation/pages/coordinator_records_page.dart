@@ -6,6 +6,7 @@ import '../../../../core/state/fypms_state_providers.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/supabase/fypms_rpc_service.dart';
 import '../widgets/fypms_loading_widget.dart';
+import '../widgets/record_admin_dialogs.dart';
 
 class CoordinatorRecordsPage extends ConsumerWidget {
   const CoordinatorRecordsPage({super.key});
@@ -82,7 +83,20 @@ class CoordinatorRecordsPage extends ConsumerWidget {
                       '${record.currentCourseCode} | ${record.workflowStatus.replaceAll('_', ' ')}',
                       style: DesignSystem.bodySm,
                     ),
-                    trailing: const Icon(Icons.chevron_right),
+                    trailing: PopupMenuButton<String>(
+                      tooltip: 'Record actions',
+                      onSelected: (action) => showDialog<void>(
+                        context: context,
+                        builder: (_) => action == 'archive'
+                            ? ArchiveRecordDialog(record: record)
+                            : OverrideRecordFieldDialog(record: record),
+                      ),
+                      itemBuilder: (_) => [
+                        const PopupMenuItem(value: 'edit', child: Text('Edit field…')),
+                        if (record.workflowStatus != 'project_archived')
+                          const PopupMenuItem(value: 'archive', child: Text('Archive…')),
+                      ],
+                    ),
                     onTap: () => context.go('/fypms/coordinator/records/${record.id}'),
                   ),
                 );

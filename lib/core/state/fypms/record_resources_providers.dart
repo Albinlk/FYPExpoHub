@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'user_scope.dart';
+import '../../domain/fypms_milestone_extension.dart';
 import '../../domain/fypms_special_evaluation.dart';
 import '../../domain/models/fypms/fyp_correction_item.dart';
 import '../../domain/models/fypms/fyp_deliverable.dart';
@@ -107,6 +108,24 @@ final fypMarksSummariesProvider =
   final db = ref.watch(supabaseDbServiceProvider);
   final data = await db.getMarksSummariesForRecordOnce(recordId);
   return data.map((m) => FypMarksSummary.fromJson(normalizeFypmsKeys(m))).toList();
+});
+
+/// Extension requests on a record's milestones (newest first).
+final fypMilestoneExtensionsProvider =
+    FutureProvider.family<List<FypMilestoneExtension>, String>((ref, recordId) async {
+  ref.watch(fypmsUserScopeProvider);
+  final db = ref.watch(supabaseDbServiceProvider);
+  final data = await db.getMilestoneExtensionsForRecordOnce(recordId);
+  return data.map(FypMilestoneExtension.fromJson).toList();
+});
+
+/// A record's scheduled presentations (slot + session).
+final fypRecordPresentationsProvider =
+    FutureProvider.family<List<FypScheduledPresentation>, String>((ref, recordId) async {
+  ref.watch(fypmsUserScopeProvider);
+  final db = ref.watch(supabaseDbServiceProvider);
+  final data = await db.getPresentationSlotsForRecordOnce(recordId);
+  return data.map(FypScheduledPresentation.fromJson).toList();
 });
 
 /// The record's F14 special-evaluation decision (null until assessed).
