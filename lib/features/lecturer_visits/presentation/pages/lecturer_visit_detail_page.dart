@@ -61,11 +61,17 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
     } catch (e) {
       if (!mounted) return;
       setState(() => _isMarking = false);
-      final msg = e.toString().contains('already-exists')
+      final text = e.toString();
+      // "failed-precondition: Visits closed on 08 Aug 2026 00:00." etc.
+      final window = RegExp(r'(Visits (?:open|closed) on [^.]+\.|Student project visits are currently disabled\.)')
+          .firstMatch(text)
+          ?.group(1);
+      final msg = text.contains('already-exists')
           ? 'Visit has already been recorded.'
-          : e.toString().contains('permission-denied')
-              ? 'You are not allowed to mark this visit.'
-              : 'Error: ${e.toString()}';
+          : window ??
+              (text.contains('permission-denied')
+                  ? 'You are not allowed to mark this visit.'
+                  : 'Error: $text');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(msg), backgroundColor: DesignSystem.error),
