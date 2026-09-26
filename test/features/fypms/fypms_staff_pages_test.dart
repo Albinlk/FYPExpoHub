@@ -10,6 +10,7 @@ import 'package:fyp_expo_hub/core/domain/models/fypms/fyp_presentation_slot.dart
 import 'package:fyp_expo_hub/core/domain/models/fypms/fyp_progress_log.dart';
 import 'package:fyp_expo_hub/core/domain/models/fypms/fyp_record.dart';
 import 'package:fyp_expo_hub/core/domain/models/fypms/fyp_record_assignment.dart';
+import 'package:fyp_expo_hub/core/domain/models/fypms/fyp_rubric_template.dart';
 import 'package:fyp_expo_hub/core/domain/models/fypms/fyp_supervision_request.dart';
 import 'package:fyp_expo_hub/core/state/fypms_state_providers.dart';
 import 'package:fyp_expo_hub/features/fypms/presentation/pages/coordinator_assignments_page.dart';
@@ -73,6 +74,30 @@ FypFormSubmission _submission() => FypFormSubmission(
 
 /// F3 (literature review) is scored by the course lecturer only.
 FypFormSubmission _lecturerOnlySubmission() => _submission().copyWith(id: 'sub-3', formCode: 'F3');
+
+/// A trimmed F8 rubric: two report criteria plus the supervisor-only
+/// progress item.
+FypRubricTemplate _rubric() => FypRubricTemplate(
+      id: 'rub-f8',
+      rubricCode: 'F8_FORMULATION_REPORT',
+      rubricName: 'F8 - Project Formulation Report Evaluation',
+      formCode: 'F8',
+      criteria: const [
+        {'key': 'literature_review', 'label': 'Literature review', 'weight': 5, 'max': 10},
+        {'key': 'methodology', 'label': 'Project methodology', 'weight': 6, 'max': 10},
+        {
+          'key': 'progress_evaluation',
+          'label': 'Progress evaluation (supervisor only)',
+          'weight': 2,
+          'max': 10,
+          'supervisor_only': true,
+        },
+      ],
+      version: 1,
+      isActive: true,
+      createdAt: DateTime(2026, 9, 26),
+      updatedAt: DateTime(2026, 9, 26),
+    );
 
 FypCorrectionItem _correction() => FypCorrectionItem(
       id: 'corr-1',
@@ -180,6 +205,7 @@ void main() {
         fypFormSubmissionsProvider.overrideWith((ref, recordId) async => submissions ?? [_submission()]),
         fypCorrectionItemsProvider.overrideWith((ref, recordId) async => [_correction()]),
         fypMarksSummariesProvider.overrideWith((ref, recordId) async => [_marksSummary()]),
+        fypRubricTemplatesProvider.overrideWith((ref) async => [_rubric()]),
       ];
 
   Widget home(Widget page) => MaterialApp(
@@ -393,9 +419,9 @@ void main() {
       );
     });
 
-    testWidgets('submitting evaluation calls submitFormEvaluationProvider',
+    testWidgets('scores each rubric criterion and submits them',
         (tester) async {
-      final called = <String>[];
+      final called = <Object?>[];
       await _pump(
         tester,
         ProviderScope(
@@ -403,7 +429,7 @@ void main() {
             ...baseOverrides(),
             submitFormEvaluationProvider.overrideWithValue(
                 (submissionId, scores, comments, decision, recordId) async {
-              called.addAll([submissionId, decision, recordId]);
+              called.addAll([submissionId, scores, decision, recordId]);
             }),
           ],
           child: home(const SupervisorEvaluationsPage()),
@@ -412,12 +438,37 @@ void main() {
 
       await tester.tap(find.text('Evaluate'));
       await tester.pumpAndSettle();
-      await tester.enterText(find.byType(TextField).first, '{"rubric_item_1": 5}');
-      await tester.tap(_dialogButton('Submit'));
+
+      // All three criteria, incl. the supervisor-only one, for a supervisor.
+      expect(find.text('Progress evaluation (supervisor only)'), findsOneWidget);
+      final submit = find.widgetWithText(FilledButton, 'Submit');
+      expect(tester.widget<FilledButton>(submit).onPressed, isNull,
+          reason: 'disabled until every criterion is scored');
+
+      Future<void> score(String key, int value) async {
+        await tester.tap(find.byKey(Key('score-$key')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('$value').last);
+        await tester.pumpAndSettle();
+      }
+
+      await score('literature_review', 8);
+      await score('methodology', 8);
+      await score('progress_evaluation', 8);
+      expect(find.text('Marks 104 / 130'), findsOneWidget);
+      expect(find.text('80.0%'), findsOneWidget);
+      expect(find.textContaining('Excellent · 48 marks'), findsOneWidget);
+
+      await tester.tap(submit);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
 
-      expect(called, ['sub-1', 'approved', 'rec-1']);
+      expect(called, [
+        'sub-1',
+        {'literature_review': 8, 'methodology': 8, 'progress_evaluation': 8},
+        'approved',
+        'rec-1',
+      ]);
       expect(find.text('Evaluation submitted.'), findsOneWidget);
     });
   });
@@ -455,6 +506,25 @@ void main() {
   });
 
   group('ExaminerEvaluationsPage', () {
+    testWidgets('rubric dialog fits a 375px phone without overflow', (tester) async {
+      tester.view.physicalSize = const Size(375, 812);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(app(const SupervisorEvaluationsPage()));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Evaluate'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('score-methodology')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('10').last);
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Excellent · 60 marks'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets('opens evaluate dialog with decision options', (tester) async {
       await _pump(tester, app(const ExaminerEvaluationsPage()));
 
@@ -463,6 +533,10 @@ void main() {
 
       await tester.tap(find.text('Evaluate'));
       await tester.pumpAndSettle();
+
+      // Supervisor-only criteria are not part of an examiner's score.
+      expect(find.text('Project methodology'), findsOneWidget);
+      expect(find.text('Progress evaluation (supervisor only)'), findsNothing);
 
       expect(find.text('Evaluate Submission'), findsOneWidget);
       final decisionItems = tester
