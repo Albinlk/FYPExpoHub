@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/supabase/supabase_client_provider.dart';
+import '../../password_reset.dart';
 
 void _goToMainSite() {
   launchUrlString('https://fskmjasinfypexhibition.site/');
@@ -167,7 +168,17 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 24),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: () => showDialog<void>(
+                            context: context,
+                            builder: (_) => ForgotPasswordDialog(initialEmail: _emailController.text.trim()),
+                          ),
+                          child: const Text('Forgot password?'),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
 
                       SizedBox(
                         width: double.infinity,
@@ -206,6 +217,94 @@ class _SignInPageState extends ConsumerState<SignInPage> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Asks for the account email and sends the recovery link. The confirmation
+/// is the same whether or not the address is registered.
+class ForgotPasswordDialog extends ConsumerStatefulWidget {
+  const ForgotPasswordDialog({super.key, this.initialEmail = ''});
+
+  final String initialEmail;
+
+  @override
+  ConsumerState<ForgotPasswordDialog> createState() => _ForgotPasswordDialogState();
+}
+
+class _ForgotPasswordDialogState extends ConsumerState<ForgotPasswordDialog> {
+  late final _email = TextEditingController(text: widget.initialEmail);
+  bool _busy = false;
+  bool _sent = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _email.dispose();
+    super.dispose();
+  }
+
+  bool get _valid => RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(_email.text.trim());
+
+  Future<void> _send() async {
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      await ref.read(sendPasswordResetProvider)(_email.text);
+      if (mounted) setState(() => _sent = true);
+    } on AuthException catch (e) {
+      // Rate limits are worth showing; "user not found" style errors are not.
+      final rateLimited = e.statusCode == '429' || e.message.toLowerCase().contains('rate limit');
+      if (mounted) {
+        setState(() => rateLimited ? _error = 'Too many requests. Please try again in a few minutes.' : _sent = true);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _error = 'Could not send the email. Check your connection and try again.');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Reset password'),
+      content: SizedBox(
+        width: 400,
+        child: _sent
+            ? const Text(
+                'If an account exists for that email, a password reset link is on its way. '
+                'The link works once and expires after an hour.',
+                key: Key('reset-sent'),
+              )
+            : Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Enter your account email and we will send you a reset link.'),
+                  TextField(
+                    key: const Key('reset-email'),
+                    controller: _email,
+                    keyboardType: TextInputType.emailAddress,
+                    autofillHints: const [AutofillHints.email],
+                    onChanged: (_) => setState(() {}),
+                    decoration: const InputDecoration(labelText: 'Email'),
+                  ),
+                  if (_error != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(_error!, style: DesignSystem.bodySm.copyWith(color: DesignSystem.error)),
+                    ),
+                ],
+              ),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(_sent ? 'Close' : 'Cancel')),
+        if (!_sent)
+          FilledButton(onPressed: _valid && !_busy ? _send : null, child: const Text('Send link')),
+      ],
     );
   }
 }
