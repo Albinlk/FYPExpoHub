@@ -22,19 +22,21 @@ class ProjectCoverImage extends StatelessWidget {
 
   // ── Palette bank ──────────────────────────────────────────────────────────
   // 12 visually-distinct, on-brand gradient pairs (start → end)
+  // Ink & Terracotta family (matches DesignSystem): muted jewel and earth
+  // tones, all dark enough for the white title/icon drawn on top.
   static const List<List<Color>> _palettes = [
-    [Color(0xFF031636), Color(0xFF1565C0)], // deep navy → vivid blue
-    [Color(0xFF0D4F3C), Color(0xFF00897B)], // forest → teal
-    [Color(0xFF4A0072), Color(0xFF7B1FA2)], // deep purple → medium purple
-    [Color(0xFF1A237E), Color(0xFF283593)], // indigo dark → indigo
-    [Color(0xFF1B5E20), Color(0xFF388E3C)], // dark green → green
-    [Color(0xFFBF360C), Color(0xFFE64A19)], // deep orange-red
-    [Color(0xFF004D40), Color(0xFF00695C)], // deep teal
-    [Color(0xFF880E4F), Color(0xFFC2185B)], // dark pink → pink
-    [Color(0xFF212121), Color(0xFF424242)], // near-black tones
-    [Color(0xFF0277BD), Color(0xFF039BE5)], // dark sky → sky blue
-    [Color(0xFF37474F), Color(0xFF546E7A)], // blue-grey
-    [Color(0xFF4E342E), Color(0xFF795548)], // dark brown → brown
+    [Color(0xFF2A1838), Color(0xFF5B3A7A)], // aubergine → plum
+    [Color(0xFF7A2E12), Color(0xFFB4532A)], // rust → terracotta
+    [Color(0xFF0B2A26), Color(0xFF1F6B5C)], // deep verdigris → verdigris
+    [Color(0xFF3A2A1C), Color(0xFF7A5634)], // umber → clay
+    [Color(0xFF5A1A2E), Color(0xFF8E3450)], // burgundy → rosewood
+    [Color(0xFF1C2B3A), Color(0xFF3F5A70)], // ink blue → slate
+    [Color(0xFF2E3A1C), Color(0xFF5C6E34)], // olive dark → moss
+    [Color(0xFF4A2A10), Color(0xFF9A5A1E)], // walnut → ochre
+    [Color(0xFF1E1A20), Color(0xFF4E4652)], // ink black → graphite
+    [Color(0xFF123A3E), Color(0xFF2F7A7A)], // pine → sea glass
+    [Color(0xFF3D2A52), Color(0xFF7A5A9A)], // plum → lavender dusk
+    [Color(0xFF6E2609), Color(0xFFC0602E)], // burnt umber → apricot rust
   ];
 
   // ── Category → icon mapping ───────────────────────────────────────────────
