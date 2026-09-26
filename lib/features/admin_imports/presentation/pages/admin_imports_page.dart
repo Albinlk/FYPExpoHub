@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../app/theme/theme.dart';
+import '../../domain/import_checks.dart';
 import '../../../../core/domain/models/import_models.dart';
 import '../../../../core/supabase/row_mappers.dart';
 import '../../../../core/supabase/supabase_client_provider.dart';
@@ -39,6 +40,23 @@ class _AdminImportsPageState extends ConsumerState<AdminImportsPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Could not read file bytes.')),
         );
+      }
+      return;
+    }
+
+    // G-06: the admin's "Max File Size" setting is enforced before the
+    // (memory-hungry, main-thread) decode.
+    final importSettings = await ref.read(supabaseDbServiceProvider).getSetting('excel_import') ?? const {};
+    final limit = parseFileSize(importSettings['maxFileSize'] as String?);
+    if (limit != null && bytes.length > limit) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(
+            '${file.name} is ${(bytes.length / 1048576).toStringAsFixed(1)} MB; '
+            'the import limit is ${importSettings['maxFileSize']} (Settings).',
+          ),
+          backgroundColor: DesignSystem.error,
+        ));
       }
       return;
     }
@@ -119,6 +137,8 @@ class _AdminImportsPageState extends ConsumerState<AdminImportsPage> {
               'audience': audience,
               'access_type': 'public',
               'comparison_status': 'new',
+              // Not a column (ignored when staged): the sheet, for messages.
+              '_sheet': table,
             });
           }
         } else if (sheetNameUpper.contains('ANUGERAH') || sheetNameUpper.contains('AWARD')) {
@@ -144,6 +164,7 @@ class _AdminImportsPageState extends ConsumerState<AdminImportsPage> {
               'supervisor_display_name': sv,
               'programme_code': prog,
               'comparison_status': 'new',
+              '_sheet': table,
             });
           }
         } else if (sheetNameUpper.contains('MARKAH') || sheetNameUpper.contains('EVALUATION') || sheetNameUpper.contains('STUDENT_PRIVATE')) {
@@ -157,6 +178,31 @@ class _AdminImportsPageState extends ConsumerState<AdminImportsPage> {
             'category': 'confidential_sheet',
           });
         }
+      }
+
+      // G-06: duplicates, overlaps and rows already live.
+      validationIssues
+        ..addAll(checkScheduleCandidates(
+          importId: importId,
+          defaultSheet: 'TENTATIF',
+          candidates: scheduleCandidates,
+          existing: ref.read(scheduleProvider),
+        ))
+        ..addAll(checkAwardCandidates(
+          importId: importId,
+          defaultSheet: 'PEMENANG ANUGERAH',
+          candidates: awardCandidates,
+          existing: ref.read(awardsProvider),
+        ));
+      for (final w in missingWorksheets(importSettings['mandatoryWorksheets'] as String?, excel.tables.keys)) {
+        validationIssues.add({
+          'import_id': importId,
+          'worksheet_name': w,
+          'row_number': 0,
+          'issue_type': 'missing_worksheet',
+          'severity': 'warning',
+          'message': 'The file has no "$w" worksheet, which Settings lists as mandatory.',
+        });
       }
 
       if (scheduleCandidates.isEmpty && awardCandidates.isEmpty) {

@@ -5,7 +5,9 @@ import 'package:uuid/uuid.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/widgets/admin_actions.dart';
 import '../../../../core/supabase/supabase_client_provider.dart';
+import '../../../../core/domain/models/import_models.dart';
 import '../../../../core/state/state_providers.dart';
+import '../../domain/import_checks.dart';
 
 class ImportDetailPage extends ConsumerStatefulWidget {
   final String importId;
@@ -33,8 +35,10 @@ class _ImportDetailPageState extends ConsumerState<ImportDetailPage> {
     final ok = await confirmAction(
       context,
       title: 'Publish this import?',
-      message: 'The rows marked Publish or Replace are added to the public schedule and awards. '
-          'An import can only be published once.',
+      message: 'Rows marked Publish are added to the public schedule and awards. '
+          'Rows marked Replace existing first remove the live item they match '
+          '(same day and title, or the same venue at an overlapping time; for awards, '
+          'the same award and team). An import can only be published once.',
       confirmLabel: 'Publish',
     );
     if (!ok || !mounted) return;
@@ -71,10 +75,15 @@ class _ImportDetailPageState extends ConsumerState<ImportDetailPage> {
       ref.invalidate(publicAwardsProvider);
       ref.invalidate(importsProvider);
 
+      final replaced = ((res['replaced_schedules'] as num?) ?? 0) + ((res['replaced_awards'] as num?) ?? 0);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Import published! ${res["published_schedules"] ?? 0} schedule items & ${res["published_awards"] ?? 0} awards added.'),
+            content: Text(
+              'Import published! ${res["published_schedules"] ?? 0} schedule items & '
+              '${res["published_awards"] ?? 0} awards added'
+              '${replaced > 0 ? ', $replaced old items replaced' : ''}.',
+            ),
             backgroundColor: Colors.green,
           ),
         );
@@ -98,7 +107,6 @@ class _ImportDetailPageState extends ConsumerState<ImportDetailPage> {
     final scheduleAsync = ref.watch(scheduleCandidatesProvider(widget.importId));
     final awardsAsync = ref.watch(awardCandidatesProvider(widget.importId));
     final skipsAsync = ref.watch(privacySkipsProvider(widget.importId));
-    // ignore: unused_local_variable
     final issuesAsync = ref.watch(validationIssuesProvider(widget.importId));
 
     return Scaffold(
@@ -136,6 +144,13 @@ class _ImportDetailPageState extends ConsumerState<ImportDetailPage> {
             ),
             const SizedBox(height: DesignSystem.spaceLg),
 
+            // G-06: what the checks found, before anything is published.
+            issuesAsync.when(
+              data: (issues) => issues.isEmpty ? const SizedBox.shrink() : _IssuesCard(issues: issues),
+              loading: () => const SizedBox.shrink(),
+              error: (e, _) => Text('Error loading validation issues: $e'),
+            ),
+
             // Schedule Candidates
             Card(
               child: Padding(
@@ -156,13 +171,23 @@ class _ImportDetailPageState extends ConsumerState<ImportDetailPage> {
                           itemBuilder: (context, i) {
                             final c = list[i];
                             final idKey = 'sch_${c.id}';
-                            final currentDecision = _decisions[idKey] ?? 'publish';
-                            if (!_decisions.containsKey(idKey)) {
-                              _decisions[idKey] = 'publish';
-                            }
+                            final currentDecision = _decisions.putIfAbsent(
+                              idKey,
+                              () => defaultImportAction(comparisonStatus: c.comparisonStatus, isDuplicate: c.isDuplicate),
+                            );
                             return ListTile(
                               title: Text('${c.startAt} - ${c.endAt} — ${c.title}', style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold)),
-                              subtitle: Text('Venue: ${c.venue} • Audience: ${c.audience}', style: DesignSystem.bodySm),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('Venue: ${c.venue} • Audience: ${c.audience}', style: DesignSystem.bodySm),
+                                  _Badges(
+                                    comparisonStatus: c.comparisonStatus,
+                                    isDuplicate: c.isDuplicate,
+                                    isOverlapping: c.isOverlapping,
+                                  ),
+                                ],
+                              ),
                               trailing: DropdownButton<String>(
                                 value: currentDecision,
                                 items: const [
@@ -207,13 +232,19 @@ class _ImportDetailPageState extends ConsumerState<ImportDetailPage> {
                           itemBuilder: (context, i) {
                             final c = list[i];
                             final idKey = 'aw_${c.id}';
-                            final currentDecision = _decisions[idKey] ?? 'publish';
-                            if (!_decisions.containsKey(idKey)) {
-                              _decisions[idKey] = 'publish';
-                            }
+                            final currentDecision = _decisions.putIfAbsent(
+                              idKey,
+                              () => c.isSkip ? 'skip' : 'publish',
+                            );
                             return ListTile(
                               title: Text('${c.awardCategory}: ${c.teamDisplayName}', style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold)),
-                              subtitle: Text('Supervisor: ${c.supervisorDisplayName} • Programme: ${c.programmeCode}', style: DesignSystem.bodySm),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('Supervisor: ${c.supervisorDisplayName} • Programme: ${c.programmeCode}', style: DesignSystem.bodySm),
+                                  if (c.isSkip) const _Badges(comparisonStatus: 'new', isDuplicate: true, isOverlapping: false),
+                                ],
+                              ),
                               trailing: DropdownButton<String>(
                                 value: currentDecision,
                                 items: const [
@@ -270,6 +301,100 @@ class _ImportDetailPageState extends ConsumerState<ImportDetailPage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// The staged validation issues, errors and warnings first.
+class _IssuesCard extends StatelessWidget {
+  const _IssuesCard({required this.issues});
+
+  final List<ValidationIssue> issues;
+
+  static const _rank = {'error': 0, 'warning': 1, 'info': 2};
+
+  @override
+  Widget build(BuildContext context) {
+    final sorted = [...issues]..sort((a, b) {
+        final r = (_rank[a.severity] ?? 3).compareTo(_rank[b.severity] ?? 3);
+        return r != 0 ? r : (a.rowNumber ?? 0).compareTo(b.rowNumber ?? 0);
+      });
+    final warnings = issues.where((i) => i.severity != 'info').length;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: DesignSystem.spaceLg),
+      child: Card(
+        key: const Key('import-issues'),
+        child: Padding(
+          padding: const EdgeInsets.all(DesignSystem.spaceMd),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Checks: $warnings to review, ${issues.length - warnings} notes',
+                style: DesignSystem.h3Mobile.copyWith(color: DesignSystem.primary),
+              ),
+              const Divider(height: 24),
+              for (final i in sorted)
+                ListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(
+                    switch (i.severity) {
+                      'error' => Icons.error_outline,
+                      'warning' => Icons.warning_amber,
+                      _ => Icons.info_outline,
+                    },
+                    color: i.severity == 'info' ? DesignSystem.onSurfaceVariant : DesignSystem.error,
+                  ),
+                  title: Text(i.message, style: DesignSystem.bodySm),
+                  subtitle: Text(
+                    '${i.worksheetName}${(i.rowNumber ?? 0) > 0 ? ' · row ${i.rowNumber}' : ''}',
+                    style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Small flags on a staged row: already live, changes a live item,
+/// duplicate in the file, overlaps another item.
+class _Badges extends StatelessWidget {
+  const _Badges({required this.comparisonStatus, required this.isDuplicate, required this.isOverlapping});
+
+  final String comparisonStatus;
+  final bool isDuplicate;
+  final bool isOverlapping;
+
+  @override
+  Widget build(BuildContext context) {
+    final labels = [
+      if (comparisonStatus == 'unchanged') 'Already live',
+      if (comparisonStatus == 'updated') 'Changes a live item',
+      if (isDuplicate && comparisonStatus != 'unchanged') 'Duplicate in file',
+      if (isOverlapping) 'Overlaps another item',
+    ];
+    if (labels.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Wrap(
+        spacing: 6,
+        runSpacing: 4,
+        children: [
+          for (final l in labels)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: DesignSystem.secondaryContainer,
+                borderRadius: DesignSystem.radiusSm,
+              ),
+              child: Text(l, style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSecondaryContainer)),
+            ),
+        ],
       ),
     );
   }

@@ -69,17 +69,19 @@ publish_approved_import_changes(p_import_id uuid)
 RETURNS jsonb
 ```
 
-**Returns:** JSON object with `import_id`, `status`, `published_schedules`, `published_awards`.
+**Returns:** JSON object with `import_id`, `status`, `published_schedules`, `published_awards`, `replaced_schedules`, `replaced_awards`, `skipped_incomplete`.
 
-**Process:**
-1. User must be authenticated and have admin role
-2. Import record must exist
-3. Iterates through `import_review_decisions` for this import
-4. For each 'publish' or 'replace_existing' decision:
-   - If `candidate_type = 'schedule'`: inserts into `schedule_items`
-   - If `candidate_type = 'award'`: inserts into `award_winners`
-5. Updates import status to 'published' with summary
-6. Creates audit log entry
+**Process** (latest: `20260927000001_import_replace_and_checks.sql`):
+1. User must be authenticated and an active admin; the import must exist and not be published yet
+2. Iterates through `import_review_decisions` for this import
+3. For each `publish` / `replace_existing` / `mark_internal` / `save_draft` decision:
+   - `schedule`: rows without a parsed day/time are skipped; `replace_existing` first **deletes** the live `schedule_items` it matches (same event and day, and the same title — case/spacing ignored — or the same venue at an overlapping time); then inserts
+   - `award`: `replace_existing` first **deletes** live `award_winners` with the same award name and team; then inserts
+   - Rows inserted earlier in the same publish are never deleted
+4. Updates import status to 'published' with the counts in `summary`
+5. Creates audit log entry with the same counts
+
+`stage_import` (same migration) now also keeps each schedule candidate's `is_duplicate`, `is_overlapping` and `overlap_details`; the client computes them while staging (duplicates in the file, rows already live, overlaps in the same venue).
 
 **Error codes:**
 - `28000` (unauthenticated)
