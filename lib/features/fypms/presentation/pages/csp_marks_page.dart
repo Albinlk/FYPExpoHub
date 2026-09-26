@@ -4,12 +4,35 @@ import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/fypms_course_marks.dart';
 import '../../../../core/domain/models/fypms/fyp_record.dart';
 import '../../../../core/state/fypms_state_providers.dart';
+import '../../../../core/utils/download_util.dart';
+import '../../domain/res_export.dart';
 import '../widgets/fypms_loading_widget.dart';
 
 /// Course marks computed from the rubric evaluations (textbook shares), with
 /// a Finalize action once every evaluator has scored.
 class CspMarksPage extends ConsumerWidget {
   const CspMarksPage({super.key});
+
+  /// R11: downloads the finalized marks as a CSV for the RES upload.
+  Future<void> _exportRes(BuildContext context, WidgetRef ref, List<FypRecord> records) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final rows = [
+        for (final r in records) (r, await ref.read(fypMarksSummariesProvider(r.id).future)),
+      ];
+      final count = resExportCount(rows);
+      if (count == 0) {
+        messenger.showSnackBar(const SnackBar(content: Text('No finalized marks to export yet.')));
+        return;
+      }
+      final now = DateTime.now().toUtc().add(const Duration(hours: 8));
+      final stamp = '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}';
+      downloadTextFileWeb('RES_marks_$stamp.csv', buildResExportCsv(rows));
+      messenger.showSnackBar(SnackBar(content: Text('Exported $count finalized marks for RES.')));
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text('Export failed: $e')));
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -23,6 +46,14 @@ class CspMarksPage extends ConsumerWidget {
           'Finalize Marks',
           style: DesignSystem.h3.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
         ),
+        actions: [
+          IconButton(
+            key: const Key('res-export'),
+            tooltip: 'Export finalized marks for RES (CSV)',
+            icon: const Icon(Icons.download, color: Colors.white),
+            onPressed: records.value == null ? null : () => _exportRes(context, ref, records.value!),
+          ),
+        ],
       ),
       body: records.when(
         loading: () => const FypmsLoadingWidget(),
