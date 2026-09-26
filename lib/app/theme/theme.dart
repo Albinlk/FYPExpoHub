@@ -5,30 +5,30 @@ class DesignSystem {
   DesignSystem._();
 
   // Colors
-  static const Color primary = Color(0xFF031636); // Deep Navy
-  static const Color primaryContainer = Color(0xFF1A2B4C); // Dark Navy
+  static const Color primary = Color(0xFF2A1838); // Aubergine Ink
+  static const Color primaryContainer = Color(0xFF3D2A52); // Plum
   static const Color onPrimary = Color(0xFFFFFFFF);
-  static const Color onPrimaryContainer = Color(0xFF8293BA);
+  static const Color onPrimaryContainer = Color(0xFFC2AEDD); // Lilac
 
-  static const Color secondary = Color(0xFF735C00); // Warm Gold/Amber
-  static const Color secondaryContainer = Color(0xFFFED65B); // Bright Gold/Amber
-  static const Color onSecondaryContainer = Color(0xFF745C00);
+  static const Color secondary = Color(0xFF9A3A12); // Terracotta
+  static const Color secondaryContainer = Color(0xFFF6B48A); // Apricot
+  static const Color onSecondaryContainer = Color(0xFF6E2609); // Burnt Umber
 
-  static const Color tertiary = Color(0xFF001B1B); // Deep Teal
-  static const Color tertiaryContainer = Color(0xFF003232);
-  static const Color onTertiaryContainer = Color(0xFF3DA2A1); // Medium Teal
+  static const Color tertiary = Color(0xFF0B2A26); // Deep Verdigris
+  static const Color tertiaryContainer = Color(0xFF12423B); // Verdigris
+  static const Color onTertiaryContainer = Color(0xFF84CDB8); // Sage Mint
 
-  static const Color background = Color(0xFFF6FAFE); // Warm Off-White
-  static const Color onBackground = Color(0xFF171C1F);
+  static const Color background = Color(0xFFFAF7F2); // Warm Paper
+  static const Color onBackground = Color(0xFF1E1A20); // Ink Black
   
-  static const Color surface = Color(0xFFF6FAFE);
+  static const Color surface = Color(0xFFFAF7F2);
   static const Color surfaceContainerLowest = Color(0xFFFFFFFF); // White (cards, modals)
-  static const Color surfaceContainerLow = Color(0xFFF0F4F8); // Very light grey-blue
-  static const Color surfaceContainer = Color(0xFFEAEEF2); // Dividers, borders
-  static const Color surfaceContainerHighest = Color(0xFFDFE3E7); // Outline
+  static const Color surfaceContainerLow = Color(0xFFF3EEE7); // Parchment
+  static const Color surfaceContainer = Color(0xFFECE5DB); // Dividers, borders
+  static const Color surfaceContainerHighest = Color(0xFFE0D7CA); // Outline
 
-  static const Color onSurfaceVariant = Color(0xFF44474E); // Muted body text
-  static const Color outlineVariant = Color(0xFFC5C6CF); // Input borders
+  static const Color onSurfaceVariant = Color(0xFF4E4652); // Muted body text
+  static const Color outlineVariant = Color(0xFFCFC5BA); // Input borders
   
   static const Color error = Color(0xFFBA1A1A);
   static const Color errorContainer = Color(0xFFFFDAD6);
