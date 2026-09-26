@@ -64,7 +64,7 @@ class _LecturerPageState extends ConsumerState<LecturerPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Lecturer Portal', style: DesignSystem.h1.copyWith(color: DesignSystem.primary)),
+                  Text('Lecturer Portal', style: DesignSystem.pageTitle(context).copyWith(color: DesignSystem.primary)),
                   const SizedBox(height: DesignSystem.spaceSm),
                   Text(
                     'Search for projects assigned to you as a supervisor or examiner.',
@@ -173,18 +173,14 @@ class _LecturerPageState extends ConsumerState<LecturerPage> {
             SliverPadding(
               padding: EdgeInsets.symmetric(horizontal: padding),
               sliver: SliverGrid(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: isDesktop ? 3 : 1,
-                  crossAxisSpacing: DesignSystem.spaceMd,
-                  mainAxisSpacing: DesignSystem.spaceMd,
-                  childAspectRatio: isDesktop ? 1.55 : 1.35,
-                ),
+                gridDelegate: ProjectCard.gridDelegate(MediaQuery.sizeOf(context).width, extraBodyHeight: 40),
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
                     final project = filteredProjects[index];
                     return ProjectCard(
                       project: project,
                       onTap: () => context.push('/projects/${project.slug}?from=lecturer'),
+                      showStaff: true,
                     );
                   },
                   childCount: filteredProjects.length,

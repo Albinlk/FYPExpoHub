@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:fyp_expo_hub/app/theme/theme.dart';
 import 'package:fyp_expo_hub/core/domain/models/event.dart';
 import 'package:fyp_expo_hub/core/domain/models/project.dart';
 import 'package:fyp_expo_hub/core/domain/models/schedule_item.dart';
@@ -11,8 +12,8 @@ import 'package:fyp_expo_hub/core/supabase/supabase_database_service.dart';
 import 'package:fyp_expo_hub/features/public_home/presentation/pages/home_page.dart';
 import 'package:fyp_expo_hub/features/public_schedule/presentation/pages/schedule_page.dart';
 
-/// Mobile-view centering contracts for the home hero + empty states:
-/// centered detail rows, centered countdown badges, even schedule tabs,
+/// Mobile-view contracts for the home hero + empty states: one compact
+/// centered details line, a small concluded pill, two hero actions, even schedule tabs,
 /// and centered empty-state text.
 void main() {
   final originalErrorHandler = FlutterError.onError;
@@ -62,44 +63,49 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('home hero detail labels are centered on mobile', (tester) async {
-    await pumpMobile(tester, const HomePage());
-
-    final dateLabel = tester.widget<Text>(find.text('DATE').first);
-    expect(dateLabel.textAlign, TextAlign.center);
-    final venueValue =
-        tester.widget<Text>(find.text('Blok Kuliah, FSKM').first);
-    expect(venueValue.textAlign, TextAlign.center);
-  });
-
-  testWidgets('concluded badge text centers and wraps on mobile', (tester) async {
-    await pumpMobile(tester, const HomePage(), concludedEvent: true);
-
-    final badge = tester
-        .widget<Text>(find.text('Exhibition Concluded — Thank You for Visiting').first);
-    expect(badge.textAlign, TextAlign.center);
-    expect(badge.softWrap, isTrue);
-    expect(find.byIcon(Icons.emoji_events), findsOneWidget);
-  });
-
-  testWidgets('mobile detail-box separators span the full box width',
+  testWidgets('home hero details are one compact centered line on mobile',
       (tester) async {
     await pumpMobile(tester, const HomePage());
 
-    // The two hairline Containers in the mobile details box.
-    final lines = tester
-        .widgetList<Container>(find.byType(Container))
-        .where((c) => (c.constraints?.minWidth == double.infinity) == false)
-        .toList();
-    // Simply assert the divider widgets got an explicit infinite width via
-    // their child DecoratedBox constraints — find by height:1 boxes.
-    final dividers = tester.widgetList<Container>(find.byType(Container)).where(
-          (c) =>
-              c.constraints != null &&
-              c.constraints!.minWidth == double.infinity,
-        );
-    expect(dividers, isNotEmpty);
-    expect(lines, isNotEmpty);
+    // No DATE/TIME/VENUE labels or boxed rows on phones: icon + value only.
+    expect(find.text('DATE'), findsNothing);
+    final venue = find.text('Blok Kuliah, FSKM').first;
+    expect(tester.widget<Text>(venue).textAlign, TextAlign.center);
+    final wrap = tester.widget<Wrap>(
+      find.ancestor(of: venue, matching: find.byType(Wrap)).first,
+    );
+    expect(wrap.alignment, WrapAlignment.center);
+    // Date, time and venue are all children of that one wrapped line.
+    expect(
+      find.descendant(of: find.byWidget(wrap), matching: find.byType(Icon)),
+      findsNWidgets(3),
+    );
+  });
+
+  testWidgets('concluded state is a small centered pill on mobile', (tester) async {
+    await pumpMobile(tester, const HomePage(), concludedEvent: true);
+
+    final text = find.text('Exhibition concluded — thank you!');
+    final badge = tester.widget<Text>(text.first);
+    expect(badge.textAlign, TextAlign.center);
+    expect(badge.softWrap, isTrue);
+    expect(find.byIcon(Icons.emoji_events), findsOneWidget);
+    // Pill, not the desktop box: tight padding and fully rounded ends.
+    final pill = tester.widget<Container>(
+      find.ancestor(of: text, matching: find.byType(Container)).first,
+    );
+    expect(pill.padding, const EdgeInsets.symmetric(horizontal: 12, vertical: 6));
+    expect((pill.decoration! as BoxDecoration).borderRadius, DesignSystem.radiusFull);
+  });
+
+  testWidgets('home hero keeps one primary and one secondary action',
+      (tester) async {
+    await pumpMobile(tester, const HomePage());
+
+    expect(find.widgetWithText(ElevatedButton, 'Explore Projects'), findsOneWidget);
+    expect(find.widgetWithText(OutlinedButton, 'View Schedule'), findsOneWidget);
+    expect(find.text('Past Sem Projects'), findsNothing);
+    expect(find.text('Lecturer Portal'), findsNothing);
   });
 
   testWidgets('Featured Projects header is centered on mobile, left on desktop title',

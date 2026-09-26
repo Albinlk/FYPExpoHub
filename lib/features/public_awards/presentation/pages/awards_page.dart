@@ -41,7 +41,7 @@ class AwardsPage extends ConsumerWidget {
               children: [
                 const Icon(Icons.emoji_events, color: DesignSystem.secondary, size: 36),
                 const SizedBox(width: 12),
-                Text('Award Winners', style: DesignSystem.h1.copyWith(color: DesignSystem.primary)),
+                Text('Award Winners', style: DesignSystem.pageTitle(context).copyWith(color: DesignSystem.primary)),
               ],
             ),
             const SizedBox(height: DesignSystem.spaceSm),

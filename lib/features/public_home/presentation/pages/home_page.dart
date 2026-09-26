@@ -44,7 +44,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                   end: Alignment.bottomRight,
                 ),
               ),
-              padding: EdgeInsets.symmetric(horizontal: padding, vertical: isDesktop ? 80.0 : 40.0),
+              padding: EdgeInsets.symmetric(horizontal: padding, vertical: isDesktop ? 80.0 : 28.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
@@ -76,17 +76,17 @@ class _HomePageState extends ConsumerState<HomePage> {
                     textAlign: TextAlign.center,
                     softWrap: true,
                   ),
-                  const SizedBox(height: DesignSystem.spaceLg),
+                  SizedBox(height: isDesktop ? DesignSystem.spaceLg : DesignSystem.spaceMd),
 
                   // EXHIBITION DETAILS ABOVE TIMER
                   _buildExhibitionDetails(isDesktop, event),
 
-                  const SizedBox(height: DesignSystem.spaceLg),
+                  SizedBox(height: isDesktop ? DesignSystem.spaceLg : DesignSystem.spaceMd),
 
                   // COUNTDOWN TIMER / EVENT STATUS
-                  _CountdownTimer(eventStart: event.startAt, eventEnd: event.endAt),
+                  _CountdownTimer(eventStart: event.startAt, eventEnd: event.endAt, compact: !isDesktop),
 
-                  const SizedBox(height: DesignSystem.spaceXl),
+                  SizedBox(height: isDesktop ? DesignSystem.spaceXl : DesignSystem.spaceLg),
 
                   // Hero CTA Buttons & Search
                   SizedBox(
@@ -101,7 +101,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                             }
                           },
                           decoration: InputDecoration(
-                            hintText: 'Search projects, supervisors, or keywords...',
+                            hintText: isDesktop
+                                ? 'Search projects, supervisors, or keywords...'
+                                : 'Search projects...',
                             prefixIcon: const Icon(Icons.search, color: DesignSystem.primary),
                             suffixIcon: ElevatedButton(
                               onPressed: () {
@@ -141,28 +143,10 @@ class _HomePageState extends ConsumerState<HomePage> {
                                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                                 shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusFull),
                               ),
-                              child: Text('Explore Project Catalogue', style: DesignSystem.button),
+                              child: Text('Explore Projects', style: DesignSystem.button),
                             ),
-                            ElevatedButton(
-                              onPressed: () => context.go('/projects/junior-guide'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: DesignSystem.tertiaryContainer,
-                                foregroundColor: DesignSystem.onTertiaryContainer,
-                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                                shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusFull),
-                              ),
-                              child: Text('Past Sem Projects', style: DesignSystem.button),
-                            ),
-                            ElevatedButton(
-                              onPressed: () => context.go('/lecturer'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: DesignSystem.tertiaryContainer,
-                                foregroundColor: DesignSystem.onTertiaryContainer,
-                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                                shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusFull),
-                              ),
-                              child: Text('Lecturer Portal', style: DesignSystem.button),
-                            ),
+                            // Past Sem Projects and Lecturer Portal live in the
+                            // navigation; the hero keeps one primary action.
                             OutlinedButton(
                               onPressed: () => context.go('/schedule'),
                               style: OutlinedButton.styleFrom(
@@ -229,18 +213,14 @@ class _HomePageState extends ConsumerState<HomePage> {
                   Consumer(
                     builder: (context, ref, child) {
                       final sorted = ref.watch(mostVisitedProjectsProvider);
-                      final display = sorted.take(10).toList();
+                      // A short, curated row: the catalogue is for browsing everything.
+                      final display = sorted.take(6).toList();
                       if (display.isEmpty) return const SizedBox.shrink();
                       if (isDesktop) {
                         return GridView.builder(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 3,
-                            crossAxisSpacing: DesignSystem.spaceMd,
-                            mainAxisSpacing: DesignSystem.spaceMd,
-                            childAspectRatio: 1.55,
-                          ),
+                          gridDelegate: ProjectCard.gridDelegate(MediaQuery.sizeOf(context).width),
                           itemCount: display.length,
                           itemBuilder: (context, index) => ProjectCard(
                             project: display[index],
@@ -321,6 +301,21 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   Widget _buildExhibitionDetails(bool isDesktop, Event event) {
+    // Mobile: one compact wrapped line (icon + value, no labels) instead of
+    // a three-row boxed block, so the whole hero fits on one screen.
+    if (!isDesktop) {
+      return Wrap(
+        alignment: WrapAlignment.center,
+        spacing: DesignSystem.spaceMd,
+        runSpacing: DesignSystem.spaceXs,
+        children: [
+          _buildCompactDetail(Icons.calendar_month_rounded, _eventDates(event)),
+          _buildCompactDetail(Icons.access_time_rounded, event.dailyHours),
+          _buildCompactDetail(Icons.location_on_rounded, event.venue),
+        ],
+      );
+    }
+
     final items = [
       _buildExhibitionDetailItem(
         Icons.calendar_month_rounded,
@@ -349,41 +344,39 @@ class _HomePageState extends ConsumerState<HomePage> {
         borderRadius: DesignSystem.radiusXl,
         border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
       ),
-      child: isDesktop
-          ? IntrinsicHeight(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  items[0],
-                  _buildVerticalDivider(),
-                  items[1],
-                  _buildVerticalDivider(),
-                  items[2],
-                ],
-              ),
-            )
-          : IntrinsicWidth(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                // Center each detail row within the box so the mobile
-                // details block looks neat inside the centered hero
-                // (was: rows pinned ragged-left to the widest row).
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  items[0],
-                  const SizedBox(height: DesignSystem.spaceSm),
-                  // Full-width separators (inside IntrinsicWidth they clamp
-                  // to the box width; without a width they render 0px).
-                  Container(height: 1, width: double.infinity, color: Colors.white.withValues(alpha: 0.1)),
-                  const SizedBox(height: DesignSystem.spaceSm),
-                  items[1],
-                  const SizedBox(height: DesignSystem.spaceSm),
-                  Container(height: 1, width: double.infinity, color: Colors.white.withValues(alpha: 0.1)),
-                  const SizedBox(height: DesignSystem.spaceSm),
-                  items[2],
-                ],
-              ),
+      child: IntrinsicHeight(
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            items[0],
+            _buildVerticalDivider(),
+            items[1],
+            _buildVerticalDivider(),
+            items[2],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCompactDetail(IconData icon, String value) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, color: DesignSystem.secondaryContainer, size: 16),
+        const SizedBox(width: 4),
+        Flexible(
+          child: Text(
+            value,
+            textAlign: TextAlign.center,
+            softWrap: true,
+            style: DesignSystem.bodySm.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
             ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -488,7 +481,10 @@ class _CountdownTimer extends StatefulWidget {
   final DateTime eventStart;
   final DateTime eventEnd;
 
-  const _CountdownTimer({required this.eventStart, required this.eventEnd});
+  /// Mobile: the concluded / live states render as a small pill.
+  final bool compact;
+
+  const _CountdownTimer({required this.eventStart, required this.eventEnd, this.compact = false});
 
   @override
   State<_CountdownTimer> createState() => _CountdownTimerState();
@@ -545,62 +541,20 @@ class _CountdownTimerState extends State<_CountdownTimer> {
     final isDesktop = MediaQuery.of(context).size.width >= 768;
 
     if (_concluded) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.08),
-          borderRadius: DesignSystem.radiusXl,
-          border: Border.all(color: Colors.white24),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const Icon(Icons.emoji_events, color: DesignSystem.secondaryContainer, size: 20),
-            const SizedBox(width: DesignSystem.spaceSm),
-            Flexible(
-              child: Text(
-                'Exhibition Concluded — Thank You for Visiting',
-                textAlign: TextAlign.center,
-                softWrap: true,
-                style: DesignSystem.bodyMd.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        ),
+      return _statusBadge(
+        icon: Icons.emoji_events,
+        text: widget.compact ? 'Exhibition concluded — thank you!' : 'Exhibition Concluded — Thank You for Visiting',
+        fill: Colors.white.withValues(alpha: 0.08),
+        border: Colors.white24,
       );
     }
 
     if (_live) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        decoration: BoxDecoration(
-          color: DesignSystem.secondaryContainer.withValues(alpha: 0.15),
-          borderRadius: DesignSystem.radiusXl,
-          border: Border.all(color: DesignSystem.secondaryContainer),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const Icon(Icons.celebration, color: DesignSystem.secondaryContainer, size: 20),
-            const SizedBox(width: DesignSystem.spaceSm),
-            Flexible(
-              child: Text(
-                'The Exhibition is Live Now!',
-                textAlign: TextAlign.center,
-                softWrap: true,
-                style: DesignSystem.bodyMd.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        ),
+      return _statusBadge(
+        icon: Icons.celebration,
+        text: 'The Exhibition is Live Now!',
+        fill: DesignSystem.secondaryContainer.withValues(alpha: 0.15),
+        border: DesignSystem.secondaryContainer,
       );
     }
 
@@ -623,6 +577,39 @@ class _CountdownTimerState extends State<_CountdownTimer> {
           _buildCountdownItem(minutes.toString().padLeft(2, '0'), 'Mins', isDesktop),
           _buildCountdownDivider(),
           _buildCountdownItem(seconds.toString().padLeft(2, '0'), 'Secs', isDesktop),
+        ],
+      ),
+    );
+  }
+
+  Widget _statusBadge({required IconData icon, required String text, required Color fill, required Color border}) {
+    final compact = widget.compact;
+    return Container(
+      padding: compact
+          ? const EdgeInsets.symmetric(horizontal: 12, vertical: 6)
+          : const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      decoration: BoxDecoration(
+        color: fill,
+        borderRadius: compact ? DesignSystem.radiusFull : DesignSystem.radiusXl,
+        border: Border.all(color: border),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Icon(icon, color: DesignSystem.secondaryContainer, size: compact ? 16 : 20),
+          SizedBox(width: compact ? 6 : DesignSystem.spaceSm),
+          Flexible(
+            child: Text(
+              text,
+              textAlign: TextAlign.center,
+              softWrap: true,
+              style: (compact ? DesignSystem.bodySm : DesignSystem.bodyMd).copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
         ],
       ),
     );

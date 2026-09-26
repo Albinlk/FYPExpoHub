@@ -90,7 +90,7 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('My Visits', style: DesignSystem.h1.copyWith(color: DesignSystem.primary)),
+                    Text('My Visits', style: DesignSystem.pageTitle(context).copyWith(color: DesignSystem.primary)),
                     const SizedBox(height: DesignSystem.spaceXs),
                     Text(
                       'Welcome, $displayName',
@@ -176,12 +176,7 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
               GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: isDesktop ? 3 : 1,
-                  crossAxisSpacing: DesignSystem.spaceMd,
-                  mainAxisSpacing: DesignSystem.spaceMd,
-                  childAspectRatio: isDesktop ? 1.55 : 1.35,
-                ),
+                gridDelegate: ProjectCard.gridDelegate(MediaQuery.sizeOf(context).width, extraBodyHeight: 90),
                 itemCount: filteredAssignments.length,
                 itemBuilder: (context, index) {
                   return _buildVisitCard(
@@ -329,6 +324,7 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
       project: project,
       onTap: () => context.push('/lecturer/visits/${project.id}'),
       imageOverlay: statusOverlay,
+      showStaff: true,
       trailingContent: Wrap(
         spacing: 6,
         runSpacing: 6,
