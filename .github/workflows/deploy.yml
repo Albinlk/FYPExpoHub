@@ -20,24 +20,23 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
+      # Pinned to commit SHAs (tag in the comment): this job holds
+      # pages:write and id-token:write, so a moved tag must not be able to
+      # swap in different code.
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           channel: 'stable'
+          flutter-version: '3.44.7'
 
       - name: Install Dependencies
         run: flutter pub get
 
       - name: Analyze
-        # --no-fatal-warnings/--no-fatal-infos: the repo carries a backlog of
-        # pre-existing style/inference lints (~130 at last count) unrelated
-        # to any given change; only analyzer *errors* (genuine breakage)
-        # gate the build here. Tightening this further is a separate,
-        # dedicated lint-debt cleanup, not a per-PR gate.
-        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+        run: flutter analyze
 
       - name: Run Tests
         run: flutter test
@@ -55,10 +54,10 @@ jobs:
             build/web/sw.js build/web/flutter_bootstrap.js
 
       - name: Upload Artifacts
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
         with:
           path: 'build/web'
 
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4

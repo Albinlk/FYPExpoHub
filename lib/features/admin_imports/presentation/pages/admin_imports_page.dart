@@ -1,3 +1,4 @@
+import 'package:crypto/crypto.dart' show sha256;
 import 'package:excel/excel.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -6,7 +7,9 @@ import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/import_models.dart';
+import '../../../../core/supabase/row_mappers.dart';
 import '../../../../core/supabase/supabase_client_provider.dart';
+import '../../../../core/supabase/supabase_database_service.dart' show kEventSlug;
 import '../../../../core/state/state_providers.dart';
 
 class AdminImportsPage extends ConsumerStatefulWidget {
@@ -47,9 +50,15 @@ class _AdminImportsPageState extends ConsumerState<AdminImportsPage> {
 
     try {
       final user = ref.read(currentAuthUserProvider);
+      if (user == null) {
+        throw NotPersistableException('Sign in again before importing a file.');
+      }
       final importId = const Uuid().v4();
-      final now = DateTime.now();
+      final event = ref.read(eventProvider);
 
+      // Let the "Parsing…" status paint before the (synchronous, and on the
+      // web single-threaded) decode blocks the frame.
+      await Future<void>.delayed(const Duration(milliseconds: 16));
       final excel = Excel.decodeBytes(bytes);
 
       final scheduleCandidates = <Map<String, dynamic>>[];
@@ -57,53 +66,70 @@ class _AdminImportsPageState extends ConsumerState<AdminImportsPage> {
       final validationIssues = <Map<String, dynamic>>[];
       final privacySkips = <Map<String, dynamic>>[];
 
-      // 1. Process worksheets
+      String cell(List<Data?> row, int i, [String fallback = '']) =>
+          row.length > i && row[i] != null ? row[i]!.value.toString().trim() : fallback;
+
+      // Row shapes below match the staging tables' real columns
+      // (20260814000001_initial_schema.sql); the previous payload used
+      // several column names that don't exist, so staging never succeeded.
       for (final table in excel.tables.keys) {
         final sheet = excel.tables[table]!;
         final sheetNameUpper = table.toUpperCase();
 
         if (sheetNameUpper.contains('TENTATIF') || sheetNameUpper.contains('SCHEDULE')) {
-          // Parse Schedule Rows
           for (int r = 1; r < sheet.rows.length; r++) {
             final row = sheet.rows[r];
             if (row.isEmpty) continue;
 
-            final dayLabel = row.isNotEmpty && row[0] != null ? row[0]!.value.toString().trim() : 'Day 1';
-            final timeStr = row.length > 1 && row[1] != null ? row[1]!.value.toString().trim() : '';
-            final title = row.length > 2 && row[2] != null ? row[2]!.value.toString().trim() : '';
-            final venue = row.length > 3 && row[3] != null ? row[3]!.value.toString().trim() : 'FSKM Complex';
-            final audience = row.length > 4 && row[4] != null ? row[4]!.value.toString().trim() : 'General';
-
+            final dayLabelRaw = cell(row, 0, 'Day 1');
+            final timeStr = cell(row, 1);
+            final title = cell(row, 2);
+            final venue = cell(row, 3, 'FSKM Complex');
+            final audience = cell(row, 4, 'General');
             if (title.isEmpty) continue;
+
+            final date = importDayDate(dayLabelRaw, event.startAt);
+            final times = importTimeRange(timeStr);
+            if (date == null || times == null) {
+              validationIssues.add({
+                'id': const Uuid().v4(),
+                'import_id': importId,
+                'worksheet_name': table,
+                'row_number': r + 1,
+                'issue_type': date == null ? 'date_conflict' : 'invalid_time',
+                'severity': 'warning',
+                'message': date == null
+                    ? 'Couldn\'t work out which day "$dayLabelRaw" is. Set it before publishing.'
+                    : 'Couldn\'t read the time "$timeStr". Set it before publishing.',
+              });
+            }
 
             scheduleCandidates.add({
               'id': const Uuid().v4(),
               'import_id': importId,
               'row_number': r + 1,
-              'day_label': dayLabel,
-              'event_date': now.toIso8601String().split('T').first,
-              'time_raw': timeStr,
-              'start_at': now.toIso8601String(),
-              'end_at': now.add(const Duration(hours: 1)).toIso8601String(),
+              'day_label': dayLabelRaw,
+              'event_date': date == null ? null : scheduleDateString(date),
+              'start_at': date == null || times == null ? null : mytTimestamp(date, times.$1),
+              'end_at': date == null || times == null ? null : mytTimestamp(date, times.$2),
+              'raw_start_str': timeStr,
               'title': title,
               'description': 'Imported from Master File ($table)',
               'venue': venue,
               'audience': audience,
-              'status': 'pending_review',
-              'created_at': now.toIso8601String(),
+              'access_type': 'public',
+              'comparison_status': 'new',
             });
           }
         } else if (sheetNameUpper.contains('ANUGERAH') || sheetNameUpper.contains('AWARD')) {
-          // Parse Award Rows
           for (int r = 1; r < sheet.rows.length; r++) {
             final row = sheet.rows[r];
             if (row.isEmpty) continue;
 
-            final cat = row.isNotEmpty && row[0] != null ? row[0]!.value.toString().trim() : 'Best Project';
-            final team = row.length > 1 && row[1] != null ? row[1]!.value.toString().trim() : '';
-            final sv = row.length > 2 && row[2] != null ? row[2]!.value.toString().trim() : '';
-            final prog = row.length > 3 && row[3] != null ? row[3]!.value.toString().trim() : 'CS230';
-
+            final cat = cell(row, 0, 'Best Project');
+            final team = cell(row, 1);
+            final sv = cell(row, 2);
+            final prog = cell(row, 3, 'CS230');
             if (team.isEmpty) continue;
 
             awardCandidates.add({
@@ -111,50 +137,50 @@ class _AdminImportsPageState extends ConsumerState<AdminImportsPage> {
               'import_id': importId,
               'row_number': r + 1,
               'award_category': cat,
+              // The award sheet has no project-title column; the team name
+              // is the best available label until an admin edits it.
+              'project_title': cell(row, 4, team),
               'team_display_name': team,
               'supervisor_display_name': sv,
               'programme_code': prog,
-              'status': 'pending_review',
-              'created_at': now.toIso8601String(),
+              'comparison_status': 'new',
             });
           }
         } else if (sheetNameUpper.contains('MARKAH') || sheetNameUpper.contains('EVALUATION') || sheetNameUpper.contains('STUDENT_PRIVATE')) {
-          // Detect and skip private/restricted sheets
           privacySkips.add({
             'id': const Uuid().v4(),
             'import_id': importId,
             'sheet_name': table,
             'row_number': 0,
-            'column_name': 'Entire Sheet',
+            'field_name': 'Entire Sheet',
             'reason': 'Confidential evaluation / marks sheet skipped from public import pipeline.',
-            'created_at': now.toIso8601String(),
+            'category': 'confidential_sheet',
           });
         }
       }
 
-      // Check for empty extraction
       if (scheduleCandidates.isEmpty && awardCandidates.isEmpty) {
         validationIssues.add({
           'id': const Uuid().v4(),
           'import_id': importId,
-          'sheet_name': 'Master File',
+          'worksheet_name': 'Master File',
           'row_number': 0,
-          'issue_type': 'warning',
+          'issue_type': 'unrecognized_worksheet',
+          'severity': 'warning',
           'message': 'No schedule or award rows matched expected sheets (TENTATIF, PEMENANG ANUGERAH).',
-          'created_at': now.toIso8601String(),
         });
       }
 
       final importRecord = ImportRecord(
         id: importId,
-        eventId: 'fskm-fyp-2026',
+        eventId: kEventSlug,
         sourceFilePath: file.name,
         sourceFileName: file.name,
-        sourceFileHash: importId,
-        uploadedBy: user?.email ?? 'admin',
-        uploadedAt: now,
-        parserVersion: '2.0.0-supabase',
-        status: 'staged',
+        sourceFileHash: sha256.convert(bytes).toString(),
+        uploadedBy: user.id,
+        uploadedAt: DateTime.now(),
+        parserVersion: '2.1.0-supabase',
+        status: 'pending_review',
         summary: {
           'schedule': scheduleCandidates.length,
           'winners': awardCandidates.length,
@@ -165,14 +191,25 @@ class _AdminImportsPageState extends ConsumerState<AdminImportsPage> {
         },
       );
 
+      setState(() => _statusMessage = 'Saving staged rows...');
       final db = ref.read(supabaseDbServiceProvider);
-      await db.setImport(importId, importRecord.toJson());
-      await db.insertScheduleCandidates(scheduleCandidates);
-      await db.insertAwardCandidates(awardCandidates);
-      await db.insertValidationIssues(validationIssues);
-      await db.insertPrivacySkips(privacySkips);
+      final eventId = await db.resolveEventId(kEventSlug);
+      // One transaction: either the import and every staged row land, or
+      // nothing does (previously five separate writes, no rollback).
+      await db.stageImport(
+        importRow: importToRow(
+          importRecord,
+          eventId: eventId,
+          uploadedBy: user.id,
+          fileSizeBytes: bytes.length,
+        ),
+        scheduleCandidates: scheduleCandidates,
+        awardCandidates: awardCandidates,
+        validationIssues: validationIssues,
+        privacySkips: privacySkips,
+      );
 
-      ref.read(importsProvider.notifier).addImport(importRecord);
+      ref.read(importsProvider.notifier).recordStagedImport(importRecord);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -277,7 +314,7 @@ class _AdminImportsPageState extends ConsumerState<AdminImportsPage> {
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         itemCount: imports.length,
-                        separatorBuilder: (_, __) => const Divider(),
+                        separatorBuilder: (_, _) => const Divider(),
                         itemBuilder: (context, index) {
                           final imp = imports[index];
                           return ListTile(

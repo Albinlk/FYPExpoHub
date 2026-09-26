@@ -3,8 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:fyp_expo_hub/core/domain/models/announcement.dart';
 import 'package:fyp_expo_hub/core/domain/models/project.dart';
-import 'package:fyp_expo_hub/core/domain/models/student_visit.dart';
 import 'package:fyp_expo_hub/core/state/state_providers.dart';
+import 'package:fyp_expo_hub/core/supabase/row_mappers.dart' show NotPersistableException;
 import 'package:fyp_expo_hub/core/supabase/supabase_database_service.dart';
 import 'package:fyp_expo_hub/core/supabase/supabase_client_provider.dart';
 
@@ -89,6 +89,12 @@ class _StubDatabaseService extends SupabaseDatabaseService {
 
   final List<(String, Map<String, dynamic>)> upserts = [];
   final List<(String, String)> deletes = [];
+  bool failWrites = false;
+
+  static const eventUuid = '00000000-0000-4000-8000-00000000e001';
+
+  @override
+  Future<String> resolveEventId(String slugOrId) async => eventUuid;
 
   @override
   Future<List<Map<String, dynamic>>> getLecturersOnce() async {
@@ -129,26 +135,37 @@ class _StubDatabaseService extends SupabaseDatabaseService {
     return [];
   }
 
+  void _maybeFail() {
+    if (failWrites) throw Exception('permission denied');
+  }
+
   @override
   Future<void> setProject(String id, Map<String, dynamic> data) async {
+    _maybeFail();
     upserts.add(('projects', data));
   }
 
   @override
   Future<void> deleteProject(String id) async {
+    _maybeFail();
     deletes.add(('projects', id));
   }
 
   @override
   Future<void> setAnnouncement(String id, Map<String, dynamic> data) async {
+    _maybeFail();
     upserts.add(('announcements', data));
   }
 
   @override
   Future<void> deleteAnnouncement(String id) async {
+    _maybeFail();
     deletes.add(('announcements', id));
   }
 }
+
+/// Database ids are uuids; the notifiers refuse to write anything else.
+String _uuid(int n) => '00000000-0000-4000-8000-${n.toString().padLeft(12, '0')}';
 
 User _fakeLecturerUser() => User(
       id: 'user-1',
@@ -163,7 +180,7 @@ void main() {
   // rootBundle (offline fallback asset) requires an initialized binding.
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  ProviderContainer _container(_StubDatabaseService db) => ProviderContainer(
+  ProviderContainer container0(_StubDatabaseService db) => ProviderContainer(
         overrides: [
           supabaseDbServiceProvider.overrideWithValue(db),
           currentAuthUserProvider.overrideWith((ref) => null),
@@ -174,7 +191,7 @@ void main() {
     test('seeds from the fallback JSON asset when Supabase read fails',
         () async {
       final db = _StubDatabaseService()..failReads = true;
-      final container = _container(db);
+      final container = container0(db);
       addTearDown(container.dispose);
 
       // Poll until the async fallback fills state (a 600KB JSON parse can
@@ -195,13 +212,13 @@ void main() {
     test('replaces fallback once Supabase returns rows', () async {
       final db = _StubDatabaseService()
         ..projectsToReturn.addAll([_row(_project(id: 'db-1', title: 'Live Project'))]);
-      final container = _container(db);
+      final container = container0(db);
       addTearDown(container.dispose);
 
       // Watch the provider and wait until the async swap completes.
       final sub = container.listen(
         publicProjectsProvider,
-        (_, __) {},
+        (_, _) {},
       );
       await Future<void>.delayed(const Duration(milliseconds: 50));
 
@@ -225,10 +242,10 @@ void main() {
           _row(_project(id: 'real-1'))
               ..['coverImageUrl'] = 'https://example.com/real-cover.png',
         ]);
-      final container = _container(db);
+      final container = container0(db);
       addTearDown(container.dispose);
 
-      final sub = container.listen(publicProjectsProvider, (_, __) {});
+      final sub = container.listen(publicProjectsProvider, (_, _) {});
       await Future<void>.delayed(const Duration(milliseconds: 50));
 
       final byId = {
@@ -244,83 +261,117 @@ void main() {
   });
 
   group('ProjectsNotifier mutations', () {
-    test('addProject updates state and upserts to Supabase', () {
+    test('addProject updates state and upserts a snake_case row', () async {
       final db = _StubDatabaseService();
-      final container = _container(db);
+      final container = container0(db);
       addTearDown(container.dispose);
 
-      final notifier = container.read(projectsProvider.notifier);
-      notifier.addProject(_project(id: 'new-1', title: 'New Project'));
+      final id = _uuid(1);
+      await container
+          .read(projectsProvider.notifier)
+          .addProject(_project(id: id, title: 'New Project'));
 
-      expect(
-        container.read(projectsProvider).any((p) => p.id == 'new-1'),
-        isTrue,
-      );
-      expect(db.upserts, isNotEmpty);
+      expect(container.read(projectsProvider).any((p) => p.id == id), isTrue);
       expect(db.upserts.last.$1, 'projects');
-      expect(db.upserts.last.$2['id'], 'new-1');
+      final row = db.upserts.last.$2;
+      expect(row['id'], id);
+      // The real columns — not the model's camelCase toJson() keys, which
+      // PostgREST rejects outright.
+      expect(row['event_id'], _StubDatabaseService.eventUuid);
+      expect(row['publication_status'], 'published');
+      expect(row.keys, isNot(contains('eventId')));
+      expect(row.keys, isNot(contains('publicationStatus')));
     });
 
-    test('deleteProject removes from state and calls Supabase delete', () {
+    test('a non-uuid (bundled fallback) id is refused, not sent', () async {
       final db = _StubDatabaseService();
-      final container = _container(db);
+      final container = container0(db);
       addTearDown(container.dispose);
 
       final notifier = container.read(projectsProvider.notifier);
-      notifier.addProject(_project(id: 'doomed'));
-      notifier.deleteProject('doomed');
-
-      expect(
-        container.read(projectsProvider).any((p) => p.id == 'doomed'),
-        isFalse,
+      await expectLater(
+        notifier.addProject(_project(id: 'proj-cs230-001')),
+        throwsA(isA<NotPersistableException>()),
       );
-      expect(db.deletes, contains(('projects', 'doomed')));
+      expect(db.upserts, isEmpty);
+      // Rolled back: the unsaveable row doesn't linger in the list.
+      expect(container.read(projectsProvider), isEmpty);
+    });
+
+    test('a failed write rolls the list back and rethrows', () async {
+      final db = _StubDatabaseService();
+      final container = container0(db);
+      addTearDown(container.dispose);
+
+      final notifier = container.read(projectsProvider.notifier);
+      await notifier.addProject(_project(id: _uuid(2), title: 'Saved'));
+      db.failWrites = true;
+
+      await expectLater(notifier.deleteProject(_uuid(2)), throwsException);
+      expect(
+        container.read(projectsProvider).map((p) => p.title),
+        ['Saved'],
+        reason: 'the delete never persisted, so the row must come back',
+      );
+    });
+
+    test('deleteProject removes from state and calls Supabase delete',
+        () async {
+      final db = _StubDatabaseService();
+      final container = container0(db);
+      addTearDown(container.dispose);
+
+      final id = _uuid(3);
+      final notifier = container.read(projectsProvider.notifier);
+      await notifier.addProject(_project(id: id));
+      await notifier.deleteProject(id);
+
+      expect(container.read(projectsProvider).any((p) => p.id == id), isFalse);
+      expect(db.deletes, contains(('projects', id)));
     });
 
     test('togglePublishStatus flips draft <-> published and stamps publishedAt',
-        () {
+        () async {
       final db = _StubDatabaseService();
-      final container = _container(db);
+      final container = container0(db);
       addTearDown(container.dispose);
 
+      final id = _uuid(4);
       final notifier = container.read(projectsProvider.notifier);
-      notifier.addProject(_project(id: 't1', status: 'draft'));
+      await notifier.addProject(_project(id: id, status: 'draft'));
 
-      notifier.togglePublishStatus('t1');
+      await notifier.togglePublishStatus(id);
       var updated =
-          container.read(projectsProvider).firstWhere((p) => p.id == 't1');
+          container.read(projectsProvider).firstWhere((p) => p.id == id);
       expect(updated.publicationStatus, 'published');
       expect(updated.publishedAt, isNotNull);
 
-      notifier.togglePublishStatus('t1');
+      await notifier.togglePublishStatus(id);
       updated =
-          container.read(projectsProvider).firstWhere((p) => p.id == 't1');
+          container.read(projectsProvider).firstWhere((p) => p.id == id);
       expect(updated.publicationStatus, 'draft');
     });
 
-    test('updateProject replaces matching id only and bumps updatedAt', () {
+    test('updateProject replaces matching id only and bumps updatedAt',
+        () async {
       final db = _StubDatabaseService();
-      final container = _container(db);
+      final container = container0(db);
       addTearDown(container.dispose);
 
+      final keep = _uuid(5);
+      final change = _uuid(6);
       final notifier = container.read(projectsProvider.notifier);
-      notifier.addProject(_project(id: 'keep'));
-      notifier.addProject(_project(id: 'change', title: 'Old Title'));
+      await notifier.addProject(_project(id: keep));
+      await notifier.addProject(_project(id: change, title: 'Old Title'));
 
-      notifier.updateProject(_project(id: 'change', title: 'New Title'));
+      await notifier.updateProject(_project(id: change, title: 'New Title'));
 
       final projects = container.read(projectsProvider);
-      expect(
-        projects.firstWhere((p) => p.id == 'change').title,
-        'New Title',
-      );
-      expect(
-        projects.firstWhere((p) => p.id == 'keep').title,
-        'Project One',
-      );
+      expect(projects.firstWhere((p) => p.id == change).title, 'New Title');
+      expect(projects.firstWhere((p) => p.id == keep).title, 'Project One');
       expect(
         projects
-            .firstWhere((p) => p.id == 'change')
+            .firstWhere((p) => p.id == change)
             .updatedAt
             .isAfter(DateTime(2026, 7, 1)),
         isTrue,
@@ -337,10 +388,10 @@ void main() {
           _row(_project(id: 'f2', featured: false)),
           _row(_project(id: 'f3', featured: true, status: 'draft')),
         ]);
-      final container = _container(db);
+      final container = container0(db);
       addTearDown(container.dispose);
 
-      final sub = container.listen(featuredProjectsProvider, (_, __) {});
+      final sub = container.listen(featuredProjectsProvider, (_, _) {});
       await Future<void>.delayed(const Duration(milliseconds: 50));
 
       final featured = container.read(featuredProjectsProvider);
@@ -350,7 +401,7 @@ void main() {
 
     test('ProjectVisitCountsNotifier counts visits per project', () {
       final db = _StubDatabaseService();
-      final container = _container(db);
+      final container = container0(db);
       addTearDown(container.dispose);
 
       final counts = container.read(projectVisitCountsProvider.notifier);
@@ -363,46 +414,55 @@ void main() {
   });
 
   group('AnnouncementsNotifier', () {
-    test('add + togglePinned + togglePublish update state and persist', () {
+    test('add + togglePinned + togglePublish update state and persist',
+        () async {
       final db = _StubDatabaseService();
-      final container = _container(db);
+      final container = container0(db);
       addTearDown(container.dispose);
 
+      final id = _uuid(10);
       final notifier = container.read(announcementsProvider.notifier);
-      notifier.addAnnouncement(_announcement('a1'));
+      // Let the initial load settle first, as it would before an admin can
+      // click anything (the stub never echoes writes back on a re-fetch).
+      await pumpEventQueue();
+      await notifier.addAnnouncement(_announcement(id));
 
       expect(container.read(announcementsProvider), hasLength(1));
 
-      notifier.togglePinned('a1');
+      await notifier.togglePinned(id);
       expect(container.read(announcementsProvider).first.pinned, isTrue);
 
-      notifier.togglePublish('a1');
+      await notifier.togglePublish(id);
       expect(
         container.read(announcementsProvider).first.publicationStatus,
         'draft',
       );
-      // Every mutation upserts to Supabase.
+      // Every mutation upserts to Supabase, using the real column names.
       expect(db.upserts.length, 3);
+      expect(db.upserts.last.$2['is_pinned'], isTrue);
+      expect(db.upserts.last.$2.keys, isNot(contains('pinned')));
     });
 
-    test('deleteAnnouncement removes the row', () {
+    test('deleteAnnouncement removes the row', () async {
       final db = _StubDatabaseService();
-      final container = _container(db);
+      final container = container0(db);
       addTearDown(container.dispose);
 
+      final id = _uuid(11);
       final notifier = container.read(announcementsProvider.notifier);
-      notifier.addAnnouncement(_announcement('gone'));
-      notifier.deleteAnnouncement('gone');
+      await pumpEventQueue();
+      await notifier.addAnnouncement(_announcement(id));
+      await notifier.deleteAnnouncement(id);
 
       expect(container.read(announcementsProvider), isEmpty);
-      expect(db.deletes, contains(('announcements', 'gone')));
+      expect(db.deletes, contains(('announcements', id)));
     });
   });
 
   group('LecturerAuthNotifier', () {
     test('signs out clears lecturer state', () {
       final db = _StubDatabaseService();
-      final container = _container(db);
+      final container = container0(db);
       addTearDown(container.dispose);
 
       expect(container.read(lecturerAuthProvider), isNull);
@@ -413,7 +473,7 @@ void main() {
       // it must NOT trigger getLecturersOnce when nobody is signed in
       // (it previously queried the lecturers table for every visitor).
       final db = _StubDatabaseService();
-      final container = _container(db);
+      final container = container0(db);
       addTearDown(container.dispose);
 
       // Read the signed-in selector the shell uses, then let async
@@ -423,14 +483,42 @@ void main() {
         isFalse,
       );
       // Give any (erroneously started) provider work a chance to run.
-      container.listen(lecturerAuthProvider, (_, __) {});
+      container.listen(lecturerAuthProvider, (_, _) {});
       expect(db.lecturerQueryCount, 0,
           reason: 'lecturers table must not be queried for anonymous users');
     });
 
+    test('a signed-in user who is NOT a lecturer is not treated as one',
+        () async {
+      final db = _StubDatabaseService();
+      final container = ProviderContainer(
+        overrides: [
+          supabaseDbServiceProvider.overrideWithValue(db),
+          currentAuthUserProvider.overrideWith(
+            (ref) => User(
+              id: 'user-2',
+              email: 'student@student.uitm.edu.my',
+              aud: 'authenticated',
+              appMetadata: const {},
+              userMetadata: const {},
+              createdAt: DateTime(2026, 1, 1).toIso8601String(),
+            ),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final sub = container.listen(lecturerAuthProvider, (_, _) {},
+          fireImmediately: true);
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      expect(container.read(lecturerAuthProvider), isNull,
+          reason: 'only emails with a lecturer profile get the lecturer workspace');
+      sub.close();
+    });
+
     test('signed-in lecturer resolves display name from config', () async {
       final db = _StubDatabaseService();
-      final container = _container(db);
+      final container = container0(db);
       addTearDown(container.dispose);
 
       // Simulate sign-in: override the auth user with a lecturer email
@@ -443,7 +531,7 @@ void main() {
       );
       addTearDown(overrideContainer.dispose);
 
-      final sub = overrideContainer.listen(lecturerAuthProvider, (_, __) {},
+      final sub = overrideContainer.listen(lecturerAuthProvider, (_, _) {},
           fireImmediately: true);
       await Future<void>.delayed(const Duration(milliseconds: 100));
 

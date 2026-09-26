@@ -22,12 +22,12 @@ extension FypmsRpcService on SupabaseRpcService {
       'p_student_id': studentId,
       'p_current_course_code': currentCourseCode,
       'p_programme_code': programmeCode,
-      if (matricId != null) 'p_matric_id': matricId,
-      if (projectTitle != null) 'p_project_title': projectTitle,
-      if (projectDescription != null) 'p_project_description': projectDescription,
-      if (projectType != null) 'p_project_type': projectType,
-      if (externalIndustryPartner != null) 'p_external_industry_partner': externalIndustryPartner,
-      if (previousRecordId != null) 'p_previous_record_id': previousRecordId,
+      'p_matric_id': ?matricId,
+      'p_project_title': ?projectTitle,
+      'p_project_description': ?projectDescription,
+      'p_project_type': ?projectType,
+      'p_external_industry_partner': ?externalIndustryPartner,
+      'p_previous_record_id': ?previousRecordId,
     });
   }
 
@@ -38,8 +38,8 @@ extension FypmsRpcService on SupabaseRpcService {
   }) async {
     return _rpc('submit_supervision_request', {
       'p_fyp_record_id': fypRecordId,
-      if (preferredSupervisorId != null) 'p_preferred_supervisor_id': preferredSupervisorId,
-      if (rationale != null) 'p_rationale': rationale,
+      'p_preferred_supervisor_id': ?preferredSupervisorId,
+      'p_rationale': ?rationale,
     });
   }
 
@@ -51,7 +51,7 @@ extension FypmsRpcService on SupabaseRpcService {
     return _rpc('decide_supervision_request', {
       'p_request_id': requestId,
       'p_decision': decision,
-      if (decisionReason != null) 'p_decision_reason': decisionReason,
+      'p_decision_reason': ?decisionReason,
     });
   }
 
@@ -93,8 +93,8 @@ extension FypmsRpcService on SupabaseRpcService {
       'p_fyp_record_id': fypRecordId,
       'p_week_number': weekNumber,
       'p_summary': summary,
-      if (challenges != null) 'p_challenges': challenges,
-      if (nextPlan != null) 'p_next_plan': nextPlan,
+      'p_challenges': ?challenges,
+      'p_next_plan': ?nextPlan,
       if (progressDate != null) 'p_progress_date': progressDate.toIso8601String().substring(0, 10),
     });
   }
@@ -110,8 +110,8 @@ extension FypmsRpcService on SupabaseRpcService {
       'p_fyp_record_id': fypRecordId,
       'p_form_code': formCode,
       'p_payload': payload,
-      if (fileUrl != null) 'p_file_url': fileUrl,
-      if (similarityIndex != null) 'p_similarity_index': similarityIndex,
+      'p_file_url': ?fileUrl,
+      'p_similarity_index': ?similarityIndex,
     });
   }
 
@@ -139,8 +139,8 @@ extension FypmsRpcService on SupabaseRpcService {
       'p_fyp_record_id': fypRecordId,
       'p_deliverable_type': deliverableType,
       'p_title': title,
-      if (description != null) 'p_description': description,
-      if (fileUrl != null) 'p_file_url': fileUrl,
+      'p_description': ?description,
+      'p_file_url': ?fileUrl,
     });
   }
 
@@ -154,7 +154,7 @@ extension FypmsRpcService on SupabaseRpcService {
       'p_fyp_record_id': fypRecordId,
       'p_report_type': reportType,
       'p_file_url': fileUrl,
-      if (similarityIndex != null) 'p_similarity_index': similarityIndex,
+      'p_similarity_index': ?similarityIndex,
     });
   }
 
@@ -167,7 +167,7 @@ extension FypmsRpcService on SupabaseRpcService {
     return _rpc('submit_form_evaluation', {
       'p_form_submission_id': formSubmissionId,
       'p_criteria_scores': scores,
-      if (comments != null) 'p_comments': comments,
+      'p_comments': ?comments,
       'p_decision': decision,
     });
   }
@@ -192,7 +192,7 @@ extension FypmsRpcService on SupabaseRpcService {
     return _rpc('review_progress_log', {
       'p_progress_log_id': progressLogId,
       'p_decision': decision,
-      if (validationComment != null) 'p_validation_comment': validationComment,
+      'p_validation_comment': ?validationComment,
     });
   }
 
@@ -204,7 +204,7 @@ extension FypmsRpcService on SupabaseRpcService {
     return _rpc('validate_progress_log', {
       'p_progress_log_id': progressLogId,
       'p_status': status,
-      if (validationComment != null) 'p_validation_comment': validationComment,
+      'p_validation_comment': ?validationComment,
     });
   }
 
@@ -220,7 +220,7 @@ extension FypmsRpcService on SupabaseRpcService {
       'p_fyp_record_id': fypRecordId,
       'p_milestone_code': milestoneCode,
       'p_milestone_title': milestoneTitle,
-      if (description != null) 'p_description': description,
+      'p_description': ?description,
       if (targetDate != null) 'p_target_date': targetDate.toIso8601String().substring(0, 10),
       'p_status': status,
     });
@@ -235,8 +235,8 @@ extension FypmsRpcService on SupabaseRpcService {
   }) async {
     return _rpc('grant_milestone_extension', {
       'p_milestone_id': milestoneId,
-      if (requestedBy != null) 'p_requested_by': requestedBy,
-      if (reason != null) 'p_reason': reason,
+      'p_requested_by': ?requestedBy,
+      'p_reason': ?reason,
       if (requestedDueDate != null) 'p_requested_due_date': requestedDueDate.toIso8601String().substring(0, 10),
       'p_decision': decision,
     });
@@ -256,7 +256,7 @@ extension FypmsRpcService on SupabaseRpcService {
       'p_slot_number': slotNumber,
       'p_start_at': startAt.toUtc().toIso8601String(),
       'p_end_at': endAt.toUtc().toIso8601String(),
-      if (room != null) 'p_room': room,
+      'p_room': ?room,
     });
   }
 
@@ -290,7 +290,7 @@ extension FypmsRpcService on SupabaseRpcService {
   }) async {
     return _rpc('create_correction_item', {
       'p_fyp_record_id': fypRecordId,
-      if (formSubmissionId != null) 'p_form_submission_id': formSubmissionId,
+      'p_form_submission_id': ?formSubmissionId,
       'p_correction_text': correctionText,
       'p_severity': severity,
     });
@@ -304,7 +304,7 @@ extension FypmsRpcService on SupabaseRpcService {
     return _rpc('confirm_correction', {
       'p_correction_item_id': correctionItemId,
       'p_confirmation_status': confirmationStatus,
-      if (notes != null) 'p_notes': notes,
+      'p_notes': ?notes,
     });
   }
 
@@ -314,7 +314,7 @@ extension FypmsRpcService on SupabaseRpcService {
   }) async {
     return _rpc('confirm_fyp_corrections', {
       'p_correction_item_id': correctionItemId,
-      if (comment != null) 'p_comment': comment,
+      'p_comment': ?comment,
     });
   }
 
@@ -327,8 +327,8 @@ extension FypmsRpcService on SupabaseRpcService {
   }) async {
     return _rpc('submit_correction_evidence', {
       'p_correction_item_id': correctionItemId,
-      if (note != null) 'p_note': note,
-      if (fileUrl != null) 'p_file_url': fileUrl,
+      'p_note': ?note,
+      'p_file_url': ?fileUrl,
     });
   }
 
@@ -340,7 +340,7 @@ extension FypmsRpcService on SupabaseRpcService {
     return _rpc('prepare_expo_publication', {
       'p_fyp_record_id': fypRecordId,
       'p_event_id': eventId,
-      if (payload != null) 'p_payload': payload,
+      'p_payload': ?payload,
     });
   }
 
@@ -358,7 +358,7 @@ extension FypmsRpcService on SupabaseRpcService {
   }) async {
     return _rpc('archive_fyp_record', {
       'p_fyp_record_id': fypRecordId,
-      if (reason != null) 'p_reason': reason,
+      'p_reason': ?reason,
     });
   }
 
@@ -374,7 +374,7 @@ extension FypmsRpcService on SupabaseRpcService {
       'p_email': email.trim().toLowerCase(),
       'p_display_name': displayName.trim().toUpperCase(),
       'p_programme_code': programmeCode,
-      if (matricId != null) 'p_matric_id': matricId,
+      'p_matric_id': ?matricId,
     });
   }
 
@@ -383,7 +383,7 @@ extension FypmsRpcService on SupabaseRpcService {
   Future<List<Map<String, dynamic>>> listFypStudents() async {
     try {
       final client = Supabase.instance.client;
-      final response = await client.rpc('list_fyp_students');
+      final response = await client.rpc<dynamic>('list_fyp_students');
       return List<Map<String, dynamic>>.from(response as List);
     } catch (e) {
       logDebug('Supabase FYPMS RPC list_fyp_students error: $e');
@@ -398,7 +398,7 @@ extension FypmsRpcService on SupabaseRpcService {
   }) async {
     try {
       final client = Supabase.instance.client;
-      final response = await client.rpc('list_fyp_staff', params: {
+      final response = await client.rpc<dynamic>('list_fyp_staff', params: {
         'p_role_codes': roleCodes,
       });
       return List<Map<String, dynamic>>.from(response as List);
@@ -412,7 +412,7 @@ extension FypmsRpcService on SupabaseRpcService {
   Future<List<Map<String, dynamic>>> listFypCoordinators() async {
     try {
       final client = Supabase.instance.client;
-      final response = await client.rpc('list_fyp_coordinators');
+      final response = await client.rpc<dynamic>('list_fyp_coordinators');
       return List<Map<String, dynamic>>.from(response as List);
     } catch (e) {
       logDebug('Supabase FYPMS RPC list_fyp_coordinators error: $e');
@@ -425,7 +425,7 @@ extension FypmsRpcService on SupabaseRpcService {
   Future<List<Map<String, dynamic>>> listSupervisorsPublic() async {
     try {
       final client = Supabase.instance.client;
-      final response = await client.rpc('list_supervisors_public');
+      final response = await client.rpc<dynamic>('list_supervisors_public');
       return List<Map<String, dynamic>>.from(response as List);
     } catch (e) {
       logDebug('Supabase FYPMS RPC list_supervisors_public error: $e');
@@ -439,7 +439,7 @@ extension FypmsRpcService on SupabaseRpcService {
   ) async {
     try {
       final client = Supabase.instance.client;
-      final response = await client.rpc(fn, params: params);
+      final response = await client.rpc<dynamic>(fn, params: params);
       return Map<String, dynamic>.from(response as Map);
     } catch (e) {
       logDebug('Supabase FYPMS RPC $fn error: $e');

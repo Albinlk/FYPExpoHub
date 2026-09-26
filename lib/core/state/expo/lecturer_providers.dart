@@ -7,27 +7,27 @@ import 'service_providers.dart';
 // ==========================================
 // LECTURER CONFIG & AUTH STATE
 // ==========================================
-const hardcodedLecturerConfig = <String, String>{
-  'albin1841@uitm.edu.my': 'ALBIN LEMUEL KUSHAN',
-};
-
 final allLecturersProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  // Refetch per signed-in user (RLS decides which profiles are visible).
+  ref.watch(currentAuthUserProvider.select((u) => u?.id));
   final db = ref.read(supabaseDbServiceProvider);
   return db.getLecturersOnce();
 });
 
+/// Lowercased email -> display name for every profile with role
+/// 'lecturer'. Keyed ONLY by email: a row without one is skipped rather
+/// than keyed by its display name (which could never match a sign-in).
 final lecturerConfigProvider = Provider<Map<String, String>>((ref) {
   final all = ref.watch(allLecturersProvider);
   final result = <String, String>{};
   final list = all.asData?.value ?? [];
   for (final doc in list) {
-    final email = (doc['email'] ?? doc['display_name']) as String?;
+    final email = doc['email'] as String?;
+    if (email == null || email.trim().isEmpty) continue;
     final name = (doc['displayName'] ?? doc['display_name']) as String?;
-    if (email != null && name != null) {
-      result[email.toLowerCase()] = name;
-    }
+    result[email.trim().toLowerCase()] =
+        (name == null || name.trim().isEmpty) ? email.split('@').first.toUpperCase() : name;
   }
-  result.addAll(hardcodedLecturerConfig);
   return result;
 });
 
@@ -57,7 +57,7 @@ class LecturerAuthNotifier extends Notifier<Lecturer?> {
     );
     // Re-resolve the display name once the config arrives (only possible
     // when signed in — the gated provider is a no-op otherwise).
-    ref.listen(_lecturerConfigWhenSignedIn, (_, __) {
+    ref.listen(_lecturerConfigWhenSignedIn, (_, _) {
       state = _evaluate(user: ref.read(currentAuthUserProvider));
     });
     return initial;
@@ -70,9 +70,12 @@ class LecturerAuthNotifier extends Notifier<Lecturer?> {
     // the lecturers-table query from authenticated sessions.
     final config = ref.read(lecturerConfigProvider);
     final emailLower = user.email!.toLowerCase();
-    final displayName = config[emailLower] ??
-        (user.userMetadata?['display_name'] as String?) ??
-        user.email!.split('@').first.toUpperCase();
+    // Only an actual lecturer profile counts. This used to return a
+    // Lecturer for ANY signed-in user, so FYPMS students and other staff
+    // were routed to /lecturer/visits after signing in.
+    final configName = config[emailLower];
+    if (configName == null) return null;
+    final displayName = configName;
 
     return Lecturer(
       id: user.id,

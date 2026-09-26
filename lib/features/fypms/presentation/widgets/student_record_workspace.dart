@@ -52,9 +52,7 @@ class _StudentRecordWorkspaceState extends ConsumerState<StudentRecordWorkspace>
             (r) => r.id == _selectedRecordId,
             orElse: () => list.first,
           );
-          if (_selectedRecordId == null) {
-            _selectedRecordId = selected.id;
-          }
+          _selectedRecordId ??= selected.id;
           return Column(
             children: [
               if (list.length > 1)

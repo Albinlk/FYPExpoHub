@@ -9,6 +9,12 @@
 -- Still public-safe: id + display name + role code only, no emails.
 -- ==============================================================================
 
+-- The return columns changed (role_code added), which CREATE OR REPLACE
+-- can't do (42P13) — it only worked on the live DB by accident of order.
+-- Dropping first lets a fresh `supabase db reset` apply this cleanly.
+-- Supabase's default privileges re-grant EXECUTE to authenticated on create.
+drop function if exists public.list_supervisors_public();
+
 create or replace function public.list_supervisors_public()
 returns table (
   id uuid,

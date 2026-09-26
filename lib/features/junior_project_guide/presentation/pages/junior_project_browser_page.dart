@@ -7,13 +7,14 @@ import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/project.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/widgets/collapsible_filter_panel.dart';
-import '../../domain/csp600_csv_loader.dart';
 import '../../domain/project_similarity.dart';
 import '../../domain/title_similarity.dart';
 import '../widgets/project_row_widget.dart';
 import '../widgets/redundancy_cluster_widget.dart';
 import '../widgets/title_similar_cluster_widget.dart';
-import 'similar_projects_page.dart';
+import '../providers/junior_guide_providers.dart';
+
+export '../providers/junior_guide_providers.dart' show csp600ProposalsProvider;
 
 /// Debounce delay for the search field: filtering + re-deriving the
 /// similarity index on every keystroke is wasted work once the projects
@@ -68,6 +69,9 @@ class _JuniorProjectBrowserPageState
   Map<String, int> _cachedSimilarityCounts = const {};
   Map<String, String> _cachedIdToSection = const {};
   Map<String, Set<String>> _cachedTitleTokenIndex = const {};
+  // Report-tab clusters: built lazily on first view, cleared with the rest.
+  List<RedundancyCluster>? _cachedTagClusters;
+  List<TitleSimilarCluster>? _cachedTitleClusters;
 
   /// Number of collapsed filters currently active (drives the toggle badge).
   int get _activeFilterCount {
@@ -133,24 +137,17 @@ class _JuniorProjectBrowserPageState
     _cachedIdToSection = {
       for (final sp in combined) sp.project.id: sp.section,
     };
+    _cachedTagClusters = null;
+    _cachedTitleClusters = null;
   }
 
   /// Opens the full list of projects [target] was flagged similar to —
-  /// the STATUS badge's "N similar" tap action. Recomputed on demand
-  /// (cheap: one O(n) scan against the already-cached indices) rather than
-  /// cached alongside [_cachedSimilarityCounts], since a reader only opens
-  /// this for a handful of rows per session.
+  /// the STATUS badge's "N similar" tap action (see SimilarProjectsPage).
   void _openSimilarProjects(BuildContext context, Project target) {
-    final matches = TitleSimilarity.findCombinedSimilar(
-      target,
-      _cachedFullProjList,
-      categoryTagIndex: _cachedCategoryTagIndex,
-      titleTokenIndex: _cachedTitleTokenIndex,
-    );
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => SimilarProjectsPage(target: target, matches: matches),
-      ),
+    // A go_router route (not Navigator.push) so the page has a URL: browser
+    // back returns here and a refresh keeps the page.
+    context.push(
+      '/projects/junior-guide/similar/${Uri.encodeComponent(target.id)}',
     );
   }
 
@@ -1013,7 +1010,11 @@ class _JuniorProjectBrowserPageState
       return bCross - aCross;
     }
 
-    final tagClusters = ProjectSimilarity.buildClusters(
+    // Both O(n^2) cluster passes are cached in state and only rebuilt when
+    // the underlying project lists change (_ensureSimilarityCache clears
+    // them) — previously they re-ran on every rebuild of this tab,
+    // including every search keystroke.
+    final tagClusters = _cachedTagClusters ??= ProjectSimilarity.buildClusters(
       projList,
       tagIndex: categoryTagIndex,
       minShared: ProjectSimilarity.minSharedCategoriesForCluster,
@@ -1031,7 +1032,7 @@ class _JuniorProjectBrowserPageState
     // Title-based redundancy is a separate signal from tag/category overlap
     // — two projects can be worded almost identically while sharing zero
     // tags, or share tags while being worded completely differently.
-    final titleClusters = TitleSimilarity.buildTitleClusters(
+    final titleClusters = _cachedTitleClusters ??= TitleSimilarity.buildTitleClusters(
       projList,
       tokenIndex: titleTokenIndex,
     )..sort((a, b) {
@@ -1175,6 +1176,3 @@ class _JuniorProjectBrowserPageState
   }
 }
 
-final csp600ProposalsProvider = FutureProvider<List<Project>>((ref) async {
-  return await Csp600CsvLoader.load();
-});

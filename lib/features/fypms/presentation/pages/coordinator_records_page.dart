@@ -59,11 +59,12 @@ class CoordinatorRecordsPage extends ConsumerWidget {
               ),
             );
           }
-          return ListView(
+          return ListView.builder(
             padding: const EdgeInsets.all(DesignSystem.gutter),
-            children: [
-              for (final record in list)
-                Card(
+            itemCount: list.length,
+            itemBuilder: (context, itemIndex) {
+              final record = list[itemIndex];
+                return Card(
                   elevation: 1,
                   margin: const EdgeInsets.only(bottom: DesignSystem.spaceMd),
                   shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusXl),
@@ -84,8 +85,8 @@ class CoordinatorRecordsPage extends ConsumerWidget {
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => context.go('/fypms/coordinator/records/${record.id}'),
                   ),
-                ),
-            ],
+                );
+            },
           );
         },
       ),

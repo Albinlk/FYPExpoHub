@@ -538,7 +538,7 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
           padding: EdgeInsets.symmetric(horizontal: padding),
           sliver: SliverList.separated(
             itemCount: venueBuckets[venue]!.length,
-            separatorBuilder: (_, __) => const SizedBox(height: DesignSystem.spaceSm),
+            separatorBuilder: (_, _) => const SizedBox(height: DesignSystem.spaceSm),
             itemBuilder: (context, index) {
               final p = venueBuckets[venue]![index];
 

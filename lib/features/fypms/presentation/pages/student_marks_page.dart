@@ -37,11 +37,12 @@ class StudentMarksPage extends ConsumerWidget {
                       ),
                     );
                   }
-                  return ListView(
+                  return ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: DesignSystem.gutter),
-                    children: [
-                      for (final s in list)
-                        Card(
+                    itemCount: list.length,
+                    itemBuilder: (context, itemIndex) {
+                      final s = list[itemIndex];
+                        return Card(
                           elevation: 1,
                           margin: const EdgeInsets.only(bottom: DesignSystem.spaceMd),
                           shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusXl),
@@ -112,8 +113,8 @@ class StudentMarksPage extends ConsumerWidget {
                               ],
                             ),
                           ),
-                        ),
-                    ],
+                        );
+                    },
                   );
                 },
               ),

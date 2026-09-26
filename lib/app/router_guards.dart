@@ -8,7 +8,9 @@ import '../core/supabase/supabase_client_provider.dart';
 /// authorization concern (FYPMS auth/workspace gating, the admin-domain
 /// root redirect, the admin path gate, and the post-login redirect) is its
 /// own named guard below rather than one large inline closure.
-Future<String?> resolveRouterRedirect(Ref ref, String path) async {
+Future<String?> resolveRouterRedirect(Ref ref, String location) async {
+  final uri = Uri.parse(location);
+  final path = uri.path;
   final user = ref.read(currentAuthUserProvider);
   final isLoggingIn = path == '/admin/sign-in';
   final isAdminPath = path.startsWith('/admin');
@@ -16,7 +18,7 @@ Future<String?> resolveRouterRedirect(Ref ref, String path) async {
   final isAdminDomain = Uri.base.host == 'admin.fskmjasinfypexhibition.site';
 
   if (isFypmsPath) {
-    return _fypmsAuthGuard(ref, path: path, user: user);
+    return _fypmsAuthGuard(ref, path: path, location: location, user: user);
   }
 
   final adminDomainRedirect = _adminDomainRootGuard(
@@ -26,16 +28,44 @@ Future<String?> resolveRouterRedirect(Ref ref, String path) async {
   );
   if (adminDomainRedirect != null) return adminDomainRedirect;
 
+  if (path.startsWith('/lecturer/visits')) {
+    return _lecturerVisitsGuard(ref, location: location, user: user);
+  }
+
   if (isAdminPath && !isLoggingIn) {
-    final redirect = await _adminPathGuard(ref, user: user);
+    final redirect = await _adminPathGuard(ref, location: location, user: user);
     if (redirect != null) return redirect;
   }
 
   if (user != null && isLoggingIn) {
-    return _postLoginRedirect(ref);
+    return _postLoginRedirect(ref, from: uri.queryParameters['from']);
   }
 
   return null;
+}
+
+/// The sign-in page, remembering where the user was headed so they land
+/// back there afterwards instead of on a generic dashboard.
+String signInRedirect(String location) =>
+    Uri(path: '/admin/sign-in', queryParameters: {'from': location}).toString();
+
+/// [from] if it's a same-origin app path, else null. Rejects
+/// protocol-relative (`//evil.example`) and absolute URLs so the `from`
+/// parameter can't be abused as an open redirect.
+String? safeReturnPath(String? from) {
+  if (from == null || !from.startsWith('/') || from.startsWith('//')) return null;
+  if (from.contains('://') || from.contains(r'\')) return null;
+  if (Uri.tryParse(from)?.path == '/admin/sign-in') return null;
+  return from;
+}
+
+/// Reads a role FutureProvider, treating a failed lookup as "no".
+Future<bool> _safeFlag(Ref ref, FutureProvider<bool> provider) async {
+  try {
+    return await ref.read(provider.future);
+  } catch (_) {
+    return false;
+  }
 }
 
 /// FYPMS routes require authentication and, once signed in, gate each
@@ -44,10 +74,11 @@ Future<String?> resolveRouterRedirect(Ref ref, String path) async {
 Future<String?> _fypmsAuthGuard(
   Ref ref, {
   required String path,
+  required String location,
   required User? user,
 }) async {
   if (user == null) {
-    return '/admin/sign-in';
+    return signInRedirect(location);
   }
   final roles = await ref.read(fypmsCurrentRolesProvider.future);
   if (roles.isEmpty) {
@@ -77,9 +108,13 @@ String? _adminDomainRootGuard({
 }
 
 /// Any other `/admin/*` path requires a signed-in user with the admin role.
-Future<String?> _adminPathGuard(Ref ref, {required User? user}) async {
+Future<String?> _adminPathGuard(
+  Ref ref, {
+  required String location,
+  required User? user,
+}) async {
   if (user == null) {
-    return '/admin/sign-in';
+    return signInRedirect(location);
   }
   final isAdmin = await ref.read(isAdminProvider.future);
   if (!isAdmin) {
@@ -88,16 +123,45 @@ Future<String?> _adminPathGuard(Ref ref, {required User? user}) async {
   return null;
 }
 
-/// Once signed in while on the sign-in page, send the user to their
-/// workspace: admins to the dashboard, lecturers to their visits list.
-Future<String?> _postLoginRedirect(Ref ref) async {
+/// `/lecturer/visits/**` is the lecturer workspace. It used to have no
+/// guard at all (the page just rendered a sign-in prompt); RLS still limits
+/// the data, but a non-lecturer shouldn't land in it.
+Future<String?> _lecturerVisitsGuard(
+  Ref ref, {
+  required String location,
+  required User? user,
+}) async {
+  if (user == null) return signInRedirect(location);
+  if (ref.read(lecturerAuthProvider) != null) return null;
+  // The lecturer config loads asynchronously; the profile role is the
+  // authoritative answer while it does.
+  if (await _safeFlag(ref, isLecturerProvider)) return null;
+  if (await _safeFlag(ref, isAdminProvider)) return null;
+  return '/';
+}
+
+/// Once signed in while on the sign-in page, send the user back to the page
+/// they were trying to reach, or else to their own workspace. Previously
+/// every non-admin was treated as a lecturer, so FYPMS students were sent
+/// to /lecturer/visits and lost their original deep link.
+Future<String?> _postLoginRedirect(Ref ref, {String? from}) async {
   final isAdmin = await ref.read(isAdminProvider.future);
+  final back = safeReturnPath(from);
+  if (back != null && (isAdmin || !back.startsWith('/admin'))) {
+    return back;
+  }
   if (isAdmin) {
     return '/admin';
   }
   final lecturer = ref.read(lecturerAuthProvider);
-  if (lecturer != null) {
+  if (lecturer != null || await _safeFlag(ref, isLecturerProvider)) {
     return '/lecturer/visits';
+  }
+  try {
+    final roles = await ref.read(fypmsCurrentRolesProvider.future);
+    if (roles.isNotEmpty) return _fypmsHomeForRoles(roles);
+  } catch (_) {
+    // No FYPMS access — stay on the sign-in page, which explains that.
   }
   return null;
 }
@@ -136,7 +200,7 @@ String? _fypmsWorkspaceForPath(String path) {
 
 /// Whether the given role codes permit access to the given workspace.
 bool _roleAllowsWorkspace(List<String> roles, String workspace) {
-  final has = (String code) => roles.contains(code);
+  bool has(String code) => roles.contains(code);
   switch (workspace) {
     case 'student':
       return has('student');

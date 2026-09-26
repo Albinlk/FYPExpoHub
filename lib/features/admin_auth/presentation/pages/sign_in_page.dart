@@ -5,7 +5,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/supabase/supabase_client_provider.dart';
-import '../../../../core/state/state_providers.dart';
 
 void _goToMainSite() {
   launchUrlString('https://fskmjasinfypexhibition.site/');
@@ -44,7 +43,9 @@ class _SignInPageState extends ConsumerState<SignInPage> {
       final client = ref.read(supabaseClientProvider);
       final response = await client.auth.signInWithPassword(
         email: _emailController.text.trim().toLowerCase(),
-        password: _passwordController.text.trim(),
+        // Not trimmed: a password may legitimately start or end with a space,
+        // and trimming made such an account impossible to sign in to.
+        password: _passwordController.text,
       );
 
       final user = response.user;
@@ -54,30 +55,11 @@ class _SignInPageState extends ConsumerState<SignInPage> {
       ref.invalidate(isAdminProvider);
       ref.invalidate(isLecturerProvider);
 
-      await Future.delayed(const Duration(milliseconds: 300));
-
-      if (mounted) {
-        final isAdmin = await ref.read(isAdminProvider.future);
-        if (isAdmin) {
-          if (mounted) context.go('/admin');
-          return;
-        }
-
-        final lecturer = ref.read(lecturerAuthProvider);
-        if (lecturer != null) {
-          if (mounted) context.go('/lecturer/visits');
-          return;
-        }
-
-        // Default redirect based on profile check
-        final profile = await ref.read(currentProfileProvider.future);
-        if (profile?.role == 'lecturer') {
-          if (mounted) context.go('/lecturer/visits');
-          return;
-        }
-
-        if (mounted) context.go('/admin');
-      }
+      // The router's post-login guard picks the destination — back to the
+      // `?from=` deep link if there was one, else the user's own workspace
+      // (admin, lecturer, or FYPMS role). One source of truth instead of a
+      // second copy of that logic here.
+      if (mounted) GoRouter.of(context).refresh();
     } on AuthException catch (e) {
       String userMsg = 'Sign in failed. Please check your credentials.';
       if (e.message.toLowerCase().contains('invalid login credentials')) {

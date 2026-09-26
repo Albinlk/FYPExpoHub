@@ -1,41 +1,54 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../app/theme/theme.dart';
-import '../../../../core/domain/models/project.dart';
+import '../../domain/csp600_csv_loader.dart';
 import '../../domain/title_similarity.dart';
+import '../providers/junior_guide_providers.dart';
 
-/// Full list of projects a given [target] was flagged similar to — opened
+/// Full list of projects a given project was flagged similar to — opened
 /// from the Browse tab's STATUS badge ("N similar") so a reader can see
 /// exactly which projects triggered that count and why, instead of just
-/// the number.
-class SimilarProjectsPage extends StatelessWidget {
-  final Project target;
-  final List<SimilarProjectMatch> matches;
+/// the number. A real route (/projects/junior-guide/similar/:projectId), so
+/// browser back and refresh work.
+class SimilarProjectsPage extends ConsumerWidget {
+  final String projectId;
 
-  const SimilarProjectsPage({
-    super.key,
-    required this.target,
-    required this.matches,
-  });
+  const SimilarProjectsPage({super.key, required this.projectId});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final result = ref.watch(similarProjectsProvider(projectId));
+    final target = result.asData?.value?.$1;
+    final matches = result.asData?.value?.$2 ?? const <SimilarProjectMatch>[];
+
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          tooltip: 'Back to the project guide',
+          onPressed: () => context.canPop()
+              ? context.pop()
+              : context.go('/projects/junior-guide'),
+        ),
         title: Text(
-          'Similar to "${target.title}"',
+          target == null ? 'Similar projects' : 'Similar to "${target.title}"',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
       ),
-      body: matches.isEmpty
-          ? const Center(child: Text('No similar projects found.'))
-          : ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: matches.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 8),
-              itemBuilder: (context, index) => _MatchTile(match: matches[index]),
-            ),
+      body: result.isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : target == null
+              ? const Center(child: Text('Project not found.'))
+              : matches.isEmpty
+                  ? const Center(child: Text('No similar projects found.'))
+                  : ListView.separated(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: matches.length,
+                      separatorBuilder: (context, index) => const SizedBox(height: 8),
+                      itemBuilder: (context, index) => _MatchTile(match: matches[index]),
+                    ),
     );
   }
 }
@@ -48,13 +61,9 @@ class _MatchTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = match.project;
-    // CSP600 proposals only exist in csp600ProposalsProvider — they were
-    // never migrated into publicProjectsProvider/projectsMapProvider, which
-    // is what ProjectDetailPage resolves '/projects/<slug>' against (see
-    // csp600_csv_loader.dart's synthetic 'csp600-{row}' id/slug). Routing
-    // there would land on "Project not found", so those matches are shown
-    // read-only instead of as a dead link.
-    final hasDetailPage = !p.id.startsWith('csp600-');
+    // See Csp600CsvLoader.isCsp600: those proposals have no detail page, so
+    // they're shown read-only instead of as a link to "Project not found".
+    final hasDetailPage = !Csp600CsvLoader.isCsp600(p);
 
     final content = Container(
       padding: const EdgeInsets.all(14),

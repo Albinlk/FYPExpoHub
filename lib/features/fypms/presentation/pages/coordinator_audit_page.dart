@@ -27,11 +27,12 @@ class CoordinatorAuditPage extends ConsumerWidget {
           if (list.isEmpty) {
             return const Center(child: Text('No audit log entries yet.'));
           }
-          return ListView(
+          return ListView.builder(
             padding: const EdgeInsets.all(DesignSystem.gutter),
-            children: [
-              for (final log in list)
-                Card(
+            itemCount: list.length,
+            itemBuilder: (context, itemIndex) {
+              final log = list[itemIndex];
+                return Card(
                   elevation: 1,
                   margin: const EdgeInsets.only(bottom: DesignSystem.spaceSm),
                   shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
@@ -63,8 +64,8 @@ class CoordinatorAuditPage extends ConsumerWidget {
                           )
                         : null,
                   ),
-                ),
-            ],
+                );
+            },
           );
         },
       ),
@@ -84,7 +85,7 @@ class CoordinatorAuditPage extends ConsumerWidget {
 
   String _formatDate(DateTime dt) {
     final local = dt.toLocal();
-    final two = (int v) => v.toString().padLeft(2, '0');
+    String two(int v) => v.toString().padLeft(2, '0');
     return '${two(local.day)}-${two(local.month)}-${local.year} '
         '${two(local.hour)}:${two(local.minute)}';
   }

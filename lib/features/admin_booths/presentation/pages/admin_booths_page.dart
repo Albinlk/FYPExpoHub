@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:uuid/uuid.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/booth.dart';
 import '../../../../core/domain/models/project.dart';
 import '../../../../core/state/state_providers.dart';
+import '../../../../core/supabase/supabase_database_service.dart' show kEventSlug;
+import '../../../../core/widgets/admin_actions.dart';
 
 class AdminBoothsPage extends ConsumerWidget {
   const AdminBoothsPage({super.key});
@@ -15,8 +18,9 @@ class AdminBoothsPage extends ConsumerWidget {
     
     String? selectedProjectId = item?.projectId;
     final projects = ref.read(projectsProvider);
+    bool saving = false;
 
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (dialogContext) {
         return StatefulBuilder(
@@ -53,7 +57,7 @@ class AdminBoothsPage extends ConsumerWidget {
                       Text('Allocated Project:', style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold)),
                       const SizedBox(height: DesignSystem.spaceSm),
                       DropdownButtonFormField<String?>(
-                        value: selectedProjectId,
+                        initialValue: selectedProjectId,
                         decoration: const InputDecoration(contentPadding: EdgeInsets.symmetric(horizontal: 12)),
                         hint: const Text('No Project Allocated / Vacant'),
                         items: [
@@ -84,13 +88,13 @@ class AdminBoothsPage extends ConsumerWidget {
                   child: const Text('Cancel'),
                 ),
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: saving ? null : () async {
                     if (numberController.text.trim().isEmpty) return;
 
                     final newItem = Booth(
-                      id: item?.id ?? 'booth-${DateTime.now().millisecondsSinceEpoch}',
-                      eventId: 'fskm-fyp-2026',
-                      boothNumber: numberController.text,
+                      id: item?.id ?? const Uuid().v4(),
+                      eventId: item?.eventId ?? kEventSlug,
+                      boothNumber: numberController.text.trim(),
                       zone: zoneController.text,
                       locationNote: noteController.text,
                       projectId: selectedProjectId,
@@ -100,31 +104,33 @@ class AdminBoothsPage extends ConsumerWidget {
                       publishedAt: DateTime.now(),
                     );
 
-                    if (item == null) {
-                      ref.read(boothsProvider.notifier).addBooth(newItem);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Booth registered successfully!')),
-                      );
-                    } else {
-                      ref.read(boothsProvider.notifier).updateBooth(newItem);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Booth mapping updated successfully!')),
-                      );
+                    final booths = ref.read(boothsProvider.notifier);
+                    final projectsNotifier = ref.read(projectsProvider.notifier);
+                    final linked = projects.where((p) => p.id == selectedProjectId).firstOrNull;
+                    setState(() => saving = true);
+                    final ok = await runAdminWrite(
+                      context,
+                      () async {
+                        // The booth row must exist before a project can point
+                        // at it (projects.booth_id is a foreign key).
+                        await (item == null ? booths.addBooth(newItem) : booths.updateBooth(newItem));
+                        if (linked != null) {
+                          await projectsNotifier.updateProject(
+                            linked.copyWith(
+                              boothId: newItem.id,
+                              boothNumber: newItem.boothNumber,
+                              boothZone: newItem.zone,
+                            ),
+                          );
+                        }
+                      },
+                      success: item == null ? 'Booth registered.' : 'Booth mapping updated.',
+                    );
+                    if (ok && dialogContext.mounted) {
+                      Navigator.of(dialogContext).pop();
+                    } else if (context.mounted) {
+                      setState(() => saving = false);
                     }
-
-                    // Automatically sync back to project's booth assignment
-                    if (selectedProjectId != null) {
-                      final proj = projects.firstWhere((p) => p.id == selectedProjectId);
-                      ref.read(projectsProvider.notifier).updateProject(
-                        proj.copyWith(
-                          boothId: newItem.id,
-                          boothNumber: newItem.boothNumber,
-                          boothZone: newItem.zone,
-                        ),
-                      );
-                    }
-
-                    Navigator.of(dialogContext).pop();
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: DesignSystem.secondary,
@@ -290,10 +296,13 @@ class AdminBoothsPage extends ConsumerWidget {
                                     IconButton(
                                       icon: const Icon(Icons.delete, size: 18, color: DesignSystem.error),
                                       tooltip: 'Delete booth',
-                                      onPressed: () {
-                                        ref.read(boothsProvider.notifier).deleteBooth(item.id);
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(content: Text('Booth mapping deleted successfully!')),
+                                      onPressed: () async {
+                                        if (!await confirmDelete(context, 'booth ${item.boothNumber}')) return;
+                                        if (!context.mounted) return;
+                                        await runAdminWrite(
+                                          context,
+                                          () => ref.read(boothsProvider.notifier).deleteBooth(item.id),
+                                          success: 'Booth deleted.',
                                         );
                                       },
                                     ),

@@ -34,11 +34,12 @@ class CspOfferingsPage extends ConsumerWidget {
             for (final s in semesters.asData?.value ?? const <AcademicSemester>[])
               s.id: s.code,
           };
-          return ListView(
+          return ListView.builder(
             padding: const EdgeInsets.all(DesignSystem.gutter),
-            children: [
-              for (final offering in list)
-                Card(
+            itemCount: list.length,
+            itemBuilder: (context, itemIndex) {
+              final offering = list[itemIndex];
+                return Card(
                   elevation: 1,
                   margin: const EdgeInsets.only(bottom: DesignSystem.spaceMd),
                   shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusXl),
@@ -57,8 +58,8 @@ class CspOfferingsPage extends ConsumerWidget {
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => context.go('/fypms/csp/milestones'),
                   ),
-                ),
-            ],
+                );
+            },
           );
         },
       ),

@@ -51,11 +51,12 @@ class StudentProgressPage extends ConsumerWidget {
                       ),
                     );
                   }
-                  return ListView(
+                  return ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: DesignSystem.gutter),
-                    children: [
-                      for (final log in items)
-                        Card(
+                    itemCount: items.length,
+                    itemBuilder: (context, itemIndex) {
+                      final log = items[itemIndex];
+                        return Card(
                           elevation: 1,
                           margin: const EdgeInsets.only(bottom: DesignSystem.spaceMd),
                           shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusXl),
@@ -97,8 +98,8 @@ class StudentProgressPage extends ConsumerWidget {
                               ],
                             ),
                           ),
-                        ),
-                    ],
+                        );
+                    },
                   );
                 },
               ),
@@ -117,7 +118,7 @@ class StudentProgressPage extends ConsumerWidget {
         ? 1
         : ((DateTime.now().difference(DateTime(DateTime.now().year, 3, 1)).inDays / 7).floor() + 1).clamp(1, 16);
 
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (dialogContext) {
         return StatefulBuilder(

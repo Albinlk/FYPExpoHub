@@ -1,13 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/award.dart';
-import '../../utils/fypms_key_normalizer.dart' show normalizeKeys;
+import '../../supabase/row_mappers.dart';
 import '../../utils/logger.dart';
+import 'optimistic_list.dart';
 import 'service_providers.dart';
 
 // ==========================================
 // PUBLISHED AWARD WINNERS STATE
 // ==========================================
-class AwardsNotifier extends Notifier<List<PublishedAwardWinner>> {
+class AwardsNotifier extends Notifier<List<PublishedAwardWinner>>
+    with OptimisticList<PublishedAwardWinner> {
   AwardsNotifier({this.publishedOnly = false});
 
   final bool publishedOnly;
@@ -20,32 +22,49 @@ class AwardsNotifier extends Notifier<List<PublishedAwardWinner>> {
 
   void _loadAwards() async {
     try {
-      final db = ref.read(supabaseDbServiceProvider);
-      final data = await db.getAwardWinnersOnce(publishedOnly: publishedOnly);
-      state = data.map((m) => PublishedAwardWinner.fromJson(normalizeKeys(m))).toList();
+      await loadRemote(() async {
+        final db = ref.read(supabaseDbServiceProvider);
+        final data = await db.getAwardWinnersOnce(publishedOnly: publishedOnly);
+        final out = <PublishedAwardWinner>[];
+        for (final m in data) {
+          try {
+            out.add(awardWinnerFromRow(m));
+          } catch (e) {
+            logDebug('Skipping unparseable award row ${m['id']}: $e');
+          }
+        }
+        return out;
+      });
     } catch (e) {
       logDebug('Awards load from Supabase warning: $e');
     }
   }
 
-  void addWinner(PublishedAwardWinner winner) {
-    state = [...state, winner];
-    ref.read(supabaseDbServiceProvider).setAwardWinner(winner.id, winner.toJson());
+  Future<void> _save(PublishedAwardWinner w) async {
+    final db = ref.read(supabaseDbServiceProvider);
+    final eventId = await db.resolveEventId(w.eventId);
+    await db.setAwardWinner(w.id, awardWinnerToRow(w, eventId: eventId));
+    if (!publishedOnly) ref.invalidate(publicAwardsProvider);
   }
 
-  void updateWinner(PublishedAwardWinner updated) {
+  Future<void> addWinner(PublishedAwardWinner winner) =>
+      commit([...state, winner], () => _save(winner));
+
+  Future<void> updateWinner(PublishedAwardWinner updated) {
     final data = updated.copyWith(updatedAt: DateTime.now());
-    state = [
-      for (final w in state)
-        if (w.id == updated.id) data else w,
-    ];
-    ref.read(supabaseDbServiceProvider).setAwardWinner(updated.id, data.toJson());
+    return commit(
+      [for (final w in state) if (w.id == updated.id) data else w],
+      () => _save(data),
+    );
   }
 
-  void deleteWinner(String id) {
-    state = state.where((w) => w.id != id).toList();
-    ref.read(supabaseDbServiceProvider).deleteAwardWinner(id);
-  }
+  Future<void> deleteWinner(String id) => commit(
+        state.where((w) => w.id != id).toList(),
+        () async {
+          await ref.read(supabaseDbServiceProvider).deleteAwardWinner(id);
+          if (!publishedOnly) ref.invalidate(publicAwardsProvider);
+        },
+      );
 }
 
 final awardsProvider =

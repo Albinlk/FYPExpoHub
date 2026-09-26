@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:uuid/uuid.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/announcement.dart';
 import '../../../../core/state/state_providers.dart';
+import '../../../../core/supabase/supabase_database_service.dart' show kEventSlug;
+import '../../../../core/widgets/admin_actions.dart';
 
 class AdminAnnouncementsPage extends ConsumerWidget {
   const AdminAnnouncementsPage({super.key});
@@ -14,8 +17,9 @@ class AdminAnnouncementsPage extends ConsumerWidget {
     
     bool pinned = item?.pinned ?? false;
     String status = item?.publicationStatus ?? 'published';
+    bool saving = false;
 
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (dialogContext) {
         return StatefulBuilder(
@@ -85,13 +89,13 @@ class AdminAnnouncementsPage extends ConsumerWidget {
                   child: const Text('Cancel'),
                 ),
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: saving ? null : () async {
                     if (titleController.text.trim().isEmpty) return;
 
                     final newItem = Announcement(
-                      id: item?.id ?? 'ann-${DateTime.now().millisecondsSinceEpoch}',
-                      eventId: 'fskm-fyp-2026',
-                      title: titleController.text,
+                      id: item?.id ?? const Uuid().v4(),
+                      eventId: item?.eventId ?? kEventSlug,
+                      title: titleController.text.trim(),
                       body: bodyController.text,
                       category: categoryController.text,
                       pinned: pinned,
@@ -101,19 +105,20 @@ class AdminAnnouncementsPage extends ConsumerWidget {
                       publishedAt: status == 'published' ? DateTime.now() : (item?.publishedAt ?? DateTime.now()),
                     );
 
-                    if (item == null) {
-                      ref.read(announcementsProvider.notifier).addAnnouncement(newItem);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Announcement created successfully!')),
-                      );
-                    } else {
-                      ref.read(announcementsProvider.notifier).updateAnnouncement(newItem);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Announcement updated successfully!')),
-                      );
+                    final notifier = ref.read(announcementsProvider.notifier);
+                    setState(() => saving = true);
+                    final ok = await runAdminWrite(
+                      context,
+                      () => item == null
+                          ? notifier.addAnnouncement(newItem)
+                          : notifier.updateAnnouncement(newItem),
+                      success: item == null ? 'Announcement created.' : 'Announcement updated.',
+                    );
+                    if (ok && dialogContext.mounted) {
+                      Navigator.of(dialogContext).pop();
+                    } else if (context.mounted) {
+                      setState(() => saving = false);
                     }
-
-                    Navigator.of(dialogContext).pop();
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: DesignSystem.secondary,
@@ -276,7 +281,11 @@ class AdminAnnouncementsPage extends ConsumerWidget {
                                 Row(
                                   children: [
                                     InkWell(
-                                      onTap: () => ref.read(announcementsProvider.notifier).togglePublish(item.id),
+                                      onTap: () => runAdminWrite(
+                                        context,
+                                        () => ref.read(announcementsProvider.notifier).togglePublish(item.id),
+                                        success: isPublished ? 'Announcement moved to draft.' : 'Announcement published.',
+                                      ),
                                       child: Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                         decoration: BoxDecoration(
@@ -301,10 +310,13 @@ class AdminAnnouncementsPage extends ConsumerWidget {
                                     IconButton(
                                       icon: const Icon(Icons.delete, size: 18, color: DesignSystem.error),
                                       tooltip: 'Delete announcement',
-                                      onPressed: () {
-                                        ref.read(announcementsProvider.notifier).deleteAnnouncement(item.id);
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(content: Text('Announcement deleted successfully!')),
+                                      onPressed: () async {
+                                        if (!await confirmDelete(context, 'this announcement')) return;
+                                        if (!context.mounted) return;
+                                        await runAdminWrite(
+                                          context,
+                                          () => ref.read(announcementsProvider.notifier).deleteAnnouncement(item.id),
+                                          success: 'Announcement deleted.',
                                         );
                                       },
                                     ),

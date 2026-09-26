@@ -1,10 +1,38 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../utils/logger.dart';
+import 'row_mappers.dart' show isUuid;
+
+/// The one event this deployment runs. Models carry this slug as their
+/// `eventId`; [SupabaseDatabaseService.resolveEventId] turns it into the
+/// `events.id` uuid that every `event_id` foreign key actually needs.
+const kEventSlug = 'fskm-fyp-2026';
 
 class SupabaseDatabaseService {
   final SupabaseClient _client;
 
   SupabaseDatabaseService(this._client);
+
+  final Map<String, String> _eventIdBySlug = {};
+
+  /// Returns [slugOrId] unchanged if it's already a uuid, otherwise looks up
+  /// the event with that slug (cached for the session). Throws if no such
+  /// event exists, rather than letting a write fail on the foreign key.
+  Future<String> resolveEventId(String slugOrId) async {
+    if (isUuid(slugOrId)) return slugOrId;
+    final cached = _eventIdBySlug[slugOrId];
+    if (cached != null) return cached;
+    final row = await _client
+        .from('events')
+        .select('id')
+        .eq('slug', slugOrId)
+        .maybeSingle();
+    final id = row?['id'] as String?;
+    if (id == null) {
+      throw StateError('No event with slug "$slugOrId" exists in the database.');
+    }
+    _eventIdBySlug[slugOrId] = id;
+    return id;
+  }
 
   // ---------------------------------------------------
   // PROJECTS
@@ -13,7 +41,6 @@ class SupabaseDatabaseService {
     bool publishedOnly = false,
     int? limit,
     int? offset,
-    String eventId = 'fskm-fyp-2026',
   }) async {
     try {
       var filter = _client.from('projects').select();
@@ -55,7 +82,6 @@ class SupabaseDatabaseService {
   // ---------------------------------------------------
   Future<List<Map<String, dynamic>>> getScheduleOnce({
     bool publishedOnly = false,
-    String eventId = 'fskm-fyp-2026',
   }) async {
     try {
       var filter = _client.from('schedule_items').select();
@@ -212,22 +238,19 @@ class SupabaseDatabaseService {
   // ---------------------------------------------------
   // EVENTS
   // ---------------------------------------------------
-  Future<Map<String, dynamic>?> getEvent(String eventId) async {
+  /// Looks the event up by uuid or, for anything else, by slug — the app
+  /// only knows the slug until the first load returns the real id.
+  Future<Map<String, dynamic>?> getEvent(String slugOrId) async {
     try {
-      final data = await _client.from('events').select().eq('id', eventId).maybeSingle();
-      return data;
+      final column = isUuid(slugOrId) ? 'id' : 'slug';
+      return await _client
+          .from('events')
+          .select()
+          .eq(column, slugOrId)
+          .maybeSingle();
     } catch (e) {
       logDebug('Supabase getEvent error: $e');
       return null;
-    }
-  }
-
-  Future<void> setEvent(String id, Map<String, dynamic> data) async {
-    try {
-      await _client.from('events').upsert(data);
-    } catch (e) {
-      logDebug('Supabase setEvent error: $e');
-      rethrow;
     }
   }
 
@@ -275,6 +298,30 @@ class SupabaseDatabaseService {
       await _client.from('imports').upsert(data);
     } catch (e) {
       logDebug('Supabase setImport error: $e');
+      rethrow;
+    }
+  }
+
+  /// Writes an import and all of its staged rows in ONE transaction via the
+  /// `stage_import` RPC, so a failure part-way leaves nothing behind instead
+  /// of an import record with only some of its candidates.
+  Future<void> stageImport({
+    required Map<String, dynamic> importRow,
+    required List<Map<String, dynamic>> scheduleCandidates,
+    required List<Map<String, dynamic>> awardCandidates,
+    required List<Map<String, dynamic>> validationIssues,
+    required List<Map<String, dynamic>> privacySkips,
+  }) async {
+    try {
+      await _client.rpc<dynamic>('stage_import', params: {
+        'p_import': importRow,
+        'p_schedule_candidates': scheduleCandidates,
+        'p_award_candidates': awardCandidates,
+        'p_validation_issues': validationIssues,
+        'p_privacy_skips': privacySkips,
+      });
+    } catch (e) {
+      logDebug('Supabase stageImport error: $e');
       rethrow;
     }
   }
@@ -433,6 +480,17 @@ class SupabaseDatabaseService {
     }
   }
 
+  /// Bulk upsert in a single request.
+  Future<void> setAssignments(List<Map<String, dynamic>> rows) async {
+    if (rows.isEmpty) return;
+    try {
+      await _client.from('lecturer_assignments').upsert(rows);
+    } catch (e) {
+      logDebug('Supabase setAssignments error: $e');
+      rethrow;
+    }
+  }
+
   Future<void> setAssignment(String id, Map<String, dynamic> data) async {
     try {
       await _client.from('lecturer_assignments').upsert(data);
@@ -488,6 +546,18 @@ class SupabaseDatabaseService {
     } catch (e) {
       logDebug('Supabase getFeedbackEntriesOnce error: $e');
       return [];
+    }
+  }
+
+  /// Visitor submission. A plain INSERT, not an upsert: upsert compiles to
+  /// INSERT ... ON CONFLICT DO UPDATE, which also needs UPDATE rights that
+  /// anonymous visitors (rightly) don't have.
+  Future<void> submitFeedbackEntry(Map<String, dynamic> data) async {
+    try {
+      await _client.from('feedback_entries').insert(data);
+    } catch (e) {
+      logDebug('Supabase submitFeedbackEntry error: $e');
+      rethrow;
     }
   }
 

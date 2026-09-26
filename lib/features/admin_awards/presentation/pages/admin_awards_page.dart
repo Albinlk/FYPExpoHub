@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:uuid/uuid.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/award.dart';
 import '../../../../core/domain/models/project.dart';
 import '../../../../core/state/state_providers.dart';
+import '../../../../core/supabase/supabase_database_service.dart' show kEventSlug;
+import '../../../../core/widgets/admin_actions.dart';
 
 class AdminAwardsPage extends ConsumerWidget {
   const AdminAwardsPage({super.key});
@@ -15,10 +18,11 @@ class AdminAwardsPage extends ConsumerWidget {
     
     String? selectedProjectId = item?.projectId;
     String status = item?.publicationStatus ?? 'published';
+    bool saving = false;
 
     final projects = ref.read(projectsProvider);
 
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (dialogContext) {
         return StatefulBuilder(
@@ -52,7 +56,7 @@ class AdminAwardsPage extends ConsumerWidget {
                       Text('Winning Project:', style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold)),
                       const SizedBox(height: DesignSystem.spaceSm),
                       DropdownButtonFormField<String?>(
-                        value: selectedProjectId,
+                        initialValue: selectedProjectId,
                         decoration: const InputDecoration(contentPadding: EdgeInsets.symmetric(horizontal: 12)),
                         hint: const Text('Select Project'),
                         items: [
@@ -99,7 +103,7 @@ class AdminAwardsPage extends ConsumerWidget {
                   child: const Text('Cancel'),
                 ),
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: saving ? null : () async {
                     if (titleController.text.trim().isEmpty) return;
 
                     // Fetch student names from selected project
@@ -109,10 +113,10 @@ class AdminAwardsPage extends ConsumerWidget {
                     );
 
                     final newItem = PublishedAwardWinner(
-                      id: item?.id ?? 'award-${DateTime.now().millisecondsSinceEpoch}',
-                      eventId: 'fskm-fyp-2026',
-                      awardCategoryId: 'cat-manual',
-                      projectId: selectedProjectId ?? 'none',
+                      id: item?.id ?? const Uuid().v4(),
+                      eventId: item?.eventId ?? kEventSlug,
+                      awardCategoryId: item?.awardCategoryId ?? '',
+                      projectId: selectedProjectId,
                       projectTitle: titleController.text,
                       teamDisplayName: associatedProj?.teamDisplayNames.join(', ') ?? 'N/A',
                       supervisorDisplayName: associatedProj?.supervisorDisplayName ?? 'N/A',
@@ -129,19 +133,20 @@ class AdminAwardsPage extends ConsumerWidget {
                       publishedAt: status == 'published' ? DateTime.now() : null,
                     );
 
-                    if (item == null) {
-                      ref.read(awardsProvider.notifier).addWinner(newItem);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Award record created successfully!')),
-                      );
-                    } else {
-                      ref.read(awardsProvider.notifier).updateWinner(newItem);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Award record updated successfully!')),
-                      );
+                    final notifier = ref.read(awardsProvider.notifier);
+                    setState(() => saving = true);
+                    final ok = await runAdminWrite(
+                      context,
+                      () => item == null
+                          ? notifier.addWinner(newItem)
+                          : notifier.updateWinner(newItem),
+                      success: item == null ? 'Award record created.' : 'Award record updated.',
+                    );
+                    if (ok && dialogContext.mounted) {
+                      Navigator.of(dialogContext).pop();
+                    } else if (context.mounted) {
+                      setState(() => saving = false);
                     }
-
-                    Navigator.of(dialogContext).pop();
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: DesignSystem.secondary,
@@ -289,7 +294,11 @@ class AdminAwardsPage extends ConsumerWidget {
                                           publishedAt: !isPublished ? DateTime.now() : null,
                                           updatedAt: DateTime.now(),
                                         );
-                                        ref.read(awardsProvider.notifier).updateWinner(updated);
+                                        runAdminWrite(
+                                          context,
+                                          () => ref.read(awardsProvider.notifier).updateWinner(updated),
+                                          success: isPublished ? 'Award moved to draft.' : 'Award published.',
+                                        );
                                       },
                                       child: Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -315,10 +324,13 @@ class AdminAwardsPage extends ConsumerWidget {
                                     IconButton(
                                       icon: const Icon(Icons.delete, size: 18, color: DesignSystem.error),
                                       tooltip: 'Delete award winner',
-                                      onPressed: () {
-                                        ref.read(awardsProvider.notifier).deleteWinner(item.id);
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(content: Text('Award winner record deleted successfully!')),
+                                      onPressed: () async {
+                                        if (!await confirmDelete(context, 'this award record')) return;
+                                        if (!context.mounted) return;
+                                        await runAdminWrite(
+                                          context,
+                                          () => ref.read(awardsProvider.notifier).deleteWinner(item.id),
+                                          success: 'Award record deleted.',
                                         );
                                       },
                                     ),

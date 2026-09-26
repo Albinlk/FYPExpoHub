@@ -82,14 +82,18 @@ class ProjectCoverImage extends StatelessWidget {
         url.contains('placehold.co') ||
         url.contains('default') ||
         url.contains('via.placeholder') ||
-        url.contains('picsum')) return true;
+        url.contains('picsum')) {
+      return true;
+    }
     // If the URL ends with a known generic name
     final uri = Uri.tryParse(url);
     final path = uri?.path.toLowerCase() ?? '';
     if (path.endsWith('cover_placeholder.png') ||
         path.endsWith('default_cover.jpg') ||
         path.endsWith('no_image.png') ||
-        path.endsWith('project_placeholder.jpg')) return true;
+        path.endsWith('project_placeholder.jpg')) {
+      return true;
+    }
     return false;
   }
 
@@ -116,8 +120,8 @@ class ProjectCoverImage extends StatelessWidget {
         maxWidthDiskCache: targetW,
         maxHeightDiskCache: targetH,
         fadeInDuration: const Duration(milliseconds: 200),
-        placeholder: (_, __) => _buildGeneratedCover(),
-        errorWidget: (_, __, ___) => _buildGeneratedCover(),
+        placeholder: (_, _) => _buildGeneratedCover(),
+        errorWidget: (_, _, _) => _buildGeneratedCover(),
       );
     }
     return _buildGeneratedCover();

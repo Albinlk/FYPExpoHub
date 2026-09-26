@@ -88,6 +88,15 @@ class StudentRecordsPage extends ConsumerWidget {
     final descriptionController = TextEditingController();
     final matricIdController = TextEditingController();
 
+    // A student's own CSP650 record must continue their own CSP600 one
+    // (enforced by trg_fyp_records_lineage); link the most recent.
+    final ownRecords = ref.read(myFypRecordsProvider).asData?.value ?? const <FypRecord>[];
+    final csp600 = ownRecords
+        .where((r) => r.currentCourseCode.toUpperCase() == 'CSP600')
+        .toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final FypRecord? previousCsp600 = csp600.isEmpty ? null : csp600.first;
+
     showDialog<void>(
       context: context,
       builder: (dialogContext) {
@@ -158,6 +167,22 @@ class StudentRecordsPage extends ConsumerWidget {
                         );
                       },
                     ),
+                    if (courseCode == 'CSP650')
+                      Padding(
+                        padding: const EdgeInsets.only(top: DesignSystem.spaceSm),
+                        child: Text(
+                          previousCsp600 != null
+                              ? 'Continues your CSP600 record: '
+                                  '${previousCsp600.projectTitle?.isNotEmpty == true ? previousCsp600.projectTitle : previousCsp600.id}'
+                              : 'CSP650 continues a CSP600 record, and you have none here. '
+                                  'If you did CSP600 before this system, ask your FYP coordinator to create your CSP650 record.',
+                          style: DesignSystem.bodySm.copyWith(
+                            color: previousCsp600 != null
+                                ? DesignSystem.onSurfaceVariant
+                                : DesignSystem.error,
+                          ),
+                        ),
+                      ),
                     const SizedBox(height: DesignSystem.spaceMd),
                     TextField(
                       controller: titleController,
@@ -183,7 +208,9 @@ class StudentRecordsPage extends ConsumerWidget {
                   child: const Text('Cancel'),
                 ),
                 FilledButton(
-                  onPressed: semesterId == null || courseCode == null
+                  onPressed: semesterId == null ||
+                          courseCode == null ||
+                          (courseCode == 'CSP650' && previousCsp600 == null)
                       ? null
                       : () async {
                           try {
@@ -193,6 +220,8 @@ class StudentRecordsPage extends ConsumerWidget {
                               studentId: studentId,
                               currentCourseCode: courseCode!,
                               programmeCode: programmeCode,
+                              previousRecordId:
+                                  courseCode == 'CSP650' ? previousCsp600?.id : null,
                               matricId: matricIdController.text.trim().isEmpty
                                   ? null
                                   : matricIdController.text.trim(),

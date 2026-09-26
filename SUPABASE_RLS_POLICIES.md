@@ -1,6 +1,7 @@
 # Row Level Security (RLS) Policies — FYP Expo Hub
 
-All 19 Supabase tables have **RLS enabled**. Access is controlled via policies
+The 19 Expo Hub tables below have **RLS enabled** (the 23 FYPMS tables are
+summarised at the end). Access is controlled via policies
 that check the `profiles.role` of the authenticated user.
 
 ## Helper Functions
@@ -60,4 +61,19 @@ All helpers use `SECURITY DEFINER`.
 - Private fields (personal emails, phone numbers, confidential evaluation scores, internal notes) are protected by RLS
 - All write operations on sensitive tables (imports, visits, audit_logs) are restricted to **admin role only**
 - Visitor mutations on `student_project_visits` must use RPC functions (direct inserts blocked for non-admins)
-- `feedback_entries` can be inserted by **anonymous users** (with validation constraints)
+- `feedback_entries` can be inserted by **anonymous users** (length/rating checks; `status` must be `new`, no `admin_note`, `submitted_by` null or the caller; throttled to 30/minute site-wide)
+
+## FYPMS tables (summary)
+
+The 23 FYPMS tables (`fyp_*`, `academic_*`, `profile_academic_roles`) use a
+different model from the Expo Hub tables above. Details live in the
+migrations; this is the shape of it:
+
+| Concern | Rule | Where |
+|---|---|---|
+| Reads | `can_read_fyp_record(id)` — the student, their assigned supervisor/co-supervisor/examiner, the course's CSP lecturer, coordinators, admins | `20260817000002_fypms_helpers.sql`, `20260817000003_fypms_rls_policies.sql` |
+| Writes by students | **None directly.** Every workflow write (requests, progress logs, forms, reports, deliverables, canvases) goes through a SECURITY DEFINER `submit_*` RPC that validates state and writes an audit row | `20260817000004_fypms_rpc.sql`; direct INSERT/UPDATE policies dropped in `20260901000001` and `20260925000001` |
+| Course offerings | Created/deleted by admins and coordinators; a lecturer may update their own active offering | `20260925000001_audit_2_hardening.sql` |
+| Academic roles | Admins grant any role; coordinators grant any role except `fyp_coordinator` | `20260925000001_audit_2_hardening.sql` |
+| Private files | Storage paths `{semester}/{record}/{type}/{version}/…`, read via `can_read_fyp_storage_path`, written via `can_write_fyp_storage_path`; a student can't overwrite/delete an object a submission references | `20260901000001_security_hardening.sql`, `20260925000001` |
+| Record lineage | `previous_record_id` must belong to the same student (trigger) | `20260925000001` |

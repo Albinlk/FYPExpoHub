@@ -1,5 +1,12 @@
 # STITCH_IMPLEMENTATION.md - Flutter UI Implementation Tracker
 
+> **Status: HISTORICAL (superseded).** This was the original design-to-code
+> tracker. Every screen below has since been implemented and wired to
+> Supabase (not Firestore — the Firebase backend was retired in August
+> 2026). The "Pending" cells are the tracker's state at the time and are
+> no longer accurate; the route list in `lib/app/router.dart` is the
+> source of truth for what exists.
+
 This document tracks the status of all screens and routes, mapping them directly to Stitch assets and tracing their backend integration progress.
 
 | Stitch Screen ID | Screen Title | Flutter Route | Implementation Status | Backend Integration | Responsive Status | Notes / Adaptation |

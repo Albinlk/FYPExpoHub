@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/fypms/academic_semester.dart';
 import '../../../../core/domain/models/fypms/fyp_course_offering.dart';
-import '../../../../core/domain/models/fypms/fyp_record.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import '../widgets/fypms_loading_widget.dart';
 

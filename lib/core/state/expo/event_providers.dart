@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/event.dart';
-import '../../utils/fypms_key_normalizer.dart' show normalizeKeys;
+import '../../supabase/row_mappers.dart';
+import '../../supabase/supabase_database_service.dart' show kEventSlug;
 import '../../utils/logger.dart';
 import 'service_providers.dart';
 
@@ -12,11 +13,14 @@ class EventNotifier extends Notifier<Event> {
   Event build() {
     _loadFromSupabase();
     return Event(
-      id: 'fskm-fyp-2026',
+      id: kEventSlug,
       title: 'FSKM FYP Expo Hub 2026',
       sessionLabel: 'Semester March - August 2026',
-      startAt: DateTime(2026, 8, 6, 9, 0),
-      endAt: DateTime(2026, 8, 7, 17, 0),
+      // 09:00 and 17:00 Malaysia time (UTC+8), as UTC instants — a local
+      // DateTime would move to a different calendar day for a visitor far
+      // enough from UTC+8, shifting the schedule's day tabs.
+      startAt: DateTime.utc(2026, 8, 6, 1, 0),
+      endAt: DateTime.utc(2026, 8, 7, 9, 0),
       dailyHours: '9:00 AM - 5:00 PM',
       venue: 'Lecture Block, FSKM',
       locationDetails:
@@ -57,30 +61,38 @@ class EventNotifier extends Notifier<Event> {
     );
   }
 
+  /// Looked up by slug: the hardcoded default above only knows the slug,
+  /// and `events.id` is a uuid. Once loaded, `state.id` is the real uuid.
   void _loadFromSupabase() async {
     try {
       final db = ref.read(supabaseDbServiceProvider);
-      final data = await db.getEvent('fskm-fyp-2026');
+      final data = await db.getEvent(kEventSlug);
       if (data != null) {
-        state = Event.fromJson(normalizeKeys(data));
+        state = eventFromRow(data);
       }
     } catch (e) {
       logDebug('Event load failed (using fallback): $e');
     }
   }
 
-  void updateEvent(Event newEvent) async {
-    state = newEvent.copyWith(updatedAt: DateTime.now());
+  /// Saves through the admin-only `update_event_configuration` RPC. On
+  /// failure the previous event is restored and the error rethrown, so the
+  /// admin page reports it rather than showing an unsaved change as saved.
+  Future<void> updateEvent(Event newEvent) async {
+    final previous = state;
+    final next = newEvent.copyWith(updatedAt: DateTime.now());
+    state = next;
     try {
-      final rpc = ref.read(supabaseRpcServiceProvider);
-      await rpc.updateEventConfiguration(
-        eventId: newEvent.id,
-        payload: newEvent.toJson(),
-      );
+      final eventId =
+          await ref.read(supabaseDbServiceProvider).resolveEventId(next.id);
+      final saved = await ref.read(supabaseRpcServiceProvider).updateEventConfiguration(
+            eventId: eventId,
+            payload: eventToRow(next),
+          );
+      state = eventFromRow(saved);
     } catch (e) {
-      logDebug('updateEvent via RPC failed: $e');
-      final db = ref.read(supabaseDbServiceProvider);
-      await db.setEvent(newEvent.id, newEvent.toJson());
+      if (identical(state, next)) state = previous;
+      rethrow;
     }
   }
 }

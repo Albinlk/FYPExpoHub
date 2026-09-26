@@ -18,19 +18,20 @@ class OfflineFallback {
   /// Returns the three fallback collections; reads and parses the asset
   /// once per session. Concurrent callers share the same in-flight future
   /// (projects/schedule/booths notifiers all start loading at boot).
-  static Future<Map<String, List<Map<String, dynamic>>>> _inFlight =
-      Future.value({});
+  static Future<Map<String, List<Map<String, dynamic>>>>? _inFlight;
 
-  static Future<Map<String, List<Map<String, dynamic>>>> load() async {
-    if (_cache != null) return _cache!;
-    if (!_inFlightCompletionPending) {
-      _inFlightCompletionPending = true;
-      _inFlight = _readAsset();
-    }
-    return _inFlight;
+  static Future<Map<String, List<Map<String, dynamic>>>> load() {
+    final cached = _cache;
+    if (cached != null) return Future.value(cached);
+    return _inFlight ??= _readAsset().catchError(
+      (Object e, StackTrace st) {
+        // Don't memoize a failure: a transient asset-fetch error used to
+        // poison every later load() for the rest of the session.
+        _inFlight = null;
+        return Future<Map<String, List<Map<String, dynamic>>>>.error(e, st);
+      },
+    );
   }
-
-  static bool _inFlightCompletionPending = false;
 
   static Future<Map<String, List<Map<String, dynamic>>>> _readAsset() async {
     final raw = await rootBundle.loadString(_assetPath);
@@ -53,7 +54,6 @@ class OfflineFallback {
   /// Test hook: clears the memoized cache between tests.
   static void resetForTests() {
     _cache = null;
-    _inFlightCompletionPending = false;
-    _inFlight = Future.value({});
+    _inFlight = null;
   }
 }

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:uuid/uuid.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/project.dart';
 import '../../../../core/state/state_providers.dart';
+import '../../../../core/supabase/supabase_database_service.dart' show kEventSlug;
+import '../../../../core/widgets/admin_actions.dart';
 
 class AdminProjectsPage extends ConsumerWidget {
   const AdminProjectsPage({super.key});
@@ -25,8 +28,12 @@ class AdminProjectsPage extends ConsumerWidget {
 
     String status = item?.publicationStatus ?? 'published';
     bool featured = item?.featured ?? false;
+    bool saving = false;
 
-    showDialog(
+    List<String> csv(String s) =>
+        s.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+
+    showDialog<void>(
       context: context,
       builder: (dialogContext) {
         return StatefulBuilder(
@@ -131,26 +138,28 @@ class AdminProjectsPage extends ConsumerWidget {
                   child: const Text('Cancel'),
                 ),
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: saving ? null : () async {
                     if (titleController.text.trim().isEmpty) return;
 
                     final newItem = Project(
-                      id: item?.id ?? 'proj-${DateTime.now().millisecondsSinceEpoch}',
-                      eventId: 'fskm-fyp-2026',
+                      id: item?.id ?? const Uuid().v4(),
+                      eventId: item?.eventId ?? kEventSlug,
                       slug: titleController.text.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-'),
-                      title: titleController.text,
+                      title: titleController.text.trim(),
                       matricId: matricIdController.text.isEmpty ? null : matricIdController.text,
                       programmeCode: codeController.text,
                       programmeName: progNameController.text,
                       shortDescription: descController.text,
                       category: categoryController.text,
-                      technologyTags: tagsController.text.split(',').map((e) => e.trim()).toList(),
-                      teamDisplayNames: studentsController.text.split(',').map((e) => e.trim()).toList(),
+                      technologyTags: csv(tagsController.text),
+                      teamDisplayNames: csv(studentsController.text),
                       supervisorDisplayName: supervisorController.text,
                       examinerDisplayName: examinerController.text.isEmpty ? null : examinerController.text,
                       boothNumber: boothNumController.text.isEmpty ? null : boothNumController.text,
                       boothZone: boothZoneController.text.isEmpty ? null : boothZoneController.text,
-                      boothId: boothNumController.text.isEmpty ? null : 'booth-${boothNumController.text}',
+                      // A booth is linked from the Booths page (which knows the
+                      // booth's real id); the free-text number here is display-only.
+                      boothId: item?.boothId,
                       demoUrl: demoController.text.isEmpty ? null : demoController.text,
                       coverImageUrl: coverController.text,
                       featured: featured,
@@ -160,18 +169,20 @@ class AdminProjectsPage extends ConsumerWidget {
                       publishedAt: status == 'published' ? DateTime.now() : null,
                     );
 
-                    if (item == null) {
-                      ref.read(projectsProvider.notifier).addProject(newItem);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Project added successfully!')),
-                      );
-                    } else {
-                      ref.read(projectsProvider.notifier).updateProject(newItem);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Project updated successfully!')),
-                      );
+                    final notifier = ref.read(projectsProvider.notifier);
+                    setState(() => saving = true);
+                    final ok = await runAdminWrite(
+                      context,
+                      () => item == null
+                          ? notifier.addProject(newItem)
+                          : notifier.updateProject(newItem),
+                      success: item == null ? 'Project added.' : 'Project updated.',
+                    );
+                    if (ok && dialogContext.mounted) {
+                      Navigator.of(dialogContext).pop();
+                    } else if (context.mounted) {
+                      setState(() => saving = false);
                     }
-                    Navigator.of(dialogContext).pop();
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: DesignSystem.secondary,
@@ -344,7 +355,11 @@ class AdminProjectsPage extends ConsumerWidget {
                                 Row(
                                   children: [
                                     InkWell(
-                                      onTap: () => ref.read(projectsProvider.notifier).togglePublishStatus(item.id),
+                                      onTap: () => runAdminWrite(
+                                        context,
+                                        () => ref.read(projectsProvider.notifier).togglePublishStatus(item.id),
+                                        success: isPublished ? 'Project moved to draft.' : 'Project published.',
+                                      ),
                                       child: Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                         decoration: BoxDecoration(
@@ -369,10 +384,13 @@ class AdminProjectsPage extends ConsumerWidget {
                                     IconButton(
                                       icon: const Icon(Icons.delete, size: 18, color: DesignSystem.error),
                                       tooltip: 'Delete project',
-                                      onPressed: () {
-                                        ref.read(projectsProvider.notifier).deleteProject(item.id);
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(content: Text('Project deleted successfully!')),
+                                      onPressed: () async {
+                                        if (!await confirmDelete(context, '"${item.title}"')) return;
+                                        if (!context.mounted) return;
+                                        await runAdminWrite(
+                                          context,
+                                          () => ref.read(projectsProvider.notifier).deleteProject(item.id),
+                                          success: 'Project deleted.',
                                         );
                                       },
                                     ),

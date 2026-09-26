@@ -128,7 +128,7 @@ class _AdminSettingsPageState extends ConsumerState<AdminSettingsPage> {
                             subtitle: Text('Allow lecturers to record student visits in real time', style: DesignSystem.bodySm),
                             value: _visitsEnabled,
                             onChanged: (val) => setState(() => _visitsEnabled = val),
-                            activeColor: DesignSystem.secondary,
+                            activeThumbColor: DesignSystem.secondary,
                           ),
                           const SizedBox(height: 12),
 

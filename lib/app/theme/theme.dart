@@ -152,11 +152,12 @@ class AppTheme {
         secondary: DesignSystem.secondary,
         secondaryContainer: DesignSystem.secondaryContainer,
         onSecondaryContainer: DesignSystem.onSecondaryContainer,
-        background: DesignSystem.background,
-        onBackground: DesignSystem.onBackground,
+        // background/onBackground/surfaceVariant are deprecated in M3;
+        // the page background is set via scaffoldBackgroundColor below and
+        // surfaceContainerHighest keeps surfaceVariant's old colour.
         surface: DesignSystem.surface,
         onSurface: DesignSystem.onBackground,
-        surfaceVariant: DesignSystem.surfaceContainerLow,
+        surfaceContainerHighest: DesignSystem.surfaceContainerLow,
         onSurfaceVariant: DesignSystem.onSurfaceVariant,
         outline: DesignSystem.surfaceContainerHighest,
         outlineVariant: DesignSystem.outlineVariant,

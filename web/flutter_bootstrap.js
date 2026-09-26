@@ -1,6 +1,22 @@
 {{flutter_js}}
 {{flutter_build_config}}
 
+// Anti-clickjacking for the signed-in areas. GitHub Pages can't send an
+// X-Frame-Options / frame-ancestors header, so refuse to run those routes
+// inside someone else's frame. Public pages stay embeddable.
+(function () {
+  var protectedArea = /^\/(admin|lecturer|fypms)(\/|$)/.test(location.pathname);
+  if (protectedArea && window.top !== window.self) {
+    document.documentElement.style.display = 'none';
+    try {
+      window.top.location = window.self.location.href;
+    } catch (e) {
+      // Cross-origin top we can't navigate: stay hidden.
+    }
+    throw new Error('Refusing to load a protected page inside a frame.');
+  }
+})();
+
 _flutter.loader.load({
   // No `renderer` key: the loader auto-selects the best compatible build
   // (dart2wasm/skwasm on WasmGC browsers, dart2js/canvaskit fallback).

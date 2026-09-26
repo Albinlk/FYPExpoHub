@@ -29,12 +29,13 @@ class SupervisorEvaluationsPage extends ConsumerWidget {
           if (records.isEmpty) {
             return const Center(child: Text('No records assigned to you.'));
           }
-          return ListView(
+          return ListView.builder(
             padding: const EdgeInsets.all(DesignSystem.gutter),
-            children: [
-              for (final record in records)
-                _RecordEvaluationSection(record: record),
-            ],
+            itemCount: records.length,
+            itemBuilder: (context, itemIndex) {
+              final record = records[itemIndex];
+                return _RecordEvaluationSection(record: record);
+            },
           );
         },
       ),

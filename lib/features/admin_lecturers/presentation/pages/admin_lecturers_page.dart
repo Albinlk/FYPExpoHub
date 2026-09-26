@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/state/state_providers.dart';
+import '../../../../core/widgets/admin_actions.dart';
 
 class AdminLecturersPage extends ConsumerWidget {
   const AdminLecturersPage({super.key});
@@ -12,7 +13,7 @@ class AdminLecturersPage extends ConsumerWidget {
     final nameController = TextEditingController();
     var creating = false;
 
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (dialogContext) {
         return StatefulBuilder(
@@ -90,27 +91,21 @@ class AdminLecturersPage extends ConsumerWidget {
                           }
 
                           setState(() => creating = true);
-
-                          try {
-                            final uid = const Uuid().v4();
-                            final rpc = ref.read(supabaseRpcServiceProvider);
-                            await rpc.createLecturerAccountProfile(
-                              userId: uid,
+                          final rpc = ref.read(supabaseRpcServiceProvider);
+                          final ok = await runAdminWrite(
+                            context,
+                            () => rpc.createLecturerAccountProfile(
+                              userId: const Uuid().v4(),
                               email: email,
                               displayName: name,
-                            );
-
+                            ),
+                            success: 'Lecturer $name added.',
+                          );
+                          if (ok) {
                             ref.invalidate(allLecturersProvider);
                             if (dialogContext.mounted) Navigator.of(dialogContext).pop();
-
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Lecturer $name added successfully!')),
-                            );
-                          } catch (e) {
+                          } else if (context.mounted) {
                             setState(() => creating = false);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Error: ${e.toString()}')),
-                            );
                           }
                         },
                   style: ElevatedButton.styleFrom(
@@ -131,7 +126,7 @@ class AdminLecturersPage extends ConsumerWidget {
     final name = (lecturer['displayName'] ?? lecturer['display_name']) as String? ?? '';
     final uid = (lecturer['id'] ?? lecturer['uid']) as String? ?? '';
 
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
@@ -145,22 +140,13 @@ class AdminLecturersPage extends ConsumerWidget {
             ElevatedButton(
               onPressed: () async {
                 Navigator.of(dialogContext).pop();
-                try {
-                  final db = ref.read(supabaseDbServiceProvider);
-                  await db.deleteLecturer(uid);
-                  ref.invalidate(allLecturersProvider);
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('$name deleted successfully.')),
-                    );
-                  }
-                } catch (e) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error: ${e.toString()}')),
-                    );
-                  }
-                }
+                final db = ref.read(supabaseDbServiceProvider);
+                final ok = await runAdminWrite(
+                  context,
+                  () => db.deleteLecturer(uid),
+                  success: '$name deleted.',
+                );
+                if (ok) ref.invalidate(allLecturersProvider);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: DesignSystem.error,
@@ -175,7 +161,8 @@ class AdminLecturersPage extends ConsumerWidget {
   }
 
   Future<void> _backfillLecturerIds(BuildContext context, WidgetRef ref) async {
-    ScaffoldMessenger.of(context).showSnackBar(
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.showSnackBar(
       const SnackBar(content: Text('Updating lecturer IDs in assignments...')),
     );
     try {
@@ -191,8 +178,8 @@ class AdminLecturersPage extends ConsumerWidget {
       }
 
       final assignmentsList = await db.getAssignmentsOnce();
-      int patched = 0;
       int skipped = 0;
+      final updates = <Map<String, dynamic>>[];
 
       for (final doc in assignmentsList) {
         final id = doc['id'] as String;
@@ -211,30 +198,28 @@ class AdminLecturersPage extends ConsumerWidget {
 
         final matchedUid = lecturersMap[lecturerName];
         if (matchedUid != null) {
-          await db.setAssignment(id, {
+          updates.add({
             ...doc,
+            'id': id,
             'lecturer_id': matchedUid,
-            'updated_at': DateTime.now().toIso8601String(),
+            'updated_at': DateTime.now().toUtc().toIso8601String(),
           });
-          patched++;
         } else {
           skipped++;
         }
       }
 
+      // One bulk upsert instead of a network round trip per assignment.
+      await db.setAssignments(updates);
       ref.invalidate(allAssignmentsProvider);
 
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Done! $patched assignments updated, $skipped skipped.')),
-        );
-      }
+      messenger.showSnackBar(
+        SnackBar(content: Text('Done! ${updates.length} assignments updated, $skipped skipped.')),
+      );
     } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}')),
-        );
-      }
+      messenger.showSnackBar(
+        SnackBar(content: Text('Not saved: ${friendlyError(e)}')),
+      );
     }
   }
 
@@ -253,7 +238,6 @@ class AdminLecturersPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isDesktop = MediaQuery.of(context).size.width >= 768;
     final lecturersAsync = ref.watch(allLecturersProvider);
-    final hardcodedEntries = hardcodedLecturerConfig.entries.toList();
 
     return Scaffold(
       body: SingleChildScrollView(
@@ -339,7 +323,7 @@ class AdminLecturersPage extends ConsumerWidget {
 
                     lecturersAsync.when(
                       data: (lecturers) {
-                        if (lecturers.isEmpty && hardcodedEntries.isEmpty) {
+                        if (lecturers.isEmpty) {
                           return const Padding(
                             padding: EdgeInsets.symmetric(vertical: 32),
                             child: Center(
@@ -354,14 +338,7 @@ class AdminLecturersPage extends ConsumerWidget {
                               final email = (doc['email'] as String?) ?? '';
                               final name = (doc['display_name'] as String?) ?? '';
                               final uid = (doc['id'] as String?) ?? '';
-                              return _buildLecturerRow(context, ref, email, name, uid, false);
-                            }),
-                            if (hardcodedEntries.isNotEmpty && lecturers.isNotEmpty)
-                              const Divider(height: 24),
-                            ...hardcodedEntries.map((entry) {
-                              return _buildLecturerRow(
-                                context, ref, entry.key, entry.value, '', true,
-                              );
+                              return _buildLecturerRow(context, ref, email, name, uid);
                             }),
                           ],
                         );
@@ -372,17 +349,15 @@ class AdminLecturersPage extends ConsumerWidget {
                           child: CircularProgressIndicator(),
                         ),
                       ),
-                      error: (err, _) {
-                        return Column(
-                          children: [
-                            ...hardcodedEntries.map((entry) {
-                              return _buildLecturerRow(
-                                context, ref, entry.key, entry.value, '', true,
-                              );
-                            }),
-                          ],
-                        );
-                      },
+                      error: (err, _) => Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 32),
+                        child: Center(
+                          child: Text(
+                            'Couldn\'t load lecturers: ${friendlyError(err)}',
+                            style: DesignSystem.bodyMd.copyWith(color: DesignSystem.error),
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -400,7 +375,6 @@ class AdminLecturersPage extends ConsumerWidget {
     String email,
     String name,
     String uid,
-    bool isHardcoded,
   ) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
@@ -409,16 +383,12 @@ class AdminLecturersPage extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: isHardcoded
-                  ? DesignSystem.surfaceContainer
-                  : DesignSystem.secondaryContainer,
+              color: DesignSystem.secondaryContainer,
               borderRadius: DesignSystem.radiusLg,
             ),
             child: Icon(
               Icons.person,
-              color: isHardcoded
-                  ? DesignSystem.onSurfaceVariant
-                  : DesignSystem.onSecondaryContainer,
+              color: DesignSystem.onSecondaryContainer,
               size: 20,
             ),
           ),
@@ -441,23 +411,7 @@ class AdminLecturersPage extends ConsumerWidget {
               ],
             ),
           ),
-          if (isHardcoded)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: DesignSystem.surfaceContainer,
-                borderRadius: DesignSystem.radiusSm,
-              ),
-              child: Text(
-                'DEFAULT',
-                style: DesignSystem.labelCaps.copyWith(
-                  color: DesignSystem.onSurfaceVariant,
-                  fontSize: 10,
-                ),
-              ),
-            ),
-          if (!isHardcoded) ...[
-            const SizedBox(width: 8),
+          const SizedBox(width: 8),
             IconButton(
               icon: const Icon(Icons.delete, size: 18, color: DesignSystem.error),
               tooltip: 'Delete lecturer',
@@ -468,7 +422,6 @@ class AdminLecturersPage extends ConsumerWidget {
                 });
               },
             ),
-          ],
         ],
       ),
     );

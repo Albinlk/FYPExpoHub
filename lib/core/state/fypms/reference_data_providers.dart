@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'user_scope.dart';
 import '../../domain/models/fypms/academic_course.dart';
 import '../../domain/models/fypms/academic_semester.dart';
 import '../../domain/models/fypms/fyp_course_offering.dart';
@@ -12,18 +13,21 @@ import '../expo/service_providers.dart';
 // ==============================================================================
 
 final fypmsSemestersProvider = FutureProvider<List<AcademicSemester>>((ref) async {
+  ref.watch(fypmsUserScopeProvider);
   final db = ref.watch(supabaseDbServiceProvider);
   final data = await db.getAcademicSemestersOnce();
   return data.map((m) => AcademicSemester.fromJson(normalizeFypmsKeys(m))).toList();
 });
 
 final fypmsCoursesProvider = FutureProvider<List<AcademicCourse>>((ref) async {
+  ref.watch(fypmsUserScopeProvider);
   final db = ref.watch(supabaseDbServiceProvider);
   final data = await db.getAcademicCoursesOnce();
   return data.map((m) => AcademicCourse.fromJson(normalizeFypmsKeys(m))).toList();
 });
 
 final fypmsOfferingsProvider = FutureProvider<List<FypCourseOffering>>((ref) async {
+  ref.watch(fypmsUserScopeProvider);
   final db = ref.watch(supabaseDbServiceProvider);
   final data = await db.getFypCourseOfferingsOnce();
   return data.map((m) => FypCourseOffering.fromJson(normalizeFypmsKeys(m))).toList();
@@ -32,6 +36,7 @@ final fypmsOfferingsProvider = FutureProvider<List<FypCourseOffering>>((ref) asy
 /// Course offerings belonging to the current lecturer (for the CSP dashboard).
 final myFypmsOfferingsProvider =
     FutureProvider<List<FypCourseOffering>>((ref) async {
+  ref.watch(fypmsUserScopeProvider);
   final user = ref.watch(currentAuthUserProvider);
   if (user == null) return const [];
   final all = await ref.watch(fypmsOfferingsProvider.future);

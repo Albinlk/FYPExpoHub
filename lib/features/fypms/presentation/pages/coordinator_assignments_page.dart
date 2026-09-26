@@ -28,11 +28,12 @@ class CoordinatorAssignmentsPage extends ConsumerWidget {
           if (list.isEmpty) {
             return const Center(child: Text('No FYP records to assign.'));
           }
-          return ListView(
+          return ListView.builder(
             padding: const EdgeInsets.all(DesignSystem.gutter),
-            children: [
-              for (final record in list)
-                Card(
+            itemCount: list.length,
+            itemBuilder: (context, itemIndex) {
+              final record = list[itemIndex];
+                return Card(
                   elevation: 1,
                   margin: const EdgeInsets.only(bottom: DesignSystem.spaceMd),
                   shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusXl),
@@ -84,8 +85,8 @@ class CoordinatorAssignmentsPage extends ConsumerWidget {
                       ],
                     ),
                   ),
-                ),
-            ],
+                );
+            },
           );
         },
       ),

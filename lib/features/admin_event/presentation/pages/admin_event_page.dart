@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/state/state_providers.dart';
+import '../../../../core/widgets/admin_actions.dart';
 
 class AdminEventPage extends ConsumerStatefulWidget {
   const AdminEventPage({super.key});
@@ -16,6 +17,19 @@ class _AdminEventPageState extends ConsumerState<AdminEventPage> {
   final _startDateController = TextEditingController();
   final _endDateController = TextEditingController();
   final _venueController = TextEditingController();
+  bool _dirty = false;
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadEvent();
+    for (final c in [_titleController, _sessionController, _venueController]) {
+      c.addListener(_markDirty);
+    }
+  }
+
+  void _markDirty() => _dirty = true;
 
   @override
   void dispose() {
@@ -34,6 +48,8 @@ class _AdminEventPageState extends ConsumerState<AdminEventPage> {
     _startDateController.text = '${event.startAt.day} ${_monthName(event.startAt.month)} ${event.startAt.year}';
     _endDateController.text = '${event.endAt.day} ${_monthName(event.endAt.month)} ${event.endAt.year}';
     _venueController.text = event.venue;
+    // Programmatic fills above aren't edits.
+    _dirty = false;
   }
 
   String _monthName(int m) {
@@ -41,24 +57,34 @@ class _AdminEventPageState extends ConsumerState<AdminEventPage> {
     return months[m - 1];
   }
 
-  void _save() {
+  Future<void> _save() async {
+    if (_saving) return;
     final event = ref.read(eventProvider);
     final updated = event.copyWith(
-      title: _titleController.text,
-      sessionLabel: _sessionController.text,
-      venue: _venueController.text,
+      title: _titleController.text.trim(),
+      sessionLabel: _sessionController.text.trim(),
+      venue: _venueController.text.trim(),
       updatedAt: DateTime.now(),
     );
-    ref.read(eventProvider.notifier).updateEvent(updated);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Event information saved to Firestore!')),
+    setState(() => _saving = true);
+    final ok = await runAdminWrite(
+      context,
+      () => ref.read(eventProvider.notifier).updateEvent(updated),
+      success: 'Event information saved.',
     );
+    if (!mounted) return;
+    setState(() => _saving = false);
+    if (ok) _dirty = false;
   }
 
   @override
   Widget build(BuildContext context) {
-    ref.listen(eventProvider, (_, __) => _loadEvent());
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadEvent());
+    // Refill from the provider when the live event arrives — but never over
+    // the admin's unsaved edits. (This used to re-run on EVERY frame, which
+    // wiped whatever was being typed whenever the page rebuilt.)
+    ref.listen(eventProvider, (_, _) {
+      if (!_dirty) _loadEvent();
+    });
 
     return Scaffold(
       body: SingleChildScrollView(
@@ -138,7 +164,7 @@ class _AdminEventPageState extends ConsumerState<AdminEventPage> {
                     const SizedBox(height: 24),
 
                     ElevatedButton(
-                      onPressed: _save,
+                      onPressed: _saving ? null : _save,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: DesignSystem.primary,
                         foregroundColor: Colors.white,

@@ -90,12 +90,12 @@ Per PDPA policy, the following student data is **approved for public display**:
 
 | Risk | Status | Rationale |
 |------|--------|-----------|
-| 11 `@fypms.test` demo accounts are **live** with a shared password documented in tracked seed migrations (`20260819000001`, `20260822142935`) | **Accepted** | Accounts are kept for development testing only. **Must be disabled or password-rotated before any real student data enters the project.** |
+| 11 `@fypms.test` demo accounts — **including an admin** — share one password that is written in tracked seed migrations (`20260819000001`, `20260822142935`) and docs | **NOT acceptable — action required** | The GitHub repository is **public**, so anyone can read that password and sign in as admin. Disable these accounts or change their passwords in the Supabase dashboard (Authentication → Users) **now**, not "before production". Code changes can't fix this: the password is already in git history. |
 | Anon key committed in `.env.example` | Accepted | Anon keys are publishable by design; RLS is the control. Rotate after initial release (checklist item below). |
 
 ## Security Audit Checklist
 
-- [x] All 42 tables have RLS enabled
+- [x] All 42 tables **defined in this repo's migrations** have RLS enabled (the live project also holds objects from an unrelated template that no migration creates — check those in the dashboard)
 - [x] Default deny (no blanket allow policies)
 - [x] Anonymous access restricted to published public data
 - [x] Lecturer visit mutations go through RPC functions
@@ -129,3 +129,40 @@ Applied via `supabase/migrations/20260901000001..3_security_hardening*.sql`:
   function from the populate_projects scratch migrations
 - **Anon EXECUTE revoked** on all mutating RPCs; RLS-policy-referenced
   helpers (read-only booleans, false for anon) intentionally keep anon grants
+
+## Security Hardening, part 2 (September 2026 audit)
+
+Applied via `supabase/migrations/20260925000001_audit_2_hardening.sql`
+(verified on a local stack with a role-by-role SQL suite):
+
+- **Student direct INSERTs removed** on supervision requests, progress logs,
+  form submissions, report submissions and deliverables. The old policies
+  only checked "is this the student's record", so a student could insert a
+  report with `status = 'approved'` or a progress log `validated` by a
+  forged `validated_by`. Every legitimate write already goes through a
+  SECURITY DEFINER `submit_*` RPC — so "all edits flow through audited
+  RPCs" is now actually true for inserts as well as updates.
+- **Course offerings** can only be created by admins/coordinators. Any
+  signed-in user could previously create an offering naming themselves as
+  lecturer and so read every record and private file for that
+  semester+course.
+- **Coordinators can't grant the coordinator role** (only admins can).
+- **FYP record lineage**: `previous_record_id` must belong to the same
+  student (trigger).
+- **Submitted files are immutable for students**: a student can no longer
+  overwrite or delete a storage object once a report/deliverable row
+  references it.
+- **Anonymous feedback** can no longer set `status`, `admin_note` or claim a
+  `submitted_by`; a coarse site-wide throttle (30/minute) blocks scripted
+  floods. Feedback CSV export neutralises spreadsheet formulas.
+- **Imports** are staged atomically (`stage_import`), `uploaded_by` is taken
+  from the session, and a publish can't be replayed.
+- **Web shell**: a Content-Security-Policy meta tag (no inline scripts) and
+  anti-framing for `/admin`, `/lecturer`, `/fypms` (GitHub Pages can't send
+  `frame-ancestors`/`X-Frame-Options` headers, so it's done in
+  `flutter_bootstrap.js`).
+- **CI**: third-party actions pinned to commit SHAs; Flutter version pinned.
+
+Still open (need a decision or dashboard access, not code): rotate the demo
+accounts above; confirm Auth self-signup is disabled if only staff-created
+accounts should exist; review the non-repo objects on the live project.

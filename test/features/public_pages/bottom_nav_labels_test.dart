@@ -12,7 +12,7 @@ import 'package:fyp_expo_hub/core/supabase/supabase_client_provider.dart';
 /// 'Visits') and this test locks in single-line centering at 390px, plus
 /// even smaller 320px screens.
 void main() {
-  Future<void> _pumpShell(WidgetTester tester, Size size) async {
+  Future<void> pumpShell(WidgetTester tester, Size size) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -23,7 +23,7 @@ void main() {
       routes: [
         GoRoute(
           path: '/',
-          builder: (_, __) => const PublicShell(child: SizedBox.shrink()),
+          builder: (_, _) => const PublicShell(child: SizedBox.shrink()),
         ),
       ],
     );
@@ -49,7 +49,7 @@ void main() {
 
   /// Asserts every NavigationBar label is a single-line Text centered in
   /// its destination slot (same top/bottom as its siblings).
-  void _expectSingleLineCentered(WidgetTester tester, Size viewport) {
+  void expectSingleLineCentered(WidgetTester tester, Size viewport) {
     final barRect = tester.getRect(find.byType(NavigationBar).first);
     final labels = ['Home', 'Map', 'Guide', 'Visits', 'Menu'];
     final slotWidth = barRect.width / labels.length;
@@ -82,12 +82,12 @@ void main() {
 
   testWidgets('bottom nav labels single-line and centered at 390px',
       (tester) async {
-    await _pumpShell(tester, const Size(390, 844));
-    _expectSingleLineCentered(tester, const Size(390, 844));
+    await pumpShell(tester, const Size(390, 844));
+    expectSingleLineCentered(tester, const Size(390, 844));
   });
 
   testWidgets('bottom nav labels single-line and centered at 320px', (tester) async {
-    await _pumpShell(tester, const Size(320, 568));
+    await pumpShell(tester, const Size(320, 568));
 
     // Below 360px the bar switches to icons-only (Material pattern) so no
     // label can wrap or clip. Verify labels are hidden and the bar renders.

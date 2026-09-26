@@ -1,32 +1,40 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/offline_fallback.dart';
 import '../../domain/models/project.dart';
-import '../../utils/fypms_key_normalizer.dart' show normalizeKeys;
+import '../../supabase/row_mappers.dart';
 import '../../utils/logger.dart';
 import '../../widgets/project_cover_image.dart';
+import 'optimistic_list.dart';
 import 'service_providers.dart';
 
 // ==========================================
 // PROJECTS STATE
 // ==========================================
-class ProjectsNotifier extends Notifier<List<Project>> {
+class ProjectsNotifier extends Notifier<List<Project>>
+    with OptimisticList<Project> {
   ProjectsNotifier({this.publishedOnly = false});
 
   final bool publishedOnly;
 
+  /// One malformed row is skipped (and logged) rather than failing the whole
+  /// list, which used to leave the page stuck on bundled data.
   List<Project> _parseProjects(List<Map<String, dynamic>> dataList) {
-    return dataList.map((m) {
-      final norm = normalizeKeys(m);
-      final project = Project.fromJson(norm);
-      // Placeholder rows keep an EMPTY cover url — ProjectCoverImage then
-      // renders its deterministic generated gradient cover locally
-      // (no third-party placehold.co requests).
-      if (project.coverImageUrl == 'assets/images/project_placeholder.jpg' ||
-          ProjectCoverImage.isPlaceholderUrl(project.coverImageUrl)) {
-        return project.copyWith(coverImageUrl: '');
+    final out = <Project>[];
+    for (final m in dataList) {
+      try {
+        final project = projectFromRow(m);
+        // Placeholder rows keep an EMPTY cover url — ProjectCoverImage then
+        // renders its deterministic generated gradient cover locally
+        // (no third-party placehold.co requests).
+        out.add(project.coverImageUrl == 'assets/images/project_placeholder.jpg' ||
+                ProjectCoverImage.isPlaceholderUrl(project.coverImageUrl)
+            ? project.copyWith(coverImageUrl: '')
+            : project);
+      } catch (e) {
+        logDebug('Skipping unparseable project row ${m['id']}: $e');
       }
-      return project;
-    }).toList();
+    }
+    return out;
   }
 
   @override
@@ -47,20 +55,27 @@ class ProjectsNotifier extends Notifier<List<Project>> {
     final remote = _fetchRemote().catchError(
       (Object e) => <Map<String, dynamic>>[],
     );
-    try {
-      final data = await OfflineFallback.load();
-      final fallback = _parseProjects(data['projects'] ?? const []);
-      if (state.isEmpty && fallback.isNotEmpty) {
-        state = fallback;
+    // Admin lists skip the bundled fallback: its rows have no database
+    // counterpart (non-uuid ids), so every edit to one would fail.
+    if (publishedOnly) {
+      try {
+        final data = await OfflineFallback.load();
+        final fallback = _parseProjects(data['projects'] ?? const []);
+        if (state.isEmpty && fallback.isNotEmpty) {
+          state = fallback;
+        }
+      } catch (e) {
+        logDebug('Projects fallback asset warning: $e');
       }
-    } catch (e) {
-      logDebug('Projects fallback asset warning: $e');
     }
     try {
-      final data = await remote;
-      if (data.isNotEmpty) {
-        state = _parseProjects(data);
-      }
+      var first = true;
+      await loadRemote(() async {
+        final data = first ? await remote : await _fetchRemote();
+        first = false;
+        // Empty remote: keep the bundled fallback that's already showing.
+        return data.isEmpty ? null : _parseProjects(data);
+      });
     } catch (e) {
       logDebug('Projects load from Supabase warning: $e');
     }
@@ -82,26 +97,39 @@ class ProjectsNotifier extends Notifier<List<Project>> {
     }
   }
 
-  void addProject(Project project) {
-    state = [...state, project];
-    ref.read(supabaseDbServiceProvider).setProject(project.id, project.toJson());
+  Future<void> _save(Project p) async {
+    final db = ref.read(supabaseDbServiceProvider);
+    final eventId = await db.resolveEventId(p.eventId);
+    await db.setProject(p.id, projectToRow(p, eventId: eventId));
+    _refreshPublic();
   }
 
-  void updateProject(Project updated) {
+  /// The public list is a separate notifier instance; reload it so an
+  /// admin's change shows on public pages in the same session.
+  void _refreshPublic() {
+    if (!publishedOnly) ref.invalidate(publicProjectsProvider);
+  }
+
+  Future<void> addProject(Project project) =>
+      commit([...state, project], () => _save(project));
+
+  Future<void> updateProject(Project updated) {
     final data = updated.copyWith(updatedAt: DateTime.now());
-    state = [
-      for (final p in state)
-        if (p.id == updated.id) data else p,
-    ];
-    ref.read(supabaseDbServiceProvider).setProject(updated.id, data.toJson());
+    return commit(
+      [for (final p in state) if (p.id == updated.id) data else p],
+      () => _save(data),
+    );
   }
 
-  void deleteProject(String id) {
-    state = state.where((p) => p.id != id).toList();
-    ref.read(supabaseDbServiceProvider).deleteProject(id);
-  }
+  Future<void> deleteProject(String id) => commit(
+        state.where((p) => p.id != id).toList(),
+        () async {
+          await ref.read(supabaseDbServiceProvider).deleteProject(id);
+          _refreshPublic();
+        },
+      );
 
-  void togglePublishStatus(String id) {
+  Future<void> togglePublishStatus(String id) async {
     final idx = state.indexWhere((p) => p.id == id);
     if (idx == -1) return;
     final p = state[idx];
@@ -110,11 +138,10 @@ class ProjectsNotifier extends Notifier<List<Project>> {
       publishedAt: p.publicationStatus != 'published' ? DateTime.now() : null,
       updatedAt: DateTime.now(),
     );
-    state = [
-      for (final item in state)
-        if (item.id == id) toggled else item,
-    ];
-    ref.read(supabaseDbServiceProvider).setProject(id, toggled.toJson());
+    await commit(
+      [for (final item in state) if (item.id == id) toggled else item],
+      () => _save(toggled),
+    );
   }
 }
 

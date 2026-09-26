@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'user_scope.dart';
 import '../../domain/models/fypms/fyp_audit_log.dart';
 import '../../domain/models/fypms/fyp_presentation_session.dart';
 import '../../domain/models/fypms/fyp_presentation_slot.dart';
@@ -14,6 +15,7 @@ import '../expo/service_providers.dart';
 
 /// Active student profiles with programme codes (via SECURITY DEFINER RPC).
 final fypStudentsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  ref.watch(fypmsUserScopeProvider);
   final rpc = ref.watch(supabaseRpcServiceProvider);
   return rpc.listFypStudents();
 });
@@ -21,6 +23,7 @@ final fypStudentsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) asy
 /// Active staff profiles for the given academic roles (via SECURITY DEFINER RPC).
 final fypStaffProvider =
     FutureProvider.family<List<Map<String, dynamic>>, List<String>>((ref, roles) async {
+  ref.watch(fypmsUserScopeProvider);
   final rpc = ref.watch(supabaseRpcServiceProvider);
   return rpc.listFypStaff(roleCodes: roles);
 });
@@ -29,6 +32,7 @@ final fypStaffProvider =
 /// supervision-request picker (via SECURITY DEFINER RPC; no emails).
 final supervisorsDirectoryProvider =
     FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  ref.watch(fypmsUserScopeProvider);
   final rpc = ref.watch(supabaseRpcServiceProvider);
   return rpc.listSupervisorsPublic();
 });
@@ -36,6 +40,7 @@ final supervisorsDirectoryProvider =
 /// Pending supervision requests across all records (coordinator view).
 final fypPendingSupervisionRequestsProvider =
     FutureProvider<List<FypSupervisionRequest>>((ref) async {
+  ref.watch(fypmsUserScopeProvider);
   final db = ref.watch(supabaseDbServiceProvider);
   final data = await db.getPendingSupervisionRequestsOnce();
   return data
@@ -46,6 +51,7 @@ final fypPendingSupervisionRequestsProvider =
 /// Presentation sessions (coordinator view).
 final fypPresentationSessionsProvider =
     FutureProvider<List<FypPresentationSession>>((ref) async {
+  ref.watch(fypmsUserScopeProvider);
   final db = ref.watch(supabaseDbServiceProvider);
   final data = await db.getPresentationSessionsOnce();
   return data
@@ -56,6 +62,7 @@ final fypPresentationSessionsProvider =
 /// Presentation slots for a session.
 final fypPresentationSlotsProvider =
     FutureProvider.family<List<FypPresentationSlot>, String>((ref, sessionId) async {
+  ref.watch(fypmsUserScopeProvider);
   final db = ref.watch(supabaseDbServiceProvider);
   final data = await db.getPresentationSlotsForSessionOnce(sessionId);
   return data
@@ -65,6 +72,7 @@ final fypPresentationSlotsProvider =
 
 /// Audit logs (read-only; coordinator/admin).
 final fypAuditLogsProvider = FutureProvider<List<FypAuditLog>>((ref) async {
+  ref.watch(fypmsUserScopeProvider);
   final db = ref.watch(supabaseDbServiceProvider);
   final data = await db.getFypAuditLogsOnce();
   return data.map((m) => FypAuditLog.fromJson(normalizeFypmsKeys(m))).toList();
@@ -72,6 +80,7 @@ final fypAuditLogsProvider = FutureProvider<List<FypAuditLog>>((ref) async {
 
 /// Published events (targets for expo publication).
 final fypPublishedEventsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  ref.watch(fypmsUserScopeProvider);
   final db = ref.watch(supabaseDbServiceProvider);
   return db.getPublishedEventsOnce();
 });

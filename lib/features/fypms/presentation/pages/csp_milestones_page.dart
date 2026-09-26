@@ -58,7 +58,7 @@ class _CspMilestonesPageState extends ConsumerState<CspMilestonesPage> {
                     Text('Record: ', style: DesignSystem.bodyMd),
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        value: selected.id,
+                        initialValue: selected.id,
                         isExpanded: true,
                         decoration: const InputDecoration(
                           isDense: true,
@@ -123,13 +123,14 @@ class _MilestonesList extends ConsumerWidget {
               if (list.isEmpty) {
                 return const Center(child: Text('No milestones defined.'));
               }
-              return ListView(
+              return ListView.builder(
                 padding: const EdgeInsets.symmetric(
                   horizontal: DesignSystem.gutter,
                 ),
-                children: [
-                  for (final m in list)
-                    Card(
+                itemCount: list.length,
+                itemBuilder: (context, itemIndex) {
+                  final m = list[itemIndex];
+                    return Card(
                       elevation: 1,
                       margin: const EdgeInsets.only(
                         bottom: DesignSystem.spaceMd,
@@ -169,8 +170,8 @@ class _MilestonesList extends ConsumerWidget {
                           ],
                         ),
                       ),
-                    ),
-                ],
+                    );
+                },
               );
             },
           ),
@@ -246,8 +247,9 @@ class _MilestonesList extends ConsumerWidget {
                             firstDate: DateTime(2020),
                             lastDate: DateTime(2100),
                           );
-                          if (picked != null)
+                          if (picked != null) {
                             setState(() => selectedDate = picked);
+                          }
                         },
                       ),
                     ),
@@ -301,8 +303,9 @@ class _MilestonesList extends ConsumerWidget {
                               targetDate: selectedDate,
                               status: status,
                             );
-                            if (dialogContext.mounted)
+                            if (dialogContext.mounted) {
                               Navigator.pop(dialogContext);
+                            }
                             ref.invalidate(fypMilestonesProvider(recordId));
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../app/router_title_io.dart'
     if (dart.library.js_interop) '../app/router_title_web.dart';
 import '../app/theme/theme.dart';
+import '../core/supabase/supabase_client_provider.dart' show currentAuthUserProvider;
 import 'router_guards.dart';
 import '../features/fypms/presentation/pages/csp_dashboard_page.dart';
 import '../features/fypms/presentation/pages/csp_marks_page.dart';
@@ -67,13 +68,25 @@ import '../features/public_projects/presentation/pages/project_detail_page.dart'
 import '../features/public_projects/presentation/pages/projects_page.dart';
 import '../features/public_schedule/presentation/pages/schedule_page.dart';
 import '../features/junior_project_guide/presentation/pages/junior_project_browser_page.dart';
+import '../features/junior_project_guide/presentation/pages/similar_projects_page.dart';
 import 'widgets/admin_shell.dart';
 import 'widgets/fypms_shell.dart';
 import 'widgets/public_shell.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
+  // Re-run the redirect guards whenever the signed-in user changes —
+  // sign-in, sign-out, or an expired session — instead of only on the next
+  // navigation (a user whose session ended could otherwise stay on an
+  // admin page).
+  final authChanges = ValueNotifier<int>(0);
+  ref.listen(currentAuthUserProvider.select((u) => u?.id), (_, _) {
+    authChanges.value++;
+  });
+  ref.onDispose(authChanges.dispose);
+
   return GoRouter(
     initialLocation: '/',
+    refreshListenable: authChanges,
     observers: [RouteTitleObserver()],
     // Branded 404 for unknown URLs.
     errorPageBuilder: (context, state) => MaterialPage(
@@ -105,6 +118,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/projects/junior-guide',
             builder: (context, state) => const JuniorProjectBrowserPage(),
+            routes: [
+              GoRoute(
+                path: 'similar/:projectId',
+                builder: (context, state) => SimilarProjectsPage(
+                  projectId: state.pathParameters['projectId'] ?? '',
+                ),
+              ),
+            ],
           ),
           GoRoute(
             path: '/booths',

@@ -94,6 +94,17 @@ void main() {
       expect(escapeCsv('say "hi"'), '"say ""hi"""');
     });
 
+    test('escapeCsv neutralises spreadsheet formulas (CSV injection)', () {
+      expect(escapeCsv('=1+1'), "'=1+1");
+      expect(escapeCsv('+cmd'), "'+cmd");
+      expect(escapeCsv('-2'), "'-2");
+      expect(escapeCsv('@SUM(A1)'), "'@SUM(A1)");
+      // Still quoted when it also contains CSV-special characters.
+      expect(escapeCsv('=HYPERLINK("x","y")'), '"\'=HYPERLINK(""x"",""y"")"');
+      // Only a LEADING trigger matters.
+      expect(escapeCsv('a=b'), 'a=b');
+    });
+
     test('escapeCsv quotes strings with newlines', () {
       expect(escapeCsv('line1\nline2'), '"line1\nline2"');
     });

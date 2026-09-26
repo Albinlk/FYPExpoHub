@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/project.dart';
+import '../../domain/csp600_csv_loader.dart';
 import '../../domain/project_similarity.dart';
 
 class ProjectRowWidget extends ConsumerWidget {
@@ -43,7 +44,11 @@ class ProjectRowWidget extends ConsumerWidget {
         : DesignSystem.surfaceContainerLowest;
 
     return InkWell(
-      onTap: () => context.go('/projects/${project.slug}'),
+      // CSP600 proposals have no detail page (they only exist in the CSV),
+      // so their rows aren't links to a "Project not found" screen.
+      onTap: Csp600CsvLoader.isCsp600(project)
+          ? null
+          : () => context.go('/projects/${project.slug}'),
       borderRadius: DesignSystem.radiusLg,
       child: Container(
         decoration: BoxDecoration(
