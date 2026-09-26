@@ -48,8 +48,8 @@ The initial schema (19 tables) uses minimal space:
    candidate rows are stored, keeping storage usage minimal.
 2. **Pagination** — All frontend queries use `LIMIT/OFFSET` to avoid loading
    all records at once.
-3. **Selective Realtime** — Only subscribes to announcements and visit updates,
-   not all tables.
+3. **Selective Realtime** — Only the 5 FYPMS workflow tables, and only while
+   an FYPMS page is open; Expo pages use one-shot reads.
 4. **Indexed queries** — All frequently-queried fields have composite indexes
    to minimize database load.
 5. **Public CDN** — Project images and static assets served via external
@@ -70,9 +70,11 @@ The initial schema (19 tables) uses minimal space:
 
 Free-tier Supabase projects are **paused** after 7 days of inactivity and
 **deleted** after 90 days. When paused:
-- The Flutter Web app shows a maintenance dialog instead of crashing
+- The Flutter Web app does not crash: public pages show the bundled
+  offline dataset under an offline banner (or an error with Retry)
 - All data and schema are preserved
 - The project can be resumed from the Supabase dashboard
 
-See `lib/app/widgets/public_shell.dart` for the paused-project handling
+See `lib/core/state/expo/load_status.dart` and
+`lib/core/widgets/public_load_state.dart` for the paused-project handling
 logic.

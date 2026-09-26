@@ -7,8 +7,8 @@
 
 ## Scope
 
-The database contains **42 tables**: the **19 Expo Hub tables** documented
-in detail below, plus **23 FYPMS tables** (see the addendum at the end and
+The database contains **44 tables**: the **19 Expo Hub tables** documented
+in detail below, plus **25 FYPMS tables** (see the addendum at the end and
 the source of truth in `supabase/migrations/`).
 
 > **Note:** The live project also carries a small number of tables from an
@@ -143,7 +143,7 @@ FYP projects exhibited at the event.
 - `unique (event_id, project_id, lecturer_id, role)` on lecturer_assignments
 - `unique (event_id, project_id, lecturer_id, visit_role)` on student_project_visits
 
-## FYPMS Tables (23) — Summary
+## FYPMS Tables (25) — Summary
 
 Detailed DDL lives in `supabase/migrations/20260817000001_fypms_core_tables.sql`
 (+ additive migrations). All have RLS and `updated_at` triggers.
@@ -151,17 +151,19 @@ Detailed DDL lives in `supabase/migrations/20260817000001_fypms_core_tables.sql`
 | Table | Purpose | Key columns / relations |
 |-------|---------|------------------------|
 | `fyp_records` | Central FYP entity | `student_id → profiles`, `academic_semester_id`, `current_course_code` (CSP600/CSP650), `main_supervisor_id` / `co_supervisor_id` / `examiner_id`, `workflow_status` (17 states), unique per (semester, student, course) |
-| `fyp_record_assignments` | Parallel assignment rows | `fyp_record_id`, `lecturer_id`, `academic_role` (supervisor/co_supervisor/examiner), `is_active` |
+| `fyp_record_assignments` | Parallel assignment rows | `fyp_record_id`, `lecturer_id`, `academic_role` (supervisor/co_supervisor/examiner), `is_active`; PU approval `pu_status` (pending/approved/rejected, set pending by trigger once the programme has a PU), `pu_decided_by`, `pu_decided_at`, `pu_comment` (`20260927000003`) |
 | `academic_semesters` | Semester reference | `code`, `status` (planned/active/completed/archived) |
 | `academic_courses` | Course reference | `code` (CSP600/CSP650), `stage` (formulation/project) |
 | `fyp_course_offerings` | Who teaches what, when | (semester, course, `lecturer_id`), `is_active`, `max_students` |
-| `profile_academic_roles` | FYPMS role grants | (profile, `role_code` in 7 values, `programme_code`), `is_active` |
-| `fyp_supervision_requests` | F1 requests | record FK, `preferred_supervisor_id`, status pending/approved/rejected/withdrawn |
-| `fyp_progress_logs` | F5 weekly logs | record FK, `week_number` (unique per record), status draft/submitted/validated/rejected |
+| `profile_academic_roles` | FYPMS role grants | (profile, `role_code` in 8 values incl. `programme_head` (PU), `programme_code`), `is_active` |
+| `fyp_supervision_requests` | F1 requests | record FK, `preferred_supervisor_id`, `preferred_co_supervisor_id`, `project_area`, `project_title`, status pending/approved/rejected/withdrawn |
+| `fyp_supervisor_change_requests` | Supervisor change via the coordinator | record FK, `requested_by`, `current_supervisor_id`, `proposed_supervisor_id`, `reason`, status pending/approved/rejected (one pending per record), decision fields (`20260927000003`) |
+| `fyp_progress_logs` | F5 consultation log | record FK, one entry per meeting (`progress_date` unique per record; week derived from the semester start), status draft/submitted/validated/rejected |
 | `fyp_form_submissions` | F1–F16 form payloads | record FK, `form_code` CHECK, `form_version`, `payload jsonb` |
 | `fyp_form_evaluations` | Rubric scoring | submission FK + `evaluator_id` (unique pair), `criteria_scores jsonb`, server-computed `weighted_total` |
 | `fyp_rubric_templates` | Versioned rubrics | `criteria jsonb`, versioned |
-| `fyp_report_submissions` | Proposal/final reports | record FK, `report_type`, `version`, `file_url`, `similarity_index` |
+| `fyp_report_submissions` | Proposal/final reports (F6) | record FK, `report_type`, `version`, `file_url`, `similarity_index` (≤ 30), `plagiarism_report_url`, `endorsed_by/at`, `page_count`, `reference_count`, `academic_reference_count`, `involves_human_subjects`, `ethics_form_url` (REC) |
+| `fyp_special_evaluations` | F14 qualification per record | record PK, `progress_lmc_marks`, `chapters_complete`, `presented_at_exhibition`, `final_semester_courses_passed`, `eligible`, `assessed_by/at` — written only by `assess_special_evaluation` (`20260926000010`) |
 | `fyp_deliverables` | Typed checklist | record FK, `deliverable_type`, versioned |
 | `fyp_lean_canvases` | F13 canvases | record FK, `canvas_version`, `is_latest` |
 | `fyp_correction_items` | Corrections | record FK, auto `CORR-xxxxxxxx`, severity minor/major, status open→…→closed |

@@ -22,7 +22,7 @@ The architecture is feature-first with a layered service abstraction.
 │                  Supabase Cloud                │
 │  ┌──────────────┐  ┌────────────────────┐      │
 │  │ Supabase Auth│  │ Supabase Postgres  │      │
-│  │  (Auth UID)  │  │  42 tables + RLS   │      │
+│  │  (Auth UID)  │  │  44 tables + RLS   │      │
 │  └──────────────┘  └─────────┬──────────┘      │
 │                              │                 │
 │                    Realtime invalidation       │
@@ -45,9 +45,9 @@ The architecture is feature-first with a layered service abstraction.
 - **Pattern**: `Notifier` (Expo CRUD) + `FutureProvider` / `.family`
   (FYPMS reads) + callable-provider wrappers for mutations
 - **Files**:
-  - `lib/core/state/state_providers.dart` — Expo: event, projects, schedule,
-    booths, announcements, awards, imports, feedback, lecturer auth,
-    assignments, visits
+  - `lib/core/state/state_providers.dart` — barrel over `expo/*_providers.dart`
+    (Expo: event, projects, schedule, booths, announcements, awards, imports,
+    feedback, lecturer auth, assignments, visits, plus `load_status.dart`)
   - `lib/core/state/fypms_state_providers.dart` — FYPMS: role resolution,
     records, forms, logs, corrections, marks, presentations, publications,
     audit; realtime bridge provider
@@ -71,7 +71,8 @@ The architecture is feature-first with a layered service abstraction.
 - `supabase_client_provider.dart` — client + auth state + role providers
 - Expo: `supabase_database_service.dart` (table CRUD),
   `supabase_rpc_service.dart` (visits/import/event RPCs),
-  `supabase_realtime_service.dart` (announcements/visits channels),
+  `supabase_realtime_service.dart` (channel helper; its announcements/visits
+  channels are not wired — only the FYPMS bridge uses it),
   `supabase_storage_service.dart`, `supabase_auth_service.dart`
 - FYPMS: `fypms_database_service.dart` (read-only!),
   `fypms_rpc_service.dart` (~25 RPCs), `fypms_realtime_service.dart`
@@ -83,33 +84,46 @@ One-shot fetches + Realtime-driven invalidation (not full-table streams):
 final data = await db.getFypRecordsOnce();          // read
 ref.invalidate(fypRecordsProvider);                // after changes / realtime
 ```
-Realtime channels watch announcements, student visits, and the 5 live FYPMS
-workflow tables (supervision requests, progress logs, form submissions,
-correction items, expo publications).
+Realtime channels watch the 5 live FYPMS workflow tables (supervision
+requests, progress logs, form submissions, correction items, expo
+publications) while `FypmsShell` is mounted. Expo announcements and visits
+are not subscribed; they refresh by refetch-after-mutation.
 
 #### 4.3 Offline Fallback (Expo)
-- **Seed data**: `lib/core/data/ExcelData` (bundled, 376 projects)
+- **Seed data**: `assets/data/offline_fallback.json` (bundled asset: 387
+  projects, 221 booths, 8 schedule items), read once per session by
+  `OfflineFallback` (`lib/core/data/offline_fallback.dart`)
 - **Generated covers**: rows without a real `cover_image_url` render a
   deterministic local cover (`ProjectCoverImage`: 12 palettes × category
   icon × title initials × title-hash geometry) — zero network requests,
   unique per project
-- **Pattern**: Providers seed with offline data, then swap when Supabase
-  responds; a maintenance dialog shows if the backend is unreachable
+- **Pattern**: the public projects, booths and schedule notifiers start the
+  Supabase request and load the fallback asset **alongside** it (not before
+  it). The fallback fills state only if nothing has arrived yet; live rows
+  replace it as soon as they come back (an empty live answer keeps the
+  fallback showing). Admin lists never use the fallback.
+- **Load status** (G-31, `lib/core/state/expo/load_status.dart`): each public
+  dataset (projects, booths, schedule, announcements, awards) reports a
+  `DataLoadStatus` — `loading` (nothing confirmed yet), `live` (the server
+  answered, possibly with no rows), `offline` (server unreachable, bundled
+  data showing) or `failed` (server unreachable, nothing to show).
+  `lib/core/widgets/public_load_state.dart` turns this into a spinner, an
+  error with Retry, or an offline banner with Retry over the saved data.
 
 ### 5. Backend Layer
 
-#### 5.1 Supabase Postgres (42 tables)
+#### 5.1 Supabase Postgres (44 tables)
 | Category | Tables |
 |----------|--------|
 | Expo public (published-only reads) | events, projects, schedule_items, booths, announcements, award_categories, award_winners |
 | Expo admin/tracking | profiles, imports + 5 import_* staging, audit_logs, settings, lecturer_assignments, student_project_visits, feedback_entries |
 | FYPMS core | fyp_records, fyp_record_assignments |
 | FYPMS reference | academic_semesters, academic_courses, fyp_course_offerings, profile_academic_roles |
-| FYPMS per-record | fyp_supervision_requests, fyp_progress_logs, fyp_form_submissions, fyp_form_evaluations, fyp_rubric_templates, fyp_report_submissions, fyp_deliverables, fyp_lean_canvases, fyp_correction_items, fyp_correction_confirmations, fyp_milestones, fyp_milestone_extensions, fyp_marks_summaries, fyp_presentation_sessions, fyp_presentation_slots |
+| FYPMS per-record | fyp_supervision_requests, fyp_supervisor_change_requests, fyp_special_evaluations, fyp_progress_logs, fyp_form_submissions, fyp_form_evaluations, fyp_rubric_templates, fyp_report_submissions, fyp_deliverables, fyp_lean_canvases, fyp_correction_items, fyp_correction_confirmations, fyp_milestones, fyp_milestone_extensions, fyp_marks_summaries, fyp_presentation_sessions, fyp_presentation_slots |
 | FYPMS bridge/audit | fyp_expo_publications, fyp_audit_logs |
 
 #### 5.2 Security (RLS)
-- All 42 tables have RLS enabled; ~119 policies
+- All 44 tables have RLS enabled; ~119 policies
 - ~55 functions: read-only helpers (`can_read_fyp_record`, `is_csp_lecturer`,
   ...) backing policies, plus ~30 SECURITY DEFINER RPCs for mutations
 - All SECURITY DEFINER functions pin `search_path`
@@ -139,7 +153,7 @@ All critical mutations go through audited SECURITY DEFINER functions:
 | Target | Service | Purpose |
 |--------|---------|---------|
 | `fskmjasinfypexhibition.site` | GitHub Pages | Public-facing site |
-| `admin.fskmjasinfypexhibition.site` | GitHub Pages | Admin CMS |
+| `admin.fskmjasinfypexhibition.site` | Cloudflare Redirect Rule (302) | Shortcut to the Admin CMS at `fskmjasinfypexhibition.site/admin` (see DEPLOYMENT.md) |
 | `siedglubjcedkbrpdzgi.supabase.co` | Supabase | Backend (DB + Auth + Storage) |
 
 ## Key Design Decisions
@@ -158,12 +172,12 @@ policies were removed in the September 2026 hardening.
 ### 3. Read + Invalidate over Streaming
 Providers use one-shot reads and refresh via realtime invalidation channels
 (a multiplexed FYPMS channel saves WebSocket connections) with refetch-after-
-mutation as fallback. The bundled `ExcelData` dataset guarantees the public
-site renders even when Supabase is paused.
+mutation as fallback. The bundled `offline_fallback.json` dataset guarantees
+the public site renders even when Supabase is paused.
 
 ### 4. RBAC via Database Roles
 Expo roles live in `profiles.role`; FYPMS roles in `profile_academic_roles`
-(7 role codes). Client role checks only gate the UI — every RPC and RLS
+(8 role codes, incl. `programme_head` for PU approval of nominations). Client role checks only gate the UI — every RPC and RLS
 policy re-validates server-side.
 
 ### 5. Defense-in-Depth Storage

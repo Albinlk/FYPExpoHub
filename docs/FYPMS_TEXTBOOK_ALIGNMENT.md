@@ -3,9 +3,9 @@
 | Item | Value |
 |---|---|
 | Reference | *Essentials of Computing Sciences: Project Administration*, 4th Edition, eds. Norjansalika Janom & Zolidah Kasiran, FSKM UiTM, 2022 (ISBN 978-967-0171-50-0) — "FYP Text Book" |
-| Compared against | FYPMS on `main` @ `f7dae99c` (migrations, RPCs, `lib/features/fypms/`) |
-| Date | 2026-09-26 |
-| Verdict | **Partially aligned.** The form catalogue (F1–F16), the CSP600 → CSP650 lineage, the Lean Canvas and the correction flow match. The rubrics, marks weighting, who-evaluates-what, and several form fields do **not** match the textbook. |
+| Compared against | FYPMS on `main` @ `f7dae99c` (migrations, RPCs, `lib/features/fypms/`) — original audit; statuses below updated for `main` @ `3b9e6c95` |
+| Date | 2026-09-26 (audit) · 2026-09-27 (status update: R1–R11 implemented and live in production) |
+| Verdict | **Aligned in 25 of 28 areas** after R1–R11. Rubrics, marks weighting, who-evaluates-what, F1, F5, F6, F10, F14, deliverables, report minimums, REC, PU approval, supervisor change and RES export now follow the textbook. Three areas remain partially aligned (A19 examiner assignment UI, A20 presentation session types, A26 workflow states). *Original verdict (2026-09-26): partially aligned.* |
 
 The textbook is summarised and paraphrased here; weights and percentages are quoted as facts for implementation.
 
@@ -24,7 +24,7 @@ The textbook is summarised and paraphrased here; weights and percentages are quo
 | Project Formulation lecturer (CSP600) | Runs the course; evaluates F2, F3, F4 and F7; signs F5; assigns examiners; records marks in RES | `csp600_lecturer` |
 | Project lecturer (CSP650) | Runs the course; evaluates F9 and F13; distributes F10/F11; collects deliverables; records marks in RES | `csp650_lecturer` |
 | FYP coordinator / resource person | Plans the exhibition and briefs students; may evaluate F9; handles supervisor changes | `fyp_coordinator` |
-| Pengurus Utama (PU) programme | Approves or rejects supervisor/examiner nominations; issues appointment letters | **none** |
+| Pengurus Utama (PU) programme | Approves or rejects supervisor/examiner nominations; issues appointment letters | `programme_head` (since R11 / PR #37; appointment letters are not generated) |
 
 ### 1.2 Forms and who completes them
 
@@ -94,51 +94,51 @@ CSP650 therefore sums to 100 %: F9 10 + F13 5 + F10 30 + F11 CLO1 45 + F11 CLO4 
 |---|---|---|---|---|
 | A1 | Two-course lifecycle | CSP600 (formulation) → CSP650 (project) | `academic_courses` CSP600/CSP650; CSP650 record must continue the student's CSP600 record (lineage trigger) | **Aligned** |
 | A2 | Form catalogue | F1–F16 incl. F6(a)/F6(b) | `form_code` CHECK allows exactly F1–F5, F6a, F6b, F7–F16 | **Aligned** |
-| A3 | F14–F16 special evaluation | Only for qualifying students | Behind `fypms_features.special_evaluation_enabled` (off) | Partially — gate is global, not per-student eligibility |
+| A3 | F14–F16 special evaluation | Only for qualifying students | F14 decided per student in `fyp_special_evaluations`; F15/F16 open only for a qualified record (R8, PR #27) | **Aligned** |
 | A4 | Lean Model Canvas | 9 blocks, evaluated with F13 | 9 blocks, versioned (`save_lean_canvas`) | **Aligned** (the textbook's sub-boxes — existing alternatives, high-level concept, early adopters — are not captured) |
 | A5 | F12 correction confirmation | SV/EX sign after amendments | Correction items → evidence → staff confirm | **Aligned** (FYPMS is more granular) |
-| A6 | F5 in-progress log | One entry **per consultation**: meeting date, completed activity, next activity/comment, SV/co-SV signature | One log **per week** (unique record + week): summary, challenges, next plan; SV validates | Partially — multiple consultations in a week are impossible; no attendance tracking toward the 80 % rule |
-| A7 | F1 mutual acceptance | Supervisor accepts and signs; captures co-supervisor, project area and title | Request with preferred supervisor + rationale; **only an already-assigned supervisor or the coordinator can approve** | **Misaligned** — the preferred supervisor cannot accept their own request; no co-supervisor, project area or title fields |
-| A8 | F2 / F3 / F4 | Student submits; **CSP600 lecturer** evaluates with rubric | Student submits JSON payload; only assigned SV / co-SV / EX may evaluate | **Misaligned** — the CSP600 lecturer cannot evaluate; no F2–F4 rubrics seeded |
-| A9 | F7 | **Presentation** rubric (depth, organisation, materials, delivery; 3/2/2/3); lecturer 10 %, SV 10 %, EX 5 % | Seeded as "Proposal Supervisor Assessment" with **report** criteria (problem 20, literature 20, methodology 30, feasibility 20, writing 10) | **Misaligned** — wrong criteria, wrong weights, lecturer cannot evaluate |
-| A10 | F8 | **Report** rubric, 7 criteria (3/2/1/5/6/3/2), progress item supervisor-only; SV 30 %, EX 15 % | Seeded as "Proposal Examiner Assessment" with 5 criteria incl. "Presentation & Defence" | **Misaligned** |
-| A11 | F9, F10, F11, F13, F15, F16 rubrics | Defined (see 1.3) | **No rubric seeded** → `weighted_total` computes as 0 | **Missing** |
-| A12 | Score scale | 0–10 per criterion × weight | Rubric `max: 100` per criterion; free-form JSON scores typed by hand | **Misaligned** — UI does not load criteria or enforce 0–10 |
-| A13 | Supervisor-only criteria | F8 #7 and F11 #8 are scored by the supervisor only | No per-criterion evaluator restriction | **Missing** |
-| A14 | Evaluator ↔ form mapping | Each form has named evaluators (1.2) | Any assigned SV/co-SV/EX can evaluate any form; coordinators and CSP lecturers cannot evaluate at all | **Misaligned** |
-| A15 | Course marks | Weighted per form and evaluator (1.3); CSP650 = 100 % | `finalize_marks` stores a **plain sum** of typed components, grade always null; no link to evaluations | **Misaligned** |
-| A16 | Similarity index | Recorded on F6(a)/F6(b), ≤ 30 %, supervisor endorsement | `fyp_report_submissions.similarity_index` exists but is never sent by the UI; no 30 % check; no endorsement step | **Missing** |
-| A17 | Report file formats | Final report in .pdf **and** .doc | Report buckets accept PDF/DOC/DOCX, one file per version | Partially |
-| A18 | Deliverables checklist | Report, slides, poster, raw data*, system + test data*, setup instructions, .apk/.exe* | proposal, interim_report, final_report, lean_canvas, project_demo, presentation_deck, project_video, poster | Partially — `interim_report` / `project_video` are not in the book; raw data, setup instructions and executable are missing; items are URL-only |
+| A6 | F5 in-progress log | One entry **per consultation**: meeting date, completed activity, next activity/comment, SV/co-SV signature | One log **per meeting date** (unique record + meeting date), completed / next activity, SV validates; attendance shown against the 80 % rule (R7, PR #22) | **Aligned** |
+| A7 | F1 mutual acceptance | Supervisor accepts and signs; captures co-supervisor, project area and title | The named preferred supervisor accepts or rejects; request carries co-supervisor, project area and title; approval assigns them (R5, PR #19) | **Aligned** |
+| A8 | F2 / F3 / F4 | Student submits; **CSP600 lecturer** evaluates with rubric | Student submits; the course (CSP600) lecturer evaluates with the textbook rubric (R1 PR #15, R2 PR #16) | **Aligned** |
+| A9 | F7 | **Presentation** rubric (depth, organisation, materials, delivery; 3/2/2/3); lecturer 10 %, SV 10 %, EX 5 % | Textbook presentation rubric (3/2/2/3), shares lecturer 10 / SV 10 / EX 5 (R1, PR #15); lecturer may evaluate (R2) | **Aligned** |
+| A10 | F8 | **Report** rubric, 7 criteria (3/2/1/5/6/3/2), progress item supervisor-only; SV 30 %, EX 15 % | Textbook report rubric, 7 criteria, progress item supervisor-only, SV 30 / EX 15 (R1, PR #15) | **Aligned** |
+| A11 | F9, F10, F11, F13, F15, F16 rubrics | Defined (see 1.3) | All seeded from the textbook (R1, PR #15); v1 rubrics retired but kept for history | **Aligned** |
+| A12 | Score scale | 0–10 per criterion × weight | Every criterion 0–10 × weight, out-of-range scores rejected (R1); the scoring dialog renders one 0–10 input per criterion with live Marks = W × S (R3, PR #17) | **Aligned** |
+| A13 | Supervisor-only criteria | F8 #7 and F11 #8 are scored by the supervisor only | `supervisor_only` criteria are left out of an examiner's score (R1, PR #15) | **Aligned** |
+| A14 | Evaluator ↔ form mapping | Each form has named evaluators (1.2) | `submit_form_evaluation` enforces the textbook evaluators per form and stores the evaluator's role (R2, PR #16) | **Aligned** |
+| A15 | Course marks | Weighted per form and evaluator (1.3); CSP650 = 100 % | CSP600/CSP650 totals computed from the evaluations × evaluator shares, grade from UiTM bands; F2–F4 default 10 % each (FSKM decision, coordinator may re-split) (R4, PR #18) | **Aligned** |
+| A16 | Similarity index | Recorded on F6(a)/F6(b), ≤ 30 %, supervisor endorsement | Similarity % and plagiarism report required, > 30 % blocked, supervisor endorse/return step (R6, PR #20) | **Aligned** |
+| A17 | Report file formats | Final report in .pdf **and** .doc | Final report delivered as two required deliverables, `final_report_pdf` and `final_report_doc` (R10, PR #23) | **Aligned** |
+| A18 | Deliverables checklist | Report, slides, poster, raw data*, system + test data*, setup instructions, .apk/.exe* | Textbook types only; report (.pdf + .doc), slides and poster required with real uploads to `fyp-deliverables`; the "if relevant" items may be an https link (R10, PR #23) | **Aligned** |
 | A19 | Examiner assignment | By CSP600 lecturer | Coordinator (UI); CSP lecturer via RLS/RPC (no CSP UI) | Partially |
-| A20 | Presentations | F7 session (CSP600), F9 progress presentation, F10 at exhibition | Sessions `defence` / `expo`; slots scheduled by coordinator; no session-creation UI | Partially |
-| A21 | F14 eligibility | Four checks incl. Progress + LMC ≥ 7.5 % | Not modelled | **Missing** |
-| A22 | PU approval of nominations | PU approves/rejects supervisor & examiner nominations | No PU role or approval step | **Missing** |
-| A23 | Research ethics (REC) | REC forms with proposal when needed | Not modelled | **Missing** |
-| A24 | Report quality thresholds | ≥ 15/30 references, ≥ 30/50 pages | Not captured | **Missing** (could be checklist items on F6) |
-| A25 | Exhibition assessment | SV & EX evaluate presentation, report **and poster** with F10 at the exhibition | Expo "My Visits" records only a timestamp and a note per SV/EX visit | **Opportunity** — the visit is exactly when F10 is scored |
+| A20 | Presentations | F7 session (CSP600), F9 progress presentation, F10 at exhibition | Sessions `defence` / `expo`; lecturers create sessions via the audited `create_presentation_session` (G-25, PR #29); slots scheduled by coordinator; F10 scored from the exhibition visit (R9) | Partially — no separate F9 progress-presentation session type |
+| A21 | F14 eligibility | Four checks incl. Progress + LMC ≥ 7.5 % | Check 1 computed from F9 + F13 evaluations; checks 2–3 suggested from the final report and exhibition visits; lecturer confirms 2–4 per student (R8, PR #27) | **Aligned** |
+| A22 | PU approval of nominations | PU approves/rejects supervisor & examiner nominations | `programme_head` role scoped by programme; once a PU is configured, new nominations stay `pending` until the PU approves, and a rejection deactivates them (R11, PR #37) | **Aligned** (appointment letters not generated) |
+| A23 | Research ethics (REC) | REC forms with proposal when needed | A proposal that involves human subjects must attach the REC form (R11, PR #35) | **Aligned** |
+| A24 | Report quality thresholds | ≥ 15/30 references, ≥ 30/50 pages | Page, reference and academic-reference counts captured on F6; proposal ≥ 30 pages / 15 refs, final ≥ 50 / 30, at least half academic enforced by `submit_report_version` (R11, PR #35) | **Aligned** |
+| A25 | Exhibition assessment | SV & EX evaluate presentation, report **and poster** with F10 at the exhibition | SV/EX score F10 (or F15 when qualified) from the Expo visit page via `get_exhibition_evaluation` (R9, PR #28) | **Aligned** |
 | A26 | Workflow states | Proposal submitted → presented → amended → marks → CSP650 → report → exhibition → corrections → approval | 17 statuses exist; only 6 are set by any RPC | Partially |
-| A27 | Supervisor change / termination | Allowed after formulation, via coordinator | No function; `withdrawn` status never set | **Missing** |
-| A28 | RES / archive | Marks uploaded to RES; reports archived by Academic Affairs | `fyp_marks_summaries.export_payload` exists; no export UI | Partially |
+| A27 | Supervisor change / termination | Allowed after formulation, via coordinator | Student or current supervisor requests a change with a reason; the coordinator approves (reassigns) or rejects (R11, PR #37) | **Aligned** (timing left to the coordinator; termination — `withdrawn` — still not set by any RPC) |
+| A28 | RES / archive | Marks uploaded to RES; reports archived by Academic Affairs | CSV export of finalized marks (matric, programme, course, total, grade) for RES on the CSP marks page (R11, PR #36); archiving stays with Academic Affairs | **Aligned** |
 
-**Totals (28 areas):** 4 aligned, 8 partially aligned, 15 misaligned or missing, 1 opportunity.
+**Totals (28 areas, 2026-09-27):** 25 aligned, 3 partially aligned (A19, A20, A26), 0 misaligned or missing, 0 open opportunities. *(Original audit, 2026-09-26: 4 aligned, 8 partially aligned, 15 misaligned or missing, 1 opportunity.)*
 
 ---
 
 ## 3. Recommended changes (priority order)
 
-| # | Change | Fixes | Effort |
-|---|---|---|---|
-| R1 | **Replace the seeded rubrics** with textbook rubrics for F2, F3, F4, F7, F8, F9, F10, F11 (CLO1 + CLO4), F13, F15, F16 — weights as in 1.3, `max: 10` per criterion, `supervisor_only` flag on F8 #7 and F11 #8, and each form's evaluator shares (e.g. F7 `{lecturer:10, supervisor:10, examiner:5}`). New migration; bump `version` so history is kept. | A9–A13 | S |
-| R2 | **Evaluator-to-form mapping** in `submit_form_evaluation`: allow the course CSP lecturer for F2, F3, F4, F7, F9, F13, F14; SV/EX for F7, F8, F10, F11, F15, F16; reject supervisor-only criteria from examiners. | A8, A14 | M |
-| R3 | **Rubric-driven evaluation UI**: load the rubric, render one 0–10 input per criterion with the band descriptors, compute Marks = W × S live — replace the raw-JSON score box. | A12 | M |
-| R4 | **Course marks from evaluations**: compute CSP600/CSP650 totals as Σ (form score ÷ max × evaluator share) using R1's shares; keep manual override with reason; derive the grade from UiTM bands. | A15 | M |
-| R5 | **F1 acceptance by the preferred supervisor**: let the named `preferred_supervisor_id` approve/reject; add co-supervisor, project area and project title fields. | A7 | S |
-| R6 | **F6 similarity index**: require a similarity % and plagiarism-report file on proposal/final submission, block > 30 %, add a supervisor "endorse" step. | A16 | S |
-| R7 | **F5 per consultation**: drop the one-per-week uniqueness in favour of meeting date; store completed activity / next activity; show attendance % against the 80 % rule. | A6 | S |
-| R8 | **F14 eligibility check**: compute Progress (F9) + LMC (F13) ≥ 7.5 % and the other three checks per student; enable F15/F16 per eligible student instead of the global flag. | A3, A21 | M |
-| R9 | **F10 at the exhibition**: let SV/EX score F10 from the Expo visit detail page (the visit already identifies project, lecturer and role). | A25 | M |
-| R10 | **Deliverables list** to match the textbook (report .pdf + .doc, slides, poster, raw data, system + test data, setup instructions, executable) with real uploads to `fyp-deliverables`. | A17, A18 | S |
-| R11 | Model PU approval, REC ethics forms, supervisor change, report thresholds (references/pages) and RES export. | A22–A24, A27, A28 | L |
+| # | Change | Fixes | Effort | Status |
+|---|---|---|---|---|
+| R1 | **Replace the seeded rubrics** with textbook rubrics for F2, F3, F4, F7, F8, F9, F10, F11 (CLO1 + CLO4), F13, F15, F16 — weights as in 1.3, `max: 10` per criterion, `supervisor_only` flag on F8 #7 and F11 #8, and each form's evaluator shares (e.g. F7 `{lecturer:10, supervisor:10, examiner:5}`). New migration; bump `version` so history is kept. | A9–A13 | S | Done — PR #15 (`20260926000001`) |
+| R2 | **Evaluator-to-form mapping** in `submit_form_evaluation`: allow the course CSP lecturer for F2, F3, F4, F7, F9, F13, F14; SV/EX for F7, F8, F10, F11, F15, F16; reject supervisor-only criteria from examiners. | A8, A14 | M | Done — PR #16 (`20260926000002`) |
+| R3 | **Rubric-driven evaluation UI**: load the rubric, render one 0–10 input per criterion with the band descriptors, compute Marks = W × S live — replace the raw-JSON score box. | A12 | M | Done — PR #17 |
+| R4 | **Course marks from evaluations**: compute CSP600/CSP650 totals as Σ (form score ÷ max × evaluator share) using R1's shares; keep manual override with reason; derive the grade from UiTM bands. | A15 | M | Done — PR #18 (`20260926000003`) |
+| R5 | **F1 acceptance by the preferred supervisor**: let the named `preferred_supervisor_id` approve/reject; add co-supervisor, project area and project title fields. | A7 | S | Done — PR #19 (`20260926000004`) |
+| R6 | **F6 similarity index**: require a similarity % and plagiarism-report file on proposal/final submission, block > 30 %, add a supervisor "endorse" step. | A16 | S | Done — PR #20 (`20260926000005`) |
+| R7 | **F5 per consultation**: drop the one-per-week uniqueness in favour of meeting date; store completed activity / next activity; show attendance % against the 80 % rule. | A6 | S | Done — PR #22 (`20260926000006`) |
+| R8 | **F14 eligibility check**: compute Progress (F9) + LMC (F13) ≥ 7.5 % and the other three checks per student; enable F15/F16 per eligible student instead of the global flag. | A3, A21 | M | Done — PR #27 (`20260926000010`) |
+| R9 | **F10 at the exhibition**: let SV/EX score F10 from the Expo visit detail page (the visit already identifies project, lecturer and role). | A25 | M | Done — PR #28 (`20260926000011`) |
+| R10 | **Deliverables list** to match the textbook (report .pdf + .doc, slides, poster, raw data, system + test data, setup instructions, executable) with real uploads to `fyp-deliverables`. | A17, A18 | S | Done — PR #23 (`20260926000007`) |
+| R11 | Model PU approval, REC ethics forms, supervisor change, report thresholds (references/pages) and RES export. | A22–A24, A27, A28 | L | Done — report minimums + REC PR #35 (`20260927000002`); RES export PR #36; supervisor change + PU approval PR #37 (`20260927000003`) |
 
-S = under a day, M = 1–3 days, L = a week or more.
+S = under a day, M = 1–3 days, L = a week or more. All eleven recommendations are implemented and live in production (2026-09-27).

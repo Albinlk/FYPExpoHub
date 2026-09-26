@@ -36,7 +36,7 @@ FYP Expo Hub is a Flutter Web application with two products on one codebase:
   - **For admins** — run a full CMS: event info, schedules, projects, booths, lecturers, announcements, awards, feedback moderation, a "My Visits" monitoring dashboard, and the master-Excel import/staging pipeline.
 - **FYPMS** — the semester-long FYP management system (`/fypms/**`): student, supervisor, examiner, CSP lecturer and coordinator workspaces over FYP records, forms (F1–F16), progress logs, report versions, deliverables, lean canvases, corrections, milestones, marks and presentations, with a bridge that publishes finished records into the public Expo catalogue.
 
-The Expo site reads live from **Supabase Postgres** and ships with a bundled offline/fallback dataset (376 projects) so the public site still renders even if Supabase is paused/unreachable.
+The Expo site reads live from **Supabase Postgres** and ships with a bundled offline/fallback dataset (`assets/data/offline_fallback.json`: 387 projects, 221 booths, 8 schedule items) so the public site still renders even if Supabase is paused/unreachable.
 
 ---
 
@@ -57,15 +57,15 @@ The Expo site reads live from **Supabase Postgres** and ships with a bundled off
 | Service | Purpose |
 |---|---|
 | **Supabase Auth** | Sign-in for admins, lecturers and FYPMS users (email/password). Roles come from `profiles.role` + `profile_academic_roles`. |
-| **Supabase Postgres** | Primary database — **42 tables** with Row Level Security, **~55 functions** (helpers + SECURITY DEFINER RPCs). |
-| **Supabase Realtime** | Live-change invalidation: announcements, student visits, and 5 FYPMS workflow tables (multiplexed channel). |
+| **Supabase Postgres** | Primary database — **44 tables** with Row Level Security, **~55 functions** (helpers + SECURITY DEFINER RPCs). |
+| **Supabase Realtime** | Live-change invalidation for the 5 FYPMS workflow tables (multiplexed channel, while an FYPMS page is open). Expo announcements/visits are one-shot reads (the Expo realtime service exists but is not wired). |
 | **Supabase Storage** | 5 FYPMS buckets (4 private path-scoped + 1 public), path convention `{semester}/{record}/{type}/{version}/{file}`. |
 | **GitHub Pages** | Serves both public domain and admin CMS (single host). SPA rewrites via `404.html` fallback. |
 
 ### Tooling & CI/CD
 - **Flutter SDK** at `D:\Dev\SDK\flutter`
 - **Supabase CLI** — linked to the `fyp-expo-hub` project
-- **GitHub Actions** (`.github/workflows/deploy.yml`) — `flutter analyze` + `flutter test` gates, then builds `build/web` with `--dart-define` credentials from repo secrets and deploys to Pages. An `uptime-monitor.yml` cron probes the public site.
+- **GitHub Actions** — `ci.yml` runs strict `flutter analyze` + `flutter test` + a Wasm build on every pull request; `deploy.yml` repeats the analyze/test gates on push to `main`, builds `build/web` (`--wasm`) with `--dart-define` credentials from repo secrets and deploys via `actions/upload-pages-artifact` + `actions/deploy-pages`. An `uptime-monitor.yml` cron probes the public site.
 
 ---
 
@@ -107,11 +107,11 @@ Route guarding lives in the router:
 - `/lecturer/visits/:projectId` — per-role sections; **Mark as Visited** (optional note) via `mark_student_project_visited` RPC; **Cancel Visit** with mandatory reason via `void_student_project_visit` RPC.
 
 ### Expo Hub — Admin CMS (`/admin/**`)
-Overview dashboard, event info, schedule, projects, booths, lecturers, announcements, awards, feedback moderation, visits monitoring (Overview / By Lecturer / By Project / Visit Log + CSV export), master-file import (drag-drop `.xlsx` parsed in-browser → staged candidates → selective publish RPC), settings.
+Overview dashboard, event info (hours, status, links, images, FAQ), schedule, projects, booths, lecturers, lecturer assignments (`/admin/assignments`), announcements, awards + award categories, feedback moderation, audit log (`/admin/audit`), visits monitoring (Overview / By Lecturer / By Project / Visit Log + CSV export), master-file import (drag-drop `.xlsx` parsed in-browser → staged candidates → selective publish RPC), settings.
 
 ### Cross-cutting
 - **Publication lifecycle** — `draft` / `published` / `archived` on all public tables; anonymous reads see `published` only.
-- **Offline fallback** — the public site seeds from a bundled `ExcelData` dataset (376 projects) and swaps to Supabase rows when available.
+- **Offline fallback** — the public site loads the bundled `assets/data/offline_fallback.json` (387 projects, 221 booths, 8 schedule items) alongside the Supabase request; live rows replace it when they arrive, and each public dataset reports a load status (`loading` / `live` / `offline` / `failed`).
 - **Generated covers** — projects without an uploaded cover image render a unique, deterministic local gradient cover (palette + category icon + initials + per-title geometry) — no third-party image service.
 - **Audit logging** — every mutating RPC writes `audit_logs` / `fyp_audit_logs` server-side; no client write path.
 
@@ -181,7 +181,7 @@ Full column reference: [`SUPABASE_SCHEMA.md`](./SUPABASE_SCHEMA.md).
 
 ## Security (RLS Policies)
 
-All **42 tables** have **RLS enabled** with role-scoped policies (~119 policies):
+All **44 tables** have **RLS enabled** with role-scoped policies (~119 policies):
 - Anonymous visitors read only `published` public rows.
 - FYPMS rows are visible to the record's owner, assigned staff, course lecturer, coordinator and admin via `can_read_fyp_record()`.
 - All mutations go through audited SECURITY DEFINER RPCs; direct student UPDATE policies were removed (September 2026 hardening).
@@ -230,16 +230,16 @@ supabase db push
 
 ### Implementation notes & known constraints
 - **Credentials are build-time only.** If missing, the app falls back to bundled seed data.
-- **Offline fallback** — `ExcelData` seeds providers; a maintenance dialog appears when the backend is unreachable.
+- **Offline fallback** — `OfflineFallback` (`lib/core/data/offline_fallback.dart`) fills the public providers from the JSON asset if live rows have not arrived; when the backend is unreachable an offline banner with Retry shows over the saved data, or an error with Retry if there is nothing to show.
 - **Demo accounts** — 11 `@fypms.test` accounts exist on the live project for development testing (see SECURITY.md accepted-risk register). **Disable before production.**
-- **Realtime** — one-shot reads + realtime invalidation channels (announcements, visits, 5 FYPMS tables); not full-table streaming.
+- **Realtime** — one-shot reads + a realtime invalidation channel for the 5 FYPMS workflow tables; Expo pages (announcements, visits) refetch after mutations only; not full-table streaming.
 - **No raw Excel files** are stored — parsing is client-side via the `excel` package.
 
 ---
 
 ## Deployment
 
-- **Workflow:** `.github/workflows/deploy.yml` — on push to `main`: `pub get` → `flutter analyze` → `flutter test` → `flutter build web --release --base-href "/"` with `SUPABASE_*` secrets → copy `index.html` → `404.html` → deploy to Pages.
+- **Workflow:** `.github/workflows/deploy.yml` — on push to `main`: `pub get` → `flutter analyze` → `flutter test` → `flutter build web --release --wasm --base-href "/"` with `SUPABASE_*` secrets → copy `index.html` → `404.html` → stamp the service-worker version → `actions/upload-pages-artifact` → `actions/deploy-pages`. Pull requests run the same gates in `ci.yml`.
 - **Required repository secrets:** `SUPABASE_URL`, `SUPABASE_ANON_KEY`.
 - **Database:** migrations in `supabase/migrations/` (applied via Supabase MCP/CLI; the live project also carries a historical `populate_projects` migration series from the initial bulk import).
 
@@ -249,6 +249,7 @@ supabase db push
 
 ```
 .
+├── .github/workflows/ci.yml         # PR gates (analyze + test + Wasm build)
 ├── .github/workflows/deploy.yml     # Pages CI (analyze + test + build + deploy)
 ├── .github/workflows/uptime-monitor.yml
 ├── .env.example                     # Environment template (no real keys)
@@ -257,9 +258,10 @@ supabase db push
 │   ├── migrations/                   # SQL migrations
 │   └── types.ts                     # Generated TypeScript types
 ├── assets/data/csp600-proposals.csv # Junior guide dataset
+├── assets/data/offline_fallback.json # Bundled offline dataset (387/221/8)
 ├── web/                             # index.html, fonts, icons
 ├── lib/                             # Dart source (see System Architecture)
-├── test/                            # unit + widget + route-guard tests
+├── test/                            # 428 unit + widget + route-guard tests
 └── *.md                             # Documentation (see below)
 ```
 
@@ -270,7 +272,7 @@ supabase db push
 | Document | Description |
 |---|---|
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | System architecture (Expo + FYPMS) |
-| [SUPABASE_SCHEMA.md](./SUPABASE_SCHEMA.md) | Database schema reference (42 tables) |
+| [SUPABASE_SCHEMA.md](./SUPABASE_SCHEMA.md) | Database schema reference (44 tables) |
 | [SUPABASE_RLS_POLICIES.md](./SUPABASE_RLS_POLICIES.md) | Row Level Security policy matrix |
 | [DATABASE_FUNCTIONS.md](./DATABASE_FUNCTIONS.md) | RPC function documentation |
 | [SECURITY.md](./SECURITY.md) | Security policy, hardening log, accepted risks |
