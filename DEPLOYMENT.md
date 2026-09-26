@@ -15,15 +15,25 @@ The backend is **Supabase** (PostgreSQL with Auth, Realtime, and Row Level Secur
 
 File: `.github/workflows/deploy.yml`
 
-The workflow triggers on every push to `main` and performs:
+The workflow triggers on every push to `main` (permissions `contents: read`,
+`pages: write`, `id-token: write`; concurrency group `pages` cancels an
+in-progress deploy). Third-party actions are pinned to commit SHAs. It
+performs:
 
-1. **Checkout** code from the repository
-2. **Setup Flutter** SDK (web toolchain)
-3. **Cache** pub cache and build output
-4. **`flutter pub get`** — install dependencies
-5. **`flutter build web --release`** — build the web app with `--dart-define` credentials
-6. **Copy `index.html` → `404.html`** — SPA fallback for deep links
-7. **Deploy to GitHub Pages** via `peaceiris/actions-gh-pages` action
+| # | Step | What it does |
+|---|------|--------------|
+| 1 | **Checkout** | `actions/checkout` (v4) |
+| 2 | **Setup Flutter** | `subosito/flutter-action` (v2), stable channel pinned to Flutter `3.44.7` |
+| 3 | **`flutter pub get`** | Install dependencies |
+| 4 | **`flutter analyze`** | Gate — strict, any issue fails the deploy |
+| 5 | **`flutter test`** | Gate — the full suite must pass |
+| 6 | **Build Web** | `flutter build web --release --wasm --base-href "/"` with `--dart-define` credentials from secrets; copies `index.html` → `404.html` (SPA fallback for deep links); stamps the first 12 chars of the commit SHA into `{{BUILD_VERSION}}` in `sw.js` and `flutter_bootstrap.js` so each release gets a fresh service-worker cache |
+| 7 | **Upload Artifacts** | `actions/upload-pages-artifact` (v3) with `build/web` |
+| 8 | **Deploy to GitHub Pages** | `actions/deploy-pages` (v4) into the `github-pages` environment |
+
+Pull requests to `main` run the same analyze + test gates and a Wasm
+smoke build (no credentials, no deploy) in `.github/workflows/ci.yml`, so
+web-only breakage is caught before merge.
 
 ### Required GitHub Secrets
 
@@ -37,7 +47,7 @@ To add secrets: GitHub Repo → Settings → Secrets and variables → Actions �
 ### Build Command
 
 ```bash
-flutter build web --release \
+flutter build web --release --wasm \
   --dart-define=SUPABASE_URL='https://siedglubjcedkbrpdzgi.supabase.co' \
   --dart-define=SUPABASE_ANON_KEY='<your-anon-key>' \
   --base-href '/'
@@ -71,6 +81,24 @@ flutter run -d chrome \
 - **Auth**: Email/password provider enabled
 - **Database**: PostgreSQL with all migrations applied
 
+### Supabase Auth settings
+
+The password-reset flow (G-32) emails a recovery link that returns to
+`<current origin>/reset-password` (`passwordResetRedirectUrl()` in
+`lib/features/admin_auth/password_reset.dart`). Supabase only redirects to
+allow-listed URLs, so under **Authentication → URL Configuration →
+Redirect URLs** add:
+
+| Redirect URL | Used by |
+|---|---|
+| `https://fskmjasinfypexhibition.site/reset-password` | "Forgot password?" on `/admin/sign-in` (the shared sign-in page) |
+| `https://admin.fskmjasinfypexhibition.site/reset-password` | Admin domain (kept in case the link is built from that origin) |
+
+Without these entries the reset email falls back to the Site URL and the
+user never reaches the "set a new password" page. There is no account
+lockout or MFA; brute-force protection relies on Supabase Auth's built-in
+rate limits.
+
 ### Migrations
 
 Migrations live in `supabase/migrations/` (timestamp-prefixed, applied in
@@ -85,6 +113,16 @@ order):
 20260822*           Defect fixes (DEF-1..7), auth policies, co-supervisor seed
 20260901*           Security hardening (storage path-scoping, RPC gates,
                     exec_sql_batch removal, F14-F16 flag, evidence RPC)
+20260902*           Staff directory + roles
+20260925*           Audit 2 hardening, published demo accounts disabled
+20260926000001..09  Textbook alignment R1-R7/R10 (rubrics, evaluators,
+                    course marks, F1, F6, F5, deliverables), workflow
+                    fixes, DB hardening
+20260926000010..12  R8 F14 special evaluation, R9 exhibition F10, G-25
+                    extensions/sessions
+20260927000001      G-06 import Replace + staged checks
+20260927000002/03   R11 report minimums + REC ethics, supervisor change +
+                    PU approval
 ```
 
 To apply migrations:
@@ -122,8 +160,8 @@ npx supabase gen types typescript --project-id siedglubjcedkbrpdzgi
 3. Or manually deploy a previous build:
    ```bash
    git checkout <previous-commit>
-   flutter build web --release
-   # Upload build/web to GitHub Pages
+   flutter build web --release --wasm
+   # Or re-run the "Deploy Flutter Web to GitHub Pages" workflow for that commit
    ```
 
 ### Rolling Back the Database
@@ -148,8 +186,11 @@ npx supabase gen types typescript --project-id siedglubjcedkbrpdzgi
 ## Paused Project Handling
 
 Free-tier Supabase projects are paused after 7 days of inactivity. When paused:
-- The Flutter app shows a maintenance dialog (not a crash)
-- Public pages still render from offline seed data
+- The Flutter app does not crash: public datasets report `offline` (or
+  `failed` if nothing is bundled for them) and show an offline banner or an
+  error with Retry
+- Public pages still render from the bundled `assets/data/offline_fallback.json`
+  (387 projects, 221 booths, 8 schedule items)
 - Admin/lecturer features are unavailable until the project is resumed
 
 To resume: Supabase Studio → Project Settings → Resume project

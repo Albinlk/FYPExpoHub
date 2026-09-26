@@ -8,8 +8,11 @@ Expo Hub + FYPMS release.
 
 ### 1. Database Schema
 - [ ] All migrations in `supabase/migrations/` applied (Expo `20260814*`,
-      FYPMS `20260817*`–`20260822*`, security hardening `20260901*`)
-- [ ] All **42 tables** exist with RLS enabled (19 Expo + 23 FYPMS)
+      FYPMS `20260817*`–`20260822*`, security hardening `20260901*`,
+      staff directory `20260902*`, audit 2 `20260925*`, textbook alignment
+      R1–R9 + G-25 `20260926*`, imports G-06 + R11 `20260927*` — 48 files)
+- [ ] All **44 tables** exist with RLS enabled (19 Expo + 25 FYPMS; the two
+      newest are `fyp_special_evaluations` and `fyp_supervisor_change_requests`)
 - [ ] ~55 functions present: policy helpers + ~30 SECURITY DEFINER RPCs
 - [ ] All SECURITY DEFINER functions pin `search_path`
 - [ ] Storage buckets exist: 4 private FYPMS + `fyp-public-assets`, with
@@ -25,11 +28,14 @@ Expo Hub + FYPMS release.
 - [ ] **All 11 `@fypms.test` demo accounts disabled or password-rotated**
       (see SECURITY.md accepted-risk register — REQUIRED before production)
 - [ ] Production anon key rotated
+- [ ] Supabase Auth Redirect URLs include both `/reset-password` pages
+      (public + admin domains — see DEPLOYMENT.md)
 
 ### 3. Application Configuration
 - [ ] `pubspec.yaml` — no Firebase dependencies
 - [ ] `lib/main.dart` — `Supabase.initialize()` with `--dart-define` creds
-- [ ] Build passes: `flutter analyze` (0 errors) + `flutter test` (132 tests)
+- [ ] Build passes: `flutter analyze` (0 issues — CI is strict) + `flutter test`
+      (428 tests, all passing as of September 2026)
 
 ### 4. CI/CD
 - [ ] `.github/workflows/deploy.yml` runs analyze + test gates before build

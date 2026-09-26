@@ -24,7 +24,7 @@ through the CMS.
 
 ## Row Level Security (RLS)
 
-All **42 tables** (19 Expo Hub + 23 FYPMS) have RLS enabled. See
+All **44 tables** (19 Expo Hub + 25 FYPMS) have RLS enabled. See
 [`SUPABASE_RLS_POLICIES.md`](./SUPABASE_RLS_POLICIES.md)
 for the Expo policy matrix; FYPMS policies live in
 `supabase/migrations/20260817000003_fypms_rls_policies.sql` and the
@@ -95,7 +95,7 @@ Per PDPA policy, the following student data is **approved for public display**:
 
 ## Security Audit Checklist
 
-- [x] All 42 tables **defined in this repo's migrations** have RLS enabled (the live project also holds objects from an unrelated template that no migration creates — check those in the dashboard)
+- [x] All 44 tables **defined in this repo's migrations** have RLS enabled (the live project also holds objects from an unrelated template that no migration creates — check those in the dashboard)
 - [x] Default deny (no blanket allow policies)
 - [x] Anonymous access restricted to published public data
 - [x] Lecturer visit mutations go through RPC functions

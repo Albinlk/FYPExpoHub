@@ -6,7 +6,7 @@ Based on the Google Stitch UI project "FYP Expo Hub", this document defines the 
 - **Project Name:** FYP Expo Hub
 - **Theme Name:** Academic Excellence Hub
 - **Aesthetic:** Corporate / Modern / Academic Prestige. It balances the stability of a traditional university with the kinetic energy of student innovation.
-- **Brand Colors:** Deep Navy (primary stability) contrasted with Warm Gold/Amber (excellence/winners) and Teal (success/status).
+- **Brand Colors ("Ink & Terracotta", since PR #10):** Aubergine Ink (primary stability) contrasted with Terracotta/Apricot (accents, excellence/winners) and Deep Verdigris (success/status) on Warm Paper. This replaced the original Stitch navy/gold/teal palette role for role at the same lightness, so every text/background pair keeps its contrast.
 
 ---
 
@@ -15,28 +15,32 @@ Based on the Google Stitch UI project "FYP Expo Hub", this document defines the 
 ### Colors
 | Token | Hex Value | Flutter Color Code | Usage |
 | :--- | :--- | :--- | :--- |
-| **primary** | `#031636` | `Color(0xFF031636)` | Deep Navy (App bars, primary structural headers, dark backgrounds) |
-| **primary-container** | `#1a2b4c` | `Color(0xFF1A2B4C)` | Dark Navy (Cards, sidebar background, containers) |
-| **on-primary** | `#ffffff` | `Color(0xFFFFFFFF)` | Text on primary |
-| **on-primary-container**| `#8293ba` | `Color(0xFF8293BA)` | Secondary text on primary container |
-| **secondary** | `#735c00` | `Color(0xFF735C00)` | Warm Gold/Amber (Accents, category tags) |
-| **secondary-container** | `#fed65b` | `Color(0xFFFED65B)` | Bright Amber/Gold (Highlight buttons, winner badge container) |
-| **on-secondary-container**| `#745c00` | `Color(0xFF745C00)` | Text on gold badges |
-| **tertiary** | `#001b1b` | `Color(0xFF001B1B)` | Deep Teal (Interactive states, technical badges) |
-| **tertiary-container** | `#003232` | `Color(0xFF003232)` | Teal Container |
-| **on-tertiary-container**| `#3da2a1` | `Color(0xFF3DA2A1)` | Medium Teal (Status text "Ongoing") |
-| **background** | `#f6fafe` | `Color(0xFFF6FAFE)` | Warm Off-White (Canvas background) |
-| **on-background** | `#171c1f` | `Color(0xFF171C1F)` | Primary text color |
-| **surface** | `#f6fafe` | `Color(0xFFF6FAFE)` | Standard surfaces |
-| **surface-container-lowest**| `#ffffff`| `Color(0xFFFFFFFF)` | White (Cards, inputs, dialogs background) |
-| **surface-container-low**| `#f0f4f8` | `Color(0xFFF0F4F8)` | Very Light Grey-Blue (Secondary background sections) |
-| **surface-container**| `#eaeef2` | `Color(0xFFEAEEF2)` | Light Grey-Blue (Dividers, borders) |
-| **surface-container-highest**| `#dfe3e7`| `Color(0xFFDFE3E7)` | Outline, inactive elements |
-| **on-surface-variant** | `#44474e` | `Color(0xFF44474E)` | Muted body text, icons |
-| **outline-variant** | `#c5c6cf` | `Color(0xFFC5C6CF)` | Input borders, separator lines |
-| **error** | `#ba1a1a` | `Color(0xFFBA1A1A)` | Standard warning / error states |
-| **error-container** | `#ffdad6` | `Color(0xFFFFDAD6)` | Light Red (Alert background) |
-| **on-error-container**| `#93000a` | `Color(0xFF93000A)` | Dark Red text |
+| **primary** | `#2A1838` | `Color(0xFF2A1838)` | Aubergine Ink (App bars, primary structural headers, dark backgrounds) |
+| **primary-container** | `#3D2A52` | `Color(0xFF3D2A52)` | Plum (Cards, sidebar background, containers) |
+| **on-primary** | `#FFFFFF` | `Color(0xFFFFFFFF)` | Text on primary |
+| **on-primary-container**| `#C2AEDD` | `Color(0xFFC2AEDD)` | Lilac (Secondary text on primary container) |
+| **secondary** | `#9A3A12` | `Color(0xFF9A3A12)` | Terracotta (Accents, links, labels, category tags) |
+| **secondary-container** | `#F6B48A` | `Color(0xFFF6B48A)` | Apricot (Highlight buttons, winner badge container) |
+| **on-secondary-container**| `#6E2609` | `Color(0xFF6E2609)` | Burnt Umber (Text on apricot badges) |
+| **tertiary** | `#0B2A26` | `Color(0xFF0B2A26)` | Deep Verdigris (Interactive states, technical badges) |
+| **tertiary-container** | `#12423B` | `Color(0xFF12423B)` | Verdigris container |
+| **on-tertiary-container**| `#84CDB8` | `Color(0xFF84CDB8)` | Sage Mint (Status text "Ongoing") |
+| **background** | `#FAF7F2` | `Color(0xFFFAF7F2)` | Warm Paper (Canvas background) |
+| **on-background** | `#1E1A20` | `Color(0xFF1E1A20)` | Ink Black (Primary text color) |
+| **surface** | `#FAF7F2` | `Color(0xFFFAF7F2)` | Standard surfaces (Warm Paper) |
+| **surface-container-lowest**| `#FFFFFF`| `Color(0xFFFFFFFF)` | White (Cards, inputs, dialogs background) |
+| **surface-container-low**| `#F3EEE7` | `Color(0xFFF3EEE7)` | Parchment (Secondary background sections) |
+| **surface-container**| `#ECE5DB` | `Color(0xFFECE5DB)` | Dividers, borders |
+| **surface-container-highest**| `#E0D7CA`| `Color(0xFFE0D7CA)` | Outline, inactive elements, offline banner |
+| **on-surface-variant** | `#4E4652` | `Color(0xFF4E4652)` | Muted body text, icons |
+| **outline-variant** | `#CFC5BA` | `Color(0xFFCFC5BA)` | Input borders, separator lines |
+| **error** | `#BA1A1A` | `Color(0xFFBA1A1A)` | Standard warning / error states |
+| **error-container** | `#FFDAD6` | `Color(0xFFFFDAD6)` | Light Red (Alert background) |
+| **on-error-container**| `#93000A` | `Color(0xFF93000A)` | Dark Red text |
+
+Source of truth: `DesignSystem` in `lib/app/theme/theme.dart` — change colours there, then update this table.
+
+**Contrast audit (G-34).** `test/app/theme_contrast_test.dart` checks 17 text/background pairs drawn from these tokens (body, muted, primary, secondary, tertiary and error text on page/card/parchment/offline banner; white on primary and secondary; each `on-*-container` on its container) and fails if any is below WCAG AA for body text (4.5 : 1). Decorative icons in `outline-variant` are exempt.
 
 ### Typography
 - **Headlines:** `Montserrat` (Architectural, bold, authoritative)
@@ -103,12 +107,12 @@ Based on the Google Stitch UI project "FYP Expo Hub", this document defines the 
 ## 4. UI Patterns & Guidelines
 
 ### Public Navigation Layout
-- **Desktop Navbar:** Top fixed 64px bar, background `#f6fafe`, left-aligned Bold "FYP Expo Hub" text, middle-aligned links (Home, Schedule, Projects, Booths) with hover states, right-aligned accent action button ("Register" or similar).
+- **Desktop Navbar:** Top fixed 64px bar, background `#FAF7F2` (Warm Paper), left-aligned Bold "FYP Expo Hub" text, middle-aligned links (Home, Schedule, Projects, Booths) with hover states, right-aligned accent action button ("Register" or similar).
 - **Mobile Navbar:** Top fixed 64px header + bottom navigation bar (height 56px, rounded top corners `12px`, subtle shadow), containing bottom tabs for quick access (Home, Projects, Booths, Menu).
 
 ### Admin Portal Shell
-- Split layout: Fixed left sidebar (`260px` wide) using Deep Navy (`#031636`) for structural navigation, and a fluid main canvas utilizing White (`#ffffff`) surfaces on top of a Warm Off-White (`#f6fafe`) background.
-- Clean typography and data-focused layout with standard 1px borders in `#eaeef2`.
+- Split layout: Fixed left sidebar (`260px` wide) using Aubergine Ink (`#2A1838`) for structural navigation, and a fluid main canvas utilizing White (`#FFFFFF`) surfaces on top of a Warm Paper (`#FAF7F2`) background.
+- Clean typography and data-focused layout with standard 1px borders in `#ECE5DB`.
 
 ### Master File Import Review & Staging Area (Data Matching)
 - Layout uses a Multi-Tab view:
@@ -124,7 +128,7 @@ Based on the Google Stitch UI project "FYP Expo Hub", this document defines the 
 ## 5. Visit Tracker UI Patterns (Extended Feature)
 
 ### Lecturer Visit Page (`/lecturer/visits`)
-- **Progress Cards**: Two side-by-side cards showing SV and EX completion counts with progress bars. SV uses Deep Navy (`#031636`), EX uses Deep Teal (`#001B1B`).
+- **Progress Cards**: Two side-by-side cards showing SV and EX completion counts with progress bars. SV uses Aubergine Ink (`#2A1838`, primary), EX uses Deep Verdigris (`#0B2A26`, tertiary).
 - **Filter Bar**: Role filter (All/SV/EX) and status filter (All/Not Yet Visited/Visited/Voided) using `ChoiceChip`. Search field with prefix icon.
 - **Visit Project Cards**: Compact horizontal card with cover thumbnail (80x60), project title, student names, role chip (SV/EX), booth number, and status chip. Status chips: green check for "Visited", red for "Voided", grey for "Not Yet".
 - **Sign-in Prompt**: When not authenticated, shows centered login icon with CTA button leading to `/lecturer/sign-in`.
@@ -151,11 +155,11 @@ Based on the Google Stitch UI project "FYP Expo Hub", this document defines the 
 - **Void Dialog**: Admin-only void action with mandatory reason.
 
 ### Status Chips (Visit-specific)
-- **Visited (Completed)**: Teal container with check icon, `#3DA2A1` text.
+- **Visited (Completed)**: Verdigris container with check icon, Sage Mint `#84CDB8` text.
 - **Voided**: Error container with red text, `#93000A`.
-- **Not Yet (Pending)**: Grey container with muted text, `#44474E`.
+- **Not Yet (Pending)**: Grey container with muted text, `#4E4652`.
 
 ## 6. Documented UI Extensions (Responsive & Missing States)
-- **Awards Page (`/awards`):** Recreates the standard Project Card grid with a modified "Winner" gold badge in `#fed65b` showing the category name and a trophy icon.
-- **Sign-in Page (`/admin/sign-in`):** Uses a centered, card-based login modal matching the typography and color scheme (Deep Navy primary button, Montserrat title, 8px rounded container).
-- **Error/Empty States:** Illustrated using thin-line icons (stroke 2px) in muted `#44474e`, labelled in English using `body-md` and `body-sm`.
+- **Awards Page (`/awards`):** Recreates the standard Project Card grid with a modified "Winner" Apricot badge in `#F6B48A` (secondary-container) showing the category name and a trophy icon.
+- **Sign-in Page (`/admin/sign-in`):** Uses a centered, card-based login modal matching the typography and color scheme (Aubergine Ink primary button, Montserrat title, 8px rounded container).
+- **Error/Empty States:** Illustrated using thin-line icons (stroke 2px) in muted `#4E4652`, labelled in English using `body-md` and `body-sm`.

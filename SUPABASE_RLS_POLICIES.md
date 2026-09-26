@@ -1,6 +1,6 @@
 # Row Level Security (RLS) Policies — FYP Expo Hub
 
-The 19 Expo Hub tables below have **RLS enabled** (the 23 FYPMS tables are
+The 19 Expo Hub tables below have **RLS enabled** (the 25 FYPMS tables are
 summarised at the end). Access is controlled via policies
 that check the `profiles.role` of the authenticated user.
 
@@ -65,7 +65,7 @@ All helpers use `SECURITY DEFINER`.
 
 ## FYPMS tables (summary)
 
-The 23 FYPMS tables (`fyp_*`, `academic_*`, `profile_academic_roles`) use a
+The 25 FYPMS tables (`fyp_*`, `academic_*`, `profile_academic_roles`) use a
 different model from the Expo Hub tables above. Details live in the
 migrations; this is the shape of it:
 

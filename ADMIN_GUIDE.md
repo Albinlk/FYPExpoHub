@@ -22,34 +22,46 @@ The `/admin` dashboard shows:
 
 ## Event Information
 
-`/admin/event`
-- Edit event title, session label, dates, venue
-- Update daily hours and location details
-- Set event status (draft/upcoming/active/completed/archived)
-- Set publication status (draft/published/archived)
-- Manage FAQ items (add/remove/edit)
-- Set hero image and poster URLs
+`/admin/event` — **Update Event Information**
+
+| Field | Notes |
+|---|---|
+| Exhibition title | Required |
+| Session / semester label | e.g. "Semester 2026/1" |
+| Start / end date | The end date must not be before the start date |
+| Daily hours | e.g. "9:00 AM – 5:00 PM" |
+| Primary venue / hall, location details | Building, floor, parking… |
+| Map link | Must be an `http(s)` link |
+| Description | Event description |
+| Public contact email | Must look like an email address |
+| Hero image URL, poster URL | Must be `http(s)` links |
+| Event status | Draft / Upcoming / Active (running) / Completed / Archived |
+| Event FAQ | Add, edit and remove question/answer pairs; a question needs an answer |
+
+Links are only checked when you change them, so an older non-link value
+already stored does not block saving. Click **Save Changes** to publish the
+edits.
 
 ## Project Catalogue
 
 `/admin/projects`
-- List all projects with publication status
-- Search by title, slug, or matric ID
-- Filter by programme, category, featured flag
-- Edit project details:
-  - Title, slug, team display name
+- List all projects with publication status (no search or filters on this page)
+- Add / edit project details:
+  - Title
   - Matric ID (public exhibition data)
   - Programme code and name
-  - Supervisor and examiner names
-  - Short description, abstract
+  - Student name(s), supervisor and examiner names
+  - Short description, project category
   - Tech tags
-  - Demo, video, repository URLs
+  - Demo URL
   - Cover image URL
-  - Booth assignment
-  - Presentation day
-  - Industry candidate flag
-  - Featured flag
-- Toggle publication status (draft/published/archived)
+  - Booth number and zone
+  - Featured flag ("Highlight as Featured Project")
+  - Publication status (Published / Draft)
+- Fields the dialog doesn't show (presentation day, video/repository/poster
+  links, Industry Candidate flag) are kept when you save
+- Toggle publication status (Published ↔ Draft; unpublishing asks for
+  confirmation)
 
 ## Schedule Management
 
@@ -73,9 +85,28 @@ The `/admin` dashboard shows:
 `/admin/lecturers`
 - List all lecturer profiles
 - Add new lecturers (creates a `profiles` row — Auth user must be created separately)
-- Assign projects to lecturers as Supervisor (SV) or Examiner (EX)
-- "Backfill Lecturer IDs" — matches display names to Supabase UIDs
-- Delete lecturer assignments
+- Delete lecturers
+- "Backfill Lecturer IDs" — links assignments that have no lecturer account
+  to the lecturer whose name matches exactly
+- Project assignments are managed on the Lecturer Assignments page (below)
+
+## Lecturer Assignments
+
+`/admin/assignments`
+
+Lecturers can mark visits **only** for projects they are assigned to, so
+every SV/EX pairing needs an active assignment.
+
+- **Match from project names** — compares each project's supervisor and
+  examiner names with active lecturer accounts (titles, case, spacing and
+  punctuation ignored) and proposes the missing assignments. The summary
+  shows how many names have no lecturer account and how many match more than
+  one (those are never auto-assigned). Click **Create N assignments** to
+  confirm.
+- **Assign** — add a lecturer to a project manually as Supervisor or Examiner.
+- **Remove** — delete an assignment from its chip; visits already recorded
+  are kept.
+- Search by project, lecturer or booth.
 
 ## Announcements
 
@@ -89,7 +120,10 @@ The `/admin` dashboard shows:
 ## Awards
 
 `/admin/awards`
-- Manage award categories
+- **Award Categories** section — add, edit and delete categories for the event: title
+  (e.g. "Gold Innovation Award"), optional description, display order
+  (lower first) and "Shown on the public Awards page"; winners are then filed
+  under a category
 - CRUD award winner records
 - Assign projects to awards
 - Toggle publication status
@@ -97,39 +131,72 @@ The `/admin` dashboard shows:
 ## Student Visits
 
 `/admin/visits`
-- Live monitoring of visit progress
+- Monitoring of visit progress (not live-updating: the Expo realtime channel
+  is not wired, so reload for new visits)
 - Tabs: Overview / By Lecturer / By Project / Visit Log
-- Filters: role, status, date range
-- Search by lecturer name or project
+- Filters: role (All / SV / EX), status (All / Visited / Not Yet / Voided)
+- Search lecturers, projects, students or booths
 - **Void Visit** button — requires a mandatory reason
 - **Export CSV** — downloads visits as a CSV file (generated client-side)
 
 ## Import Master File
 
-`/admin/imports`
-1. Click "Upload XLSX" and select the master workbook
-2. Wait for in-browser parsing to complete
-3. Review validation issues and privacy skips
-4. Navigate to the import detail page
+The Master File import covers **schedule items and award winners only**
+(see `IMPORT_PIPELINE.md` for the workbook layout and every check).
 
-`/admin/imports/:importId`
-- **Data Matching Dashboard** — side-by-side comparison of staged vs. live data
-- Review schedule candidates and award candidates
-- See validation issues (overlaps, missing fields)
-- See privacy-skipped fields
-- Make publish/retain decisions per candidate
-- Click "Publish Approved Changes" to call the `publish_approved_import_changes` RPC
+`/admin/imports`
+1. Click **Upload & Parse .xlsx** and select the master workbook. Files
+   larger than the **Maximum File Size Limit** in Settings are refused before
+   parsing.
+2. Wait for in-browser parsing and checks to complete
+3. Open the import with **Review & Publish**
+
+`/admin/imports/:importId` — **Review Master File Import**
+- **Checks** card — the validation issues, warnings first, then notes:
+  unreadable days/times, duplicates, rows that change a live item, overlaps,
+  missing mandatory worksheets
+- Schedule candidates (TENTATIF) and award candidates (PEMENANG ANUGERAH),
+  each flagged where it applies:
+
+  | Flag | Meaning |
+  |---|---|
+  | Already live | An identical item is already published |
+  | Changes a live item | Same day + title is live with a different time or venue |
+  | Duplicate in file | The row repeats an earlier row of the same file |
+  | Overlaps another item | Same venue at an overlapping time |
+
+- Choose **Publish**, **Replace Existing** or **Skip** per row. Sensible
+  defaults are pre-selected: for schedule rows Skip when "Already live" or
+  "Duplicate in file", Replace Existing for "Changes a live item", otherwise
+  Publish; for award rows Skip when "Duplicate in file", otherwise Publish
+  (an award that is already published is listed in the Checks card — skip or
+  replace it yourself).
+- **Replace Existing really replaces**: it first deletes the live item(s) the
+  row matches (schedule: same day and same title, or same venue at an
+  overlapping time; awards: same award and team), then inserts the row.
+- See privacy-skipped (confidential) sheets
+- Click **Approve & Publish Selected** to call the
+  `publish_approved_import_changes` RPC. An import can only be published once.
 
 ## Settings
 
 `/admin/settings`
 - View and edit portal settings
+- **Excel Master File Parsing** — Maximum File Size Limit (default `10 MB`;
+  accepts e.g. `10 MB`, `500KB`, `2.5 mb` or plain bytes; enforced on upload)
+  and Mandatory Worksheet Names (default `TENTATIF, PEMENANG ANUGERAH`;
+  English/Malay aliases SCHEDULE ≈ TENTATIF and AWARD ≈ ANUGERAH count)
+- **Visit Tracker Settings** — enable visits, allow visits before/after the
+  exhibition, lecturer undo window (minutes)
 - Settings are stored as key-value pairs in the `settings` table
 - Changes take effect immediately
 
 ## Audit Log
 
-All admin actions are logged in `audit_logs`:
+`/admin/audit` — the latest 300 recorded actions, newest first, in Malaysia
+time. Search by action, target or details, and filter by action.
+
+Admin and lecturer actions are logged in `audit_logs`, for example:
 - `visit_marked` — when a visit is marked complete
 - `visit_voided` — when a visit is voided
 - `import_created` — when an import job is created
