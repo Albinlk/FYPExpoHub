@@ -7,6 +7,7 @@ import '../../../../core/domain/models/project.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/supabase/supabase_database_service.dart' show kEventSlug;
 import '../../../../core/widgets/admin_actions.dart';
+import '../widgets/award_categories_section.dart';
 
 class AdminAwardsPage extends ConsumerWidget {
   const AdminAwardsPage({super.key});
@@ -17,6 +18,9 @@ class AdminAwardsPage extends ConsumerWidget {
     final sponsorController = TextEditingController(text: item?.sponsor ?? '');
     
     String? selectedProjectId = item?.projectId;
+    final categories = ref.read(awardCategoriesProvider).value ?? const [];
+    String? selectedCategoryId =
+        categories.any((c) => c.id == item?.awardCategoryId) ? item!.awardCategoryId : null;
     String status = item?.publicationStatus ?? 'published';
     bool saving = false;
 
@@ -37,6 +41,26 @@ class AdminAwardsPage extends ConsumerWidget {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      if (categories.isNotEmpty) ...[
+                        DropdownButtonFormField<String?>(
+                          key: const Key('winner-category'),
+                          initialValue: selectedCategoryId,
+                          isExpanded: true,
+                          decoration: const InputDecoration(labelText: 'Award category'),
+                          items: [
+                            const DropdownMenuItem<String?>(value: null, child: Text('No category')),
+                            for (final c in categories)
+                              DropdownMenuItem<String?>(value: c.id, child: Text(c.title, overflow: TextOverflow.ellipsis)),
+                          ],
+                          onChanged: (id) => setState(() {
+                            selectedCategoryId = id;
+                            // The award name follows the category unless edited.
+                            final c = categories.where((c) => c.id == id).firstOrNull;
+                            if (c != null) titleController.text = c.title;
+                          }),
+                        ),
+                        const SizedBox(height: DesignSystem.spaceSm),
+                      ],
                       TextField(
                         controller: titleController,
                         decoration: const InputDecoration(labelText: 'Category / Award Name'),
@@ -115,7 +139,7 @@ class AdminAwardsPage extends ConsumerWidget {
                     final newItem = PublishedAwardWinner(
                       id: item?.id ?? const Uuid().v4(),
                       eventId: item?.eventId ?? kEventSlug,
-                      awardCategoryId: item?.awardCategoryId ?? '',
+                      awardCategoryId: selectedCategoryId ?? '',
                       projectId: selectedProjectId,
                       projectTitle: titleController.text,
                       teamDisplayName: associatedProj?.teamDisplayNames.join(', ') ?? 'N/A',
@@ -240,6 +264,9 @@ class AdminAwardsPage extends ConsumerWidget {
                     ],
                   ),
             const SizedBox(height: DesignSystem.spaceXl),
+
+            const AwardCategoriesSection(),
+            const SizedBox(height: DesignSystem.spaceLg),
 
             Card(
               child: Padding(

@@ -503,6 +503,33 @@ class SupabaseDatabaseService {
     }
   }
 
+  /// Creates assignments, or re-activates a removed one, keyed by the
+  /// table's unique (event, project, lecturer, role).
+  Future<void> upsertAssignmentsByKey(List<Map<String, dynamic>> rows) async {
+    if (rows.isEmpty) return;
+    try {
+      await _client
+          .from('lecturer_assignments')
+          .upsert(rows, onConflict: 'event_id,project_id,lecturer_id,role');
+    } catch (e) {
+      logDebug('Supabase upsertAssignmentsByKey error: $e');
+      rethrow;
+    }
+  }
+
+  /// Removes an assignment (kept as `removed` so past visits still resolve).
+  Future<void> removeAssignment(String id) async {
+    try {
+      await _client
+          .from('lecturer_assignments')
+          .update({'status': 'removed', 'updated_at': DateTime.now().toUtc().toIso8601String()})
+          .eq('id', id);
+    } catch (e) {
+      logDebug('Supabase removeAssignment error: $e');
+      rethrow;
+    }
+  }
+
   Future<void> setAssignment(String id, Map<String, dynamic> data) async {
     try {
       await _client.from('lecturer_assignments').upsert(data);
@@ -532,6 +559,39 @@ class SupabaseDatabaseService {
     } catch (e) {
       logDebug('Supabase getVisit error: $e');
       return null;
+    }
+  }
+
+  // ---------------------------------------------------
+  // AWARD CATEGORIES
+  // ---------------------------------------------------
+  /// Categories in display order (RLS: the public sees active ones only).
+  Future<List<Map<String, dynamic>>> getAwardCategoriesOnce() async {
+    try {
+      final res = await _client.from('award_categories').select().order('sort_order').order('title');
+      return List<Map<String, dynamic>>.from(res);
+    } catch (e) {
+      logDebug('Supabase getAwardCategoriesOnce error: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> upsertAwardCategory(Map<String, dynamic> row) async {
+    try {
+      await _client.from('award_categories').upsert(row);
+    } catch (e) {
+      logDebug('Supabase upsertAwardCategory error: $e');
+      rethrow;
+    }
+  }
+
+  /// Winners in the category keep their record (category_id is set null).
+  Future<void> deleteAwardCategory(String id) async {
+    try {
+      await _client.from('award_categories').delete().eq('id', id);
+    } catch (e) {
+      logDebug('Supabase deleteAwardCategory error: $e');
+      rethrow;
     }
   }
 

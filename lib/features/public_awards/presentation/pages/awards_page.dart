@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/widgets/public_load_state.dart';
 import '../../../../core/domain/models/award.dart';
+import '../../../../core/domain/models/award_category.dart';
 import '../../../../core/state/state_providers.dart';
 
 class AwardsPage extends ConsumerWidget {
@@ -17,7 +18,9 @@ class AwardsPage extends ConsumerWidget {
     'cat-best-innovative': 'Best Innovative Project Award',
   };
 
-  String _getAwardTitle(PublishedAwardWinner award) {
+  String _getAwardTitle(PublishedAwardWinner award, Map<String, String> categoryTitles) {
+    final category = categoryTitles[award.awardCategoryId];
+    if (category != null) return category;
     final legacy = _legacyCategoryTitles[award.awardCategoryId];
     if (legacy != null) return legacy;
     return award.projectTitle.trim().isNotEmpty ? award.projectTitle : 'Final Year Project Award';
@@ -29,6 +32,10 @@ class AwardsPage extends ConsumerWidget {
     final padding = isDesktop ? DesignSystem.marginDesktop : DesignSystem.marginMobile;
 
     final allAwards = ref.watch(publicAwardsProvider);
+    // Admin-managed category names (G-07); unknown ids fall back below.
+    final categoryTitles = <String, String>{
+      for (final c in ref.watch(awardCategoriesProvider).value ?? const <AwardCategoryItem>[]) c.id: c.title,
+    };
     final publishedAwards = allAwards.where((a) => a.publicationStatus == 'published').toList();
 
     // O(1) project lookup by id.
@@ -79,7 +86,7 @@ class AwardsPage extends ConsumerWidget {
                       final award = publishedAwards[index];
                       final associatedProj = projectsMap[award.projectId];
 
-                      final awardTitle = _getAwardTitle(award);
+                      final awardTitle = _getAwardTitle(award, categoryTitles);
                       final winningProjectTitle = _legacyCategoryTitles.containsKey(award.awardCategoryId)
                           ? award.projectTitle
                           : (associatedProj?.title ?? 'N/A');

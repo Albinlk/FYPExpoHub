@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/award.dart';
+import '../../domain/models/award_category.dart';
 import '../../supabase/row_mappers.dart';
 import '../../utils/logger.dart';
 import 'load_status.dart';
@@ -85,3 +86,9 @@ final publicAwardsProvider =
     NotifierProvider<AwardsNotifier, List<PublishedAwardWinner>>(
       () => AwardsNotifier(publishedOnly: true),
     );
+
+/// Award categories in display order (admins see hidden ones too).
+final awardCategoriesProvider = FutureProvider<List<AwardCategoryItem>>((ref) async {
+  final rows = await ref.read(supabaseDbServiceProvider).getAwardCategoriesOnce();
+  return rows.map(AwardCategoryItem.fromRow).toList();
+});
