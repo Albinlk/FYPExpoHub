@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:uuid/uuid.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/widgets/admin_actions.dart';
@@ -57,7 +56,7 @@ class AdminLecturersPage extends ConsumerWidget {
                           const SizedBox(width: DesignSystem.spaceXs),
                           Expanded(
                             child: Text(
-                              'Lecturers can sign in with their UiTM email. Ensure their account exists in Supabase Auth (or auto-provisions on first sign in).',
+                              'The lecturer must already have a sign-in account with this email (Supabase → Authentication → Users). Adding them here gives that account lecturer access.',
                               style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant),
                             ),
                           ),
@@ -91,14 +90,25 @@ class AdminLecturersPage extends ConsumerWidget {
                           }
 
                           setState(() => creating = true);
+                          final db = ref.read(supabaseDbServiceProvider);
                           final rpc = ref.read(supabaseRpcServiceProvider);
                           final ok = await runAdminWrite(
                             context,
-                            () => rpc.createLecturerAccountProfile(
-                              userId: const Uuid().v4(),
-                              email: email,
-                              displayName: name,
-                            ),
+                            () async {
+                              // profiles.id must be the lecturer's real auth
+                              // user id; a made-up id fails the FK.
+                              final userId = await db.findProfileIdByEmail(email);
+                              if (userId == null) {
+                                throw Exception(
+                                  'No account found for $email. Create the user in Supabase Authentication first, then add them here.',
+                                );
+                              }
+                              await rpc.createLecturerAccountProfile(
+                                userId: userId,
+                                email: email,
+                                displayName: name,
+                              );
+                            },
                             success: 'Lecturer $name added.',
                           );
                           if (ok) {

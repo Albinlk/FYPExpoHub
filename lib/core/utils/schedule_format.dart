@@ -12,6 +12,14 @@ DateTime dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
 /// The calendar day an instant falls on in Malaysia time (UTC+8).
 DateTime mytDate(DateTime instant) => dateOnly(instant.toUtc().add(const Duration(hours: 8)));
 
+/// [instant] moved onto calendar [day] (Malaysia time), keeping its Malaysia
+/// wall-clock time — e.g. an event start of 09:00 MYT stays 09:00 MYT.
+DateTime withMytDate(DateTime instant, DateTime day) {
+  final myt = instant.toUtc().add(const Duration(hours: 8));
+  return DateTime.utc(day.year, day.month, day.day, myt.hour, myt.minute, myt.second)
+      .subtract(const Duration(hours: 8));
+}
+
 /// Every day the event runs (inclusive, Malaysia time), plus any other day
 /// that actually has a schedule item — so a slot added outside the event's
 /// configured dates still shows instead of silently disappearing.
