@@ -191,7 +191,11 @@ gate (`42501`), argument validation (`22023`), state-machine preconditions
 | `assign_examiner` | CSP lecturer or coordinator | Assign examiner + assignment row |
 | `create_or_update_milestone` | CSP lecturer / supervisor | Upsert milestone |
 | `grant_milestone_extension` | (defined; no UI yet) | Milestone extension workflow |
-| `finalize_marks` | CSP lecturer for the course — cross-checked against the record's actual course | Sum component breakdown; `is_finalized` lock |
+| `finalize_marks` | CSP lecturer for the course — cross-checked against the record's actual course | Legacy: sums a typed breakdown. The app now uses `finalize_fyp_course_marks` |
+| `compute_fyp_course_marks` | course lecturer or coordinator | Course marks from rubric evaluations: Σ evaluator share × role's average evaluation %, per CLO for F11/F16; returns breakdown, total, UiTM grade, missing evaluations (`20260926000003`) |
+| `finalize_fyp_course_marks` | course lecturer | Refuses while evaluations are missing or already finalized; stores breakdown, total and grade |
+| `set_csp600_formulation_shares` | coordinator | Splits CSP600's formulation 30 % across F2 / F3 / F4 (must sum to 30) |
+| `fyp_grade_for`, `fyp_evaluation_percent` | helpers | UiTM grade bands; an evaluation's % over a role's (and CLO's) criteria |
 | `schedule_presentation_slot` | CSP lecturer of the session's offering or coordinator | Insert slot; sets `project_pending_presentation` |
 | `create_correction_item` | assigned supervisor/co-sup/examiner | Auto `CORR-xxxxxxxx` code |
 | `submit_correction_evidence` | record owner (student) | open/in_progress → `evidence_submitted` for staff review |

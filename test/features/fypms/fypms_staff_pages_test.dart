@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fyp_expo_hub/core/domain/fypms_course_marks.dart';
 import 'package:fyp_expo_hub/core/domain/models/fypms/fyp_correction_item.dart';
 import 'package:fyp_expo_hub/core/domain/models/fypms/fyp_expo_publication.dart';
 import 'package:fyp_expo_hub/core/domain/models/fypms/fyp_form_submission.dart';
@@ -99,6 +100,24 @@ FypRubricTemplate _rubric() => FypRubricTemplate(
       updatedAt: DateTime(2026, 9, 26),
     );
 
+/// CSP600 marks as computed by compute_fyp_course_marks.
+CourseMarks _courseMarks({required bool complete}) => CourseMarks.fromJson({
+      'course_code': 'CSP600',
+      'total': complete ? 70.0 : 62.5,
+      'allocated': 100,
+      'grade': complete ? 'B+' : 'B-',
+      'complete': complete,
+      'components': [
+        {'form_code': 'F7', 'role': 'lecturer', 'share': 10, 'percent': 100, 'evaluations': 1, 'contribution': 10},
+        {'form_code': 'F8', 'role': 'supervisor', 'share': 30, 'percent': 50, 'evaluations': 1, 'contribution': 15},
+        if (complete)
+          {'form_code': 'F8', 'role': 'examiner', 'share': 15, 'percent': 50, 'evaluations': 1, 'contribution': 7.5},
+      ],
+      'missing': [
+        if (!complete) {'form_code': 'F8', 'role': 'examiner', 'share': 15, 'reason': 'not_evaluated'},
+      ],
+    });
+
 FypCorrectionItem _correction() => FypCorrectionItem(
       id: 'corr-1',
       fypRecordId: 'rec-1',
@@ -191,7 +210,7 @@ Finder _dialogButton(String label) =>
     find.descendant(of: find.byType(AlertDialog), matching: find.text(label));
 
 void main() {
-  baseOverrides({List<FypFormSubmission>? submissions}) => [
+  baseOverrides({List<FypFormSubmission>? submissions, List<FypMarksSummary>? marks, CourseMarks? courseMarks}) => [
         fypRecordsProvider.overrideWith((ref) async => [_record()]),
         fypPendingSupervisionRequestsProvider.overrideWith((ref) async => [_request()]),
         assignedFypRecordsProvider.overrideWith((ref, role) async => [_record()]),
@@ -204,7 +223,8 @@ void main() {
         fypProgressLogsProvider.overrideWith((ref, recordId) async => [_submittedLog()]),
         fypFormSubmissionsProvider.overrideWith((ref, recordId) async => submissions ?? [_submission()]),
         fypCorrectionItemsProvider.overrideWith((ref, recordId) async => [_correction()]),
-        fypMarksSummariesProvider.overrideWith((ref, recordId) async => [_marksSummary()]),
+        fypMarksSummariesProvider.overrideWith((ref, recordId) async => marks ?? [_marksSummary()]),
+        fypCourseMarksProvider.overrideWith((ref, recordId) async => courseMarks ?? _courseMarks(complete: true)),
         fypRubricTemplatesProvider.overrideWith((ref) async => [_rubric()]),
       ];
 
@@ -316,18 +336,16 @@ void main() {
       expect(find.text('CSP600 — Grade: A'), findsOneWidget);
     });
 
-    testWidgets('finalizing marks calls finalizeMarksProvider', (tester) async {
-      final called = <String>[];
+    testWidgets('finalized course hides Finalize', (tester) async {
+      await _pump(tester, app(const CspMarksPage()));
+      expect(find.text('Finalize'), findsNothing);
+    });
+
+    testWidgets('incomplete marks list what is missing and cannot be finalized', (tester) async {
       await _pump(
         tester,
         ProviderScope(
-          overrides: [
-            ...baseOverrides(),
-            finalizeMarksProvider.overrideWithValue(
-                (recordId, courseCode, breakdown) async {
-              called.addAll([recordId, courseCode]);
-            }),
-          ],
+          overrides: baseOverrides(marks: [], courseMarks: _courseMarks(complete: false)),
           child: home(const CspMarksPage()),
         ),
       );
@@ -335,17 +353,51 @@ void main() {
       await tester.tap(find.text('Finalize').first);
       await tester.pumpAndSettle();
       expect(find.text('Finalize Course Marks'), findsOneWidget);
+      expect(find.text('F8 · Supervisor'), findsOneWidget);
+      expect(find.text('Still missing (1)'), findsOneWidget);
+      expect(find.text('F8 · Examiner'), findsOneWidget);
+      expect(find.text('62.50 / 100'), findsOneWidget, reason: 'no grade until complete');
+      final finalize = find.widgetWithText(FilledButton, 'Finalize').last;
+      expect(tester.widget<FilledButton>(finalize).onPressed, isNull);
+    });
 
-      await tester.enterText(
-        find.byType(TextField),
-        '{"proposal": 20, "report": 40, "viva": 40}',
-      );
+    testWidgets('marks breakdown fits a 375px phone', (tester) async {
+      tester.view.physicalSize = const Size(375, 812);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(ProviderScope(
+        overrides: baseOverrides(marks: [], courseMarks: _courseMarks(complete: false)),
+        child: home(const CspMarksPage()),
+      ));
       await tester.pumpAndSettle();
+      await tester.tap(find.text('Finalize').first);
+      await tester.pumpAndSettle();
+      expect(find.text('Still missing (1)'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('complete marks finalize through finalizeCourseMarksProvider', (tester) async {
+      final called = <String>[];
+      await _pump(
+        tester,
+        ProviderScope(
+          overrides: [
+            ...baseOverrides(marks: []),
+            finalizeCourseMarksProvider.overrideWithValue((recordId) async => called.add(recordId)),
+          ],
+          child: home(const CspMarksPage()),
+        ),
+      );
+
+      await tester.tap(find.text('Finalize').first);
+      await tester.pumpAndSettle();
+      expect(find.text('70.00 / 100  ·  B+'), findsOneWidget);
       await tester.tap(_dialogButton('Finalize'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
 
-      expect(called, ['rec-1', 'CSP600']);
+      expect(called, ['rec-1']);
       expect(find.text('Marks finalized.'), findsOneWidget);
     });
   });

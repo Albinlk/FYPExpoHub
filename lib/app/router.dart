@@ -13,6 +13,7 @@ import '../features/fypms/presentation/pages/csp_milestones_page.dart';
 import '../features/fypms/presentation/pages/csp_offerings_page.dart';
 import '../features/fypms/presentation/pages/csp_requests_page.dart';
 import '../features/fypms/presentation/pages/coordinator_assignments_page.dart';
+import '../features/fypms/presentation/pages/coordinator_mark_allocation_page.dart';
 import '../features/fypms/presentation/pages/coordinator_audit_page.dart';
 import '../features/fypms/presentation/pages/coordinator_dashboard_page.dart';
 import '../features/fypms/presentation/pages/coordinator_expo_page.dart';
@@ -458,6 +459,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/fypms/coordinator/expo',
             builder: (context, state) => const CoordinatorExpoPage(),
+          ),
+          GoRoute(
+            path: '/fypms/coordinator/mark-allocation',
+            builder: (context, state) => const CoordinatorMarkAllocationPage(),
           ),
           GoRoute(
             path: '/fypms/coordinator/audit',

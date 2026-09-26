@@ -11,6 +11,9 @@ abstract class FypRubricTemplate with _$FypRubricTemplate {
     required String rubricName,
     required String formCode,
     required List<Map<String, dynamic>> criteria,
+
+    /// Each evaluator's share of the course grade (textbook mark allocation).
+    @Default(<String, dynamic>{}) Map<String, dynamic> evaluatorShares,
     required int version,
     required bool isActive,
     required DateTime createdAt,

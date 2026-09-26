@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'user_scope.dart';
+import '../../domain/fypms_course_marks.dart';
 import '../../domain/models/fypms/fyp_audit_log.dart';
 import '../../domain/models/fypms/fyp_presentation_session.dart';
 import '../../domain/models/fypms/fyp_presentation_slot.dart';
@@ -83,4 +84,13 @@ final fypPublishedEventsProvider = FutureProvider<List<Map<String, dynamic>>>((r
   ref.watch(fypmsUserScopeProvider);
   final db = ref.watch(supabaseDbServiceProvider);
   return db.getPublishedEventsOnce();
+});
+
+/// A record's course marks computed from its rubric evaluations (course
+/// lecturer / coordinator only; the server enforces this).
+final fypCourseMarksProvider =
+    FutureProvider.family<CourseMarks, String>((ref, fypRecordId) async {
+  ref.watch(fypmsUserScopeProvider);
+  final rpc = ref.watch(supabaseRpcServiceProvider);
+  return CourseMarks.fromJson(await rpc.computeFypCourseMarks(fypRecordId: fypRecordId));
 });

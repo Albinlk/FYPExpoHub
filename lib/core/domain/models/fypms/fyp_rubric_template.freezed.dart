@@ -15,7 +15,8 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$FypRubricTemplate {
 
- String get id; String get rubricCode; String get rubricName; String get formCode; List<Map<String, dynamic>> get criteria; int get version; bool get isActive; DateTime get createdAt; DateTime get updatedAt;
+ String get id; String get rubricCode; String get rubricName; String get formCode; List<Map<String, dynamic>> get criteria;/// Each evaluator's share of the course grade (textbook mark allocation).
+ Map<String, dynamic> get evaluatorShares; int get version; bool get isActive; DateTime get createdAt; DateTime get updatedAt;
 /// Create a copy of FypRubricTemplate
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +29,16 @@ $FypRubricTemplateCopyWith<FypRubricTemplate> get copyWith => _$FypRubricTemplat
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is FypRubricTemplate&&(identical(other.id, id) || other.id == id)&&(identical(other.rubricCode, rubricCode) || other.rubricCode == rubricCode)&&(identical(other.rubricName, rubricName) || other.rubricName == rubricName)&&(identical(other.formCode, formCode) || other.formCode == formCode)&&const DeepCollectionEquality().equals(other.criteria, criteria)&&(identical(other.version, version) || other.version == version)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FypRubricTemplate&&(identical(other.id, id) || other.id == id)&&(identical(other.rubricCode, rubricCode) || other.rubricCode == rubricCode)&&(identical(other.rubricName, rubricName) || other.rubricName == rubricName)&&(identical(other.formCode, formCode) || other.formCode == formCode)&&const DeepCollectionEquality().equals(other.criteria, criteria)&&const DeepCollectionEquality().equals(other.evaluatorShares, evaluatorShares)&&(identical(other.version, version) || other.version == version)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,rubricCode,rubricName,formCode,const DeepCollectionEquality().hash(criteria),version,isActive,createdAt,updatedAt);
+int get hashCode => Object.hash(runtimeType,id,rubricCode,rubricName,formCode,const DeepCollectionEquality().hash(criteria),const DeepCollectionEquality().hash(evaluatorShares),version,isActive,createdAt,updatedAt);
 
 @override
 String toString() {
-  return 'FypRubricTemplate(id: $id, rubricCode: $rubricCode, rubricName: $rubricName, formCode: $formCode, criteria: $criteria, version: $version, isActive: $isActive, createdAt: $createdAt, updatedAt: $updatedAt)';
+  return 'FypRubricTemplate(id: $id, rubricCode: $rubricCode, rubricName: $rubricName, formCode: $formCode, criteria: $criteria, evaluatorShares: $evaluatorShares, version: $version, isActive: $isActive, createdAt: $createdAt, updatedAt: $updatedAt)';
 }
 
 
@@ -48,7 +49,7 @@ abstract mixin class $FypRubricTemplateCopyWith<$Res>  {
   factory $FypRubricTemplateCopyWith(FypRubricTemplate value, $Res Function(FypRubricTemplate) _then) = _$FypRubricTemplateCopyWithImpl;
 @useResult
 $Res call({
- String id, String rubricCode, String rubricName, String formCode, List<Map<String, dynamic>> criteria, int version, bool isActive, DateTime createdAt, DateTime updatedAt
+ String id, String rubricCode, String rubricName, String formCode, List<Map<String, dynamic>> criteria, Map<String, dynamic> evaluatorShares, int version, bool isActive, DateTime createdAt, DateTime updatedAt
 });
 
 
@@ -65,14 +66,15 @@ class _$FypRubricTemplateCopyWithImpl<$Res>
 
 /// Create a copy of FypRubricTemplate
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? rubricCode = null,Object? rubricName = null,Object? formCode = null,Object? criteria = null,Object? version = null,Object? isActive = null,Object? createdAt = null,Object? updatedAt = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? rubricCode = null,Object? rubricName = null,Object? formCode = null,Object? criteria = null,Object? evaluatorShares = null,Object? version = null,Object? isActive = null,Object? createdAt = null,Object? updatedAt = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,rubricCode: null == rubricCode ? _self.rubricCode : rubricCode // ignore: cast_nullable_to_non_nullable
 as String,rubricName: null == rubricName ? _self.rubricName : rubricName // ignore: cast_nullable_to_non_nullable
 as String,formCode: null == formCode ? _self.formCode : formCode // ignore: cast_nullable_to_non_nullable
 as String,criteria: null == criteria ? _self.criteria : criteria // ignore: cast_nullable_to_non_nullable
-as List<Map<String, dynamic>>,version: null == version ? _self.version : version // ignore: cast_nullable_to_non_nullable
+as List<Map<String, dynamic>>,evaluatorShares: null == evaluatorShares ? _self.evaluatorShares : evaluatorShares // ignore: cast_nullable_to_non_nullable
+as Map<String, dynamic>,version: null == version ? _self.version : version // ignore: cast_nullable_to_non_nullable
 as int,isActive: null == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
 as bool,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
@@ -161,10 +163,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String rubricCode,  String rubricName,  String formCode,  List<Map<String, dynamic>> criteria,  int version,  bool isActive,  DateTime createdAt,  DateTime updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String rubricCode,  String rubricName,  String formCode,  List<Map<String, dynamic>> criteria,  Map<String, dynamic> evaluatorShares,  int version,  bool isActive,  DateTime createdAt,  DateTime updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _FypRubricTemplate() when $default != null:
-return $default(_that.id,_that.rubricCode,_that.rubricName,_that.formCode,_that.criteria,_that.version,_that.isActive,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.rubricCode,_that.rubricName,_that.formCode,_that.criteria,_that.evaluatorShares,_that.version,_that.isActive,_that.createdAt,_that.updatedAt);case _:
   return orElse();
 
 }
@@ -182,10 +184,10 @@ return $default(_that.id,_that.rubricCode,_that.rubricName,_that.formCode,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String rubricCode,  String rubricName,  String formCode,  List<Map<String, dynamic>> criteria,  int version,  bool isActive,  DateTime createdAt,  DateTime updatedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String rubricCode,  String rubricName,  String formCode,  List<Map<String, dynamic>> criteria,  Map<String, dynamic> evaluatorShares,  int version,  bool isActive,  DateTime createdAt,  DateTime updatedAt)  $default,) {final _that = this;
 switch (_that) {
 case _FypRubricTemplate():
-return $default(_that.id,_that.rubricCode,_that.rubricName,_that.formCode,_that.criteria,_that.version,_that.isActive,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.rubricCode,_that.rubricName,_that.formCode,_that.criteria,_that.evaluatorShares,_that.version,_that.isActive,_that.createdAt,_that.updatedAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -202,10 +204,10 @@ return $default(_that.id,_that.rubricCode,_that.rubricName,_that.formCode,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String rubricCode,  String rubricName,  String formCode,  List<Map<String, dynamic>> criteria,  int version,  bool isActive,  DateTime createdAt,  DateTime updatedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String rubricCode,  String rubricName,  String formCode,  List<Map<String, dynamic>> criteria,  Map<String, dynamic> evaluatorShares,  int version,  bool isActive,  DateTime createdAt,  DateTime updatedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _FypRubricTemplate() when $default != null:
-return $default(_that.id,_that.rubricCode,_that.rubricName,_that.formCode,_that.criteria,_that.version,_that.isActive,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.rubricCode,_that.rubricName,_that.formCode,_that.criteria,_that.evaluatorShares,_that.version,_that.isActive,_that.createdAt,_that.updatedAt);case _:
   return null;
 
 }
@@ -217,7 +219,7 @@ return $default(_that.id,_that.rubricCode,_that.rubricName,_that.formCode,_that.
 @JsonSerializable()
 
 class _FypRubricTemplate implements FypRubricTemplate {
-  const _FypRubricTemplate({required this.id, required this.rubricCode, required this.rubricName, required this.formCode, required final  List<Map<String, dynamic>> criteria, required this.version, required this.isActive, required this.createdAt, required this.updatedAt}): _criteria = criteria;
+  const _FypRubricTemplate({required this.id, required this.rubricCode, required this.rubricName, required this.formCode, required final  List<Map<String, dynamic>> criteria, final  Map<String, dynamic> evaluatorShares = const <String, dynamic>{}, required this.version, required this.isActive, required this.createdAt, required this.updatedAt}): _criteria = criteria,_evaluatorShares = evaluatorShares;
   factory _FypRubricTemplate.fromJson(Map<String, dynamic> json) => _$FypRubricTemplateFromJson(json);
 
 @override final  String id;
@@ -229,6 +231,15 @@ class _FypRubricTemplate implements FypRubricTemplate {
   if (_criteria is EqualUnmodifiableListView) return _criteria;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_criteria);
+}
+
+/// Each evaluator's share of the course grade (textbook mark allocation).
+ final  Map<String, dynamic> _evaluatorShares;
+/// Each evaluator's share of the course grade (textbook mark allocation).
+@override@JsonKey() Map<String, dynamic> get evaluatorShares {
+  if (_evaluatorShares is EqualUnmodifiableMapView) return _evaluatorShares;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(_evaluatorShares);
 }
 
 @override final  int version;
@@ -249,16 +260,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FypRubricTemplate&&(identical(other.id, id) || other.id == id)&&(identical(other.rubricCode, rubricCode) || other.rubricCode == rubricCode)&&(identical(other.rubricName, rubricName) || other.rubricName == rubricName)&&(identical(other.formCode, formCode) || other.formCode == formCode)&&const DeepCollectionEquality().equals(other._criteria, _criteria)&&(identical(other.version, version) || other.version == version)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FypRubricTemplate&&(identical(other.id, id) || other.id == id)&&(identical(other.rubricCode, rubricCode) || other.rubricCode == rubricCode)&&(identical(other.rubricName, rubricName) || other.rubricName == rubricName)&&(identical(other.formCode, formCode) || other.formCode == formCode)&&const DeepCollectionEquality().equals(other._criteria, _criteria)&&const DeepCollectionEquality().equals(other._evaluatorShares, _evaluatorShares)&&(identical(other.version, version) || other.version == version)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,rubricCode,rubricName,formCode,const DeepCollectionEquality().hash(_criteria),version,isActive,createdAt,updatedAt);
+int get hashCode => Object.hash(runtimeType,id,rubricCode,rubricName,formCode,const DeepCollectionEquality().hash(_criteria),const DeepCollectionEquality().hash(_evaluatorShares),version,isActive,createdAt,updatedAt);
 
 @override
 String toString() {
-  return 'FypRubricTemplate(id: $id, rubricCode: $rubricCode, rubricName: $rubricName, formCode: $formCode, criteria: $criteria, version: $version, isActive: $isActive, createdAt: $createdAt, updatedAt: $updatedAt)';
+  return 'FypRubricTemplate(id: $id, rubricCode: $rubricCode, rubricName: $rubricName, formCode: $formCode, criteria: $criteria, evaluatorShares: $evaluatorShares, version: $version, isActive: $isActive, createdAt: $createdAt, updatedAt: $updatedAt)';
 }
 
 
@@ -269,7 +280,7 @@ abstract mixin class _$FypRubricTemplateCopyWith<$Res> implements $FypRubricTemp
   factory _$FypRubricTemplateCopyWith(_FypRubricTemplate value, $Res Function(_FypRubricTemplate) _then) = __$FypRubricTemplateCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String rubricCode, String rubricName, String formCode, List<Map<String, dynamic>> criteria, int version, bool isActive, DateTime createdAt, DateTime updatedAt
+ String id, String rubricCode, String rubricName, String formCode, List<Map<String, dynamic>> criteria, Map<String, dynamic> evaluatorShares, int version, bool isActive, DateTime createdAt, DateTime updatedAt
 });
 
 
@@ -286,14 +297,15 @@ class __$FypRubricTemplateCopyWithImpl<$Res>
 
 /// Create a copy of FypRubricTemplate
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? rubricCode = null,Object? rubricName = null,Object? formCode = null,Object? criteria = null,Object? version = null,Object? isActive = null,Object? createdAt = null,Object? updatedAt = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? rubricCode = null,Object? rubricName = null,Object? formCode = null,Object? criteria = null,Object? evaluatorShares = null,Object? version = null,Object? isActive = null,Object? createdAt = null,Object? updatedAt = null,}) {
   return _then(_FypRubricTemplate(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,rubricCode: null == rubricCode ? _self.rubricCode : rubricCode // ignore: cast_nullable_to_non_nullable
 as String,rubricName: null == rubricName ? _self.rubricName : rubricName // ignore: cast_nullable_to_non_nullable
 as String,formCode: null == formCode ? _self.formCode : formCode // ignore: cast_nullable_to_non_nullable
 as String,criteria: null == criteria ? _self._criteria : criteria // ignore: cast_nullable_to_non_nullable
-as List<Map<String, dynamic>>,version: null == version ? _self.version : version // ignore: cast_nullable_to_non_nullable
+as List<Map<String, dynamic>>,evaluatorShares: null == evaluatorShares ? _self._evaluatorShares : evaluatorShares // ignore: cast_nullable_to_non_nullable
+as Map<String, dynamic>,version: null == version ? _self.version : version // ignore: cast_nullable_to_non_nullable
 as int,isActive: null == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
 as bool,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
