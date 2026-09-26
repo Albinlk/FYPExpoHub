@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../app/theme/theme.dart';
+import '../../../../core/utils/external_link.dart';
 import '../../../../core/domain/models/event.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/widgets/project_card.dart';
@@ -37,12 +38,25 @@ class _HomePageState extends ConsumerState<HomePage> {
             // 1. HERO BANNER SECTION
             Container(
               width: double.infinity,
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
                   colors: [DesignSystem.primary, DesignSystem.primaryContainer],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
+                // Admin-set hero photo (Event → Hero Image URL), tinted with
+                // the brand ink so the white hero text keeps its contrast.
+                image: safeExternalUri(event.heroImageUrl) == null
+                    ? null
+                    : DecorationImage(
+                        image: NetworkImage(safeExternalUri(event.heroImageUrl)!.toString()),
+                        fit: BoxFit.cover,
+                        colorFilter: ColorFilter.mode(
+                          DesignSystem.primary.withValues(alpha: 0.8),
+                          BlendMode.srcOver,
+                        ),
+                        onError: (_, _) {},
+                      ),
               ),
               padding: EdgeInsets.symmetric(horizontal: padding, vertical: isDesktop ? 80.0 : 28.0),
               child: Column(
