@@ -15,6 +15,13 @@ class _AdminSettingsPageState extends ConsumerState<AdminSettingsPage> {
   final _worksheetsController = TextEditingController();
   final _undoWindowController = TextEditingController(text: '30');
   bool _visitsEnabled = true;
+  // Enforced by mark_student_project_visited: by default lecturers can only
+  // mark visits on the exhibition days.
+  bool _allowBefore = false;
+  bool _allowAfter = false;
+  // Kept as loaded (no editor yet) so saving doesn't wipe them.
+  Object? _visitOpenAt;
+  Object? _visitCloseAt;
   bool _isLoading = true;
 
   @override
@@ -40,6 +47,10 @@ class _AdminSettingsPageState extends ConsumerState<AdminSettingsPage> {
         _maxSizeController.text = excelData?['maxFileSize'] as String? ?? '10 MB';
         _worksheetsController.text = excelData?['mandatoryWorksheets'] as String? ?? 'TENTATIF, PEMENANG ANUGERAH';
         _visitsEnabled = (visitData?['visitsEnabled'] as bool?) ?? true;
+        _allowBefore = (visitData?['allowVisitsBeforeEvent'] as bool?) ?? false;
+        _allowAfter = (visitData?['allowVisitsAfterEvent'] as bool?) ?? false;
+        _visitOpenAt = visitData?['visitOpenAt'];
+        _visitCloseAt = visitData?['visitCloseAt'];
         _undoWindowController.text = (visitData?['lecturerUndoWindowMinutes']?.toString()) ?? '30';
         _isLoading = false;
       });
@@ -57,10 +68,10 @@ class _AdminSettingsPageState extends ConsumerState<AdminSettingsPage> {
 
       await db.setSetting('visit_tracker', {
         'visitsEnabled': _visitsEnabled,
-        'allowVisitsBeforeEvent': false,
-        'allowVisitsAfterEvent': false,
-        'visitOpenAt': null,
-        'visitCloseAt': null,
+        'allowVisitsBeforeEvent': _allowBefore,
+        'allowVisitsAfterEvent': _allowAfter,
+        'visitOpenAt': _visitOpenAt,
+        'visitCloseAt': _visitCloseAt,
         'lecturerUndoWindowMinutes': int.tryParse(_undoWindowController.text) ?? 30,
         'updatedAt': DateTime.now().toIso8601String(),
       });
@@ -128,6 +139,22 @@ class _AdminSettingsPageState extends ConsumerState<AdminSettingsPage> {
                             subtitle: Text('Allow lecturers to record student visits in real time', style: DesignSystem.bodySm),
                             value: _visitsEnabled,
                             onChanged: (val) => setState(() => _visitsEnabled = val),
+                            activeThumbColor: DesignSystem.secondary,
+                          ),
+                          SwitchListTile(
+                            contentPadding: EdgeInsets.zero,
+                            title: Text('Allow visits before the exhibition', style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold)),
+                            subtitle: Text('Off: lecturers can mark visits from the first exhibition day', style: DesignSystem.bodySm),
+                            value: _allowBefore,
+                            onChanged: (val) => setState(() => _allowBefore = val),
+                            activeThumbColor: DesignSystem.secondary,
+                          ),
+                          SwitchListTile(
+                            contentPadding: EdgeInsets.zero,
+                            title: Text('Allow visits after the exhibition', style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold)),
+                            subtitle: Text('Off: marking closes at the end of the last exhibition day', style: DesignSystem.bodySm),
+                            value: _allowAfter,
+                            onChanged: (val) => setState(() => _allowAfter = val),
                             activeThumbColor: DesignSystem.secondary,
                           ),
                           const SizedBox(height: 12),
