@@ -109,6 +109,29 @@ const List<String> fypmsAlwaysEnabledFormCodes = [
   'F1', 'F2', 'F3', 'F4', 'F6a', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12', 'F13',
 ];
 
+/// Who scores each form with its rubric (FYP Text Book, 4th ed.) — mirrors
+/// `public.fyp_form_evaluator_roles`, which the server enforces. Forms not
+/// listed (F1, F5, F6a, F6b, F12) have their own flows, not a rubric.
+const Map<String, Set<String>> fypmsFormEvaluatorRoles = {
+  'F2': {'lecturer'},
+  'F3': {'lecturer'},
+  'F4': {'lecturer'},
+  'F14': {'lecturer'},
+  'F7': {'supervisor', 'examiner', 'lecturer'},
+  'F8': {'supervisor', 'examiner'},
+  'F10': {'supervisor', 'examiner'},
+  'F11': {'supervisor', 'examiner'},
+  'F15': {'supervisor', 'examiner'},
+  'F16': {'supervisor', 'examiner'},
+  'F9': {'lecturer', 'coordinator'},
+  'F13': {'supervisor', 'lecturer'},
+};
+
+/// Whether [role] (`supervisor`, `examiner`, `lecturer`, `coordinator`)
+/// evaluates [formCode].
+bool fypmsCanEvaluate(String formCode, String role) =>
+    fypmsFormEvaluatorRoles[formCode]?.contains(role) ?? false;
+
 /// Form codes that are only available when `special_evaluation_enabled` is true.
 const List<String> fypmsSpecialEvaluationFormCodes = ['F14', 'F15', 'F16'];
 

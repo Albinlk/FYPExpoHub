@@ -208,6 +208,7 @@ List<({String title, IconData icon, String route})> _navItems({
       (title: 'Supervision Requests', icon: Icons.mail, route: '/fypms/csp/requests'),
       (title: 'Offerings', icon: Icons.school, route: '/fypms/csp/offerings'),
       (title: 'Milestones', icon: Icons.flag, route: '/fypms/csp/milestones'),
+      (title: 'Evaluations', icon: Icons.description, route: '/fypms/csp/evaluations'),
       // Presentations nav hidden until the page is implemented (route is a
       // placeholder in the router).
       (title: 'Marks', icon: Icons.scoreboard, route: '/fypms/csp/marks'),
