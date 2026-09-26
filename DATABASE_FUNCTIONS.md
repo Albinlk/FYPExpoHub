@@ -205,6 +205,9 @@ gate (`42501`), argument validation (`22023`), state-machine preconditions
 | `decide_milestone_extension` | CSP lecturer of the course or coordinator | Approves/rejects the pending request in place (reject needs a comment); approval moves the milestone target date; audited (`20260926000012`) |
 | `create_presentation_session` | course lecturer or coordinator | Creates a session for an offering: code (upper-cased, unique per offering), title, start < end, defence/expo; event date from MYT; audited (`20260926000012`) |
 | `fyp_can_read_presentation_session` | authenticated (RLS helper) | Whether the caller can read a record slotted in the session, so students see their own session (`20260926000012`) |
+| `request_supervisor_change` | record owner or current supervisor | Supervisor change request to the coordinator: reason ≥ 20 chars, optional proposed active supervisor (not the current supervisor or examiner), one pending per record; audited (`20260927000003`) |
+| `decide_supervisor_change` | coordinator | Approve (reassigns via `assign_supervisor_to_fyp_record`, new or proposed supervisor) or reject (reason required); audited (`20260927000003`) |
+| `list_pending_nominations` / `decide_nomination` | PU (`programme_head` for the record's programme) | Nominations made while the programme has a PU start `pending` (trigger `fyp_assignment_pu_pending`); the PU approves, or rejects with a reason, which deactivates the nomination and clears it from the record; audited (`20260927000003`) |
 | `finalize_fyp_course_marks` | course lecturer | Refuses while evaluations are missing or already finalized; stores breakdown, total and grade |
 | `set_csp600_formulation_shares` | coordinator | Splits CSP600's formulation 30 % across F2 / F3 / F4 (must sum to 30) |
 | `fyp_grade_for`, `fyp_evaluation_percent` | helpers | UiTM grade bands; an evaluation's % over a role's (and CLO's) criteria |

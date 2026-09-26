@@ -9,6 +9,7 @@ import '../theme/theme.dart';
 /// /fypms/supervisor/evaluations) must not also highlight the dashboard
 /// entry alongside the sub-page entry.
 const _dashboardRoutes = [
+  '/fypms/pu',
   '/fypms/student',
   '/fypms/supervisor',
   '/fypms/examiner',
@@ -48,9 +49,10 @@ class FypmsShell extends ConsumerWidget {
     final isSupervisor = ref.watch(isFypSupervisorProvider);
     final isExaminer = ref.watch(isFypExaminerProvider);
     final isCsp = ref.watch(isCspLecturerProvider);
+    final isPu = ref.watch(isFypProgrammeHeadProvider);
 
     final hasAccess =
-        roles.value?.isNotEmpty == true && (isAdmin || isCoordinator || isStudent || isSupervisor || isExaminer || isCsp);
+        roles.value?.isNotEmpty == true && (isAdmin || isCoordinator || isStudent || isSupervisor || isExaminer || isCsp || isPu);
 
     if (!hasAccess) {
       return Scaffold(
@@ -129,7 +131,7 @@ class FypmsShell extends ConsumerWidget {
               ]
             : null,
       ),
-      drawer: !isDesktop ? _FypmsDrawer(currentPath: location, isAdmin: isAdmin, isCoordinator: isCoordinator, isStudent: isStudent, isSupervisor: isSupervisor, isExaminer: isExaminer, isCsp: isCsp) : null,
+      drawer: !isDesktop ? _FypmsDrawer(currentPath: location, isAdmin: isAdmin, isCoordinator: isCoordinator, isStudent: isStudent, isSupervisor: isSupervisor, isExaminer: isExaminer, isCsp: isCsp, isPu: isPu) : null,
       body: Row(
         children: [
           if (isDesktop)
@@ -141,6 +143,7 @@ class FypmsShell extends ConsumerWidget {
               isSupervisor: isSupervisor,
               isExaminer: isExaminer,
               isCsp: isCsp,
+      isPu: isPu,
             ),
           Expanded(
             child: Container(
@@ -161,6 +164,7 @@ List<({String title, IconData icon, String route})> _navItems({
   required bool isSupervisor,
   required bool isExaminer,
   required bool isCsp,
+  bool isPu = false,
 }) {
   final items = <({String title, IconData icon, String route})>[];
 
@@ -176,8 +180,7 @@ List<({String title, IconData icon, String route})> _navItems({
       (title: 'Deliverables', icon: Icons.checklist, route: '/fypms/student/deliverables'),
       (title: 'Milestones', icon: Icons.flag, route: '/fypms/student/milestones'),
       (title: 'Corrections', icon: Icons.fact_check, route: '/fypms/student/corrections'),
-      // Presentations nav hidden until the page is implemented (route is a
-      // placeholder in the router).
+      (title: 'Presentations', icon: Icons.event, route: '/fypms/student/presentations'),
       (title: 'Marks', icon: Icons.scoreboard, route: '/fypms/student/marks'),
     ]);
   }
@@ -211,10 +214,13 @@ List<({String title, IconData icon, String route})> _navItems({
       (title: 'Offerings', icon: Icons.school, route: '/fypms/csp/offerings'),
       (title: 'Milestones', icon: Icons.flag, route: '/fypms/csp/milestones'),
       (title: 'Evaluations', icon: Icons.description, route: '/fypms/csp/evaluations'),
-      // Presentations nav hidden until the page is implemented (route is a
-      // placeholder in the router).
+      (title: 'Presentations', icon: Icons.event, route: '/fypms/csp/presentations'),
       (title: 'Marks', icon: Icons.scoreboard, route: '/fypms/csp/marks'),
     ]);
+  }
+
+  if (isPu) {
+    items.add((title: 'Nominations', icon: Icons.how_to_reg, route: '/fypms/pu'));
   }
 
   if (isCoordinator || isAdmin) {
@@ -241,6 +247,7 @@ class _FypmsSidebar extends StatelessWidget {
   final bool isSupervisor;
   final bool isExaminer;
   final bool isCsp;
+  final bool isPu;
 
   const _FypmsSidebar({
     required this.currentPath,
@@ -250,6 +257,7 @@ class _FypmsSidebar extends StatelessWidget {
     required this.isSupervisor,
     required this.isExaminer,
     required this.isCsp,
+    this.isPu = false,
   });
 
   @override
@@ -261,6 +269,7 @@ class _FypmsSidebar extends StatelessWidget {
       isSupervisor: isSupervisor,
       isExaminer: isExaminer,
       isCsp: isCsp,
+      isPu: isPu,
     );
 
     return Container(
@@ -338,6 +347,7 @@ class _FypmsDrawer extends StatelessWidget {
   final bool isSupervisor;
   final bool isExaminer;
   final bool isCsp;
+  final bool isPu;
 
   const _FypmsDrawer({
     required this.currentPath,
@@ -347,6 +357,7 @@ class _FypmsDrawer extends StatelessWidget {
     required this.isSupervisor,
     required this.isExaminer,
     required this.isCsp,
+    this.isPu = false,
   });
 
   @override
@@ -358,6 +369,7 @@ class _FypmsDrawer extends StatelessWidget {
       isSupervisor: isSupervisor,
       isExaminer: isExaminer,
       isCsp: isCsp,
+      isPu: isPu,
     );
 
     return Drawer(

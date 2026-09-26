@@ -205,5 +205,19 @@ void main() {
         '/fypms/supervisor',
       );
     });
+
+    testWidgets('R11 PU lands on /fypms/pu', (tester) async {
+      expect(
+        await _resolve(tester, target: '/fypms', user: _user('pu@x'), roles: const ['programme_head']),
+        '/fypms/pu',
+      );
+    });
+
+    testWidgets('R11 a supervisor cannot enter the PU workspace', (tester) async {
+      expect(
+        await _resolve(tester, target: '/fypms/pu', user: _user('sup@x'), roles: const ['supervisor']),
+        '/fypms/supervisor',
+      );
+    });
   });
 }

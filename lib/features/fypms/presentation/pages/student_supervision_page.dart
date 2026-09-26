@@ -7,6 +7,7 @@ import '../../../../core/state/state_providers.dart';
 import '../../../../core/supabase/fypms_rpc_service.dart';
 import '../../../../core/utils/fypms_format.dart';
 import '../widgets/fypms_loading_widget.dart';
+import '../widgets/supervisor_change_widgets.dart';
 import '../widgets/student_record_workspace.dart';
 
 /// F1 Mutual Acceptance: the student names the supervisor (and co-supervisor)
@@ -48,14 +49,8 @@ class StudentSupervisionPage extends ConsumerWidget {
                 ],
               ),
             ),
-            if (hasSupervisor)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(DesignSystem.gutter, 0, DesignSystem.gutter, DesignSystem.spaceSm),
-                child: Text(
-                  'Your supervisor is assigned. To change supervisor, contact the FYP coordinator (F1 terms).',
-                  style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant),
-                ),
-              ),
+            // R11: a supervisor change goes to the coordinator (F1 terms).
+            if (hasSupervisor) SupervisorChangeSection(record: record),
             Expanded(
               child: requests.when(
                 loading: () => const FypmsLoadingWidget(),

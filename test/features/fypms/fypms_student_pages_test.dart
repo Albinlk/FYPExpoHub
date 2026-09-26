@@ -231,7 +231,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('New Request'), findsNothing);
-      expect(find.textContaining('contact the FYP coordinator'), findsOneWidget);
+      // R11: changes go to the coordinator through a request.
+      expect(find.text('Request supervisor change'), findsOneWidget);
     });
   });
 }

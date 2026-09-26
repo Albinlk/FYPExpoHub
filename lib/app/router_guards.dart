@@ -192,6 +192,7 @@ String _fypmsHomeForRoles(List<String> roles) {
   if (roles.contains('fyp_coordinator') || roles.contains('admin')) {
     return '/fypms/coordinator';
   }
+  if (roles.contains('programme_head')) return '/fypms/pu';
   return '/fypms';
 }
 
@@ -204,6 +205,7 @@ String? _fypmsWorkspaceForPath(String path) {
     'examiner',
     'csp',
     'coordinator',
+    'pu',
   ];
   final segments = path.split('/');
   if (segments.length < 3 || segments[1] != 'fypms') return null;
@@ -225,6 +227,8 @@ bool _roleAllowsWorkspace(List<String> roles, String workspace) {
       return has('csp600_lecturer') || has('csp650_lecturer');
     case 'coordinator':
       return has('fyp_coordinator') || has('admin');
+    case 'pu':
+      return has('programme_head') || has('admin');
     default:
       return false;
   }
