@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/fypms/fyp_correction_item.dart';
+import '../../../../core/domain/models/fypms/fyp_record.dart';
 import '../../../../core/state/fypms_state_providers.dart';
-import '../../../../core/state/state_providers.dart';
-import '../../../../core/supabase/fypms_rpc_service.dart';
+import '../widgets/correction_evidence_dialog.dart';
+import '../widgets/fypms_file_link.dart';
 import '../widgets/fypms_loading_widget.dart';
 import '../widgets/student_record_workspace.dart';
 
@@ -81,9 +82,13 @@ class StudentCorrectionsPage extends ConsumerWidget {
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
+                                if (item.evidenceNote?.isNotEmpty == true)
+                                  Text('Your note: ${item.evidenceNote}', style: DesignSystem.bodySm),
+                                if (item.evidenceUrl != null)
+                                  FypmsFileLink(label: 'Evidence file', bucket: kCorrectionEvidenceBucket, path: item.evidenceUrl!),
                               ],
                             ),
-                            trailing: _trailingFor(context, ref, record.id, item),
+                            trailing: _trailingFor(context, ref, record, item),
                           ),
                         );
                     },
@@ -100,7 +105,7 @@ class StudentCorrectionsPage extends ConsumerWidget {
   Widget? _trailingFor(
     BuildContext context,
     WidgetRef ref,
-    String recordId,
+    FypRecord record,
     FypCorrectionItem item,
   ) {
     if (item.status == 'confirmed' || item.status == 'closed') {
@@ -114,7 +119,10 @@ class StudentCorrectionsPage extends ConsumerWidget {
       );
     }
     return FilledButton(
-      onPressed: () => _showEvidenceDialog(context, ref, recordId, item.id),
+      onPressed: () => showDialog<void>(
+        context: context,
+        builder: (_) => CorrectionEvidenceDialog(record: record, item: item),
+      ),
       style: FilledButton.styleFrom(
         backgroundColor: DesignSystem.secondary,
         foregroundColor: Colors.white,
@@ -135,87 +143,4 @@ class StudentCorrectionsPage extends ConsumerWidget {
     }
   }
 
-  void _showEvidenceDialog(
-    BuildContext context,
-    WidgetRef ref,
-    String recordId,
-    String correctionItemId,
-  ) {
-    final noteController = TextEditingController();
-    final fileUrlController = TextEditingController();
-
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor: DesignSystem.surfaceContainerLowest,
-          title: Text('Submit Correction Evidence', style: DesignSystem.h2),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Confirm that the correction has been addressed. Your supervisor '
-                'or examiner will review and confirm it.',
-                style: DesignSystem.bodySm,
-              ),
-              const SizedBox(height: DesignSystem.spaceMd),
-              TextField(
-                controller: noteController,
-                decoration: const InputDecoration(
-                  labelText: 'Note (what was fixed)',
-                ),
-                maxLines: 3,
-              ),
-              const SizedBox(height: DesignSystem.spaceMd),
-              TextField(
-                controller: fileUrlController,
-                decoration: const InputDecoration(
-                  labelText: 'Evidence file URL (optional)',
-                  hintText: 'e.g. link to the updated document',
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () async {
-                try {
-                  final rpc = ref.read(supabaseRpcServiceProvider);
-                  await rpc.submitCorrectionEvidence(
-                    correctionItemId: correctionItemId,
-                    note: noteController.text.trim().isEmpty
-                        ? null
-                        : noteController.text.trim(),
-                    fileUrl: fileUrlController.text.trim().isEmpty
-                        ? null
-                        : fileUrlController.text.trim(),
-                  );
-                  if (dialogContext.mounted) Navigator.pop(dialogContext);
-                  ref.invalidate(fypCorrectionItemsProvider(recordId));
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Evidence submitted. Awaiting staff review.'),
-                      ),
-                    );
-                  }
-                } catch (e) {
-                  if (dialogContext.mounted) {
-                    ScaffoldMessenger.of(dialogContext).showSnackBar(
-                      SnackBar(content: Text('Failed to submit evidence: $e')),
-                    );
-                  }
-                }
-              },
-              child: const Text('Submit'),
-            ),
-          ],
-        );
-      },
-    );
-  }
 }

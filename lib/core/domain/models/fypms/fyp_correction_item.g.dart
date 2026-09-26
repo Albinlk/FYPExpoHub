@@ -15,6 +15,11 @@ _FypCorrectionItem _$FypCorrectionItemFromJson(Map<String, dynamic> json) =>
       severity: json['severity'] as String,
       status: json['status'] as String,
       createdBy: json['createdBy'] as String?,
+      evidenceNote: json['evidenceNote'] as String?,
+      evidenceUrl: json['evidenceUrl'] as String?,
+      evidenceSubmittedAt: json['evidenceSubmittedAt'] == null
+          ? null
+          : DateTime.parse(json['evidenceSubmittedAt'] as String),
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
     );
@@ -28,6 +33,9 @@ Map<String, dynamic> _$FypCorrectionItemToJson(_FypCorrectionItem instance) =>
       'severity': instance.severity,
       'status': instance.status,
       'createdBy': instance.createdBy,
+      'evidenceNote': instance.evidenceNote,
+      'evidenceUrl': instance.evidenceUrl,
+      'evidenceSubmittedAt': instance.evidenceSubmittedAt?.toIso8601String(),
       'createdAt': instance.createdAt.toIso8601String(),
       'updatedAt': instance.updatedAt.toIso8601String(),
     };

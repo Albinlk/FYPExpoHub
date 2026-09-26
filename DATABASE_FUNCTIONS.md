@@ -189,8 +189,8 @@ gate (`42501`), argument validation (`22023`), state-machine preconditions
 | `submit_deliverable` | record owner | Textbook CSP650 deliverables only; report PDF + Word, slides, poster required (file in the record's folder); raw data / system + test data / setup instructions / executable may be an https link (`20260926000007`) |
 | `submit_report_version` | record owner | F6: report + original plagiarism report (both in the record's folder) and similarity index, required and ≤ 30 % (`20260926000005`) |
 | `endorse_report_submission` | assigned supervisor/co-sup or coordinator | F6 endorsement: `endorsed` → under_review, or `returned` (comment required) → rejected |
-| `assign_supervisor_to_fyp_record` | coordinator | Assign supervisor/co-supervisor |
-| `assign_examiner` | CSP lecturer or coordinator | Assign examiner + assignment row |
+| `assign_supervisor_to_fyp_record` | CSP lecturer or coordinator | One active holder per role (replaces the previous); sets main/co-supervisor/examiner ids; workflow only advances from pre-supervision stages; nobody both supervises and examines (`20260926000008`) |
+| `assign_examiner` | CSP lecturer or coordinator | Delegates to `assign_supervisor_to_fyp_record(..., 'examiner')` |
 | `create_or_update_milestone` | CSP lecturer / supervisor | Upsert milestone |
 | `grant_milestone_extension` | (defined; no UI yet) | Milestone extension workflow |
 | `finalize_marks` | CSP lecturer for the course — cross-checked against the record's actual course | Legacy: sums a typed breakdown. The app now uses `finalize_fyp_course_marks` |

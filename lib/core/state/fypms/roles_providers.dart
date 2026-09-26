@@ -106,7 +106,9 @@ final fypmsFeaturesProvider = FutureProvider<FypmsFeatures>((ref) async {
 
 /// Form codes that are always available.
 const List<String> fypmsAlwaysEnabledFormCodes = [
-  'F1', 'F2', 'F3', 'F4', 'F6a', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12', 'F13',
+  // F1 (supervision request), F5 (consultation log), F6b (report submission)
+  // and F12 (corrections) have their own pages; submit_fyp_form rejects them.
+  'F2', 'F3', 'F4', 'F6a', 'F7', 'F8', 'F9', 'F10', 'F11', 'F13',
 ];
 
 /// Who scores each form with its rubric (FYP Text Book, 4th ed.) — mirrors

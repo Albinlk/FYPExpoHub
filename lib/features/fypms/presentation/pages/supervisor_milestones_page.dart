@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
-import '../../../../core/domain/models/fypms/fyp_milestone.dart';
 import '../../../../core/domain/models/fypms/fyp_record.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import '../../../../core/utils/fypms_format.dart';
-import '../../../../core/state/state_providers.dart';
-import '../../../../core/supabase/fypms_rpc_service.dart';
 import '../widgets/fypms_loading_widget.dart';
 
+/// Milestones of the supervisor's students, read-only: the course lecturer or
+/// coordinator sets them (create_or_update_milestone), so offering add/edit
+/// here only produced permission errors.
 class SupervisorMilestonesPage extends ConsumerWidget {
   const SupervisorMilestonesPage({super.key});
 
@@ -63,14 +63,11 @@ class _RecordMilestonesSection extends ConsumerWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                record.projectTitle ?? 'Untitled Project',
-                style: DesignSystem.bodyLg.copyWith(fontWeight: FontWeight.bold, color: DesignSystem.primary),
-              ),
-              FilledButton.icon(
-                onPressed: () => _showMilestoneDialog(context, ref, null),
-                icon: const Icon(Icons.add, size: 18),
-                label: const Text('Add Milestone'),
+              Flexible(
+                child: Text(
+                  record.projectTitle ?? 'Untitled Project',
+                  style: DesignSystem.bodyLg.copyWith(fontWeight: FontWeight.bold, color: DesignSystem.primary),
+                ),
               ),
             ],
           ),
@@ -101,17 +98,7 @@ class _RecordMilestonesSection extends ConsumerWidget {
                         'Target: ${m.targetDate != null ? formatFypDate(m.targetDate!) : 'TBD'}',
                         style: DesignSystem.bodySm,
                       ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          FypStatusBadge.milestone(m.status),
-                          IconButton(
-                            icon: const Icon(Icons.edit, size: 20),
-                            tooltip: 'Edit milestone',
-                            onPressed: () => _showMilestoneDialog(context, ref, m),
-                          ),
-                        ],
-                      ),
+                      trailing: FypStatusBadge.milestone(m.status),
                     ),
                   ),
               ],
@@ -120,120 +107,6 @@ class _RecordMilestonesSection extends ConsumerWidget {
         ),
         const SizedBox(height: DesignSystem.spaceLg),
       ],
-    );
-  }
-
-  void _showMilestoneDialog(BuildContext context, WidgetRef ref, FypMilestone? milestone) {
-    final codeController = TextEditingController(text: milestone?.milestoneCode);
-    final titleController = TextEditingController(text: milestone?.milestoneTitle);
-    final descController = TextEditingController(text: milestone?.description);
-    DateTime selectedDate = milestone?.targetDate ?? DateTime.now();
-    String status = milestone?.status ?? 'pending';
-
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (dialogContext, setState) {
-            return AlertDialog(
-              backgroundColor: DesignSystem.surfaceContainerLowest,
-              title: Text(milestone == null ? 'New Milestone' : 'Edit Milestone', style: DesignSystem.h2),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextField(
-                      controller: codeController,
-                      decoration: const InputDecoration(labelText: 'Milestone Code (e.g. M1)'),
-                    ),
-                    const SizedBox(height: DesignSystem.spaceMd),
-                    TextField(
-                      controller: titleController,
-                      decoration: const InputDecoration(labelText: 'Title'),
-                    ),
-                    const SizedBox(height: DesignSystem.spaceMd),
-                    TextField(
-                      controller: descController,
-                      decoration: const InputDecoration(labelText: 'Description'),
-                      maxLines: 3,
-                    ),
-                    const SizedBox(height: DesignSystem.spaceMd),
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text('Target Date: ${formatFypDate(selectedDate)}', style: DesignSystem.bodySm),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.calendar_today),
-                        tooltip: 'Pick target date',
-                        onPressed: () async {
-                          final picked = await showDatePicker(
-                            context: context,
-                            initialDate: selectedDate,
-                            firstDate: DateTime(2020),
-                            lastDate: DateTime(2100),
-                          );
-                          if (picked != null) setState(() => selectedDate = picked);
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: DesignSystem.spaceMd),
-                    DropdownButtonFormField<String>(
-                      initialValue: status,
-                      decoration: const InputDecoration(labelText: 'Status'),
-                      items: const [
-                        DropdownMenuItem(value: 'pending', child: Text('Pending')),
-                        DropdownMenuItem(value: 'in_progress', child: Text('In Progress')),
-                        DropdownMenuItem(value: 'completed', child: Text('Completed')),
-                        DropdownMenuItem(value: 'overdue', child: Text('Overdue')),
-                      ],
-                      onChanged: (v) => setState(() => status = v!),
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(dialogContext),
-                  child: const Text('Cancel'),
-                ),
-                FilledButton(
-                  onPressed: codeController.text.trim().isEmpty || titleController.text.trim().isEmpty
-                      ? null
-                      : () async {
-                          try {
-                            final rpc = ref.read(supabaseRpcServiceProvider);
-                            await rpc.createOrUpdateMilestone(
-                              fypRecordId: record.id,
-                              milestoneCode: codeController.text.trim(),
-                              milestoneTitle: titleController.text.trim(),
-                              description: descController.text.trim().isEmpty ? null : descController.text.trim(),
-                              targetDate: selectedDate,
-                              status: status,
-                            );
-                            if (dialogContext.mounted) {
-                              Navigator.pop(dialogContext);
-                            }
-                            ref.invalidate(fypMilestonesProvider(record.id));
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Milestone saved.')),
-                              );
-                            }
-                          } catch (e) {
-                            if (dialogContext.mounted) {
-                              ScaffoldMessenger.of(dialogContext).showSnackBar(
-                                SnackBar(content: Text('Failed: $e')),
-                              );
-                            }
-                          }
-                        },
-                  child: const Text('Save'),
-                ),
-              ],
-            );
-          },
-        );
-      },
     );
   }
 }

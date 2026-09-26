@@ -4,6 +4,8 @@ import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/fypms/fyp_record.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import '../../../../core/utils/fypms_format.dart';
+import '../widgets/correction_evidence_dialog.dart' show kCorrectionEvidenceBucket;
+import '../widgets/fypms_file_link.dart';
 import '../widgets/fypms_loading_widget.dart';
 
 class ExaminerCorrectionsPage extends ConsumerWidget {
@@ -100,7 +102,16 @@ class _RecordCorrectionsSection extends ConsumerWidget {
                         '${item.itemCode ?? 'Correction'} — ${item.severity}',
                         style: DesignSystem.bodySm.copyWith(fontWeight: FontWeight.bold),
                       ),
-                      subtitle: Text(item.description, style: DesignSystem.bodySm),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(item.description, style: DesignSystem.bodySm),
+                          if (item.evidenceNote?.isNotEmpty == true)
+                            Text('Student: ${item.evidenceNote}', style: DesignSystem.bodySm.copyWith(color: DesignSystem.secondary)),
+                          if (item.evidenceUrl != null)
+                            FypmsFileLink(label: 'Evidence file', bucket: kCorrectionEvidenceBucket, path: item.evidenceUrl!),
+                        ],
+                      ),
                       trailing: _trailingFor(context, ref, item),
                     ),
                   ),
