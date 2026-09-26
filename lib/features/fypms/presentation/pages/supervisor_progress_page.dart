@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/fypms/fyp_record.dart';
 import '../../../../core/state/fypms_state_providers.dart';
+import '../../../../core/utils/fypms_format.dart';
+import '../widgets/consultation_attendance_banner.dart';
 import '../widgets/fypms_loading_widget.dart';
 
 class SupervisorProgressPage extends ConsumerWidget {
@@ -75,6 +77,10 @@ class _RecordProgressSection extends ConsumerWidget {
             }
             return Column(
               children: [
+                Padding(
+                  padding: const EdgeInsets.only(bottom: DesignSystem.spaceSm),
+                  child: ConsultationAttendanceBanner(record: record, logs: list),
+                ),
                 for (final log in list)
                   Card(
                     elevation: 1,
@@ -86,7 +92,10 @@ class _RecordProgressSection extends ConsumerWidget {
                       leading: Text('W${log.weekNumber}', style: DesignSystem.bodySm.copyWith(fontWeight: FontWeight.bold)),
                       title: Text(log.summary, style: DesignSystem.bodySm),
                       subtitle: Text(
-                        'Status: ${log.status.replaceAll('_', ' ')}',
+                        [
+                          '${formatFypDate(log.progressDate)} · ${log.status.replaceAll('_', ' ')}',
+                          if (log.nextPlan?.isNotEmpty == true) 'Next: ${log.nextPlan}',
+                        ].join('\n'),
                         style: DesignSystem.bodySm,
                       ),
                       trailing: log.status == 'submitted'

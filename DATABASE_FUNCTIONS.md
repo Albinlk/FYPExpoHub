@@ -181,7 +181,7 @@ gate (`42501`), argument validation (`22023`), state-machine preconditions
 | `list_my_supervision_requests` | any lecturer | F1 requests naming the caller as supervisor/co-supervisor, with student name and course |
 | `decide_supervision_request` | the named supervisor, an assigned supervisor/co-sup, or coordinator | Approve/reject; approval sets `main_supervisor_id`, `co_supervisor_id`, the project title and both assignments |
 | `update_fyp_record_field` / `admin_override_fyp_record_field` | owner / admin (+reason) | Edit whitelisted project fields (typed CASE branches) |
-| `submit_progress_log` | record owner | F5 weekly log (unique per record+week) |
+| `submit_progress_log` | record owner | F5 consultation entry: one per meeting date; week derived from the semester start; date within the semester and not in the future (`20260926000006`) |
 | `validate_progress_log` | assigned supervisor/co-sup/coordinator | Validate or reject submitted logs |
 | `submit_fyp_form` | record owner | Version form submissions; F14–F16 require `settings.fypms_features.special_evaluation_enabled` |
 | `submit_form_evaluation` | textbook evaluator for the form (`fyp_form_evaluator_roles`, `20260926000002`) | Upsert evaluation; `weighted_total` = the form's percentage from the active textbook rubric, 100 × Σ(W×S) ÷ Σ(W×10); supervisor-only criteria excluded for examiners; scores outside 0–max rejected (`20260926000001`) |

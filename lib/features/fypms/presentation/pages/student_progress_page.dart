@@ -1,20 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
+import '../../../../core/domain/fypms_attendance.dart';
+import '../../../../core/domain/models/fypms/fyp_record.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import '../../../../core/utils/fypms_format.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/supabase/fypms_rpc_service.dart';
+import '../widgets/consultation_attendance_banner.dart';
 import '../widgets/fypms_loading_widget.dart';
 import '../widgets/student_record_workspace.dart';
 
+/// F5 Proposal/Project In-Progress Form: one entry per supervision meeting
+/// (date, completed activity, next activity), signed by the supervisor, with
+/// attendance against the 80 % requirement.
 class StudentProgressPage extends ConsumerWidget {
   const StudentProgressPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return StudentRecordWorkspace(
-      title: 'Progress Logs',
+      title: 'Consultation Log',
       builder: (context, ref, record) {
         final logs = ref.watch(fypProgressLogsProvider(record.id));
         return Column(
@@ -24,11 +30,14 @@ class StudentProgressPage extends ConsumerWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Weekly Progress Logs', style: DesignSystem.h2),
+                  Flexible(child: Text('Consultation Log (F5)', style: DesignSystem.h2)),
                   FilledButton.icon(
-                    onPressed: () => _showAddLogDialog(context, ref, record.id),
+                    onPressed: () => showDialog<void>(
+                      context: context,
+                      builder: (_) => ConsultationLogDialog(record: record),
+                    ),
                     icon: const Icon(Icons.add),
-                    label: const Text('Add Log'),
+                    label: const Text('Log Meeting'),
                     style: FilledButton.styleFrom(
                       backgroundColor: DesignSystem.secondary,
                       foregroundColor: Colors.white,
@@ -37,6 +46,11 @@ class StudentProgressPage extends ConsumerWidget {
                 ],
               ),
             ),
+            if (logs.value != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(DesignSystem.gutter, 0, DesignSystem.gutter, DesignSystem.spaceSm),
+                child: ConsultationAttendanceBanner(record: record, logs: logs.value!),
+              ),
             Expanded(
               child: logs.when(
                 loading: () => const FypmsLoadingWidget(),
@@ -45,7 +59,7 @@ class StudentProgressPage extends ConsumerWidget {
                   if (items.isEmpty) {
                     return Center(
                       child: Text(
-                        'No progress logs yet.\nSubmit your first weekly log.',
+                        'No consultations logged yet.\nLog each meeting with your supervisor.',
                         style: DesignSystem.bodyMd,
                         textAlign: TextAlign.center,
                       ),
@@ -56,49 +70,51 @@ class StudentProgressPage extends ConsumerWidget {
                     itemCount: items.length,
                     itemBuilder: (context, itemIndex) {
                       final log = items[itemIndex];
-                        return Card(
-                          elevation: 1,
-                          margin: const EdgeInsets.only(bottom: DesignSystem.spaceMd),
-                          shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusXl),
-                          color: DesignSystem.surfaceContainerLowest,
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.all(DesignSystem.spaceMd),
-                            leading: const Icon(Icons.timeline, size: 40, color: DesignSystem.primary),
-                            title: Text(
-                              'Week ${log.weekNumber}',
-                              style: DesignSystem.bodyLg.copyWith(fontWeight: FontWeight.bold),
-                            ),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Status: ${log.status.replaceAll('_', ' ')}', style: DesignSystem.bodySm),
-                                const SizedBox(height: DesignSystem.spaceXs),
-                                Text(log.summary, style: DesignSystem.bodySm),
-                                if (log.challenges?.isNotEmpty == true)
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: DesignSystem.spaceXs),
-                                    child: Text(
-                                      'Challenges: ${log.challenges}',
-                                      style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant),
-                                    ),
-                                  ),
-                                if (log.validationComment?.isNotEmpty == true)
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: DesignSystem.spaceXs),
-                                    child: Text(
-                                      'Feedback: ${log.validationComment}',
-                                      style: DesignSystem.bodySm.copyWith(color: DesignSystem.secondary),
-                                    ),
-                                  ),
-                                const SizedBox(height: DesignSystem.spaceSm),
+                      return Card(
+                        elevation: 1,
+                        margin: const EdgeInsets.only(bottom: DesignSystem.spaceMd),
+                        shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusXl),
+                        color: DesignSystem.surfaceContainerLowest,
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.all(DesignSystem.spaceMd),
+                          leading: const Icon(Icons.forum, size: 36, color: DesignSystem.primary),
+                          title: Text(
+                            '${formatFypDate(log.progressDate)} · Week ${log.weekNumber}',
+                            style: DesignSystem.bodyLg.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                switch (log.status) {
+                                  'validated' => 'Signed by supervisor',
+                                  'rejected' => 'Not accepted by supervisor',
+                                  'submitted' => 'Awaiting supervisor signature',
+                                  _ => log.status,
+                                },
+                                style: DesignSystem.bodySm.copyWith(fontWeight: FontWeight.w600),
+                              ),
+                              const SizedBox(height: DesignSystem.spaceXs),
+                              Text('Completed: ${log.summary}', style: DesignSystem.bodySm),
+                              if (log.nextPlan?.isNotEmpty == true)
+                                Text('Next: ${log.nextPlan}', style: DesignSystem.bodySm),
+                              if (log.challenges?.isNotEmpty == true)
                                 Text(
-                                  'Date: ${formatFypDate(log.progressDate)}',
+                                  'Challenges: ${log.challenges}',
                                   style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant),
                                 ),
-                              ],
-                            ),
+                              if (log.validationComment?.isNotEmpty == true)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: DesignSystem.spaceXs),
+                                  child: Text(
+                                    'Supervisor: ${log.validationComment}',
+                                    style: DesignSystem.bodySm.copyWith(color: DesignSystem.secondary),
+                                  ),
+                                ),
+                            ],
                           ),
-                        );
+                        ),
+                      );
                     },
                   );
                 },
@@ -109,121 +125,148 @@ class StudentProgressPage extends ConsumerWidget {
       },
     );
   }
+}
 
-  void _showAddLogDialog(BuildContext context, WidgetRef ref, String fypRecordId) {
-    final summaryController = TextEditingController();
-    final challengesController = TextEditingController();
-    final nextPlanController = TextEditingController();
-    int weekNumber = DateTime.now().isBefore(DateTime(DateTime.now().year, 3, 1))
-        ? 1
-        : ((DateTime.now().difference(DateTime(DateTime.now().year, 3, 1)).inDays / 7).floor() + 1).clamp(1, 16);
+/// One F5 entry: meeting date (within the semester, not in the future),
+/// completed activity (required), next activity, challenges.
+class ConsultationLogDialog extends ConsumerStatefulWidget {
+  const ConsultationLogDialog({super.key, required this.record});
 
-    showDialog<void>(
+  final FypRecord record;
+
+  @override
+  ConsumerState<ConsultationLogDialog> createState() => _ConsultationLogDialogState();
+}
+
+class _ConsultationLogDialogState extends ConsumerState<ConsultationLogDialog> {
+  final _completed = TextEditingController();
+  final _next = TextEditingController();
+  final _challenges = TextEditingController();
+  DateTime _date = DateTime.now();
+  bool _submitting = false;
+
+  @override
+  void dispose() {
+    _completed.dispose();
+    _next.dispose();
+    _challenges.dispose();
+    super.dispose();
+  }
+
+  String? _trimmed(TextEditingController c) => c.text.trim().isEmpty ? null : c.text.trim();
+
+  Future<void> _pickDate(DateTime first, DateTime last) async {
+    final picked = await showDatePicker(
       context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            final isDesktop = MediaQuery.of(context).size.width >= 768;
-            return AlertDialog(
-              title: Text(
-                'Add Progress Log',
-                style: (isDesktop ? DesignSystem.h3 : DesignSystem.bodyLg)
-                    .copyWith(color: DesignSystem.primary),
-              ),
-              content: SingleChildScrollView(
-                child: SizedBox(
-                  width: isDesktop ? 500 : MediaQuery.of(context).size.width * 0.85,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TextField(
-                        controller: summaryController,
-                        decoration: const InputDecoration(labelText: 'Work Summary'),
-                        maxLines: 3,
-                      ),
-                      const SizedBox(height: DesignSystem.spaceSm),
-                      TextField(
-                        controller: challengesController,
-                        decoration: const InputDecoration(labelText: 'Challenges (optional)'),
-                        maxLines: 2,
-                      ),
-                      const SizedBox(height: DesignSystem.spaceSm),
-                      TextField(
-                        controller: nextPlanController,
-                        decoration: const InputDecoration(labelText: 'Next Plan (optional)'),
-                        maxLines: 2,
-                      ),
-                      const SizedBox(height: DesignSystem.spaceSm),
-                      Row(
-                        children: [
-                          Text('Week Number', style: DesignSystem.bodyMd),
-                          const SizedBox(width: DesignSystem.spaceSm),
-                          DropdownButton<int>(
-                            value: weekNumber,
-                            underline: const SizedBox.shrink(),
-                            items: [
-                              for (var w = 1; w <= 16; w++)
-                                DropdownMenuItem(value: w, child: Text('$w')),
-                            ],
-                            onChanged: (v) {
-                              if (v != null) {
-                                setState(() => weekNumber = v);
-                              }
-                            },
-                          ),
-                        ],
-                      ),
-                    ],
+      initialDate: _date.isAfter(last) ? last : (_date.isBefore(first) ? first : _date),
+      firstDate: first,
+      lastDate: last,
+    );
+    if (picked != null) setState(() => _date = picked);
+  }
+
+  Future<void> _submit(DateTime? semesterStart) async {
+    setState(() => _submitting = true);
+    try {
+      await ref.read(supabaseRpcServiceProvider).submitProgressLog(
+            fypRecordId: widget.record.id,
+            // The server derives the week from the semester start; this is its
+            // fallback when the semester has no dates.
+            weekNumber: semesterStart == null ? 1 : semesterWeek(semesterStart, _date).clamp(1, 52),
+            summary: _completed.text.trim(),
+            nextPlan: _trimmed(_next),
+            challenges: _trimmed(_challenges),
+            progressDate: _date,
+          );
+      ref.invalidate(fypProgressLogsProvider(widget.record.id));
+      if (!mounted) return;
+      final messenger = ScaffoldMessenger.of(context);
+      Navigator.pop(context);
+      messenger.showSnackBar(const SnackBar(content: Text('Consultation logged for your supervisor to sign.')));
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _submitting = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to log: $e')));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final semester = ref
+        .watch(fypmsSemestersProvider)
+        .value
+        ?.where((s) => s.id == widget.record.academicSemesterId)
+        .firstOrNull;
+    final today = DateTime.now();
+    final first = semester?.startDate ?? DateTime(today.year - 1);
+    final last = semester == null || semester.endDate.isAfter(today) ? today : semester.endDate;
+    final ready = _completed.text.trim().isNotEmpty && !_submitting;
+
+    return AlertDialog(
+      title: Text(
+        'Log Consultation (F5)',
+        style: (isDesktop ? DesignSystem.h3 : DesignSystem.bodyLg).copyWith(color: DesignSystem.primary),
+      ),
+      content: SingleChildScrollView(
+        child: SizedBox(
+          width: isDesktop ? 500 : MediaQuery.of(context).size.width * 0.85,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              InkWell(
+                key: const Key('meeting-date'),
+                onTap: _submitting ? null : () => _pickDate(first, last),
+                child: InputDecorator(
+                  decoration: const InputDecoration(
+                    labelText: 'Date of meeting',
+                    prefixIcon: Icon(Icons.event),
+                  ),
+                  child: Text(
+                    semester == null
+                        ? formatFypDate(_date)
+                        : '${formatFypDate(_date)} · Week ${semesterWeek(semester.startDate, _date)}',
                   ),
                 ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    if (summaryController.text.trim().isEmpty) return;
-                    Navigator.of(dialogContext).pop();
-                    try {
-                      final rpc = ref.read(supabaseRpcServiceProvider);
-                      await rpc.submitProgressLog(
-                        fypRecordId: fypRecordId,
-                        weekNumber: weekNumber,
-                        summary: summaryController.text.trim(),
-                        challenges: challengesController.text.trim().isEmpty
-                            ? null
-                            : challengesController.text.trim(),
-                        nextPlan: nextPlanController.text.trim().isEmpty
-                            ? null
-                            : nextPlanController.text.trim(),
-                      );
-                      if (context.mounted) {
-                        ref.invalidate(fypProgressLogsProvider(fypRecordId));
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Progress log submitted.')),
-                        );
-                      }
-                    } catch (e) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Failed to submit: $e')),
-                        );
-                      }
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: DesignSystem.secondary,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: const Text('Submit'),
-                ),
-              ],
-            );
-          },
-        );
-      },
+              const SizedBox(height: DesignSystem.spaceSm),
+              TextField(
+                key: const Key('completed-activity'),
+                controller: _completed,
+                onChanged: (_) => setState(() {}),
+                decoration: const InputDecoration(labelText: 'Completed activity *'),
+                maxLines: 3,
+              ),
+              const SizedBox(height: DesignSystem.spaceSm),
+              TextField(
+                controller: _next,
+                decoration: const InputDecoration(labelText: 'Next activity'),
+                maxLines: 2,
+              ),
+              const SizedBox(height: DesignSystem.spaceSm),
+              TextField(
+                controller: _challenges,
+                decoration: const InputDecoration(labelText: 'Challenges (optional)'),
+                maxLines: 2,
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _submitting ? null : () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: ready ? () => _submit(semester?.startDate) : null,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: DesignSystem.secondary,
+            foregroundColor: Colors.white,
+          ),
+          child: const Text('Submit'),
+        ),
+      ],
     );
   }
 }
