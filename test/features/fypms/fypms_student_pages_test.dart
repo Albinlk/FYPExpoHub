@@ -118,87 +118,79 @@ void main() {
     });
   });
 
-  group('StudentDeliverablesPage', () {
-    testWidgets('shows readiness card and checklist when empty',
-        (tester) async {
+  group('StudentDeliverablesPage (textbook CSP650 list)', () {
+    FypDeliverable del(String type, {String? url, int version = 1}) => FypDeliverable(
+          id: 'del-$type',
+          fypRecordId: 'rec-1',
+          deliverableType: type,
+          title: type,
+          fileUrl: url,
+          version: version,
+          isRequired: false,
+          createdAt: DateTime(2026, 8, 1),
+          updatedAt: DateTime(2026, 8, 1),
+        );
+
+    testWidgets('empty: 0/4 required, eight checklist items', (tester) async {
       await pumpWithSize(tester, _deliverablesApp());
       await tester.pumpAndSettle();
 
       expect(find.text('Exhibition Readiness'), findsOneWidget);
-      expect(find.text('0/5 required deliverables submitted'), findsOneWidget);
-      expect(find.text('Deliverables Checklist'), findsOneWidget);
-      expect(find.text('Submit Deliverable'), findsOneWidget);
-      expect(find.text('Lean Canvas (F13)'), findsOneWidget);
-      expect(find.text('Project Demo / Artifact'), findsOneWidget);
-      expect(find.textContaining('No deliverables submitted yet'), findsOneWidget);
+      expect(find.text('0/4 required deliverables submitted'), findsOneWidget);
+      for (final title in [
+        'FYP report (PDF)',
+        'FYP report (Word)',
+        'Presentation slides',
+        'Poster',
+        'Raw data',
+        'System with test data',
+        'Instructions on system setup',
+        '.apk / .exe file',
+      ]) {
+        expect(find.text(title), findsOneWidget, reason: title);
+      }
+      expect(find.textContaining('If relevant'), findsNWidgets(4));
+      expect(find.text('Submit'), findsNWidgets(8));
     });
 
-    testWidgets('counts submitted deliverables with file URLs toward readiness',
-        (tester) async {
-      await pumpWithSize(tester, _deliverablesApp(
-        deliverables: [
-          FypDeliverable(
-            id: 'del-1',
-            fypRecordId: 'rec-1',
-            deliverableType: 'proposal',
-            title: 'F1 Supervision Request',
-            fileUrl: 'https://storage.example.com/del-1.pdf',
-            version: 1,
-            isRequired: true,
-            createdAt: DateTime(2026, 8, 1),
-            updatedAt: DateTime(2026, 8, 1),
-          ),
-          FypDeliverable(
-            id: 'del-2',
-            fypRecordId: 'rec-1',
-            deliverableType: 'project_demo',
-            title: 'Project Demo / Artifact',
-            fileUrl: 'https://storage.example.com/demo.zip',
-            version: 1,
-            isRequired: true,
-            createdAt: DateTime(2026, 8, 1),
-            updatedAt: DateTime(2026, 8, 1),
-          ),
-          FypDeliverable(
-            id: 'del-3',
-            fypRecordId: 'rec-1',
-            deliverableType: 'poster',
-            title: 'Exhibition Poster',
-            version: 1,
-            isRequired: false,
-            createdAt: DateTime(2026, 8, 1),
-            updatedAt: DateTime(2026, 8, 1),
-          ),
-        ],
-      ));
+    testWidgets('counts required files; keeps older items visible', (tester) async {
+      await pumpWithSize(tester, _deliverablesApp(deliverables: [
+        del('final_report_pdf', url: '2026_1/rec-1/deliverable_final_report_pdf/2/report.pdf', version: 2),
+        del('poster'), // no file yet
+        del('demo', url: 'https://youtu.be/x'), // legacy type
+      ]));
       await tester.pumpAndSettle();
 
-      expect(find.text('2/5 required deliverables submitted'), findsOneWidget);
-      expect(find.textContaining('Submitted (v1)'), findsNWidgets(3));
+      expect(find.text('1/4 required deliverables submitted'), findsOneWidget);
+      expect(find.textContaining('Submitted (v2)'), findsOneWidget);
+      expect(find.text('Replace'), findsOneWidget);
+      expect(find.text('Other submitted items'), findsOneWidget);
+      expect(find.text('demo · v1'), findsOneWidget);
     });
 
-    testWidgets('opens readiness preview dialog', (tester) async {
+    testWidgets('required items need a file; "if relevant" items may be an https link', (tester) async {
       await pumpWithSize(tester, _deliverablesApp());
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Preview Readiness'));
+      await tester.tap(find.text('Submit').first); // FYP report (PDF)
+      await tester.pumpAndSettle();
+      expect(find.text('Choose file (.pdf)'), findsOneWidget);
+      expect(find.text('Link'), findsNothing);
+      await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Exhibition Readiness Preview'), findsOneWidget);
-      expect(find.text('0/5 required deliverables ready'), findsOneWidget);
-      expect(find.textContaining('NOT yet ready'), findsOneWidget);
-    });
-
-    testWidgets('opens submit dialog with checklist types', (tester) async {
-      await pumpWithSize(tester, _deliverablesApp());
+      await tester.tap(find.text('Submit').at(5)); // System with test data
       await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Submit Deliverable'));
+      await tester.tap(find.text('Link'));
       await tester.pumpAndSettle();
-
-      expect(find.text('Submit Deliverable'), findsWidgets);
-      expect(find.text('Deliverable Type'), findsOneWidget);
-      expect(find.text('Cancel'), findsOneWidget);
+      final submit = find.widgetWithText(ElevatedButton, 'Submit');
+      await tester.enterText(find.byKey(const Key('deliverable-link')), 'http://example.com/repo');
+      await tester.pump();
+      expect(find.text('Use an https:// address'), findsOneWidget);
+      expect(tester.widget<ElevatedButton>(submit).onPressed, isNull);
+      await tester.enterText(find.byKey(const Key('deliverable-link')), 'https://github.com/team/system');
+      await tester.pump();
+      expect(tester.widget<ElevatedButton>(submit).onPressed, isNotNull);
     });
   });
 

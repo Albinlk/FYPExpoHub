@@ -1,27 +1,24 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../app/theme/theme.dart';
+import '../../../../core/domain/fypms_deliverables.dart';
 import '../../../../core/domain/models/fypms/fyp_deliverable.dart';
 import '../../../../core/domain/models/fypms/fyp_record.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/supabase/fypms_rpc_service.dart';
+import '../../../../core/utils/external_link.dart';
+import '../widgets/fypms_file_link.dart';
 import '../widgets/fypms_loading_widget.dart';
 import '../widgets/student_record_workspace.dart';
 
-/// Expected FYP deliverables used for the exhibition-readiness checklist.
-/// Each entry maps to the `deliverable_type` column in `fyp_deliverables`.
-const List<({String type, String title, bool required})> fypmsDeliverableChecklist = [
-  (type: 'proposal', title: 'F1 Supervision Request', required: true),
-  (type: 'interim_report', title: 'Interim Report (F6a)', required: true),
-  (type: 'final_report', title: 'Final Report (F6b)', required: true),
-  (type: 'lean_canvas', title: 'Lean Canvas (F13)', required: true),
-  (type: 'project_demo', title: 'Project Demo / Artifact', required: true),
-  (type: 'presentation_deck', title: 'Presentation Deck', required: false),
-  (type: 'project_video', title: 'Project Video', required: false),
-  (type: 'poster', title: 'Exhibition Poster', required: false),
-];
+const _bucket = 'fyp-deliverables';
 
+/// CSP650 deliverables handed to the Project lecturer (FYP Text Book): the
+/// report as PDF and Word, slides, poster, and the "if relevant" project
+/// files, with an exhibition-readiness count of the required ones.
 class StudentDeliverablesPage extends ConsumerWidget {
   const StudentDeliverablesPage({super.key});
 
@@ -31,347 +28,128 @@ class StudentDeliverablesPage extends ConsumerWidget {
       title: 'Deliverables',
       builder: (context, ref, record) {
         final deliverables = ref.watch(fypDeliverablesProvider(record.id));
-        return Column(
-          children: [
-            Expanded(
-              child: deliverables.when(
-                loading: () => const FypmsLoadingWidget(),
-                error: (e, _) => Center(child: Text('Error: $e')),
-                data: (items) => _buildBody(context, ref, record, items),
-              ),
-            ),
-          ],
+        return deliverables.when(
+          loading: () => const FypmsLoadingWidget(),
+          error: (e, _) => Center(child: Text('Error: $e')),
+          data: (items) => _Body(record: record, items: items),
         );
       },
     );
   }
+}
 
-  Widget _buildBody(
-    BuildContext context,
-    WidgetRef ref,
-    FypRecord record,
-    List<FypDeliverable> items,
-  ) {
-    final byType = <String, FypDeliverable>{
-      for (final d in items) d.deliverableType ?? '': d,
-    };
-    final readiness = _readiness(byType);
+class _Body extends StatelessWidget {
+  const _Body({required this.record, required this.items});
+
+  final FypRecord record;
+  final List<FypDeliverable> items;
+
+  @override
+  Widget build(BuildContext context) {
+    final byType = {for (final d in items) d.deliverableType ?? '': d};
+    final readiness = deliverableReadiness(items);
+    final ready = readiness.done == readiness.total;
+    final others = otherDeliverables(items);
 
     return ListView(
       padding: const EdgeInsets.all(DesignSystem.gutter),
       children: [
-        _ExhibitionReadinessCard(
-          record: record,
-          readiness: readiness,
-          onPreview: () => _showReadinessPreview(context, record, readiness),
-        ),
-        const SizedBox(height: DesignSystem.spaceMd),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text('Deliverables Checklist', style: DesignSystem.h2),
-            FilledButton.icon(
-              onPressed: () => _showSubmitDialog(context, ref, record.id),
-              icon: const Icon(Icons.upload_file),
-              label: const Text('Submit Deliverable'),
-              style: FilledButton.styleFrom(
-                backgroundColor: DesignSystem.secondary,
-                foregroundColor: Colors.white,
-              ),
+        Card(
+          color: DesignSystem.surfaceContainerLowest,
+          child: Padding(
+            padding: const EdgeInsets.all(DesignSystem.spaceMd),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Exhibition Readiness', style: DesignSystem.h3Mobile.copyWith(color: DesignSystem.primary)),
+                const SizedBox(height: DesignSystem.spaceSm),
+                LinearProgressIndicator(
+                  value: readiness.total == 0 ? 0 : readiness.done / readiness.total,
+                  minHeight: 8,
+                  borderRadius: DesignSystem.radiusFull,
+                ),
+                const SizedBox(height: DesignSystem.spaceSm),
+                Text(
+                  '${readiness.done}/${readiness.total} required deliverables submitted',
+                  style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.w600),
+                ),
+                Text(
+                  ready
+                      ? 'All required items are in. Add the "if relevant" project files that apply.'
+                      : 'The report (PDF and Word), slides and poster are required.',
+                  style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
+        const SizedBox(height: DesignSystem.spaceLg),
+        Text('Deliverables Checklist', style: DesignSystem.h3Mobile.copyWith(color: DesignSystem.primary)),
         const SizedBox(height: DesignSystem.spaceSm),
-        for (final item in fypmsDeliverableChecklist)
-          _DeliverableTile(
-            item: item,
-            deliverable: byType[item.type],
-          ),
-        if (items.isEmpty)
-          Padding(
-            padding: const EdgeInsets.only(top: DesignSystem.spaceLg),
-            child: Center(
-              child: Text(
-                'No deliverables submitted yet.\nUse "Submit Deliverable" to begin.',
-                style: DesignSystem.bodyMd,
-                textAlign: TextAlign.center,
-              ),
+        for (final spec in fypmsDeliverableChecklist)
+          _DeliverableRow(record: record, spec: spec, current: byType[spec.type]),
+        if (others.isNotEmpty) ...[
+          const SizedBox(height: DesignSystem.spaceLg),
+          Text('Other submitted items', style: DesignSystem.bodyLg.copyWith(fontWeight: FontWeight.bold)),
+          for (final d in others)
+            ListTile(
+              dense: true,
+              leading: const Icon(Icons.inventory_2_outlined),
+              title: Text(d.title),
+              subtitle: Text('${d.deliverableType ?? 'item'} · v${d.version}'),
+              trailing: d.fileUrl == null ? null : _OpenButton(url: d.fileUrl!),
             ),
-          ),
+        ],
       ],
     );
   }
-
-  /// Computes exhibition-readiness from the submitted deliverables map.
-  ({int completed, int total, bool ready}) _readiness(
-      Map<String, FypDeliverable> byType) {
-    var completed = 0;
-    var total = 0;
-    for (final item in fypmsDeliverableChecklist) {
-      if (!item.required) continue;
-      total++;
-      final d = byType[item.type];
-      if (d != null && d.fileUrl != null) completed++;
-    }
-    return (completed: completed, total: total, ready: completed >= total);
-  }
-
-  void _showReadinessPreview(
-    BuildContext context,
-    FypRecord record,
-    ({int completed, int total, bool ready}) readiness,
-  ) {
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        final isDesktop = MediaQuery.of(context).size.width >= 768;
-        return AlertDialog(
-          title: Text(
-            'Exhibition Readiness Preview',
-            style: (isDesktop ? DesignSystem.h3 : DesignSystem.bodyLg)
-                .copyWith(color: DesignSystem.primary),
-          ),
-          content: SizedBox(
-            width: isDesktop ? 460 : MediaQuery.of(context).size.width * 0.85,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  record.projectTitle?.isNotEmpty == true
-                      ? record.projectTitle!
-                      : 'Untitled Project',
-                  style: DesignSystem.bodyLg.copyWith(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: DesignSystem.spaceSm),
-                Text(
-                  'Course: ${record.currentCourseCode}',
-                  style: DesignSystem.bodyMd,
-                ),
-                const SizedBox(height: DesignSystem.spaceMd),
-                LinearProgressIndicator(
-                  value: readiness.total == 0
-                      ? 0
-                      : readiness.completed / readiness.total,
-                  backgroundColor: DesignSystem.surfaceContainer,
-                  color: DesignSystem.secondary,
-                ),
-                const SizedBox(height: DesignSystem.spaceSm),
-                Text(
-                  '${readiness.completed}/${readiness.total} required deliverables ready',
-                  style: DesignSystem.bodySm,
-                ),
-                const SizedBox(height: DesignSystem.spaceMd),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(DesignSystem.spaceMd),
-                  decoration: BoxDecoration(
-                    color: readiness.ready
-                        ? DesignSystem.secondary.withValues(alpha: 0.15)
-                        : DesignSystem.errorContainer.withValues(alpha: 0.4),
-                    borderRadius: DesignSystem.radiusLg,
-                  ),
-                  child: Text(
-                    readiness.ready
-                        ? 'This record meets the required deliverables for exhibition publication.'
-                        : 'This record is NOT yet ready for exhibition publication.',
-                    style: DesignSystem.bodySm.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: readiness.ready
-                          ? DesignSystem.onSecondaryContainer
-                          : DesignSystem.onErrorContainer,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Close'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showSubmitDialog(BuildContext context, WidgetRef ref, String fypRecordId) {
-    final titleController = TextEditingController();
-    final descriptionController = TextEditingController();
-    final fileUrlController = TextEditingController();
-    String? selectedType = fypmsDeliverableChecklist.first.type;
-
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            final isDesktop = MediaQuery.of(context).size.width >= 768;
-            return AlertDialog(
-              title: Text(
-                'Submit Deliverable',
-                style: (isDesktop ? DesignSystem.h3 : DesignSystem.bodyLg)
-                    .copyWith(color: DesignSystem.primary),
-              ),
-              content: SingleChildScrollView(
-                child: SizedBox(
-                  width: isDesktop ? 500 : MediaQuery.of(context).size.width * 0.85,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      DropdownButtonFormField<String>(
-                        initialValue: selectedType,
-                        decoration: const InputDecoration(labelText: 'Deliverable Type'),
-                        isExpanded: true,
-                        items: [
-                          for (final item in fypmsDeliverableChecklist)
-                            DropdownMenuItem(
-                              value: item.type,
-                              child: Text('${item.title}${item.required ? ' *' : ''}'),
-                            ),
-                        ],
-                        onChanged: (v) {
-                          if (v != null) {
-                            setState(() => selectedType = v);
-                          }
-                        },
-                      ),
-                      const SizedBox(height: DesignSystem.spaceSm),
-                      TextField(
-                        controller: titleController,
-                        decoration: const InputDecoration(labelText: 'Title'),
-                      ),
-                      const SizedBox(height: DesignSystem.spaceSm),
-                      TextField(
-                        controller: descriptionController,
-                        decoration: const InputDecoration(labelText: 'Description (optional)'),
-                        maxLines: 2,
-                      ),
-                      const SizedBox(height: DesignSystem.spaceSm),
-                      TextField(
-                        controller: fileUrlController,
-                        decoration: const InputDecoration(
-                          labelText: 'File URL (optional)',
-                          helperText:
-                              'Paste a storage URL after uploading your file.',
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    final type = selectedType;
-                    if (type == null) return;
-                    if (titleController.text.trim().isEmpty) return;
-                    Navigator.of(dialogContext).pop();
-                    try {
-                      final rpc = ref.read(supabaseRpcServiceProvider);
-                      await rpc.submitDeliverable(
-                        fypRecordId: fypRecordId,
-                        deliverableType: type,
-                        title: titleController.text.trim(),
-                        description: descriptionController.text.trim().isEmpty
-                            ? null
-                            : descriptionController.text.trim(),
-                        fileUrl: fileUrlController.text.trim().isEmpty
-                            ? null
-                            : fileUrlController.text.trim(),
-                      );
-                      if (context.mounted) {
-                        ref.invalidate(fypDeliverablesProvider(fypRecordId));
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Deliverable submitted.')),
-                        );
-                      }
-                    } catch (e) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Failed to submit: $e')),
-                        );
-                      }
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: DesignSystem.secondary,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: const Text('Submit'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
 }
 
-class _ExhibitionReadinessCard extends StatelessWidget {
+class _DeliverableRow extends StatelessWidget {
+  const _DeliverableRow({required this.record, required this.spec, required this.current});
+
   final FypRecord record;
-  final ({int completed, int total, bool ready}) readiness;
-  final VoidCallback onPreview;
-
-  const _ExhibitionReadinessCard({
-    required this.record,
-    required this.readiness,
-    required this.onPreview,
-  });
+  final DeliverableSpec spec;
+  final FypDeliverable? current;
 
   @override
   Widget build(BuildContext context) {
+    final done = current?.fileUrl?.isNotEmpty ?? false;
     return Card(
-      elevation: 1,
+      margin: const EdgeInsets.only(bottom: DesignSystem.spaceSm),
       color: DesignSystem.surfaceContainerLowest,
-      shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusXl),
       child: Padding(
-        padding: const EdgeInsets.all(DesignSystem.spaceMd),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        padding: const EdgeInsets.symmetric(horizontal: DesignSystem.spaceMd, vertical: DesignSystem.spaceSm),
+        child: Row(
           children: [
-            Row(
-              children: [
-                Icon(
-                  readiness.ready
-                      ? Icons.check_circle
-                      : Icons.pending_actions,
-                  color: readiness.ready
-                      ? DesignSystem.secondary
-                      : DesignSystem.onSurfaceVariant,
-                ),
-                const SizedBox(width: DesignSystem.spaceSm),
-                Text('Exhibition Readiness', style: DesignSystem.bodyLg.copyWith(fontWeight: FontWeight.bold)),
-              ],
+            Icon(
+              done ? Icons.check_circle : Icons.radio_button_unchecked,
+              color: done ? DesignSystem.tertiary : DesignSystem.onSurfaceVariant,
             ),
-            const SizedBox(height: DesignSystem.spaceSm),
-            LinearProgressIndicator(
-              value: readiness.total == 0
-                  ? 0
-                  : readiness.completed / readiness.total,
-              backgroundColor: DesignSystem.surfaceContainer,
-              color: DesignSystem.secondary,
-            ),
-            const SizedBox(height: DesignSystem.spaceXs),
-            Text(
-              '${readiness.completed}/${readiness.total} required deliverables submitted',
-              style: DesignSystem.bodySm,
-            ),
-            const SizedBox(height: DesignSystem.spaceSm),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton.icon(
-                onPressed: onPreview,
-                icon: const Icon(Icons.visibility),
-                label: const Text('Preview Readiness'),
+            const SizedBox(width: DesignSystem.spaceSm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(spec.title, style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.w600)),
+                  Text(
+                    [
+                      spec.required ? 'Required' : 'If relevant',
+                      ?spec.hint,
+                      if (done) 'Submitted (v${current!.version})',
+                    ].join(' · '),
+                    style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant),
+                  ),
+                ],
               ),
+            ),
+            if (done) _OpenButton(url: current!.fileUrl!),
+            TextButton(
+              onPressed: () => showDialog<void>(
+                context: context,
+                builder: (_) => DeliverableUploadDialog(record: record, spec: spec, current: current),
+              ),
+              child: Text(done ? 'Replace' : 'Submit'),
             ),
           ],
         ),
@@ -380,51 +158,182 @@ class _ExhibitionReadinessCard extends StatelessWidget {
   }
 }
 
-class _DeliverableTile extends StatelessWidget {
-  final ({String type, String title, bool required}) item;
-  final FypDeliverable? deliverable;
+/// Opens a stored file (signed URL) or an https link.
+class _OpenButton extends StatelessWidget {
+  const _OpenButton({required this.url});
 
-  const _DeliverableTile({required this.item, this.deliverable});
+  final String url;
 
   @override
   Widget build(BuildContext context) {
-    final submitted = deliverable != null;
-    final version = deliverable?.version ?? 0;
-    final fileUrl = deliverable?.fileUrl;
+    if (!url.startsWith('http')) return FypmsFileLink(label: 'Open', bucket: _bucket, path: url);
+    final uri = safeExternalUri(url);
+    return TextButton.icon(
+      onPressed: uri == null ? null : () => launchUrl(uri, webOnlyWindowName: '_blank'),
+      icon: const Icon(Icons.open_in_new, size: 16),
+      label: const Text('Open'),
+      style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+    );
+  }
+}
 
-    return Card(
-      elevation: 1,
-      margin: const EdgeInsets.only(bottom: DesignSystem.spaceSm),
-      shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
-      color: DesignSystem.surfaceContainerLowest,
-      child: ListTile(
-        dense: true,
-        leading: Icon(
-          submitted ? Icons.check_circle : Icons.radio_button_unchecked,
-          color: submitted ? DesignSystem.secondary : DesignSystem.onSurfaceVariant,
-        ),
-        title: Text(
-          item.title,
-          style: DesignSystem.bodySm.copyWith(
-            fontWeight: FontWeight.bold,
-            color: submitted ? null : DesignSystem.onSurfaceVariant,
+/// Upload one deliverable (or, for "if relevant" items, give an https link).
+class DeliverableUploadDialog extends ConsumerStatefulWidget {
+  const DeliverableUploadDialog({super.key, required this.record, required this.spec, this.current});
+
+  final FypRecord record;
+  final DeliverableSpec spec;
+  final FypDeliverable? current;
+
+  @override
+  ConsumerState<DeliverableUploadDialog> createState() => _DeliverableUploadDialogState();
+}
+
+class _DeliverableUploadDialogState extends ConsumerState<DeliverableUploadDialog> {
+  late final _title = TextEditingController(text: widget.current?.title ?? widget.spec.title);
+  final _description = TextEditingController();
+  final _link = TextEditingController();
+  PlatformFile? _file;
+  bool _useLink = false;
+  bool _busy = false;
+
+  @override
+  void dispose() {
+    _title.dispose();
+    _description.dispose();
+    _link.dispose();
+    super.dispose();
+  }
+
+  bool get _linkValid => _link.text.trim().startsWith('https://') && safeExternalUri(_link.text) != null;
+
+  Future<void> _pick() async {
+    final exts = widget.spec.extensions;
+    final result = await FilePicker.pickFiles(
+      type: exts.isEmpty ? FileType.any : FileType.custom,
+      allowedExtensions: exts.isEmpty ? null : exts,
+      withData: true,
+    );
+    if (result != null && result.files.isNotEmpty) setState(() => _file = result.files.first);
+  }
+
+  Future<void> _submit() async {
+    setState(() => _busy = true);
+    try {
+      final record = widget.record;
+      String url;
+      if (_useLink) {
+        url = _link.text.trim();
+      } else {
+        final bytes = _file!.bytes;
+        if (bytes == null) throw Exception('Could not read ${_file!.name}.');
+        final semesters = await ref.read(fypmsSemestersProvider.future);
+        final semesterCode =
+            semesters.where((s) => s.id == record.academicSemesterId).map((s) => s.code).firstOrNull ?? 'unknown';
+        url = await ref.read(supabaseStorageServiceProvider).uploadFile(
+              bucket: _bucket,
+              semesterCode: semesterCode,
+              fypRecordId: record.id,
+              resourceType: 'deliverable_${widget.spec.type}',
+              version: (widget.current?.version ?? 0) + 1,
+              fileName: _file!.name,
+              bytes: bytes,
+            );
+      }
+      await ref.read(supabaseRpcServiceProvider).submitDeliverable(
+            fypRecordId: record.id,
+            deliverableType: widget.spec.type,
+            title: _title.text.trim(),
+            description: _description.text.trim().isEmpty ? null : _description.text.trim(),
+            fileUrl: url,
+          );
+      ref.invalidate(fypDeliverablesProvider(record.id));
+      if (!mounted) return;
+      final messenger = ScaffoldMessenger.of(context);
+      Navigator.pop(context);
+      messenger.showSnackBar(SnackBar(content: Text('${widget.spec.title} submitted.')));
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _busy = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to submit: $e')));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final spec = widget.spec;
+    final ready = !_busy && _title.text.trim().isNotEmpty && (_useLink ? _linkValid : _file != null);
+    final types = spec.extensions.isEmpty ? 'any file' : spec.extensions.map((e) => '.$e').join(' / ');
+
+    return AlertDialog(
+      title: Text(spec.title, style: (isDesktop ? DesignSystem.h3 : DesignSystem.bodyLg).copyWith(color: DesignSystem.primary)),
+      content: SingleChildScrollView(
+        child: SizedBox(
+          width: isDesktop ? 480 : MediaQuery.of(context).size.width * 0.85,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextField(
+                controller: _title,
+                onChanged: (_) => setState(() {}),
+                decoration: const InputDecoration(labelText: 'Title *'),
+              ),
+              const SizedBox(height: DesignSystem.spaceSm),
+              TextField(
+                controller: _description,
+                decoration: const InputDecoration(labelText: 'Description (optional)'),
+                maxLines: 2,
+              ),
+              const SizedBox(height: DesignSystem.spaceMd),
+              if (spec.linkAllowed)
+                SegmentedButton<bool>(
+                  segments: const [
+                    ButtonSegment(value: false, label: Text('Upload file'), icon: Icon(Icons.upload_file)),
+                    ButtonSegment(value: true, label: Text('Link'), icon: Icon(Icons.link)),
+                  ],
+                  selected: {_useLink},
+                  onSelectionChanged: _busy ? null : (s) => setState(() => _useLink = s.first),
+                ),
+              const SizedBox(height: DesignSystem.spaceSm),
+              if (_useLink)
+                TextField(
+                  key: const Key('deliverable-link'),
+                  controller: _link,
+                  onChanged: (_) => setState(() {}),
+                  decoration: InputDecoration(
+                    labelText: 'https:// link',
+                    helperText: 'For large systems, repositories or datasets',
+                    errorText: _link.text.isNotEmpty && !_linkValid ? 'Use an https:// address' : null,
+                  ),
+                )
+              else
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: _busy ? null : _pick,
+                    icon: Icon(_file == null ? Icons.attach_file : Icons.check_circle, size: 18),
+                    label: Text(_file?.name ?? 'Choose file ($types)', overflow: TextOverflow.ellipsis),
+                  ),
+                ),
+              if (_busy)
+                const Padding(
+                  padding: EdgeInsets.only(top: DesignSystem.spaceMd),
+                  child: LinearProgressIndicator(),
+                ),
+            ],
           ),
         ),
-        subtitle: Text(
-          submitted
-              ? (fileUrl != null && fileUrl.isNotEmpty
-                  ? 'Submitted (v$version) - attached file'
-                  : 'Submitted (v$version)')
-              : (item.required ? 'Required' : 'Optional'),
-          style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant),
-        ),
-        trailing: item.required
-            ? Icon(
-                submitted ? Icons.task_alt : Icons.pending,
-                color: submitted ? DesignSystem.secondary : DesignSystem.onSurfaceVariant,
-              )
-            : null,
       ),
+      actions: [
+        TextButton(onPressed: _busy ? null : () => Navigator.pop(context), child: const Text('Cancel')),
+        ElevatedButton(
+          onPressed: ready ? _submit : null,
+          style: ElevatedButton.styleFrom(backgroundColor: DesignSystem.secondary, foregroundColor: Colors.white),
+          child: Text(_busy ? 'Uploading...' : 'Submit'),
+        ),
+      ],
     );
   }
 }
