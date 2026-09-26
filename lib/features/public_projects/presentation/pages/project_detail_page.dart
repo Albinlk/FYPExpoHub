@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/widgets/entrance_animation.dart';
 import '../../../../core/domain/models/project.dart';
 import '../../../../core/state/state_providers.dart';
+import '../../../../core/utils/external_link.dart';
 import '../../../../core/widgets/project_cover_image.dart';
 
 class ProjectDetailPage extends ConsumerStatefulWidget {
@@ -382,9 +384,9 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
               children: [
                 Text('Links & Demos', style: (isDesktop ? DesignSystem.h3 : DesignSystem.h3Mobile).copyWith(color: DesignSystem.primary)),
                 const SizedBox(height: DesignSystem.spaceMd),
-                _buildActionLinkButton(Icons.launch, 'Live Demo / Slides', project.demoUrl ?? ''),
+                _buildActionLinkButton(Icons.launch, 'Live Demo / Slides', project.demoUrl),
                 const SizedBox(height: DesignSystem.spaceSm),
-                _buildActionLinkButton(Icons.code, 'GitHub Repository', project.repositoryUrl ?? ''),
+                _buildActionLinkButton(Icons.code, 'GitHub Repository', project.repositoryUrl),
               ],
             ),
           ),
@@ -393,11 +395,13 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
     );
   }
 
-  Widget _buildActionLinkButton(IconData icon, String label, String url) {
+  Widget _buildActionLinkButton(IconData icon, String label, String? url) {
+    final uri = safeExternalUri(url);
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton.icon(
-        onPressed: url.isEmpty ? null : () {},
+        // Disabled when the project has no (valid) link; opens in a new tab.
+        onPressed: uri == null ? null : () => launchUrl(uri, webOnlyWindowName: '_blank'),
         icon: Icon(icon, size: 18),
         label: Text(label, softWrap: true),
         style: ElevatedButton.styleFrom(

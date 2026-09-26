@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:fyp_expo_hub/core/state/state_providers.dart';
 import 'package:fyp_expo_hub/core/supabase/supabase_client_provider.dart';
 import 'package:fyp_expo_hub/core/supabase/supabase_database_service.dart';
+import 'package:fyp_expo_hub/core/supabase/supabase_rpc_service.dart';
 import 'package:fyp_expo_hub/features/admin_lecturers/presentation/pages/admin_lecturers_page.dart';
 
 /// Admin lecturer management: permanently deletes profiles and bulk-edits
@@ -46,9 +47,36 @@ class _Db extends SupabaseDatabaseService {
 
   @override
   Future<void> deleteLecturer(String uid) async => deleted.add(uid);
+
+  /// Accounts that exist in Supabase Auth (and so have a profile).
+  final accounts = {'new.lecturer@uitm.edu.my': 'auth-uid-9'};
+
+  @override
+  Future<String?> findProfileIdByEmail(String email) async => accounts[email];
 }
 
-Future<void> _pump(WidgetTester tester, _Db db) async {
+class _Rpc extends SupabaseRpcService {
+  _Rpc()
+      : super(SupabaseClient(
+          'https://placeholder-project.supabase.co',
+          'placeholder-anon-key',
+          authOptions: const AuthClientOptions(autoRefreshToken: false),
+        ));
+
+  final promoted = <String>[];
+
+  @override
+  Future<Map<String, dynamic>> createLecturerAccountProfile({
+    required String userId,
+    required String email,
+    required String displayName,
+  }) async {
+    promoted.add('$userId|$email|$displayName');
+    return {'id': userId};
+  }
+}
+
+Future<void> _pump(WidgetTester tester, _Db db, [_Rpc? rpc]) async {
   tester.view.physicalSize = const Size(1400, 1600);
   tester.view.devicePixelRatio = 1.0;
   addTearDown(tester.view.resetPhysicalSize);
@@ -56,6 +84,7 @@ Future<void> _pump(WidgetTester tester, _Db db) async {
   await tester.pumpWidget(ProviderScope(
     overrides: [
       supabaseDbServiceProvider.overrideWithValue(db),
+      supabaseRpcServiceProvider.overrideWithValue(rpc ?? _Rpc()),
       currentAuthUserProvider.overrideWith((ref) => null),
     ],
     child: const MaterialApp(home: AdminLecturersPage()),
@@ -86,6 +115,35 @@ void main() {
     await tester.tap(find.widgetWithText(ElevatedButton, 'Delete'));
     await tester.pumpAndSettle();
     expect(db.deleted, ['lec-1']);
+  });
+
+  Future<void> addLecturer(WidgetTester tester, String email) async {
+    await tester.tap(find.text('Add Lecturer').first);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.widgetWithText(TextField, 'UiTM Email'), email);
+    await tester.enterText(find.widgetWithText(TextField, 'Full Name'), 'dr. new');
+    await tester.tap(find.widgetWithText(ElevatedButton, 'Add'));
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('add lecturer promotes the existing account by its real id', (tester) async {
+    final rpc = _Rpc();
+    await _pump(tester, _Db(), rpc);
+
+    await addLecturer(tester, 'New.Lecturer@uitm.edu.my ');
+
+    expect(rpc.promoted, ['auth-uid-9|new.lecturer@uitm.edu.my|DR. NEW']);
+    expect(find.text('Lecturer DR. NEW added.'), findsOneWidget);
+  });
+
+  testWidgets('add lecturer refuses an email with no account', (tester) async {
+    final rpc = _Rpc();
+    await _pump(tester, _Db(), rpc);
+
+    await addLecturer(tester, 'nobody@uitm.edu.my');
+
+    expect(rpc.promoted, isEmpty);
+    expect(find.textContaining('No account found for nobody@uitm.edu.my'), findsOneWidget);
   });
 
   testWidgets('backfill links assignments by name in ONE bulk upsert', (tester) async {

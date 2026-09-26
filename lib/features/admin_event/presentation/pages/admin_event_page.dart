@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/state/state_providers.dart';
+import '../../../../core/utils/schedule_format.dart';
 import '../../../../core/widgets/admin_actions.dart';
 
 class AdminEventPage extends ConsumerStatefulWidget {
@@ -17,6 +18,10 @@ class _AdminEventPageState extends ConsumerState<AdminEventPage> {
   final _startDateController = TextEditingController();
   final _endDateController = TextEditingController();
   final _venueController = TextEditingController();
+  // Calendar days (Malaysia time) picked for the event; the saved instants
+  // keep the event's existing daily start/end times.
+  late DateTime _startDay;
+  late DateTime _endDay;
   bool _dirty = false;
   bool _saving = false;
 
@@ -45,8 +50,8 @@ class _AdminEventPageState extends ConsumerState<AdminEventPage> {
     final event = ref.read(eventProvider);
     _titleController.text = event.title;
     _sessionController.text = event.sessionLabel;
-    _startDateController.text = '${event.startAt.day} ${_monthName(event.startAt.month)} ${event.startAt.year}';
-    _endDateController.text = '${event.endAt.day} ${_monthName(event.endAt.month)} ${event.endAt.year}';
+    _setStartDay(mytDate(event.startAt));
+    _setEndDay(mytDate(event.endAt));
     _venueController.text = event.venue;
     // Programmatic fills above aren't edits.
     _dirty = false;
@@ -57,12 +62,54 @@ class _AdminEventPageState extends ConsumerState<AdminEventPage> {
     return months[m - 1];
   }
 
+  String _formatDay(DateTime d) => '${d.day} ${_monthName(d.month)} ${d.year}';
+
+  void _setStartDay(DateTime d) {
+    _startDay = d;
+    _startDateController.text = _formatDay(d);
+  }
+
+  void _setEndDay(DateTime d) {
+    _endDay = d;
+    _endDateController.text = _formatDay(d);
+  }
+
+  Future<void> _pickDay({required bool start}) async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: start ? _startDay : _endDay,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2100),
+    );
+    if (picked == null || !mounted) return;
+    setState(() {
+      _dirty = true;
+      if (start) {
+        _setStartDay(picked);
+        // Keep the range valid: a start after the end drags the end along.
+        if (_endDay.isBefore(picked)) _setEndDay(picked);
+      } else {
+        _setEndDay(picked);
+      }
+    });
+  }
+
   Future<void> _save() async {
     if (_saving) return;
     final event = ref.read(eventProvider);
+    final startAt = withMytDate(event.startAt, _startDay);
+    final endAt = withMytDate(event.endAt, _endDay);
+    if (!endAt.isAfter(startAt)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('The end date must not be before the start date.')),
+      );
+      return;
+    }
     final updated = event.copyWith(
       title: _titleController.text.trim(),
       sessionLabel: _sessionController.text.trim(),
+      startAt: startAt,
+      endAt: endAt,
       venue: _venueController.text.trim(),
       updatedAt: DateTime.now(),
     );
@@ -132,6 +179,8 @@ class _AdminEventPageState extends ConsumerState<AdminEventPage> {
                               const SizedBox(height: 6),
                               TextFormField(
                                 controller: _startDateController,
+                                readOnly: true,
+                                onTap: () => _pickDay(start: true),
                                 decoration: const InputDecoration(prefixIcon: Icon(Icons.calendar_month)),
                               ),
                             ],
@@ -146,6 +195,8 @@ class _AdminEventPageState extends ConsumerState<AdminEventPage> {
                               const SizedBox(height: 6),
                               TextFormField(
                                 controller: _endDateController,
+                                readOnly: true,
+                                onTap: () => _pickDay(start: false),
                                 decoration: const InputDecoration(prefixIcon: Icon(Icons.calendar_month)),
                               ),
                             ],

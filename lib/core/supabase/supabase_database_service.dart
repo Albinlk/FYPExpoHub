@@ -439,6 +439,18 @@ class SupabaseDatabaseService {
     }
   }
 
+  /// The profile id of the account signed up with [email], or null when no
+  /// such account exists. Every Supabase Auth user gets a profile on sign-up
+  /// (`handle_new_user`), so this is how an admin finds the real user id.
+  Future<String?> findProfileIdByEmail(String email) async {
+    final res = await _client
+        .from('profiles')
+        .select('id')
+        .eq('email', email.trim().toLowerCase())
+        .maybeSingle();
+    return res?['id'] as String?;
+  }
+
   Future<void> setLecturer(String uid, Map<String, dynamic> data) async {
     try {
       await _client.from('profiles').upsert(data);

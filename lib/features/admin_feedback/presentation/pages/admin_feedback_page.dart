@@ -80,9 +80,9 @@ class _AdminFeedbackPageState extends ConsumerState<AdminFeedbackPage> {
                     initialValue: statusController.text,
                     items: const [
                       DropdownMenuItem(value: 'new', child: Text('New')),
-                      DropdownMenuItem(value: 'in_progress', child: Text('In Progress')),
+                      DropdownMenuItem(value: 'reviewed', child: Text('Reviewed')),
                       DropdownMenuItem(value: 'resolved', child: Text('Resolved')),
-                      DropdownMenuItem(value: 'rejected', child: Text('Rejected')),
+                      DropdownMenuItem(value: 'archived', child: Text('Archived')),
                     ],
                     onChanged: (val) {
                       if (val != null) {
@@ -175,12 +175,12 @@ class _AdminFeedbackPageState extends ConsumerState<AdminFeedbackPage> {
     switch (status) {
       case 'new':
         return DesignSystem.secondary;
-      case 'in_progress':
+      case 'reviewed':
         return Colors.blue;
       case 'resolved':
         return Colors.green;
-      case 'rejected':
-        return DesignSystem.error;
+      case 'archived':
+        return DesignSystem.onSurfaceVariant;
       default:
         return DesignSystem.onSurfaceVariant;
     }
@@ -189,9 +189,9 @@ class _AdminFeedbackPageState extends ConsumerState<AdminFeedbackPage> {
   String _statusLabel(String status) {
     switch (status) {
       case 'new': return 'New';
-      case 'in_progress': return 'In Progress';
+      case 'reviewed': return 'Reviewed';
       case 'resolved': return 'Resolved';
-      case 'rejected': return 'Rejected';
+      case 'archived': return 'Archived';
       default: return status;
     }
   }
@@ -391,9 +391,9 @@ class _AdminFeedbackPageState extends ConsumerState<AdminFeedbackPage> {
       children: [
         _buildFilterChip('all', 'All'),
         _buildFilterChip('new', 'New'),
-        _buildFilterChip('in_progress', 'In Progress'),
+        _buildFilterChip('reviewed', 'Reviewed'),
         _buildFilterChip('resolved', 'Resolved'),
-        _buildFilterChip('rejected', 'Rejected'),
+        _buildFilterChip('archived', 'Archived'),
       ],
     );
   }

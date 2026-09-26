@@ -141,33 +141,68 @@ class AdminProjectsPage extends ConsumerWidget {
                   onPressed: saving ? null : () async {
                     if (titleController.text.trim().isEmpty) return;
 
-                    final newItem = Project(
-                      id: item?.id ?? const Uuid().v4(),
-                      eventId: item?.eventId ?? kEventSlug,
-                      slug: titleController.text.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-'),
-                      title: titleController.text.trim(),
-                      matricId: matricIdController.text.isEmpty ? null : matricIdController.text,
-                      programmeCode: codeController.text,
-                      programmeName: progNameController.text,
-                      shortDescription: descController.text,
-                      category: categoryController.text,
-                      technologyTags: csv(tagsController.text),
-                      teamDisplayNames: csv(studentsController.text),
-                      supervisorDisplayName: supervisorController.text,
-                      examinerDisplayName: examinerController.text.isEmpty ? null : examinerController.text,
-                      boothNumber: boothNumController.text.isEmpty ? null : boothNumController.text,
-                      boothZone: boothZoneController.text.isEmpty ? null : boothZoneController.text,
-                      // A booth is linked from the Booths page (which knows the
-                      // booth's real id); the free-text number here is display-only.
-                      boothId: item?.boothId,
-                      demoUrl: demoController.text.isEmpty ? null : demoController.text,
-                      coverImageUrl: coverController.text,
-                      featured: featured,
-                      publicationStatus: status,
-                      createdAt: item?.createdAt ?? DateTime.now(),
-                      updatedAt: DateTime.now(),
-                      publishedAt: status == 'published' ? DateTime.now() : null,
-                    );
+                    final title = titleController.text.trim();
+                    final slug = titleController.text.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-');
+                    final matricId = matricIdController.text.isEmpty ? null : matricIdController.text;
+                    final examiner = examinerController.text.isEmpty ? null : examinerController.text;
+                    final boothNumber = boothNumController.text.isEmpty ? null : boothNumController.text;
+                    final boothZone = boothZoneController.text.isEmpty ? null : boothZoneController.text;
+                    final demoUrl = demoController.text.isEmpty ? null : demoController.text;
+                    final now = DateTime.now();
+                    // Keep the first publish time; a draft has none.
+                    final publishedAt = status == 'published' ? (item?.publishedAt ?? now) : null;
+
+                    // Editing starts from the stored project so fields this
+                    // form doesn't show (presentation day, video/repository/
+                    // poster links, Industry Candidate) survive the save.
+                    final newItem = item != null
+                        ? item.copyWith(
+                            slug: slug,
+                            title: title,
+                            matricId: matricId,
+                            programmeCode: codeController.text,
+                            programmeName: progNameController.text,
+                            shortDescription: descController.text,
+                            category: categoryController.text,
+                            technologyTags: csv(tagsController.text),
+                            teamDisplayNames: csv(studentsController.text),
+                            supervisorDisplayName: supervisorController.text,
+                            examinerDisplayName: examiner,
+                            boothNumber: boothNumber,
+                            boothZone: boothZone,
+                            demoUrl: demoUrl,
+                            coverImageUrl: coverController.text,
+                            featured: featured,
+                            publicationStatus: status,
+                            updatedAt: now,
+                            publishedAt: publishedAt,
+                          )
+                        : Project(
+                            id: const Uuid().v4(),
+                            eventId: kEventSlug,
+                            slug: slug,
+                            title: title,
+                            matricId: matricId,
+                            programmeCode: codeController.text,
+                            programmeName: progNameController.text,
+                            shortDescription: descController.text,
+                            category: categoryController.text,
+                            technologyTags: csv(tagsController.text),
+                            teamDisplayNames: csv(studentsController.text),
+                            supervisorDisplayName: supervisorController.text,
+                            examinerDisplayName: examiner,
+                            boothNumber: boothNumber,
+                            boothZone: boothZone,
+                            demoUrl: demoUrl,
+                            coverImageUrl: coverController.text,
+                            featured: featured,
+                            publicationStatus: status,
+                            // A booth is linked from the Booths page (which knows the
+                            // booth's real id); the number here is display-only.
+                            createdAt: now,
+                            updatedAt: now,
+                            publishedAt: publishedAt,
+                          );
 
                     final notifier = ref.read(projectsProvider.notifier);
                     setState(() => saving = true);
