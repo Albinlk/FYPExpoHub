@@ -69,7 +69,13 @@ class ProjectCard extends StatelessWidget {
           ? DesignSystem.tertiaryContainer.withValues(alpha: 0.15)
           : null,
       surfaceTintColor: project.calonIndustri ? DesignSystem.tertiary : null,
-      child: InkWell(
+      // One screen-reader stop per card, announced as a button with its
+      // text (title, team, booth…) instead of a dozen loose fragments.
+      child: MergeSemantics(
+        child: Semantics(
+          button: true,
+          hint: 'Opens project details',
+          child: InkWell(
         onTap: onTap,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -125,6 +131,8 @@ class ProjectCard extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
         ),
       ),
     );

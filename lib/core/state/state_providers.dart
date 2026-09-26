@@ -8,6 +8,7 @@
 library;
 
 export 'expo/service_providers.dart';
+export 'expo/load_status.dart';
 export 'expo/event_providers.dart';
 export 'expo/projects_providers.dart';
 export 'expo/schedule_providers.dart';

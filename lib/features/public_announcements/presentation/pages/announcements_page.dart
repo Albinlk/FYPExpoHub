@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
+import '../../../../core/widgets/public_load_state.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/utils/schedule_format.dart' show longDate, mytDate;
 
@@ -34,13 +35,18 @@ class AnnouncementsPage extends ConsumerWidget {
             const SizedBox(height: DesignSystem.spaceXl),
 
             publishedAnnouncements.isEmpty
-                ? Center(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 40.0),
-                      child: Text(
-                        'No announcements available at this time.',
-                        textAlign: TextAlign.center,
-                        style: DesignSystem.bodyMd.copyWith(color: DesignSystem.onSurfaceVariant),
+                ? PublicListPlaceholder(
+                    dataset: PublicDataset.announcements,
+                    what: 'announcements',
+                    onRetry: () => ref.invalidate(publicAnnouncementsProvider),
+                    empty: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 40.0),
+                        child: Text(
+                          'No announcements available at this time.',
+                          textAlign: TextAlign.center,
+                          style: DesignSystem.bodyMd.copyWith(color: DesignSystem.onSurfaceVariant),
+                        ),
                       ),
                     ),
                   )

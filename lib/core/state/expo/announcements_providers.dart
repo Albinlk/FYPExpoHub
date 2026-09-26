@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/announcement.dart';
 import '../../supabase/row_mappers.dart';
 import '../../utils/logger.dart';
+import 'load_status.dart';
 import 'optimistic_list.dart';
 import 'service_providers.dart';
 
@@ -21,6 +22,7 @@ class AnnouncementsNotifier extends Notifier<List<Announcement>>
   }
 
   void _loadAnnouncements() async {
+    var remoteFailed = false;
     try {
       await loadRemote(() async {
         final db = ref.read(supabaseDbServiceProvider);
@@ -36,7 +38,14 @@ class AnnouncementsNotifier extends Notifier<List<Announcement>>
         return out;
       });
     } catch (e) {
+      remoteFailed = true;
       logDebug('Announcements load from Supabase warning: $e');
+    }
+    // G-31: let public pages tell loading, offline data and failure apart.
+    if (publishedOnly && ref.mounted) {
+      ref
+          .read(publicLoadStatusProvider(PublicDataset.announcements).notifier)
+          .set(loadOutcome(remoteFailed: remoteFailed, hasRows: state.isNotEmpty));
     }
   }
 

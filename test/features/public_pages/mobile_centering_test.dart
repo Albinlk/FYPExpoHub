@@ -226,7 +226,7 @@ class _StubDb extends SupabaseDatabaseService {
               Map<String, dynamic>.from(ScheduleItem(
                 id: 's1',
                 eventId: 'fskm-fyp-2026',
-                date: DateTime(2026, 8, 6),
+                date: DateTime(2027, 8, 6), // day 1 of the stub (upcoming) event
                 startAt: '09:00',
                 endAt: '10:00',
                 title: 'Opening Ceremony',

@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/offline_fallback.dart';
 import '../../domain/models/project.dart';
 import '../../supabase/row_mappers.dart';
 import '../../utils/logger.dart';
 import '../../widgets/project_cover_image.dart';
+import 'load_status.dart';
 import 'optimistic_list.dart';
 import 'service_providers.dart';
 
@@ -52,22 +55,16 @@ class ProjectsNotifier extends Notifier<List<Project>>
   /// never unhandled in the window before the later await re-throws into
   /// the local try/catch.
   void _loadProjects() async {
-    final remote = _fetchRemote().catchError(
-      (Object e) => <Map<String, dynamic>>[],
-    );
+    var remoteFailed = false;
+    final remote = _fetchRemote().catchError((Object e) {
+      remoteFailed = true;
+      return <Map<String, dynamic>>[];
+    });
     // Admin lists skip the bundled fallback: its rows have no database
     // counterpart (non-uuid ids), so every edit to one would fail.
-    if (publishedOnly) {
-      try {
-        final data = await OfflineFallback.load();
-        final fallback = _parseProjects(data['projects'] ?? const []);
-        if (state.isEmpty && fallback.isNotEmpty) {
-          state = fallback;
-        }
-      } catch (e) {
-        logDebug('Projects fallback asset warning: $e');
-      }
-    }
+    // The bundled fallback loads alongside the request rather than before
+    // it, so a slow asset never holds up live rows (or the load status).
+    if (publishedOnly) unawaited(_applyFallback(() => remoteFailed));
     try {
       var first = true;
       await loadRemote(() async {
@@ -77,8 +74,33 @@ class ProjectsNotifier extends Notifier<List<Project>>
         return data.isEmpty ? null : _parseProjects(data);
       });
     } catch (e) {
+      remoteFailed = true;
       logDebug('Projects load from Supabase warning: $e');
     }
+    _reportLoad(remoteFailed: remoteFailed);
+  }
+
+  /// Fills state from the bundled offline data if nothing has arrived yet.
+  Future<void> _applyFallback(bool Function() remoteFailed) async {
+    try {
+      final data = await OfflineFallback.load();
+      final fallback = _parseProjects(data['projects'] ?? const []);
+      if (ref.mounted && state.isEmpty && fallback.isNotEmpty) {
+        state = fallback;
+        // The request already failed: this saved copy is all there is.
+        if (remoteFailed()) _reportLoad(remoteFailed: true);
+      }
+    } catch (e) {
+      logDebug('Projects fallback asset warning: $e');
+    }
+  }
+
+  /// G-31: lets public pages tell loading, offline data and failure apart.
+  void _reportLoad({required bool remoteFailed}) {
+    if (!publishedOnly || !ref.mounted) return;
+    ref
+        .read(publicLoadStatusProvider(PublicDataset.projects).notifier)
+        .set(loadOutcome(remoteFailed: remoteFailed, hasRows: state.isNotEmpty));
   }
 
   Future<List<Map<String, dynamic>>> _fetchRemote() async {
