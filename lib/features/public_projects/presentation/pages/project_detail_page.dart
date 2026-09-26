@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../app/theme/theme.dart';
+import '../../../../core/widgets/entrance_animation.dart';
 import '../../../../core/domain/models/project.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/widgets/project_cover_image.dart';
@@ -127,10 +128,14 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
               child: SizedBox(
                 width: double.infinity,
                 height: 200,
-                child: ProjectCoverImage(
-                  title: project.title,
-                  category: project.category,
-                  imageUrl: project.coverImageUrl,
+                // Landing spot for the catalogue card's cover (same tag).
+                child: Hero(
+                  tag: projectCoverHeroTag(project.id),
+                  child: ProjectCoverImage(
+                    title: project.title,
+                    category: project.category,
+                    imageUrl: project.coverImageUrl,
+                  ),
                 ),
               ),
             ),
