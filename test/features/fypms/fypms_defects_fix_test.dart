@@ -164,7 +164,16 @@ void main() {
   group('DEF-3: submit_report_version bump', () {
     test('second version succeeds (MAX+1)', () async {
       final svc = SupabaseRpcService(Supabase.instance.client);
-      await svc.submitReportVersion(fypRecordId: 'rec-1', reportType: 'proposal', fileUrl: 'https://x/v2.pdf');
+      await svc.submitReportVersion(
+        fypRecordId: 'rec-1',
+        reportType: 'proposal',
+        fileUrl: 'https://x/v2.pdf',
+        similarityIndex: 12,
+        plagiarismReportUrl: 'https://x/v2-plag.pdf',
+        pageCount: 40,
+        referenceCount: 20,
+        academicReferenceCount: 12,
+      );
       expect(_fake.calls.last, 'submit_report_version');
       expect(_fake.bodies.last['p_report_type'], 'proposal');
     });

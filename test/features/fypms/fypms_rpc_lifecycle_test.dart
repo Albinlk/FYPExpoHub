@@ -157,10 +157,22 @@ setUpAll(() async {
         reportType: 'proposal',
         fileUrl: 'https://demo.fypms.test/f6a.pdf',
         similarityIndex: 12.0,
+        plagiarismReportUrl: 'https://demo.fypms.test/f6a-plag.pdf',
+        pageCount: 42,
+        referenceCount: 18,
+        academicReferenceCount: 10,
+        involvesHumanSubjects: true,
+        ethicsFormUrl: 'https://demo.fypms.test/rec.pdf',
       );
       expect(_fake.rpcCalls.last, 'submit_report_version');
       expect(_fake.rpcBodies.last,
-          allOf(containsPair('p_report_type', 'proposal'), containsPair('p_similarity_index', 12.0)));
+          allOf(
+            containsPair('p_report_type', 'proposal'),
+            containsPair('p_similarity_index', 12.0),
+            containsPair('p_page_count', 42),
+            containsPair('p_academic_reference_count', 10),
+            containsPair('p_ethics_form_url', 'https://demo.fypms.test/rec.pdf'),
+          ));
 
       await service.assignExaminer(fypRecordId: 'rec-1', examinerId: 'ex-1');
       expect(_fake.rpcCalls.last, 'assign_examiner');

@@ -15,6 +15,11 @@ _FypReportSubmission _$FypReportSubmissionFromJson(Map<String, dynamic> json) =>
       fileUrl: json['fileUrl'] as String,
       similarityIndex: (json['similarityIndex'] as num?)?.toDouble(),
       plagiarismReportUrl: json['plagiarismReportUrl'] as String?,
+      pageCount: (json['pageCount'] as num?)?.toInt(),
+      referenceCount: (json['referenceCount'] as num?)?.toInt(),
+      academicReferenceCount: (json['academicReferenceCount'] as num?)?.toInt(),
+      involvesHumanSubjects: json['involvesHumanSubjects'] as bool? ?? false,
+      ethicsFormUrl: json['ethicsFormUrl'] as String?,
       endorsedBy: json['endorsedBy'] as String?,
       endorsedAt: json['endorsedAt'] == null
           ? null
@@ -41,6 +46,11 @@ Map<String, dynamic> _$FypReportSubmissionToJson(
   'fileUrl': instance.fileUrl,
   'similarityIndex': instance.similarityIndex,
   'plagiarismReportUrl': instance.plagiarismReportUrl,
+  'pageCount': instance.pageCount,
+  'referenceCount': instance.referenceCount,
+  'academicReferenceCount': instance.academicReferenceCount,
+  'involvesHumanSubjects': instance.involvesHumanSubjects,
+  'ethicsFormUrl': instance.ethicsFormUrl,
   'endorsedBy': instance.endorsedBy,
   'endorsedAt': instance.endorsedAt?.toIso8601String(),
   'status': instance.status,

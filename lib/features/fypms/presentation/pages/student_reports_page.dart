@@ -121,6 +121,14 @@ class ReportSubmissionCard extends StatelessWidget {
                   color: similarity > kMaxSimilarityIndex ? DesignSystem.error : DesignSystem.onSurfaceVariant,
                 ),
               ),
+            if (report.pageCount != null)
+              Text(
+                '${report.pageCount} pages · ${report.referenceCount ?? 0} references '
+                '(${report.academicReferenceCount ?? 0} academic)'
+                '${report.involvesHumanSubjects ? ' · human subjects' : ''}',
+                key: const Key('report-counts'),
+                style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant),
+              ),
             if (report.endorsedAt != null)
               Text('Endorsed ${formatFypDateTime(report.endorsedAt!)}', style: DesignSystem.bodySm),
             if (report.reviewComment?.isNotEmpty == true)
@@ -141,6 +149,8 @@ class ReportSubmissionCard extends StatelessWidget {
                 FypmsFileLink(label: 'Report', bucket: bucket, path: report.fileUrl),
                 if (report.plagiarismReportUrl != null)
                   FypmsFileLink(label: 'Plagiarism report', bucket: bucket, path: report.plagiarismReportUrl!),
+                if (report.ethicsFormUrl != null)
+                  FypmsFileLink(label: 'REC ethics form', bucket: bucket, path: report.ethicsFormUrl!),
               ],
             ),
             ?actions,
@@ -152,7 +162,8 @@ class ReportSubmissionCard extends StatelessWidget {
 }
 
 /// F6 form: report type, report file (PDF / DOC / DOCX), similarity index
-/// (0–30 %) and the original plagiarism report (PDF).
+/// (0–30 %), the original plagiarism report (PDF), page / reference counts
+/// (textbook minimums) and, for a proposal with human subjects, the REC form.
 class ReportSubmissionDialog extends ConsumerStatefulWidget {
   const ReportSubmissionDialog({super.key, required this.record});
 
@@ -164,14 +175,22 @@ class ReportSubmissionDialog extends ConsumerStatefulWidget {
 
 class _ReportSubmissionDialogState extends ConsumerState<ReportSubmissionDialog> {
   final _similarity = TextEditingController();
+  final _pages = TextEditingController();
+  final _references = TextEditingController();
+  final _academic = TextEditingController();
   String _reportType = 'proposal';
   PlatformFile? _report;
   PlatformFile? _plagiarism;
+  PlatformFile? _ethics;
+  bool _humanSubjects = false;
   bool _uploading = false;
 
   @override
   void dispose() {
     _similarity.dispose();
+    _pages.dispose();
+    _references.dispose();
+    _academic.dispose();
     super.dispose();
   }
 
@@ -224,6 +243,7 @@ class _ReportSubmissionDialogState extends ConsumerState<ReportSubmissionDialog>
 
       final reportPath = await upload(_report!, _reportType);
       final plagiarismPath = await upload(_plagiarism!, '${_reportType}_plagiarism');
+      final ethicsPath = _needsEthics ? await upload(_ethics!, '${_reportType}_ethics') : null;
 
       await rpc.submitReportVersion(
         fypRecordId: record.id,
@@ -231,6 +251,11 @@ class _ReportSubmissionDialogState extends ConsumerState<ReportSubmissionDialog>
         fileUrl: reportPath,
         similarityIndex: parseSimilarity(_similarity.text),
         plagiarismReportUrl: plagiarismPath,
+        pageCount: int.parse(_pages.text.trim()),
+        referenceCount: int.parse(_references.text.trim()),
+        academicReferenceCount: int.parse(_academic.text.trim()),
+        involvesHumanSubjects: _humanSubjects,
+        ethicsFormUrl: ethicsPath,
       );
 
       ref.invalidate(fypReportSubmissionsProvider(record.id));
@@ -245,13 +270,21 @@ class _ReportSubmissionDialogState extends ConsumerState<ReportSubmissionDialog>
     }
   }
 
+  /// REC forms go with a proposal involving human subjects (textbook).
+  bool get _needsEthics => _reportType == 'proposal' && _humanSubjects;
+
   @override
   Widget build(BuildContext context) {
     final isDesktop = MediaQuery.of(context).size.width >= 768;
     final similarityError = _similarity.text.isEmpty ? null : similarityProblem(_similarity.text);
+    final anyCount = _pages.text.isNotEmpty || _references.text.isNotEmpty || _academic.text.isNotEmpty;
+    final countsProblem = reportCountsProblem(_reportType, _pages.text, _references.text, _academic.text);
+    final (minPages, minRefs) = reportMinimums(_reportType);
     final ready = _report != null &&
         _plagiarism != null &&
         similarityProblem(_similarity.text) == null &&
+        countsProblem == null &&
+        (!_needsEthics || _ethics != null) &&
         !_uploading;
 
     return AlertDialog(
@@ -309,6 +342,59 @@ class _ReportSubmissionDialogState extends ConsumerState<ReportSubmissionDialog>
                         if (f != null) setState(() => _plagiarism = f);
                       },
               ),
+              const SizedBox(height: DesignSystem.spaceSm),
+              Row(
+                children: [
+                  for (final (key, label, c) in [
+                    ('report-pages', 'Pages', _pages),
+                    ('report-refs', 'References', _references),
+                    ('report-academic', 'Academic', _academic),
+                  ]) ...[
+                    Expanded(
+                      child: TextField(
+                        key: Key(key),
+                        controller: c,
+                        keyboardType: TextInputType.number,
+                        onChanged: (_) => setState(() {}),
+                        decoration: InputDecoration(labelText: label),
+                      ),
+                    ),
+                    if (key != 'report-academic') const SizedBox(width: DesignSystem.spaceSm),
+                  ],
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  anyCount && countsProblem != null
+                      ? countsProblem
+                      : 'At least $minPages pages and $minRefs references, half of them academic.',
+                  key: const Key('report-counts-help'),
+                  style: DesignSystem.bodySm.copyWith(
+                    color: anyCount && countsProblem != null ? DesignSystem.error : DesignSystem.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              if (_reportType == 'proposal')
+                SwitchListTile(
+                  key: const Key('human-subjects'),
+                  contentPadding: EdgeInsets.zero,
+                  value: _humanSubjects,
+                  onChanged: _uploading ? null : (v) => setState(() => _humanSubjects = v),
+                  title: const Text('The project involves human subjects'),
+                  subtitle: const Text('Surveys, interviews, user testing… — attach the REC ethics form.'),
+                ),
+              if (_needsEthics)
+                _FileRow(
+                  label: 'REC ethics form (PDF)',
+                  file: _ethics,
+                  onPick: _uploading
+                      ? null
+                      : () async {
+                          final f = await _pick(const ['pdf']);
+                          if (f != null) setState(() => _ethics = f);
+                        },
+                ),
               if (_uploading)
                 const Padding(
                   padding: EdgeInsets.only(top: DesignSystem.spaceMd),

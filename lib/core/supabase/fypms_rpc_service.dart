@@ -163,21 +163,32 @@ extension FypmsRpcService on SupabaseRpcService {
     });
   }
 
-  /// F6(a)/F6(b): report file, similarity index (<= 30 %) and the original
-  /// plagiarism report.
+  /// F6(a)/F6(b): report file, similarity index (<= 30 %), the original
+  /// plagiarism report, page / reference counts (textbook minimums) and,
+  /// for a proposal involving human subjects, the REC ethics form.
   Future<Map<String, dynamic>> submitReportVersion({
     required String fypRecordId,
     required String reportType,
     required String fileUrl,
-    double? similarityIndex,
-    String? plagiarismReportUrl,
+    required double similarityIndex,
+    required String plagiarismReportUrl,
+    required int pageCount,
+    required int referenceCount,
+    required int academicReferenceCount,
+    bool involvesHumanSubjects = false,
+    String? ethicsFormUrl,
   }) async {
     return _rpc('submit_report_version', {
       'p_fyp_record_id': fypRecordId,
       'p_report_type': reportType,
       'p_file_url': fileUrl,
-      'p_similarity_index': ?similarityIndex,
-      'p_plagiarism_report_url': ?plagiarismReportUrl,
+      'p_similarity_index': similarityIndex,
+      'p_plagiarism_report_url': plagiarismReportUrl,
+      'p_page_count': pageCount,
+      'p_reference_count': referenceCount,
+      'p_academic_reference_count': academicReferenceCount,
+      'p_involves_human_subjects': involvesHumanSubjects,
+      'p_ethics_form_url': ethicsFormUrl,
     });
   }
 
