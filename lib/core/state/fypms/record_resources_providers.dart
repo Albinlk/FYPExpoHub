@@ -123,3 +123,17 @@ final fypRubricTemplatesProvider =
   final data = await db.getRubricTemplatesOnce();
   return data.map((m) => FypRubricTemplate.fromJson(normalizeFypmsKeys(m))).toList();
 });
+
+/// The rubric a form is scored with (latest active version), or null when the
+/// form has none.
+final fypActiveRubricProvider =
+    FutureProvider.family<FypRubricTemplate?, String>((ref, formCode) async {
+  final all = await ref.watch(fypRubricTemplatesProvider.future);
+  FypRubricTemplate? best;
+  for (final t in all) {
+    if (t.formCode == formCode && t.isActive && (best == null || t.version > best.version)) {
+      best = t;
+    }
+  }
+  return best;
+});
