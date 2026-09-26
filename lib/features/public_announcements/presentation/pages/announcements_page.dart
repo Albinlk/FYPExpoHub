@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/state/state_providers.dart';
+import '../../../../core/utils/schedule_format.dart' show longDate, mytDate;
 
 class AnnouncementsPage extends ConsumerWidget {
   const AnnouncementsPage({super.key});
@@ -52,7 +53,7 @@ class AnnouncementsPage extends ConsumerWidget {
                       final isPinned = ann.pinned;
 
                       // Format Date
-                      final dateText = "${ann.createdAt.day} ${ann.createdAt.month == 7 ? "July" : "August"} ${ann.createdAt.year}";
+                      final dateText = longDate(mytDate(ann.createdAt));
 
                       return Card(
                         margin: const EdgeInsets.only(bottom: DesignSystem.spaceMd),

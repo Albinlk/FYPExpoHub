@@ -97,7 +97,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                           controller: _searchController,
                           onSubmitted: (value) {
                             if (value.isNotEmpty) {
-                              context.go('/projects?search=$value');
+                              context.go(Uri(path: '/projects', queryParameters: {'search': value}).toString());
                             }
                           },
                           decoration: InputDecoration(
@@ -109,7 +109,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                               onPressed: () {
                                 final query = _searchController.text;
                                 if (query.isNotEmpty) {
-                                  context.go('/projects?search=$query');
+                                  context.go(Uri(path: '/projects', queryParameters: {'search': query}).toString());
                                 } else {
                                   context.go('/projects');
                                 }
@@ -214,7 +214,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                     builder: (context, ref, child) {
                       final sorted = ref.watch(mostVisitedProjectsProvider);
                       // A short, curated row: the catalogue is for browsing everything.
-                      final display = sorted.take(6).toList();
+                      final display = featuredForHome(sorted);
                       if (display.isEmpty) return const SizedBox.shrink();
                       if (isDesktop) {
                         return GridView.builder(
