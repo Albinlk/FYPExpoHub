@@ -14,6 +14,11 @@ _FypReportSubmission _$FypReportSubmissionFromJson(Map<String, dynamic> json) =>
       version: (json['version'] as num).toInt(),
       fileUrl: json['fileUrl'] as String,
       similarityIndex: (json['similarityIndex'] as num?)?.toDouble(),
+      plagiarismReportUrl: json['plagiarismReportUrl'] as String?,
+      endorsedBy: json['endorsedBy'] as String?,
+      endorsedAt: json['endorsedAt'] == null
+          ? null
+          : DateTime.parse(json['endorsedAt'] as String),
       status: json['status'] as String,
       submittedBy: json['submittedBy'] as String?,
       submittedAt: DateTime.parse(json['submittedAt'] as String),
@@ -35,6 +40,9 @@ Map<String, dynamic> _$FypReportSubmissionToJson(
   'version': instance.version,
   'fileUrl': instance.fileUrl,
   'similarityIndex': instance.similarityIndex,
+  'plagiarismReportUrl': instance.plagiarismReportUrl,
+  'endorsedBy': instance.endorsedBy,
+  'endorsedAt': instance.endorsedAt?.toIso8601String(),
   'status': instance.status,
   'submittedBy': instance.submittedBy,
   'submittedAt': instance.submittedAt.toIso8601String(),

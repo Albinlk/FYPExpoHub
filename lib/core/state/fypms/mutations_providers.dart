@@ -172,6 +172,18 @@ final setCsp600FormulationSharesProvider = Provider<Future<void> Function(num f2
   },
 );
 
+/// Supervisor endorses or returns an F6 report submission.
+final endorseReportProvider = Provider<
+    Future<void> Function(String reportId, String decision, String? comment, String recordId)>(
+  (ref) {
+    return (reportId, decision, comment, recordId) async {
+      final rpc = ref.read(supabaseRpcServiceProvider);
+      await rpc.endorseReportSubmission(reportId: reportId, decision: decision, comment: comment);
+      ref.invalidate(fypReportSubmissionsProvider(recordId));
+    };
+  },
+);
+
 /// Schedules a presentation slot within a session.
 final schedulePresentationSlotProvider = Provider<
     Future<void> Function(

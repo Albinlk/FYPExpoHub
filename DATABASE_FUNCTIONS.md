@@ -187,7 +187,8 @@ gate (`42501`), argument validation (`22023`), state-machine preconditions
 | `submit_form_evaluation` | textbook evaluator for the form (`fyp_form_evaluator_roles`, `20260926000002`) | Upsert evaluation; `weighted_total` = the form's percentage from the active textbook rubric, 100 × Σ(W×S) ÷ Σ(W×10); supervisor-only criteria excluded for examiners; scores outside 0–max rejected (`20260926000001`) |
 | `save_lean_canvas` | owner/assigned staff | New canvas version; demotes previous `is_latest` |
 | `submit_deliverable` | record owner | Deliverable checklist submission |
-| `submit_report_version` | record owner | Report version + storage file URL |
+| `submit_report_version` | record owner | F6: report + original plagiarism report (both in the record's folder) and similarity index, required and ≤ 30 % (`20260926000005`) |
+| `endorse_report_submission` | assigned supervisor/co-sup or coordinator | F6 endorsement: `endorsed` → under_review, or `returned` (comment required) → rejected |
 | `assign_supervisor_to_fyp_record` | coordinator | Assign supervisor/co-supervisor |
 | `assign_examiner` | CSP lecturer or coordinator | Assign examiner + assignment row |
 | `create_or_update_milestone` | CSP lecturer / supervisor | Upsert milestone |

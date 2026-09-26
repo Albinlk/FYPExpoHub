@@ -16,7 +16,8 @@ T _$identity<T>(T value) => value;
 mixin _$FypReportSubmission {
 
  String get id; String get fypRecordId; String get reportType;// 'proposal', 'final'
- int get version; String get fileUrl; double? get similarityIndex; String get status;// 'submitted', 'under_review', 'approved', 'rejected'
+ int get version; String get fileUrl; double? get similarityIndex;/// Storage path of the original plagiarism report (F6).
+ String? get plagiarismReportUrl; String? get endorsedBy; DateTime? get endorsedAt; String get status;// 'submitted', 'under_review', 'approved', 'rejected'
  String? get submittedBy; DateTime get submittedAt; String? get reviewedBy; DateTime? get reviewedAt; String? get reviewComment; DateTime get createdAt; DateTime get updatedAt;
 /// Create a copy of FypReportSubmission
 /// with the given fields replaced by the non-null parameter values.
@@ -30,16 +31,16 @@ $FypReportSubmissionCopyWith<FypReportSubmission> get copyWith => _$FypReportSub
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is FypReportSubmission&&(identical(other.id, id) || other.id == id)&&(identical(other.fypRecordId, fypRecordId) || other.fypRecordId == fypRecordId)&&(identical(other.reportType, reportType) || other.reportType == reportType)&&(identical(other.version, version) || other.version == version)&&(identical(other.fileUrl, fileUrl) || other.fileUrl == fileUrl)&&(identical(other.similarityIndex, similarityIndex) || other.similarityIndex == similarityIndex)&&(identical(other.status, status) || other.status == status)&&(identical(other.submittedBy, submittedBy) || other.submittedBy == submittedBy)&&(identical(other.submittedAt, submittedAt) || other.submittedAt == submittedAt)&&(identical(other.reviewedBy, reviewedBy) || other.reviewedBy == reviewedBy)&&(identical(other.reviewedAt, reviewedAt) || other.reviewedAt == reviewedAt)&&(identical(other.reviewComment, reviewComment) || other.reviewComment == reviewComment)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FypReportSubmission&&(identical(other.id, id) || other.id == id)&&(identical(other.fypRecordId, fypRecordId) || other.fypRecordId == fypRecordId)&&(identical(other.reportType, reportType) || other.reportType == reportType)&&(identical(other.version, version) || other.version == version)&&(identical(other.fileUrl, fileUrl) || other.fileUrl == fileUrl)&&(identical(other.similarityIndex, similarityIndex) || other.similarityIndex == similarityIndex)&&(identical(other.plagiarismReportUrl, plagiarismReportUrl) || other.plagiarismReportUrl == plagiarismReportUrl)&&(identical(other.endorsedBy, endorsedBy) || other.endorsedBy == endorsedBy)&&(identical(other.endorsedAt, endorsedAt) || other.endorsedAt == endorsedAt)&&(identical(other.status, status) || other.status == status)&&(identical(other.submittedBy, submittedBy) || other.submittedBy == submittedBy)&&(identical(other.submittedAt, submittedAt) || other.submittedAt == submittedAt)&&(identical(other.reviewedBy, reviewedBy) || other.reviewedBy == reviewedBy)&&(identical(other.reviewedAt, reviewedAt) || other.reviewedAt == reviewedAt)&&(identical(other.reviewComment, reviewComment) || other.reviewComment == reviewComment)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,fypRecordId,reportType,version,fileUrl,similarityIndex,status,submittedBy,submittedAt,reviewedBy,reviewedAt,reviewComment,createdAt,updatedAt);
+int get hashCode => Object.hash(runtimeType,id,fypRecordId,reportType,version,fileUrl,similarityIndex,plagiarismReportUrl,endorsedBy,endorsedAt,status,submittedBy,submittedAt,reviewedBy,reviewedAt,reviewComment,createdAt,updatedAt);
 
 @override
 String toString() {
-  return 'FypReportSubmission(id: $id, fypRecordId: $fypRecordId, reportType: $reportType, version: $version, fileUrl: $fileUrl, similarityIndex: $similarityIndex, status: $status, submittedBy: $submittedBy, submittedAt: $submittedAt, reviewedBy: $reviewedBy, reviewedAt: $reviewedAt, reviewComment: $reviewComment, createdAt: $createdAt, updatedAt: $updatedAt)';
+  return 'FypReportSubmission(id: $id, fypRecordId: $fypRecordId, reportType: $reportType, version: $version, fileUrl: $fileUrl, similarityIndex: $similarityIndex, plagiarismReportUrl: $plagiarismReportUrl, endorsedBy: $endorsedBy, endorsedAt: $endorsedAt, status: $status, submittedBy: $submittedBy, submittedAt: $submittedAt, reviewedBy: $reviewedBy, reviewedAt: $reviewedAt, reviewComment: $reviewComment, createdAt: $createdAt, updatedAt: $updatedAt)';
 }
 
 
@@ -50,7 +51,7 @@ abstract mixin class $FypReportSubmissionCopyWith<$Res>  {
   factory $FypReportSubmissionCopyWith(FypReportSubmission value, $Res Function(FypReportSubmission) _then) = _$FypReportSubmissionCopyWithImpl;
 @useResult
 $Res call({
- String id, String fypRecordId, String reportType, int version, String fileUrl, double? similarityIndex, String status, String? submittedBy, DateTime submittedAt, String? reviewedBy, DateTime? reviewedAt, String? reviewComment, DateTime createdAt, DateTime updatedAt
+ String id, String fypRecordId, String reportType, int version, String fileUrl, double? similarityIndex, String? plagiarismReportUrl, String? endorsedBy, DateTime? endorsedAt, String status, String? submittedBy, DateTime submittedAt, String? reviewedBy, DateTime? reviewedAt, String? reviewComment, DateTime createdAt, DateTime updatedAt
 });
 
 
@@ -67,7 +68,7 @@ class _$FypReportSubmissionCopyWithImpl<$Res>
 
 /// Create a copy of FypReportSubmission
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? fypRecordId = null,Object? reportType = null,Object? version = null,Object? fileUrl = null,Object? similarityIndex = freezed,Object? status = null,Object? submittedBy = freezed,Object? submittedAt = null,Object? reviewedBy = freezed,Object? reviewedAt = freezed,Object? reviewComment = freezed,Object? createdAt = null,Object? updatedAt = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? fypRecordId = null,Object? reportType = null,Object? version = null,Object? fileUrl = null,Object? similarityIndex = freezed,Object? plagiarismReportUrl = freezed,Object? endorsedBy = freezed,Object? endorsedAt = freezed,Object? status = null,Object? submittedBy = freezed,Object? submittedAt = null,Object? reviewedBy = freezed,Object? reviewedAt = freezed,Object? reviewComment = freezed,Object? createdAt = null,Object? updatedAt = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,fypRecordId: null == fypRecordId ? _self.fypRecordId : fypRecordId // ignore: cast_nullable_to_non_nullable
@@ -75,7 +76,10 @@ as String,reportType: null == reportType ? _self.reportType : reportType // igno
 as String,version: null == version ? _self.version : version // ignore: cast_nullable_to_non_nullable
 as int,fileUrl: null == fileUrl ? _self.fileUrl : fileUrl // ignore: cast_nullable_to_non_nullable
 as String,similarityIndex: freezed == similarityIndex ? _self.similarityIndex : similarityIndex // ignore: cast_nullable_to_non_nullable
-as double?,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as double?,plagiarismReportUrl: freezed == plagiarismReportUrl ? _self.plagiarismReportUrl : plagiarismReportUrl // ignore: cast_nullable_to_non_nullable
+as String?,endorsedBy: freezed == endorsedBy ? _self.endorsedBy : endorsedBy // ignore: cast_nullable_to_non_nullable
+as String?,endorsedAt: freezed == endorsedAt ? _self.endorsedAt : endorsedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as String,submittedBy: freezed == submittedBy ? _self.submittedBy : submittedBy // ignore: cast_nullable_to_non_nullable
 as String?,submittedAt: null == submittedAt ? _self.submittedAt : submittedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,reviewedBy: freezed == reviewedBy ? _self.reviewedBy : reviewedBy // ignore: cast_nullable_to_non_nullable
@@ -168,10 +172,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String fypRecordId,  String reportType,  int version,  String fileUrl,  double? similarityIndex,  String status,  String? submittedBy,  DateTime submittedAt,  String? reviewedBy,  DateTime? reviewedAt,  String? reviewComment,  DateTime createdAt,  DateTime updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String fypRecordId,  String reportType,  int version,  String fileUrl,  double? similarityIndex,  String? plagiarismReportUrl,  String? endorsedBy,  DateTime? endorsedAt,  String status,  String? submittedBy,  DateTime submittedAt,  String? reviewedBy,  DateTime? reviewedAt,  String? reviewComment,  DateTime createdAt,  DateTime updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _FypReportSubmission() when $default != null:
-return $default(_that.id,_that.fypRecordId,_that.reportType,_that.version,_that.fileUrl,_that.similarityIndex,_that.status,_that.submittedBy,_that.submittedAt,_that.reviewedBy,_that.reviewedAt,_that.reviewComment,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.fypRecordId,_that.reportType,_that.version,_that.fileUrl,_that.similarityIndex,_that.plagiarismReportUrl,_that.endorsedBy,_that.endorsedAt,_that.status,_that.submittedBy,_that.submittedAt,_that.reviewedBy,_that.reviewedAt,_that.reviewComment,_that.createdAt,_that.updatedAt);case _:
   return orElse();
 
 }
@@ -189,10 +193,10 @@ return $default(_that.id,_that.fypRecordId,_that.reportType,_that.version,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String fypRecordId,  String reportType,  int version,  String fileUrl,  double? similarityIndex,  String status,  String? submittedBy,  DateTime submittedAt,  String? reviewedBy,  DateTime? reviewedAt,  String? reviewComment,  DateTime createdAt,  DateTime updatedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String fypRecordId,  String reportType,  int version,  String fileUrl,  double? similarityIndex,  String? plagiarismReportUrl,  String? endorsedBy,  DateTime? endorsedAt,  String status,  String? submittedBy,  DateTime submittedAt,  String? reviewedBy,  DateTime? reviewedAt,  String? reviewComment,  DateTime createdAt,  DateTime updatedAt)  $default,) {final _that = this;
 switch (_that) {
 case _FypReportSubmission():
-return $default(_that.id,_that.fypRecordId,_that.reportType,_that.version,_that.fileUrl,_that.similarityIndex,_that.status,_that.submittedBy,_that.submittedAt,_that.reviewedBy,_that.reviewedAt,_that.reviewComment,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.fypRecordId,_that.reportType,_that.version,_that.fileUrl,_that.similarityIndex,_that.plagiarismReportUrl,_that.endorsedBy,_that.endorsedAt,_that.status,_that.submittedBy,_that.submittedAt,_that.reviewedBy,_that.reviewedAt,_that.reviewComment,_that.createdAt,_that.updatedAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -209,10 +213,10 @@ return $default(_that.id,_that.fypRecordId,_that.reportType,_that.version,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String fypRecordId,  String reportType,  int version,  String fileUrl,  double? similarityIndex,  String status,  String? submittedBy,  DateTime submittedAt,  String? reviewedBy,  DateTime? reviewedAt,  String? reviewComment,  DateTime createdAt,  DateTime updatedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String fypRecordId,  String reportType,  int version,  String fileUrl,  double? similarityIndex,  String? plagiarismReportUrl,  String? endorsedBy,  DateTime? endorsedAt,  String status,  String? submittedBy,  DateTime submittedAt,  String? reviewedBy,  DateTime? reviewedAt,  String? reviewComment,  DateTime createdAt,  DateTime updatedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _FypReportSubmission() when $default != null:
-return $default(_that.id,_that.fypRecordId,_that.reportType,_that.version,_that.fileUrl,_that.similarityIndex,_that.status,_that.submittedBy,_that.submittedAt,_that.reviewedBy,_that.reviewedAt,_that.reviewComment,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.fypRecordId,_that.reportType,_that.version,_that.fileUrl,_that.similarityIndex,_that.plagiarismReportUrl,_that.endorsedBy,_that.endorsedAt,_that.status,_that.submittedBy,_that.submittedAt,_that.reviewedBy,_that.reviewedAt,_that.reviewComment,_that.createdAt,_that.updatedAt);case _:
   return null;
 
 }
@@ -224,7 +228,7 @@ return $default(_that.id,_that.fypRecordId,_that.reportType,_that.version,_that.
 @JsonSerializable()
 
 class _FypReportSubmission implements FypReportSubmission {
-  const _FypReportSubmission({required this.id, required this.fypRecordId, required this.reportType, required this.version, required this.fileUrl, this.similarityIndex, required this.status, this.submittedBy, required this.submittedAt, this.reviewedBy, this.reviewedAt, this.reviewComment, required this.createdAt, required this.updatedAt});
+  const _FypReportSubmission({required this.id, required this.fypRecordId, required this.reportType, required this.version, required this.fileUrl, this.similarityIndex, this.plagiarismReportUrl, this.endorsedBy, this.endorsedAt, required this.status, this.submittedBy, required this.submittedAt, this.reviewedBy, this.reviewedAt, this.reviewComment, required this.createdAt, required this.updatedAt});
   factory _FypReportSubmission.fromJson(Map<String, dynamic> json) => _$FypReportSubmissionFromJson(json);
 
 @override final  String id;
@@ -234,6 +238,10 @@ class _FypReportSubmission implements FypReportSubmission {
 @override final  int version;
 @override final  String fileUrl;
 @override final  double? similarityIndex;
+/// Storage path of the original plagiarism report (F6).
+@override final  String? plagiarismReportUrl;
+@override final  String? endorsedBy;
+@override final  DateTime? endorsedAt;
 @override final  String status;
 // 'submitted', 'under_review', 'approved', 'rejected'
 @override final  String? submittedBy;
@@ -257,16 +265,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FypReportSubmission&&(identical(other.id, id) || other.id == id)&&(identical(other.fypRecordId, fypRecordId) || other.fypRecordId == fypRecordId)&&(identical(other.reportType, reportType) || other.reportType == reportType)&&(identical(other.version, version) || other.version == version)&&(identical(other.fileUrl, fileUrl) || other.fileUrl == fileUrl)&&(identical(other.similarityIndex, similarityIndex) || other.similarityIndex == similarityIndex)&&(identical(other.status, status) || other.status == status)&&(identical(other.submittedBy, submittedBy) || other.submittedBy == submittedBy)&&(identical(other.submittedAt, submittedAt) || other.submittedAt == submittedAt)&&(identical(other.reviewedBy, reviewedBy) || other.reviewedBy == reviewedBy)&&(identical(other.reviewedAt, reviewedAt) || other.reviewedAt == reviewedAt)&&(identical(other.reviewComment, reviewComment) || other.reviewComment == reviewComment)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FypReportSubmission&&(identical(other.id, id) || other.id == id)&&(identical(other.fypRecordId, fypRecordId) || other.fypRecordId == fypRecordId)&&(identical(other.reportType, reportType) || other.reportType == reportType)&&(identical(other.version, version) || other.version == version)&&(identical(other.fileUrl, fileUrl) || other.fileUrl == fileUrl)&&(identical(other.similarityIndex, similarityIndex) || other.similarityIndex == similarityIndex)&&(identical(other.plagiarismReportUrl, plagiarismReportUrl) || other.plagiarismReportUrl == plagiarismReportUrl)&&(identical(other.endorsedBy, endorsedBy) || other.endorsedBy == endorsedBy)&&(identical(other.endorsedAt, endorsedAt) || other.endorsedAt == endorsedAt)&&(identical(other.status, status) || other.status == status)&&(identical(other.submittedBy, submittedBy) || other.submittedBy == submittedBy)&&(identical(other.submittedAt, submittedAt) || other.submittedAt == submittedAt)&&(identical(other.reviewedBy, reviewedBy) || other.reviewedBy == reviewedBy)&&(identical(other.reviewedAt, reviewedAt) || other.reviewedAt == reviewedAt)&&(identical(other.reviewComment, reviewComment) || other.reviewComment == reviewComment)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,fypRecordId,reportType,version,fileUrl,similarityIndex,status,submittedBy,submittedAt,reviewedBy,reviewedAt,reviewComment,createdAt,updatedAt);
+int get hashCode => Object.hash(runtimeType,id,fypRecordId,reportType,version,fileUrl,similarityIndex,plagiarismReportUrl,endorsedBy,endorsedAt,status,submittedBy,submittedAt,reviewedBy,reviewedAt,reviewComment,createdAt,updatedAt);
 
 @override
 String toString() {
-  return 'FypReportSubmission(id: $id, fypRecordId: $fypRecordId, reportType: $reportType, version: $version, fileUrl: $fileUrl, similarityIndex: $similarityIndex, status: $status, submittedBy: $submittedBy, submittedAt: $submittedAt, reviewedBy: $reviewedBy, reviewedAt: $reviewedAt, reviewComment: $reviewComment, createdAt: $createdAt, updatedAt: $updatedAt)';
+  return 'FypReportSubmission(id: $id, fypRecordId: $fypRecordId, reportType: $reportType, version: $version, fileUrl: $fileUrl, similarityIndex: $similarityIndex, plagiarismReportUrl: $plagiarismReportUrl, endorsedBy: $endorsedBy, endorsedAt: $endorsedAt, status: $status, submittedBy: $submittedBy, submittedAt: $submittedAt, reviewedBy: $reviewedBy, reviewedAt: $reviewedAt, reviewComment: $reviewComment, createdAt: $createdAt, updatedAt: $updatedAt)';
 }
 
 
@@ -277,7 +285,7 @@ abstract mixin class _$FypReportSubmissionCopyWith<$Res> implements $FypReportSu
   factory _$FypReportSubmissionCopyWith(_FypReportSubmission value, $Res Function(_FypReportSubmission) _then) = __$FypReportSubmissionCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String fypRecordId, String reportType, int version, String fileUrl, double? similarityIndex, String status, String? submittedBy, DateTime submittedAt, String? reviewedBy, DateTime? reviewedAt, String? reviewComment, DateTime createdAt, DateTime updatedAt
+ String id, String fypRecordId, String reportType, int version, String fileUrl, double? similarityIndex, String? plagiarismReportUrl, String? endorsedBy, DateTime? endorsedAt, String status, String? submittedBy, DateTime submittedAt, String? reviewedBy, DateTime? reviewedAt, String? reviewComment, DateTime createdAt, DateTime updatedAt
 });
 
 
@@ -294,7 +302,7 @@ class __$FypReportSubmissionCopyWithImpl<$Res>
 
 /// Create a copy of FypReportSubmission
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? fypRecordId = null,Object? reportType = null,Object? version = null,Object? fileUrl = null,Object? similarityIndex = freezed,Object? status = null,Object? submittedBy = freezed,Object? submittedAt = null,Object? reviewedBy = freezed,Object? reviewedAt = freezed,Object? reviewComment = freezed,Object? createdAt = null,Object? updatedAt = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? fypRecordId = null,Object? reportType = null,Object? version = null,Object? fileUrl = null,Object? similarityIndex = freezed,Object? plagiarismReportUrl = freezed,Object? endorsedBy = freezed,Object? endorsedAt = freezed,Object? status = null,Object? submittedBy = freezed,Object? submittedAt = null,Object? reviewedBy = freezed,Object? reviewedAt = freezed,Object? reviewComment = freezed,Object? createdAt = null,Object? updatedAt = null,}) {
   return _then(_FypReportSubmission(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,fypRecordId: null == fypRecordId ? _self.fypRecordId : fypRecordId // ignore: cast_nullable_to_non_nullable
@@ -302,7 +310,10 @@ as String,reportType: null == reportType ? _self.reportType : reportType // igno
 as String,version: null == version ? _self.version : version // ignore: cast_nullable_to_non_nullable
 as int,fileUrl: null == fileUrl ? _self.fileUrl : fileUrl // ignore: cast_nullable_to_non_nullable
 as String,similarityIndex: freezed == similarityIndex ? _self.similarityIndex : similarityIndex // ignore: cast_nullable_to_non_nullable
-as double?,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as double?,plagiarismReportUrl: freezed == plagiarismReportUrl ? _self.plagiarismReportUrl : plagiarismReportUrl // ignore: cast_nullable_to_non_nullable
+as String?,endorsedBy: freezed == endorsedBy ? _self.endorsedBy : endorsedBy // ignore: cast_nullable_to_non_nullable
+as String?,endorsedAt: freezed == endorsedAt ? _self.endorsedAt : endorsedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as String,submittedBy: freezed == submittedBy ? _self.submittedBy : submittedBy // ignore: cast_nullable_to_non_nullable
 as String?,submittedAt: null == submittedAt ? _self.submittedAt : submittedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,reviewedBy: freezed == reviewedBy ? _self.reviewedBy : reviewedBy // ignore: cast_nullable_to_non_nullable

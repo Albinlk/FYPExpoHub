@@ -12,6 +12,11 @@ abstract class FypReportSubmission with _$FypReportSubmission {
     required int version,
     required String fileUrl,
     double? similarityIndex,
+
+    /// Storage path of the original plagiarism report (F6).
+    String? plagiarismReportUrl,
+    String? endorsedBy,
+    DateTime? endorsedAt,
     required String status, // 'submitted', 'under_review', 'approved', 'rejected'
     String? submittedBy,
     required DateTime submittedAt,
