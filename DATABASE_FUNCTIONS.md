@@ -183,8 +183,8 @@ gate (`42501`), argument validation (`22023`), state-machine preconditions
 | `update_fyp_record_field` / `admin_override_fyp_record_field` | owner / admin (+reason) | Edit whitelisted project fields (typed CASE branches) |
 | `submit_progress_log` | record owner | F5 consultation entry: one per meeting date; week derived from the semester start; date within the semester and not in the future (`20260926000006`) |
 | `validate_progress_log` | assigned supervisor/co-sup/coordinator | Validate or reject submitted logs |
-| `submit_fyp_form` | record owner | Version form submissions; F14–F16 require `settings.fypms_features.special_evaluation_enabled` |
-| `submit_form_evaluation` | textbook evaluator for the form (`fyp_form_evaluator_roles`, `20260926000002`) | Upsert evaluation; `weighted_total` = the form's percentage from the active textbook rubric, 100 × Σ(W×S) ÷ Σ(W×10); supervisor-only criteria excluded for examiners; scores outside 0–max rejected (`20260926000001`) |
+| `submit_fyp_form` | record owner | Version form submissions; F14 requires `settings.fypms_features.special_evaluation_enabled`; F15/F16 require the record to be qualified on F14 (`20260926000010`) |
+| `submit_form_evaluation` | textbook evaluator for the form (`fyp_form_evaluator_roles`, `20260926000002`) | Upsert evaluation; `weighted_total` = the form's percentage from the active textbook rubric, 100 × Σ(W×S) ÷ Σ(W×10); supervisor-only criteria excluded for examiners; scores outside 0–max rejected (`20260926000001`); F15/F16 only for a record qualified on F14; F14 is not rubric-scored (`20260926000010`) |
 | `save_lean_canvas` | owner/assigned staff | New canvas version; demotes previous `is_latest` |
 | `submit_deliverable` | record owner | Textbook CSP650 deliverables only; report PDF + Word, slides, poster required (file in the record's folder); raw data / system + test data / setup instructions / executable may be an https link (`20260926000007`) |
 | `submit_report_version` | record owner | F6: report + original plagiarism report (both in the record's folder) and similarity index, required and ≤ 30 % (`20260926000005`) |
@@ -195,6 +195,9 @@ gate (`42501`), argument validation (`22023`), state-machine preconditions
 | `grant_milestone_extension` | (defined; no UI yet) | Milestone extension workflow |
 | `finalize_marks` | CSP lecturer for the course — cross-checked against the record's actual course | Legacy: sums a typed breakdown. The app now uses `finalize_fyp_course_marks` |
 | `compute_fyp_course_marks` | course lecturer or coordinator | Course marks from rubric evaluations: Σ evaluator share × role's average evaluation %, per CLO for F11/F16; returns breakdown, total, UiTM grade, missing evaluations (`20260926000003`) |
+| `get_special_evaluation_checks` | CSP650 lecturer or coordinator | F14 checks for a CSP650 record: Progress (F9) + LMC (F13) marks vs 7.5, final report on file, exhibition visit recorded, plus the saved decision (`20260926000010`) |
+| `assess_special_evaluation` | CSP650 lecturer or coordinator | Records the F14 decision in `fyp_special_evaluations`; Progress + LMC recomputed server-side; eligible only when all four checks pass; audited (`20260926000010`) |
+| `fyp_is_special_evaluation_eligible` | authenticated | Whether a record qualified on F14 (gates F15/F16) (`20260926000010`) |
 | `finalize_fyp_course_marks` | course lecturer | Refuses while evaluations are missing or already finalized; stores breakdown, total and grade |
 | `set_csp600_formulation_shares` | coordinator | Splits CSP600's formulation 30 % across F2 / F3 / F4 (must sum to 30) |
 | `fyp_grade_for`, `fyp_evaluation_percent` | helpers | UiTM grade bands; an evaluation's % over a role's (and CLO's) criteria |

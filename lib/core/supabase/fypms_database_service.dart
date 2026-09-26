@@ -357,6 +357,24 @@ extension FypmsDatabaseService on SupabaseDatabaseService {
   }
 
   // ---------------------------------------------------
+  // SPECIAL EVALUATION (F14)
+  // ---------------------------------------------------
+  /// The record's F14 qualification row, or null when not assessed yet.
+  Future<Map<String, dynamic>?> getSpecialEvaluationForRecordOnce(String fypRecordId) async {
+    try {
+      final res = await Supabase.instance.client
+          .from('fyp_special_evaluations')
+          .select()
+          .eq('fyp_record_id', fypRecordId)
+          .maybeSingle();
+      return res == null ? null : Map<String, dynamic>.from(res);
+    } catch (e) {
+      logDebug('Supabase getSpecialEvaluationForRecordOnce error: $e');
+      return null;
+    }
+  }
+
+  // ---------------------------------------------------
   // MARKS
   // ---------------------------------------------------
   Future<List<Map<String, dynamic>>> getMarksSummariesForRecordOnce(String fypRecordId) async {

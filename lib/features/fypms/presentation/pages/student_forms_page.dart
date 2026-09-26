@@ -14,16 +14,18 @@ class StudentFormsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final formCodes = ref.watch(fypmsAvailableFormCodesProvider);
     final features = ref.watch(fypmsFeaturesProvider);
+    final applicationsOpen = features.value?.specialEvaluationEnabled ?? false;
 
     return StudentRecordWorkspace(
       title: 'Form Submissions',
       builder: (context, ref, record) {
         final submissions = ref.watch(fypFormSubmissionsProvider(record.id));
+        final qualified = ref.watch(fypSpecialEvaluationProvider(record.id)).value?.eligible ?? false;
+        final formCodes = fypmsFormCodesFor(applicationsOpen: applicationsOpen, qualified: qualified);
         return Column(
           children: [
-            if (features.value?.specialEvaluationEnabled != true)
+            if (record.currentCourseCode == 'CSP650' || qualified)
               Container(
                 width: double.infinity,
                 margin: const EdgeInsets.all(DesignSystem.gutter),
@@ -32,13 +34,22 @@ class StudentFormsPage extends ConsumerWidget {
                   color: DesignSystem.surfaceContainerLow,
                   borderRadius: DesignSystem.radiusXl,
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.info_outline, color: DesignSystem.primary),
-                    SizedBox(width: DesignSystem.spaceSm),
+                    Icon(
+                      qualified ? Icons.verified : Icons.info_outline,
+                      color: qualified ? DesignSystem.secondary : DesignSystem.primary,
+                    ),
+                    const SizedBox(width: DesignSystem.spaceSm),
                     Expanded(
                       child: Text(
-                        'Special evaluation forms (F14-F16) are currently disabled by the coordinator.',
+                        qualified
+                            ? 'You qualified for special evaluation — F15 and F16 are open.'
+                            : applicationsOpen
+                                ? 'Special evaluation (F14) applications are open. F15 and F16 open once '
+                                    'the CSP650 lecturer qualifies you.'
+                                : 'Special evaluation (F14) applications are closed.',
+                        key: const Key('special-evaluation-banner'),
                         style: DesignSystem.bodySm,
                       ),
                     ),
