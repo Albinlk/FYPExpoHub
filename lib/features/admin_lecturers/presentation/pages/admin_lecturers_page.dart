@@ -171,6 +171,14 @@ class AdminLecturersPage extends ConsumerWidget {
   }
 
   Future<void> _backfillLecturerIds(BuildContext context, WidgetRef ref) async {
+    final ok = await confirmAction(
+      context,
+      title: 'Backfill lecturer IDs?',
+      message: 'Assignments without a lecturer account are linked to the lecturer whose name matches exactly. '
+          'This updates every matching assignment at once.',
+      confirmLabel: 'Backfill',
+    );
+    if (!ok || !context.mounted) return;
     final messenger = ScaffoldMessenger.of(context);
     messenger.showSnackBar(
       const SnackBar(content: Text('Updating lecturer IDs in assignments...')),

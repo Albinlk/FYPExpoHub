@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../app/theme/theme.dart';
+import '../../../../core/widgets/admin_actions.dart';
 import '../../../../core/supabase/supabase_client_provider.dart';
 import '../../../../core/state/state_providers.dart';
 
@@ -28,6 +29,15 @@ class _ImportDetailPageState extends ConsumerState<ImportDetailPage> {
   Future<void> _publish() async {
     final user = ref.read(currentAuthUserProvider);
     if (user == null) return;
+
+    final ok = await confirmAction(
+      context,
+      title: 'Publish this import?',
+      message: 'The rows marked Publish or Replace are added to the public schedule and awards. '
+          'An import can only be published once.',
+      confirmLabel: 'Publish',
+    );
+    if (!ok || !mounted) return;
 
     setState(() => _isPublishing = true);
 

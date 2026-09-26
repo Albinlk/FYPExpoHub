@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/award.dart';
 import '../../../../core/state/state_providers.dart';
@@ -7,17 +8,18 @@ import '../../../../core/state/state_providers.dart';
 class AwardsPage extends ConsumerWidget {
   const AwardsPage({super.key});
 
+  /// Seed rows with these category ids keep the project title in
+  /// projectTitle; every other row (admin- or import-created) stores the award
+  /// name there and links the project by id.
+  static const _legacyCategoryTitles = {
+    'cat-gold': 'Gold Innovation Award',
+    'cat-best-innovative': 'Best Innovative Project Award',
+  };
+
   String _getAwardTitle(PublishedAwardWinner award) {
-    if (award.awardCategoryId == 'cat-manual') {
-      return award.projectTitle; // Custom title stored in projectTitle
-    }
-    if (award.awardCategoryId == 'cat-gold') {
-      return 'Gold Innovation Award';
-    }
-    if (award.awardCategoryId == 'cat-best-innovative') {
-      return 'Best Innovative Project Award';
-    }
-    return 'Final Year Project Award';
+    final legacy = _legacyCategoryTitles[award.awardCategoryId];
+    if (legacy != null) return legacy;
+    return award.projectTitle.trim().isNotEmpty ? award.projectTitle : 'Final Year Project Award';
   }
 
   @override
@@ -68,9 +70,9 @@ class AwardsPage extends ConsumerWidget {
                       final associatedProj = projectsMap[award.projectId];
 
                       final awardTitle = _getAwardTitle(award);
-                      final winningProjectTitle = award.awardCategoryId == 'cat-manual'
-                          ? (associatedProj?.title ?? 'N/A')
-                          : award.projectTitle;
+                      final winningProjectTitle = _legacyCategoryTitles.containsKey(award.awardCategoryId)
+                          ? award.projectTitle
+                          : (associatedProj?.title ?? 'N/A');
 
                       final teamName = award.teamDisplayName ?? associatedProj?.teamDisplayNames.join(', ') ?? 'N/A';
                       final supervisor = associatedProj?.supervisorDisplayName ?? award.supervisorDisplayName ?? 'N/A';
@@ -114,6 +116,22 @@ class AwardsPage extends ConsumerWidget {
                               const SizedBox(height: DesignSystem.spaceSm),
                               Text('Student(s): $teamName', style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant), softWrap: true),
                               Text('Supervisor: $supervisor', style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant, fontStyle: FontStyle.italic), softWrap: true),
+                              if (award.sponsor?.isNotEmpty == true)
+                                Text('Sponsor: ${award.sponsor}', style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant), softWrap: true),
+                              if (award.description?.isNotEmpty == true)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: DesignSystem.spaceXs),
+                                  child: Text(award.description!, style: DesignSystem.bodySm, softWrap: true),
+                                ),
+                              if (associatedProj != null)
+                                Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: TextButton.icon(
+                                    onPressed: () => context.go('/projects/${associatedProj.slug}'),
+                                    icon: const Icon(Icons.arrow_forward, size: 16),
+                                    label: const Text('View project'),
+                                  ),
+                                ),
                               const SizedBox(height: DesignSystem.spaceMd),
                               const Divider(),
                               Padding(

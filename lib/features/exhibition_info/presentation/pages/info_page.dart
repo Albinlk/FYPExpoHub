@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/event.dart';
 import '../../../../core/state/state_providers.dart';
+import '../../../../core/utils/external_link.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class InfoPage extends ConsumerWidget {
   const InfoPage({super.key});
@@ -100,8 +102,21 @@ class InfoPage extends ConsumerWidget {
                 borderRadius: DesignSystem.radiusLg,
                 border: Border.all(color: DesignSystem.surfaceContainer),
               ),
-              child: const Center(
-                child: Icon(Icons.map, size: 48, color: DesignSystem.primaryContainer),
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.map, size: 48, color: DesignSystem.primaryContainer),
+                    if (safeExternalUri(event.mapUrl) != null) ...[
+                      const SizedBox(height: DesignSystem.spaceSm),
+                      FilledButton.icon(
+                        onPressed: () => launchUrl(safeExternalUri(event.mapUrl)!, webOnlyWindowName: '_blank'),
+                        icon: const Icon(Icons.directions, size: 18),
+                        label: const Text('Open in Maps'),
+                      ),
+                    ],
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: DesignSystem.spaceMd),

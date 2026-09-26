@@ -1,0 +1,9 @@
+# FYP Expo Hub — public exhibition portal
+User-agent: *
+Allow: /
+# Staff and student areas need a sign-in and have nothing to index.
+Disallow: /admin
+Disallow: /fypms
+Disallow: /lecturer/visits
+
+Sitemap: https://fskmjasinfypexhibition.site/sitemap.xml

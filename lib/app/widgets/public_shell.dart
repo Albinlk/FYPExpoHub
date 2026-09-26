@@ -115,8 +115,13 @@ class _DesktopNavBar extends StatelessWidget {
             ),
           ),
 
-          // Center: Links
-          Row(
+          // Center: Links. Flexible + horizontal scroll so the row never runs
+          // into the logo on narrow desktop widths (~800 px).
+          Flexible(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: DesignSystem.spaceMd),
+              child: Row(
             children: [
               _buildNavLink(context, 'Home', '/'),
               const SizedBox(width: DesignSystem.spaceLg),
@@ -137,7 +142,34 @@ class _DesktopNavBar extends StatelessWidget {
                 const SizedBox(width: DesignSystem.spaceLg),
                 _buildNavLink(context, 'My Visits', '/lecturer/visits'),
               ],
+              const SizedBox(width: DesignSystem.spaceMd),
+              // Info, FAQ and Privacy were only reachable from the mobile menu.
+              PopupMenuButton<String>(
+                tooltip: 'More',
+                onSelected: (route) => _navigateTo(context, route),
+                itemBuilder: (_) => const [
+                  PopupMenuItem(value: '/info', child: Text('Exhibition Info')),
+                  PopupMenuItem(value: '/faq', child: Text('FAQ')),
+                  PopupMenuItem(value: '/privacy', child: Text('Privacy Policy')),
+                ],
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'More',
+                      style: DesignSystem.bodyMd.copyWith(
+                        color: _isActive('/info') || _isActive('/faq') || _isActive('/privacy')
+                            ? DesignSystem.primary
+                            : DesignSystem.onSurfaceVariant,
+                      ),
+                    ),
+                    const Icon(Icons.arrow_drop_down, color: DesignSystem.onSurfaceVariant),
+                  ],
+                ),
+              ),
             ],
+          ),
+            ),
           ),
 
           // Right: Login Button
