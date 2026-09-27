@@ -234,6 +234,8 @@ List<({String title, IconData icon, String route})> _navItems({
       (title: 'All Records', icon: Icons.folder_open, route: '/fypms/coordinator/records'),
       (title: 'Assignments', icon: Icons.assignment_ind, route: '/fypms/coordinator/assignments'),
       (title: 'Semesters & Courses', icon: Icons.date_range, route: '/fypms/coordinator/semesters'),
+      (title: 'Users & Roles', icon: Icons.manage_accounts, route: '/fypms/coordinator/users'),
+      (title: 'Enrol Students', icon: Icons.group_add, route: '/fypms/coordinator/enrol'),
       (title: 'Supervision Requests', icon: Icons.mail, route: '/fypms/coordinator/requests'),
       (title: 'Presentations', icon: Icons.event, route: '/fypms/coordinator/presentations'),
       (title: 'Expo Publications', icon: Icons.public, route: '/fypms/coordinator/expo'),

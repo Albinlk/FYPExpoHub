@@ -12,7 +12,7 @@ Priority: **H** high · **M** medium · **L** low
 | [x] | S1 | Semester management screen (coordinator): create, open (active), close (completed), archive semesters; one active at a time (#40) | H |
 | [x] | S2 | Semester selector on every FYPMS list (records, requests, evaluations, marks, presentations), defaulting to the active semester (#40) | H |
 | [x] | S3 | "Promote to CSP650" action: creates the linked next-semester record (`previous_record_id`), carrying supervisor, examiner and title (#40) | H |
-| [ ] | S4 | New-intake rollover: bulk-create CSP600 records for a semester from an enrolment list | M |
+| [x] | S4 | New-intake rollover: bulk-create CSP600 records for a semester from an enrolment list (#42) | M |
 | [x] | S5 | Course setup screen (CSP600 / CSP650 details, offerings per semester) (#40) | M |
 | [x] | S6 | Exhibition: replace the hard-wired event (`kEventSlug = fskm-fyp-2026`) with an **active event** setting; admin can create a new exhibition without overwriting the last one (#41) | H |
 | [x] | S7 | Public "past exhibitions" archive: browse earlier years' projects and award winners (#41) | M |
@@ -23,8 +23,8 @@ Priority: **H** high · **M** medium · **L** low
 | Done | # | Item | Pri |
 |---|---|---|---|
 | [ ] | U1 | Proper student form screens for F2, F3, F4, F7, F9, F10 … (replace the raw-JSON payload box) | H |
-| [ ] | U2 | User role management (admin / coordinator): search users, add / remove FYPMS roles with programme scope, activate / deactivate; audited; coordinators can't grant coordinator / admin | H |
-| [ ] | U3 | Student account creation and bulk enrolment (uses `create_student_account_profile`) | H |
+| [x] | U2 | User role management (admin / coordinator): search users, add / remove FYPMS roles with programme scope, activate / deactivate; audited; coordinators can't grant coordinator / admin (#42) | H |
+| [x] | U3 | Student account creation and bulk enrolment (uses `create_student_account_profile`) (#42) | H |
 | [ ] | U4 | Rubric editor (criteria, weights, evaluator shares, versioned) | M |
 | [ ] | U5 | Edit / delete presentation sessions and slots | L |
 
