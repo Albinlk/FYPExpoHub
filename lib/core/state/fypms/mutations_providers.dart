@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/fypms_exhibition_evaluation.dart';
+import '../../domain/fypms_users.dart';
 import '../../supabase/fypms_rpc_service.dart';
 import '../expo/service_providers.dart';
 import 'coordinator_providers.dart';
@@ -179,6 +180,41 @@ final openExhibitionEvaluationProvider = Provider<Future<ExhibitionEvaluation> F
     };
   },
 );
+
+/// Users & Roles and enrolment actions (backlog U2, U3).
+final userAdminProvider = Provider<UserAdmin>((ref) => UserAdmin(ref));
+
+class UserAdmin {
+  UserAdmin(this._ref);
+  final Ref _ref;
+
+  Future<List<ManagedUser>> search(String query) async =>
+      (await _ref.read(supabaseRpcServiceProvider).adminListUsers(search: query)).map(ManagedUser.fromJson).toList();
+
+  Future<void> setRole(String profileId, String roleCode, {String programmeCode = '', required bool active}) =>
+      _ref.read(supabaseRpcServiceProvider).setUserAcademicRole(
+            profileId: profileId,
+            roleCode: roleCode,
+            programmeCode: programmeCode,
+            active: active,
+          );
+
+  Future<void> setActive(String profileId, bool active) =>
+      _ref.read(supabaseRpcServiceProvider).setProfileActive(profileId: profileId, active: active);
+
+  Future<void> setAccountType(String profileId, String role) =>
+      _ref.read(supabaseRpcServiceProvider).setProfileAccountRole(profileId: profileId, role: role);
+
+  Future<List<Map<String, dynamic>>> enrol(String semesterId, String courseCode, List<EnrolmentRow> rows) async {
+    final results = await _ref.read(supabaseRpcServiceProvider).enrollStudents(
+          semesterId: semesterId,
+          courseCode: courseCode,
+          students: [for (final r in rows) r.toJson()],
+        );
+    _ref.invalidate(fypRecordsProvider);
+    return results;
+  }
+}
 
 /// Coordinator semester / course / offering management (backlog S1, S5).
 final semesterAdminProvider = Provider<SemesterAdmin>((ref) => SemesterAdmin(ref));

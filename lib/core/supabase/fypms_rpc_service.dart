@@ -391,6 +391,59 @@ extension FypmsRpcService on SupabaseRpcService {
     return _rpc('get_exhibition_evaluation', {'p_project_id': projectId, 'p_create': create});
   }
 
+  /// Users matching [search] with their roles (admin / coordinator).
+  Future<List<Map<String, dynamic>>> adminListUsers({String search = '', int limit = 50}) async {
+    try {
+      final response = await Supabase.instance.client
+          .rpc<dynamic>('admin_list_users', params: {'p_search': search, 'p_limit': limit});
+      return [for (final m in (response as List? ?? const [])) Map<String, dynamic>.from(m as Map)];
+    } catch (e) {
+      logDebug('Supabase FYPMS RPC admin_list_users error: $e');
+      rethrow;
+    }
+  }
+
+  /// Grants ([active]) or removes an FYPMS role.
+  Future<Map<String, dynamic>> setUserAcademicRole({
+    required String profileId,
+    required String roleCode,
+    String programmeCode = '',
+    bool active = true,
+  }) async {
+    return _rpc('set_user_academic_role', {
+      'p_profile_id': profileId,
+      'p_role_code': roleCode,
+      'p_programme_code': programmeCode,
+      'p_active': active,
+    });
+  }
+
+  Future<Map<String, dynamic>> setProfileActive({required String profileId, required bool active}) async {
+    return _rpc('set_profile_active', {'p_profile_id': profileId, 'p_active': active});
+  }
+
+  /// Admin: account type admin / lecturer / student.
+  Future<Map<String, dynamic>> setProfileAccountRole({required String profileId, required String role}) async {
+    return _rpc('set_profile_account_role', {'p_profile_id': profileId, 'p_role': role});
+  }
+
+  /// Bulk enrolment through the enroll-students Edge Function; returns one
+  /// result per row (status enrolled / already_enrolled / error).
+  Future<List<Map<String, dynamic>>> enrollStudents({
+    required String semesterId,
+    required String courseCode,
+    required List<Map<String, dynamic>> students,
+  }) async {
+    final response = await Supabase.instance.client.functions.invoke('enroll-students', body: {
+      'semester_id': semesterId,
+      'course_code': courseCode,
+      'students': students,
+    });
+    final data = response.data;
+    if (data is Map && data['error'] != null) throw Exception(data['error']);
+    return [for (final r in ((data as Map?)?['results'] as List? ?? const [])) Map<String, dynamic>.from(r as Map)];
+  }
+
   /// Coordinator: new semester (planned).
   Future<Map<String, dynamic>> createAcademicSemester({
     required String code,
