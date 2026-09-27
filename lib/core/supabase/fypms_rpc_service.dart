@@ -570,6 +570,17 @@ extension FypmsRpcService on SupabaseRpcService {
     });
   }
 
+  /// Approved appointments for the caller's programmes (PU) or all (coordinator).
+  Future<List<Map<String, dynamic>>> listApprovedNominations() async {
+    try {
+      final response = await Supabase.instance.client.rpc<dynamic>('list_approved_nominations');
+      return [for (final m in (response as List? ?? const [])) Map<String, dynamic>.from(m as Map)];
+    } catch (e) {
+      logDebug('Supabase FYPMS RPC list_approved_nominations error: $e');
+      rethrow;
+    }
+  }
+
   /// Supervisor / examiner nominations awaiting the caller (PU).
   Future<List<Map<String, dynamic>>> listPendingNominations() async {
     try {

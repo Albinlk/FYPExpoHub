@@ -127,6 +127,13 @@ final pendingNominationsProvider = FutureProvider<List<PendingNomination>>((ref)
   return (await rpc.listPendingNominations()).map(PendingNomination.fromJson).toList();
 });
 
+/// Appointments the PU approved, for appointment letters (backlog F7).
+final approvedNominationsProvider = FutureProvider<List<PendingNomination>>((ref) async {
+  ref.watch(fypmsUserScopeProvider);
+  final rpc = ref.watch(supabaseRpcServiceProvider);
+  return (await rpc.listApprovedNominations()).map(PendingNomination.fromJson).toList();
+});
+
 /// The F14 checks for a CSP650 record (CSP650 lecturer / coordinator).
 final fypSpecialEvaluationChecksProvider =
     FutureProvider.family<SpecialEvaluationChecks, String>((ref, fypRecordId) async {
