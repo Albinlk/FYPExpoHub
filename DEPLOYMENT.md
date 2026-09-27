@@ -95,9 +95,39 @@ Redirect URLs** add:
 | `https://admin.fskmjasinfypexhibition.site/reset-password` | Admin domain (kept in case the link is built from that origin) |
 
 Without these entries the reset email falls back to the Site URL and the
-user never reaches the "set a new password" page. There is no account
-lockout or MFA; brute-force protection relies on Supabase Auth's built-in
-rate limits.
+user never reaches the "set a new password" page.
+
+**Two-step verification (F8).** Users turn on an authenticator app (TOTP)
+under My Account; TOTP MFA is enabled by default on Supabase projects
+(Authentication → Multi-Factor). Once an account has a verified factor,
+`is_admin()` / `is_fyp_coordinator()` only return true for an `aal2`
+session (`20260927000014`). There is no per-account lockout: brute-force
+protection is Supabase Auth's sign-in rate limit (Authentication → Rate
+Limits).
+
+**Email.** Supabase's built-in SMTP sends only a few auth emails per hour
+(password recovery), so FYPMS notifications are in-app (`fyp_notifications`,
+the bell). Sending them by email would need a custom SMTP provider
+(Authentication → Emails → SMTP Settings) plus a sender (e.g. an Edge
+Function on a schedule); not set up.
+
+### Edge Functions
+
+| Function | JWT | Purpose |
+|---|---|---|
+| `enroll-students` | verified | Coordinator bulk enrolment (U3): checks `is_fyp_coordinator` with the caller's token, creates missing Auth users with the service role (`email_confirm: true`, no invite), then calls `enroll_student` as the caller |
+
+Deploy with `supabase functions deploy enroll-students` (or the Supabase
+MCP `deploy_edge_function`). It uses the built-in `SUPABASE_URL`,
+`SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` secrets — nothing to
+configure. New students sign in through *Forgot password?*.
+
+### Current exhibition
+
+The app reads the exhibition marked `events.is_current` at start-up
+(`loadCurrentEvent()`, 4 s timeout, falling back to `fskm-fyp-2026` and
+the bundled offline data). Admins switch it from Event → Exhibitions; no
+redeploy is needed.
 
 ### Migrations
 
@@ -123,6 +153,14 @@ order):
 20260927000001      G-06 import Replace + staged checks
 20260927000002/03   R11 report minimums + REC ethics, supervisor change +
                     PU approval
+20260927000004..07  Multi-semester (S1-S3), current event + archive (S6),
+                    users / roles / enrolment (U2, U3), rubric versions +
+                    session edits (U4, U5)
+20260927000008..14  Notifications (F1), account self-service (F2),
+                    withdrawn / incomplete + reopen marks (F3, F4),
+                    project / booth import (F5), cohort report (F6),
+                    approved nominations (F7), MFA for admin /
+                    coordinator (F8)
 ```
 
 To apply migrations:

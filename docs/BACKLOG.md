@@ -16,7 +16,7 @@ Priority: **H** high · **M** medium · **L** low
 | [x] | S5 | Course setup screen (CSP600 / CSP650 details, offerings per semester) (#40) | M |
 | [x] | S6 | Exhibition: replace the hard-wired event (`kEventSlug = fskm-fyp-2026`) with an **active event** setting; admin can create a new exhibition without overwriting the last one (#41) | H |
 | [x] | S7 | Public "past exhibitions" archive: browse earlier years' projects and award winners (#41) | M |
-| [ ] | S8 | Tests + docs: semester filtering, promotion, event switching; migration keeps existing data on the 2026 semester/event | H |
+| [x] | S8 | Tests + docs: semester filtering, promotion, event switching; migration keeps existing data on the 2026 semester/event (#52) | H |
 
 ## 2. Missing screens (backend already exists)
 
@@ -47,8 +47,10 @@ Priority: **H** high · **M** medium · **L** low
 |---|---|---|
 | [ ] | C1 | Supabase Auth → Redirect URLs: add `https://fskmjasinfypexhibition.site/reset-password` and `https://admin.fskmjasinfypexhibition.site/reset-password` |
 | [ ] | C2 | Create real lecturer accounts, then run *Lecturer Assignments → Match from project names* |
-| [ ] | C3 | Grant `programme_head` (PU) roles if nomination approval is wanted |
+| [ ] | C3 | Grant `programme_head` (PU) roles if nomination approval is wanted — now done in-app from FYPMS → Users & Roles |
 | [ ] | C4 | Review the import setting *mandatory worksheets* (`COMMITTEE` will always warn) |
+
+These need the project owner (dashboard access or real staff data); code cannot do them. Also recommended: turn on two-step verification (My Account) for every admin and coordinator account.
 
 ## Suggested order
 

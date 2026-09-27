@@ -261,7 +261,7 @@ supabase db push
 ├── assets/data/offline_fallback.json # Bundled offline dataset (387/221/8)
 ├── web/                             # index.html, fonts, icons
 ├── lib/                             # Dart source (see System Architecture)
-├── test/                            # 428 unit + widget + route-guard tests
+├── test/                            # 463 unit + widget + route-guard tests
 └── *.md                             # Documentation (see below)
 ```
 

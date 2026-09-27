@@ -35,7 +35,7 @@ Expo Hub + FYPMS release.
 - [ ] `pubspec.yaml` — no Firebase dependencies
 - [ ] `lib/main.dart` — `Supabase.initialize()` with `--dart-define` creds
 - [ ] Build passes: `flutter analyze` (0 issues — CI is strict) + `flutter test`
-      (428 tests, all passing as of September 2026)
+      (463 tests, all passing as of September 2026)
 
 ### 4. CI/CD
 - [ ] `.github/workflows/deploy.yml` runs analyze + test gates before build
