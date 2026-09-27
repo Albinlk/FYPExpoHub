@@ -386,6 +386,33 @@ final createPresentationSessionProvider = Provider<
 );
 
 /// Coordinator archives a record (reason kept in the audit log).
+/// Withdraw / incomplete / reinstate a record and reopen finalized marks
+/// (backlog F3, F4).
+final recordStandingProvider = Provider<RecordStanding>((ref) => RecordStanding(ref));
+
+class RecordStanding {
+  RecordStanding(this._ref);
+  final Ref _ref;
+
+  /// [status] is 'withdrawn' or 'incomplete'.
+  Future<void> hold(String fypRecordId, String status, String reason) async {
+    await _ref.read(supabaseRpcServiceProvider).setFypRecordStanding(fypRecordId: fypRecordId, status: status, reason: reason);
+    _ref.invalidate(fypRecordsProvider);
+  }
+
+  Future<void> reinstate(String fypRecordId, String reason) async {
+    await _ref.read(supabaseRpcServiceProvider).reinstateFypRecord(fypRecordId: fypRecordId, reason: reason);
+    _ref.invalidate(fypRecordsProvider);
+  }
+
+  Future<void> reopenMarks(String fypRecordId, String courseCode, String reason) async {
+    await _ref
+        .read(supabaseRpcServiceProvider)
+        .reopenFypCourseMarks(fypRecordId: fypRecordId, courseCode: courseCode, reason: reason);
+    _ref.invalidate(fypMarksSummariesProvider(fypRecordId));
+  }
+}
+
 final archiveFypRecordProvider = Provider<Future<void> Function(String fypRecordId, String reason)>(
   (ref) {
     return (fypRecordId, reason) async {
