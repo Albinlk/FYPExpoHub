@@ -3,6 +3,7 @@ import '../../domain/fypms_exhibition_evaluation.dart';
 import '../../supabase/fypms_rpc_service.dart';
 import '../expo/service_providers.dart';
 import 'coordinator_providers.dart';
+import 'reference_data_providers.dart';
 import 'record_resources_providers.dart';
 import 'records_providers.dart';
 
@@ -178,6 +179,47 @@ final openExhibitionEvaluationProvider = Provider<Future<ExhibitionEvaluation> F
     };
   },
 );
+
+/// Coordinator semester / course / offering management (backlog S1, S5).
+final semesterAdminProvider = Provider<SemesterAdmin>((ref) => SemesterAdmin(ref));
+
+class SemesterAdmin {
+  SemesterAdmin(this._ref);
+  final Ref _ref;
+
+  Future<void> create({required String code, required String label, required DateTime start, required DateTime end}) async {
+    await _ref.read(supabaseRpcServiceProvider).createAcademicSemester(code: code, label: label, startDate: start, endDate: end);
+    _ref.invalidate(fypmsSemestersProvider);
+  }
+
+  Future<void> setStatus(String semesterId, String status) async {
+    await _ref.read(supabaseRpcServiceProvider).setAcademicSemesterStatus(semesterId: semesterId, status: status);
+    _ref.invalidate(fypmsSemestersProvider);
+  }
+
+  Future<void> updateCourse({required String code, required String name, required int creditHours, required bool isActive}) async {
+    await _ref
+        .read(supabaseRpcServiceProvider)
+        .updateAcademicCourse(code: code, name: name, creditHours: creditHours, isActive: isActive);
+    _ref.invalidate(fypmsCoursesProvider);
+  }
+
+  Future<void> saveOffering({required String semesterId, required String courseCode, String? lecturerId, int? maxStudents}) async {
+    await _ref.read(supabaseRpcServiceProvider).upsertCourseOffering(
+          semesterId: semesterId,
+          courseCode: courseCode,
+          lecturerId: lecturerId,
+          maxStudents: maxStudents,
+        );
+    _ref.invalidate(fypmsOfferingsProvider);
+  }
+
+  /// CSP600 -> CSP650 (backlog S3).
+  Future<void> promote(String fypRecordId, String targetSemesterId) async {
+    await _ref.read(supabaseRpcServiceProvider).promoteFypRecord(fypRecordId: fypRecordId, targetSemesterId: targetSemesterId);
+    _ref.invalidate(fypRecordsProvider);
+  }
+}
 
 /// Student asks for a supervisor change.
 final requestSupervisorChangeProvider =

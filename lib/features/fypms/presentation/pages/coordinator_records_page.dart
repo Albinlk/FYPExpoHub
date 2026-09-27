@@ -7,6 +7,7 @@ import '../../../../core/state/state_providers.dart';
 import '../../../../core/supabase/fypms_rpc_service.dart';
 import '../widgets/fypms_loading_widget.dart';
 import '../widgets/record_admin_dialogs.dart';
+import '../widgets/semester_selector.dart';
 
 class CoordinatorRecordsPage extends ConsumerWidget {
   const CoordinatorRecordsPage({super.key});
@@ -87,12 +88,20 @@ class CoordinatorRecordsPage extends ConsumerWidget {
                       tooltip: 'Record actions',
                       onSelected: (action) => showDialog<void>(
                         context: context,
-                        builder: (_) => action == 'archive'
-                            ? ArchiveRecordDialog(record: record)
-                            : OverrideRecordFieldDialog(record: record),
+                        builder: (_) => switch (action) {
+                          'archive' => ArchiveRecordDialog(record: record),
+                          'promote' => PromoteRecordDialog(
+                              fypRecordId: record.id,
+                              currentSemesterId: record.academicSemesterId,
+                              title: record.projectTitle ?? 'Untitled Project',
+                            ),
+                          _ => OverrideRecordFieldDialog(record: record),
+                        },
                       ),
                       itemBuilder: (_) => [
                         const PopupMenuItem(value: 'edit', child: Text('Edit field…')),
+                        if (record.currentCourseCode == 'CSP600')
+                          const PopupMenuItem(value: 'promote', child: Text('Promote to CSP650…')),
                         if (record.workflowStatus != 'project_archived')
                           const PopupMenuItem(value: 'archive', child: Text('Archive…')),
                       ],
