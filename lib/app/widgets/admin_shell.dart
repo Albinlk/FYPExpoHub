@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher_string.dart';
 import '../../core/supabase/supabase_client_provider.dart';
 import '../theme/theme.dart';
 import 'feedback_form_widget.dart';
+import '../../features/admin_auth/presentation/widgets/my_account_dialog.dart';
 
 void _goToPublicPortal() {
   launchUrlString('https://fskmjasinfypexhibition.site/');
@@ -29,8 +30,6 @@ class AdminShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isDesktop = MediaQuery.of(context).size.width >= 768;
     final location = GoRouterState.of(context).uri.toString();
-    final user = ref.watch(currentAuthUserProvider);
-    final userEmail = user?.email ?? 'Admin';
 
     return Scaffold(
       appBar: AppBar(
@@ -46,13 +45,8 @@ class AdminShell extends ConsumerWidget {
             if (isDesktop)
               Row(
                 children: [
-                  const Icon(Icons.account_circle, color: Colors.white70),
-                  const SizedBox(width: 8),
-                  Text(
-                    userEmail,
-                    style: DesignSystem.bodySm.copyWith(color: Colors.white, fontWeight: FontWeight.w500),
-                  ),
-                  const SizedBox(width: 24),
+                  const MyAccountButton(),
+                  const SizedBox(width: 16),
                   IconButton(
                     icon: const Icon(Icons.logout, color: Colors.white70),
                     onPressed: () => _logout(context, ref),
@@ -64,6 +58,7 @@ class AdminShell extends ConsumerWidget {
         ),
         actions: !isDesktop
             ? [
+                const MyAccountButton(compact: true),
                 IconButton(
                   icon: const Icon(Icons.logout),
                   onPressed: () => _logout(context, ref),
