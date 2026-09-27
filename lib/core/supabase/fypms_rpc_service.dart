@@ -700,6 +700,29 @@ extension FypmsRpcService on SupabaseRpcService {
     });
   }
 
+  /// Coordinator marks a record withdrawn or incomplete (TL) (backlog F4).
+  Future<Map<String, dynamic>> setFypRecordStanding({
+    required String fypRecordId,
+    required String status,
+    required String reason,
+  }) async {
+    return _rpc('set_fyp_record_standing', {'p_fyp_record_id': fypRecordId, 'p_status': status, 'p_reason': reason});
+  }
+
+  /// Coordinator puts a withdrawn / incomplete record back to its earlier status.
+  Future<Map<String, dynamic>> reinstateFypRecord({required String fypRecordId, required String reason}) async {
+    return _rpc('reinstate_fyp_record', {'p_fyp_record_id': fypRecordId, 'p_reason': reason});
+  }
+
+  /// Coordinator unlocks finalized course marks, with an audited reason (backlog F3).
+  Future<Map<String, dynamic>> reopenFypCourseMarks({
+    required String fypRecordId,
+    required String courseCode,
+    required String reason,
+  }) async {
+    return _rpc('reopen_fyp_course_marks', {'p_fyp_record_id': fypRecordId, 'p_course_code': courseCode, 'p_reason': reason});
+  }
+
   Future<Map<String, dynamic>> archiveFypRecord({
     required String fypRecordId,
     String? reason,

@@ -26,7 +26,7 @@ String formatFypDateTime(DateTime dt) {
 /// Human label for a snake_case status value.
 String fypStatusLabel(String status) => status.replaceAll('_', ' ');
 
-/// Semantic color for the 17 fyp_records.workflow_status values.
+/// Semantic color for the fyp_records.workflow_status values.
 Color workflowStatusColor(String status) {
   switch (status) {
     case 'awaiting_supervisor_assignment':
@@ -47,6 +47,10 @@ Color workflowStatusColor(String status) {
       return const Color(0xFF2E7D32); // success green
     case 'project_archived':
       return DesignSystem.outlineVariant;
+    case 'withdrawn':
+      return DesignSystem.error;
+    case 'incomplete':
+      return DesignSystem.tertiary;
     case 'project_registered':
     default:
       return DesignSystem.primary;

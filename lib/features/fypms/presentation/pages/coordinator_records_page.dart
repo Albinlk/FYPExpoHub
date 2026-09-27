@@ -90,6 +90,8 @@ class CoordinatorRecordsPage extends ConsumerWidget {
                         context: context,
                         builder: (_) => switch (action) {
                           'archive' => ArchiveRecordDialog(record: record),
+                          'withdrawn' || 'incomplete' || 'reinstate' => RecordStandingDialog(record: record, action: action),
+                          'reopen' => ReopenMarksDialog(record: record),
                           'promote' => PromoteRecordDialog(
                               fypRecordId: record.id,
                               currentSemesterId: record.academicSemesterId,
@@ -102,6 +104,13 @@ class CoordinatorRecordsPage extends ConsumerWidget {
                         const PopupMenuItem(value: 'edit', child: Text('Edit field…')),
                         if (record.currentCourseCode == 'CSP600')
                           const PopupMenuItem(value: 'promote', child: Text('Promote to CSP650…')),
+                        if (kHeldStatuses.contains(record.workflowStatus))
+                          const PopupMenuItem(value: 'reinstate', child: Text('Reinstate…'))
+                        else if (record.workflowStatus != 'project_archived' && record.workflowStatus != 'project_completed') ...[
+                          const PopupMenuItem(value: 'incomplete', child: Text('Mark incomplete (TL)…')),
+                          const PopupMenuItem(value: 'withdrawn', child: Text('Mark withdrawn…')),
+                        ],
+                        const PopupMenuItem(value: 'reopen', child: Text('Reopen finalized marks…')),
                         if (record.workflowStatus != 'project_archived')
                           const PopupMenuItem(value: 'archive', child: Text('Archive…')),
                       ],

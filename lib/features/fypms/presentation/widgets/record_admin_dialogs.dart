@@ -194,3 +194,183 @@ class _ArchiveRecordDialogState extends ConsumerState<ArchiveRecordDialog> {
     );
   }
 }
+
+/// Workflow statuses that put a record on hold (backlog F4).
+const kHeldStatuses = {'withdrawn', 'incomplete'};
+
+/// Coordinator marks a record withdrawn / incomplete (TL), or reinstates it
+/// ([action] is 'withdrawn', 'incomplete' or 'reinstate').
+class RecordStandingDialog extends ConsumerStatefulWidget {
+  const RecordStandingDialog({super.key, required this.record, required this.action});
+
+  final FypRecord record;
+  final String action;
+
+  @override
+  ConsumerState<RecordStandingDialog> createState() => _RecordStandingDialogState();
+}
+
+class _RecordStandingDialogState extends ConsumerState<RecordStandingDialog> {
+  final _reason = TextEditingController();
+  bool _busy = false;
+
+  @override
+  void dispose() {
+    _reason.dispose();
+    super.dispose();
+  }
+
+  (String, String, String) get _copy => switch (widget.action) {
+        'withdrawn' => (
+            'Mark Withdrawn',
+            'The student has left the course. The record leaves the active workflow until reinstated.',
+            'Record marked withdrawn.',
+          ),
+        'incomplete' => (
+            'Mark Incomplete (TL)',
+            'The course is carried over (Tidak Lengkap). The record is paused until reinstated.',
+            'Record marked incomplete.',
+          ),
+        _ => (
+            'Reinstate Record',
+            'The record goes back to the status it had before it was put on hold.',
+            'Record reinstated.',
+          ),
+      };
+
+  Future<void> _save() async {
+    setState(() => _busy = true);
+    final done = _copy.$3;
+    try {
+      final standing = ref.read(recordStandingProvider);
+      if (widget.action == 'reinstate') {
+        await standing.reinstate(widget.record.id, _reason.text.trim());
+      } else {
+        await standing.hold(widget.record.id, widget.action, _reason.text.trim());
+      }
+      if (!mounted) return;
+      final messenger = ScaffoldMessenger.of(context);
+      Navigator.pop(context);
+      messenger.showSnackBar(SnackBar(content: Text(done)));
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _busy = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final (title, explain, _) = _copy;
+    final ready = _reason.text.trim().length >= 5 && !_busy;
+    return AlertDialog(
+      backgroundColor: DesignSystem.surfaceContainerLowest,
+      title: Text(title, style: DesignSystem.h2),
+      content: SizedBox(
+        width: 440,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('“${widget.record.projectTitle ?? 'Untitled Project'}”. $explain', style: DesignSystem.bodySm),
+            TextField(
+              key: const Key('standing-reason'),
+              controller: _reason,
+              onChanged: (_) => setState(() {}),
+              decoration: const InputDecoration(labelText: 'Reason (kept in the audit log)'),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+        FilledButton(
+          style: widget.action == 'withdrawn' ? FilledButton.styleFrom(backgroundColor: DesignSystem.error) : null,
+          onPressed: ready ? _save : null,
+          child: Text(widget.action == 'reinstate' ? 'Reinstate' : 'Confirm'),
+        ),
+      ],
+    );
+  }
+}
+
+/// Coordinator unlocks finalized course marks so they can be corrected
+/// (backlog F3). The lecturer finalizes again afterwards.
+class ReopenMarksDialog extends ConsumerStatefulWidget {
+  const ReopenMarksDialog({super.key, required this.record});
+
+  final FypRecord record;
+
+  @override
+  ConsumerState<ReopenMarksDialog> createState() => _ReopenMarksDialogState();
+}
+
+class _ReopenMarksDialogState extends ConsumerState<ReopenMarksDialog> {
+  late String _course = widget.record.currentCourseCode == 'CSP650' ? 'CSP650' : 'CSP600';
+  final _reason = TextEditingController();
+  bool _busy = false;
+
+  @override
+  void dispose() {
+    _reason.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    setState(() => _busy = true);
+    try {
+      await ref.read(recordStandingProvider).reopenMarks(widget.record.id, _course, _reason.text.trim());
+      if (!mounted) return;
+      final messenger = ScaffoldMessenger.of(context);
+      Navigator.pop(context);
+      messenger.showSnackBar(SnackBar(content: Text('$_course marks reopened. The course lecturer has been notified.')));
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _busy = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ready = _reason.text.trim().length >= 10 && !_busy;
+    return AlertDialog(
+      backgroundColor: DesignSystem.surfaceContainerLowest,
+      title: Text('Reopen Finalized Marks', style: DesignSystem.h2),
+      content: SizedBox(
+        width: 460,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'The grade is unlocked so evaluations can be corrected; the course lecturer then finalizes again. '
+              'The previous total and grade are kept in the audit log.',
+              style: DesignSystem.bodySm,
+            ),
+            DropdownButtonFormField<String>(
+              initialValue: _course,
+              decoration: const InputDecoration(labelText: 'Course'),
+              items: const [
+                DropdownMenuItem(value: 'CSP600', child: Text('CSP600')),
+                DropdownMenuItem(value: 'CSP650', child: Text('CSP650')),
+              ],
+              onChanged: (v) => setState(() => _course = v ?? _course),
+            ),
+            TextField(
+              key: const Key('reopen-reason'),
+              controller: _reason,
+              onChanged: (_) => setState(() {}),
+              maxLines: 2,
+              decoration: const InputDecoration(labelText: 'Reason (at least 10 characters)'),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+        FilledButton(onPressed: ready ? _save : null, child: const Text('Reopen')),
+      ],
+    );
+  }
+}
