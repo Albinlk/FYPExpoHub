@@ -36,7 +36,7 @@ Priority: **H** high · **M** medium · **L** low
 | [x] | F2 | Account self-service: change password while signed in, edit display name (#46) | M |
 | [x] | F3 | Reopen finalized marks with a reason (audited) (#47) | M |
 | [x] | F4 | Withdraw / incomplete (TL) record statuses and flow (#47) | M |
-| [ ] | F5 | Import projects and booths from the Master File | M |
+| [x] | F5 | Import projects and booths from the Master File (#48) | M |
 | [ ] | F6 | Reports / analytics: grade distribution, supervisor workload, cohort progress | L |
 | [ ] | F7 | PU appointment letters (printable record of approved nominations) | L |
 | [ ] | F8 | Account lockout / MFA (G-32 remainder) | L |

@@ -6,6 +6,7 @@ import '../../../../core/domain/models/project.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/supabase/supabase_database_service.dart' show kEventSlug;
 import '../../../../core/widgets/admin_actions.dart';
+import '../widgets/project_import_dialog.dart';
 
 class AdminProjectsPage extends ConsumerWidget {
   const AdminProjectsPage({super.key});
@@ -283,14 +284,25 @@ class AdminProjectsPage extends ConsumerWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       _buildPageTitle('Project Catalogue Management', 'Manage the complete list of student final year projects.'),
-                      ElevatedButton.icon(
-                        onPressed: () => _showAddEditDialog(context, ref),
-                        icon: const Icon(Icons.add),
-                        label: const Text('Add Project'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: DesignSystem.secondary,
-                          foregroundColor: Colors.white,
-                        ),
+                      Row(
+                        children: [
+                          OutlinedButton.icon(
+                            key: const Key('import-projects'),
+                            onPressed: () => showDialog<void>(context: context, builder: (_) => const ProjectImportDialog()),
+                            icon: const Icon(Icons.upload_file),
+                            label: const Text('Import'),
+                          ),
+                          const SizedBox(width: DesignSystem.spaceSm),
+                          ElevatedButton.icon(
+                            onPressed: () => _showAddEditDialog(context, ref),
+                            icon: const Icon(Icons.add),
+                            label: const Text('Add Project'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: DesignSystem.secondary,
+                              foregroundColor: Colors.white,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   )
@@ -299,6 +311,15 @@ class AdminProjectsPage extends ConsumerWidget {
                     children: [
                       _buildPageTitle('Project Catalogue Management', 'Manage the complete list of student final year projects.'),
                       const SizedBox(height: DesignSystem.spaceMd),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: () => showDialog<void>(context: context, builder: (_) => const ProjectImportDialog()),
+                          icon: const Icon(Icons.upload_file),
+                          label: const Text('Import projects & booths'),
+                        ),
+                      ),
+                      const SizedBox(height: DesignSystem.spaceSm),
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton.icon(
