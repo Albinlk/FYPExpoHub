@@ -335,7 +335,9 @@ Purpose: help junior students check whether a proposed topic has already been do
 | FR-AUTH-08 | On the host `admin.fskmjasinfypexhibition.site`, `/` shall redirect to `/admin/sign-in` (signed out) or `/admin` (signed in). |
 | FR-AUTH-09 | `/lecturer/sign-in` shall forward to the shared sign-in page. |
 | FR-AUTH-10 | Sign-out shall end the Supabase session, clear cached profile/role state and return to the public site (admin, lecturer) or sign-in (FYPMS). |
-| FR-AUTH-11 | "Forgot password?" on the sign-in page shall send the Supabase recovery email with a neutral confirmation (an unknown account also reads as sent; a rate limit is reported). The link lands on `/reset-password`, where the recovery session lets the user set a new password (8+ characters, letters and digits, typed twice); an expired or reused link says so. Account lockout and MFA are not implemented — brute-force protection relies on Supabase Auth rate limits (G-32). |
+| FR-AUTH-11 | "Forgot password?" on the sign-in page shall send the Supabase recovery email with a neutral confirmation (an unknown account also reads as sent; a rate limit is reported). The link lands on `/reset-password`, where the recovery session lets the user set a new password (8+ characters, letters and digits, typed twice); an expired or reused link says so. There is no per-account lockout; brute-force protection is Supabase Auth's sign-in rate limit (G-32). |
+| FR-AUTH-12 | My Account (top bar, CMS and FYPMS) shall let a signed-in user change their display name (2–80 characters, `update_my_display_name`, audited) and password (current password re-checked; new one 8+ characters with letters and digits) (F2). |
+| FR-AUTH-13 | A user may turn on two-step verification with an authenticator app (TOTP): QR code or key, confirmed with a code; it can be turned off. With a verified factor, a password-only session shows a code screen before any CMS / FYPMS page, and `is_admin()` / `is_fyp_coordinator()` are false until the session is `aal2` (F8). |
 
 ### 6.2 M14 Lecturer visits (My Visits)
 
@@ -371,9 +373,11 @@ Purpose: help junior students check whether a proposed topic has already been do
 |---|---|---|
 | FR-ADM-10 | M15 Dashboard | Show counts for Total Projects, Booths, Event Schedules, Files Imported, FYP Records and Pending (supervision) Requests; quick actions (Import, Event, Schedule, Projects); FYP Management shortcuts; recent import history with status and a link to each import. |
 | FR-ADM-20 | M16 Event | Edit the event's title (required), session/semester label, start/end dates, daily hours, venue, location details, map link, description, public contact email, hero image URL, poster URL, event status (draft / upcoming / active / completed / archived) and the event FAQ (question/answer pairs; a question needs an answer). Changed links must be http(s); the email must be valid. Saving calls `update_event_configuration`, which rejects `end_at ≤ start_at` and writes audit entry `event_updated`. |
+| FR-ADM-21 | M16 Event | An Exhibitions section shall list every exhibition, create one (slug, title, dates, venue) and make one current (`set_current_event`; exactly one). The public site and CMS follow the current exhibition; earlier ones stay intact and are listed on the public `/archive` page with their projects and winners (S6, S7). |
 | FR-ADM-30 | M17 Projects | List projects (title, featured badge, programme, students, supervisor, examiner, booth) with a publish ↔ draft toggle, Edit and Delete. |
 | FR-ADM-31 | M17 Projects | Add/Edit dialog fields: title (required), matric ID, programme code/name, short description, category, technology tags (comma-separated), student names (comma-separated), supervisor, examiner, booth number/zone, demo URL, cover image URL (blank = generated cover), Featured flag, publication status. |
 | FR-ADM-32 | M17 Projects | The slug shall be derived from the title (lower-case, non-alphanumerics → `-`) and be unique per event. |
+| FR-ADM-33 | M17 Projects | *Import* shall read a CSV or the Master File project sheet (header row, English/Malay column names, *Title* required), preview each row as new / already listed / problem (duplicate title or booth in the file, booth held by another project) and apply the rows in one transaction (`import_event_projects`): duplicates skipped or updated, booths created or reused and linked, drafts unless published; the result lists the counts and any refused rows (F5). |
 | FR-ADM-40 | M18 Schedule | List slots by date and time with a day chip; publish toggle, Edit, Delete. |
 | FR-ADM-41 | M18 Schedule | Dialog fields: title (required), start and end time (accepts `09:00`, `9:00 AM`, `09.00`, ISO), venue, audience, description, event date (event days), access (public / internal "Committee/Jury"), publication status; end must be after start. |
 | FR-ADM-50 | M19 Booths | List booths with zone, note, linked project or "UNASSIGNED (VACANT)" and an Active/Vacant chip; Edit, Delete. |
@@ -474,7 +478,15 @@ Purpose: help junior students check whether a proposed topic has already been do
 | FR-COO-06 | The coordinator shall **prepare** an expo publication for a record against a published event (status `ready`) and **publish** it, which upserts a public `projects` row (slug = lower-case matric ID). |
 | FR-COO-07 | The coordinator shall view the latest 200 FYPMS audit entries (action, time, actor role, target). |
 | FR-COO-08 | The coordinator shall decide supervisor change requests (approval reassigns the supervisor with the proposed one preselected), split the CSP600 30 % across F2–F4 (Mark Allocation), edit a record field with a mandatory reason, and archive records. |
+| FR-COO-09 | The coordinator shall manage semesters (create; planned → active → completed, one active), course details and per-semester offerings; staff lists follow the active semester or the one picked in the top bar, or all (S1, S2). |
+| FR-COO-10 | The coordinator (or CSP600 lecturer) shall promote a CSP600 record with finalized, passing CSP600 marks to a new linked CSP650 record in a later semester, copying the project and assignments (S3). |
+| FR-COO-11 | The coordinator shall grant and revoke academic roles and deactivate accounts (Users & Roles; only an admin grants `fyp_coordinator`), and enrol students in bulk from a CSV, creating missing logins and their records (U2, U3). |
+| FR-COO-12 | The coordinator shall edit a form's rubric (criteria, weights, evaluator shares) as a new version, and edit or delete presentation sessions and slots (U4, U5). |
+| FR-COO-13 | The coordinator shall mark a record withdrawn or incomplete (TL) and reinstate it to its previous status, and reopen finalized course marks with a reason of 10+ characters (previous total / grade kept; CSP600 marks of a promoted record stay locked) (F3, F4). |
+| FR-COO-14 | A Reports page shall show, for the chosen semester, status and course counts, the finalized grade distribution and average, supervisor workload (CSV export), records without a supervisor and overdue milestones (F6). |
+| FR-NOT-01 | Users shall receive in-app notifications (bell with unread count, `/fypms/notifications`) when a request, submission, decision, assignment, nomination, correction, finalized mark or F14 decision concerns them; tapping one marks it read and opens the page (F1). |
 | FR-PU-01 | A programme head (`programme_head`, scoped by programme) shall approve or reject supervisor/examiner nominations on `/fypms/pu`; while a PU exists for the programme, new nominations are `pending` until decided, and a rejection deactivates the nomination. |
+| FR-PU-02 | The PU (and coordinator) shall list approved appointments and download a printable appointment letter per appointment or for all (F7). |
 
 ### 8.6 FYP record workflow
 
@@ -486,8 +498,10 @@ Purpose: help junior students check whether a proposed topic has already been do
 | Request approved / supervisor assigned | `supervision_approved` |
 | Presentation slot scheduled | `project_pending_presentation` |
 | Record archived | `project_archived` |
+| CSP600 record promoted | source → `formulation_completed`; new CSP650 record `project_registered` |
+| Coordinator marks withdrawn / incomplete (TL) | `withdrawn` / `incomplete` (previous status kept for *Reinstate*) |
 
-The schema allows 17 statuses in total (proposal, formulation, final-report and completion stages); the remaining transitions are made by coordinators/admins directly.
+The schema allows 19 statuses in total (proposal, formulation, final-report and completion stages, withdrawn, incomplete); the remaining transitions are made by coordinators/admins directly.
 
 ### 8.7 Correction lifecycle
 
@@ -515,7 +529,7 @@ The schema allows 17 statuses in total (proposal, formulation, final-report and 
 | `settings` | key, value (jsonb) | keys `visit_tracker`, `excel_import`, `fypms_features` |
 | `audit_logs` | actor, role, action, target, metadata | written only by RPCs |
 
-### 9.2 FYPMS entities (23 tables)
+### 9.2 FYPMS entities (24 tables)
 
 | Entity | Purpose |
 |---|---|
@@ -534,6 +548,7 @@ The schema allows 17 statuses in total (proposal, formulation, final-report and 
 | `fyp_marks_summaries` | Per-course marks, total, grade, finalisation lock |
 | `fyp_expo_publications` | Bridge from an FYP record to a public Expo project |
 | `fyp_audit_logs` | FYPMS audit trail |
+| `fyp_notifications` | In-app notifications per recipient, written only by triggers (F1) |
 
 ### 9.3 File storage
 
@@ -644,6 +659,9 @@ The bundled `assets/data/offline_fallback.json` (≈ 640 KB) holds 387 projects,
 | Import summary | Admin → Import | Candidates staged/published, privacy skips, published counts |
 | Audit trails | `audit_logs`, `fyp_audit_logs` | Actor, role, action, target, safe metadata, timestamp |
 | Public project record | FYPMS expo publication | A published `projects` row generated from an FYP record |
+| Cohort report | FYPMS → Reports | Status / course counts, grade distribution, averages; `supervisor_workload.csv` (Lecturer, Supervisor, Co-supervisor, Examiner, Total) |
+| Appointment letters | FYPMS → Nominations / Appointment Letters | Printable HTML, one letter per approved appointment |
+| Project import result | Admin → Projects → Import | New / updated / skipped counts, booths linked, refused rows |
 
 ---
 
@@ -701,7 +719,7 @@ Found while tracing the code for this document. None of these was executed, so "
 | ID | Finding | Severity | Status (2026-09-27) |
 |---|---|---|---|
 | G-31 | Public pages show no loading or error state; load failures are silent. | Medium | Fixed — PR #31 |
-| G-32 | No password reset, account lockout or MFA in the UI; production Auth rate limits are unverified. | Medium | **Partially fixed** — password reset flow added (PR #30); no account lockout or MFA, brute-force protection relies on Supabase Auth rate limits |
+| G-32 | No password reset, account lockout or MFA in the UI; production Auth rate limits are unverified. | Medium | Fixed — password reset (PR #30), two-step verification enforced for admin / coordinator powers (PR #51); lockout is Supabase Auth's sign-in rate limit |
 | G-33 | No robots.txt, sitemap or Open Graph tags. | Low | Fixed — PR #24 |
 | G-34 | Accessibility is minimal: one explicit `Semantics` widget, no semantic labels on images, no contrast audit. | Medium | Fixed — PR #31 (image labels, project cards as one button, 17-pair WCAG AA contrast audit) |
 
@@ -709,7 +727,7 @@ Found while tracing the code for this document. None of these was executed, so "
 
 | Doc | Claim | Actual | Status (2026-09-27) |
 |---|---|---|---|
-| `TESTING.md`, `RELEASE_CHECKLIST.md` | 132 tests | 428 tests (all passing) | Updated |
+| `TESTING.md`, `RELEASE_CHECKLIST.md` | 132 tests | 463 tests (all passing) | Updated |
 | `README.md`, `ARCHITECTURE.md` | "ExcelData, 376 projects" | JSON asset, 387 projects / 221 booths / 8 schedule items | Updated |
 | `FREE_TIER_LIMITS.md`, `DEPLOYMENT.md` | Maintenance dialog when backend is down | Offline banner / error with Retry (G-31) | Updated |
 | `ARCHITECTURE.md`, `README.md` | Realtime announcements and visits | Only the FYPMS channel is wired | Updated |
@@ -729,7 +747,7 @@ Found while tracing the code for this document. None of these was executed, so "
 | Public features | `lib/features/public_*`, `junior_project_guide`, `exhibition_info`, `faq_privacy` |
 | Admin features | `lib/features/admin_*` |
 | FYPMS | `lib/features/fypms`, `lib/core/state/fypms`, `lib/core/supabase/fypms_*` |
-| Schema, RLS, RPCs | `supabase/migrations/` (48 files) |
+| Schema, RLS, RPCs | `supabase/migrations/` (59 files); `supabase/functions/enroll-students` |
 | Web shell | `web/index.html`, `web/flutter_bootstrap.js`, `web/sw.js`, `web/manifest.json` |
 | CI/CD | `.github/workflows/ci.yml`, `deploy.yml`, `uptime-monitor.yml` |
-| Tests | `test/` (428 tests) |
+| Tests | `test/` (463 tests) |

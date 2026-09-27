@@ -2,8 +2,8 @@
 
 ## Test Suite
 
-The project includes **428 Flutter tests, all passing** (unit, widget,
-route-guard and theme-audit; `flutter test`, September 2026) in 51 files
+The project includes **463 Flutter tests, all passing** (unit, widget,
+route-guard and theme-audit; `flutter test`, September 2026) in 63 files
 under `test/` — all runnable offline (no live backend needed).
 
 ### Running Tests
@@ -44,9 +44,12 @@ test/
     ├── admin_g07_part2_test.dart         # G-07 assignments, audit log,
     │                                     #   award categories
     ├── admin_import_checks_test.dart     # G-06 import checks + review defaults
+    ├── admin_project_import_test.dart    # F5 project / booth import (CSV,
+    │                                     #   headers, duplicates, dialog)
     ├── admin_public_polish_test.dart     # G-05/18/28/29 booths, awards, visits
     ├── admin_settings_test.dart          # G-30 visit-window settings
-    ├── admin_auth/                       # Sign-in + G-32 password reset
+    ├── admin_auth/                       # Sign-in, G-32 password reset,
+    │                                     #   F2 My Account, F8 two-step (MFA)
     ├── admin_feedback/                   # Feedback model + CSV export
     ├── admin_lecturers/                  # Lecturers page
     ├── admin_projects/                   # Project edit page
@@ -56,16 +59,23 @@ test/
     ├── lecturer_visits/                  # My Visits detail page + dialogs,
     │   └── lecturer_visit_detail_test.dart  #   R9 F10 scoring from a visit
     ├── junior_project_guide/             # Similarity engines (Jaccard, titles)
-    ├── public_pages/                     # 6 files: G-31 load states, 404,
-    │                                     #   mobile nav/filters/centering
-    └── fypms/                            # 20 files: models, route guards,
+    ├── public_pages/                     # 7 files: G-31 load states, 404,
+    │                                     #   mobile nav/filters/centering,
+    │                                     #   S6/S7 current event + archive
+    └── fypms/                            # 28 files: models, route guards,
                                           #   staff/student pages, RPC lifecycle
                                           #   (mocked HTTP), rubrics, course
                                           #   marks, attendance, reports,
                                           #   R8 special evaluation (F14),
                                           #   R11 report thresholds, RES export,
                                           #   supervisor change / PU, G-25
-                                          #   workflows, defect fixes, regression
+                                          #   workflows, defect fixes, regression,
+                                          #   S1-S3 semesters / scope / promotion,
+                                          #   U1-U5 users, enrolment, forms,
+                                          #   rubric editor, sessions, F1
+                                          #   notifications, F3/F4 standing and
+                                          #   reopened marks, F6 reports, F7
+                                          #   appointment letters
 ```
 
 ### Notable suites
@@ -131,6 +141,13 @@ test/
 - [ ] Import master .xlsx → staging → Data Matching Dashboard → publish
 - [ ] Visits monitoring tabs + CSV export
 - [ ] Feedback moderation (status + admin note)
+- [ ] Event page → Exhibitions: create next year's exhibition, *Make current*;
+      the public site switches to it and the old one appears under
+      /archive (S6, S7)
+- [ ] Projects → *Import*: CSV / Master File preview flags duplicates and
+      booth clashes; imported rows are drafts unless *Publish* is on (F5)
+- [ ] My Account: change name and password; turn on two-step verification,
+      sign out and back in — the code screen appears (F2, F8)
 
 ### FYPMS
 - [ ] Student: create record, submit F1 request, progress log, form,
@@ -141,6 +158,20 @@ test/
 - [ ] CSP: approve request, milestone, finalize marks (lock enforced)
 - [ ] Coordinator: assign roles, schedule presentation, publish record to
       Expo → appears on public /projects
+- [ ] Coordinator: Semesters & Courses — create the next semester, activate
+      it (the previous one completes); the top-bar semester selector
+      scopes every staff list; *All semesters* shows history (S1, S2)
+- [ ] Coordinator: records → *Promote to CSP650…* after CSP600 marks are
+      finalized (S3); *Mark incomplete (TL)* / *withdrawn* / *Reinstate*,
+      *Reopen finalized marks* (F3, F4)
+- [ ] Coordinator: Users & Roles (grant / revoke roles, deactivate),
+      Enrol Students (CSV → accounts + records) (U2, U3)
+- [ ] Coordinator: Rubrics — save a new version; old evaluations keep
+      theirs (U4); Presentations — edit / delete a session or slot (U5)
+- [ ] Coordinator: Reports — status, grades, workload CSV (F6)
+- [ ] Bell icon: a supervisor sees a new supervision request / report;
+      the student sees the decision; tapping opens the page (F1)
+- [ ] PU: Nominations → *Approved · letters* → download and print (F7)
 
 ## CI Configuration
 

@@ -9,6 +9,30 @@
 > **Important:** Creating a lecturer or admin account is a two-step process:
 > 1. Create the Supabase Auth user (Studio → Authentication → Users → Add user)
 > 2. Create or update the `profiles` row with `role = 'admin'` or `'lecturer'`
+>
+> After that, **FYPMS → Users & Roles** (`/fypms/coordinator/users`) grants
+> or revokes academic roles (supervisor, examiner, CSP lecturer, programme
+> head / PU, coordinator), deactivates accounts and, for admins, changes the
+> account role — no SQL needed. Students are created in bulk from
+> **Enrol Students** (see *FYPMS administration* below).
+
+### My Account
+
+Click your email in the top bar (the person icon on phones) to open
+**My Account**:
+- **Display name** — shown to students and colleagues.
+- **Change password** — asks for the current password; the new one needs
+  8+ characters with letters and numbers.
+- **Two-step verification** — scan the QR code with an authenticator app
+  (Google / Microsoft Authenticator…) and confirm a code. From then on
+  sign-in asks for a code, and your **admin / coordinator powers only work
+  after the code is entered** (enforced in the database, not just the
+  screen). Turn it off from the same place. If the phone is lost, another
+  admin removes the factor in Studio → Authentication → Users.
+
+Repeated wrong passwords are slowed down by Supabase Auth's sign-in rate
+limit (Dashboard → Authentication → Rate Limits); there is no separate
+per-account lockout.
 
 ## Dashboard Overview
 
@@ -42,6 +66,16 @@ Links are only checked when you change them, so an older non-link value
 already stored does not block saving. Click **Save Changes** to publish the
 edits.
 
+### Exhibitions (one per year)
+
+The **Exhibitions** section on the same page lists every exhibition. Exactly
+one is **current** — the public site, the CMS pages and imports all work on
+it.
+- **New exhibition** — slug (e.g. `fskm-fyp-2027`), title, dates, venue.
+- **Make current** — switches the site to that exhibition. The previous one
+  keeps all its projects, booths and winners and appears on the public
+  **Past Exhibitions** page (`/archive`).
+
 ## Project Catalogue
 
 `/admin/projects`
@@ -62,6 +96,24 @@ edits.
   links, Industry Candidate flag) are kept when you save
 - Toggle publication status (Published ↔ Draft; unpublishing asks for
   confirmation)
+
+### Import projects & booths
+
+**Import** (next to *Add Project*) loads many projects at once into the
+current exhibition from the Master File's project sheet (a worksheet whose
+name contains PROJEK / PROJECT / BOOTH / GERAI, else the first sheet) or a
+CSV. The first row is a header; columns are matched by name in English or
+Malay — *Title / Tajuk* (required), *Students / Nama Pelajar*, *Matric*,
+*Programme*, *Supervisor / Penyelia*, *Examiner / Pemeriksa*,
+*Booth / No Gerai*, *Zone / Zon*, *Category*, *Tags*, *Description*, *Day*.
+Several students or tags in one cell are separated by `;` or `,`.
+
+The preview marks each row *New*, *Already listed* (same title in this
+exhibition — skipped unless **Update projects already listed** is on) or a
+problem (no title, the same title or booth twice in the file, a booth that
+belongs to another project). Imported projects and booths are **drafts**
+unless **Publish … now** is on. The result lists anything the database
+refused, e.g. a booth that another project took meanwhile.
 
 ## Schedule Management
 
@@ -190,6 +242,26 @@ The Master File import covers **schedule items and award winners only**
 - Settings are stored as key-value pairs in the `settings` table
 - Changes take effect immediately
 
+## FYPMS administration (coordinator)
+
+The coordinator (and admins) manage the FYP workflow from `/fypms`:
+
+| Page | What it does |
+|---|---|
+| Semesters & Courses | Create semesters, move them planned → active → completed (activating one completes the previous active one), course names / credit hours, and each semester's course offerings and lecturer |
+| Top-bar semester selector | Every staff list follows the chosen semester; *All semesters* shows history. Records of past semesters stay as they were |
+| All Records → ⋮ | *Promote to CSP650…* (after finalized, passing CSP600 marks; creates the linked CSP650 record in a later semester), *Mark incomplete (TL)…*, *Mark withdrawn…*, *Reinstate…*, *Reopen finalized marks…* (reason required; the course lecturer is notified to finalize again), *Archive…* |
+| Users & Roles | Grant / revoke academic roles, deactivate accounts |
+| Enrol Students | Paste or upload a CSV (email, name, programme, matric); creates missing logins (students then use *Forgot password?*) and their FYP records for the chosen semester and course |
+| Rubrics | Edit a form's criteria, weights and evaluator shares; saving creates a new version — earlier evaluations keep the version they were scored with |
+| Presentations | Create, edit or delete sessions; remove slots |
+| Reports | Status counts, grade distribution, supervisor workload (CSV) for the chosen semester |
+| Appointment Letters | Approved supervisor / examiner appointments with printable letters (the PU sees the same under Nominations) |
+
+The bell in the top bar shows each user's notifications — new requests,
+submissions, decisions, assignments, corrections and finalized marks. They
+are in-app only (email would need a custom SMTP provider).
+
 ## Audit Log
 
 `/admin/audit` — the latest 300 recorded actions, newest first, in Malaysia
@@ -201,5 +273,13 @@ Admin and lecturer actions are logged in `audit_logs`, for example:
 - `import_created` — when an import job is created
 - `import_published` — when approved changes are published
 - `profile_created` — when a new profile is created
+- `event_created`, `current_event_changed` — exhibitions (S6)
+- `projects_imported` — a project / booth import, with its counts (F5)
+
+FYPMS actions go to `fyp_audit_logs` (FYPMS → Audit Logs), e.g. semester
+changes, promotions, role grants, enrolments, rubric versions, session
+edits, `record_withdrawn` / `record_incomplete` / `record_reinstated`,
+`course_marks_reopened` (with the previous total and grade) and
+`display_name_changed`.
 
 The audit log is read-only for all users (no direct writes from the client).

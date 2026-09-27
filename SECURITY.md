@@ -10,6 +10,14 @@
 - **Supabase Auth** (email/password provider)
 - Users sign in with their UiTM email address
 - No third-party providers configured (keep simple, control access)
+- Optional two-step verification (TOTP authenticator app) from My Account
+  (F8). Once a user has a verified factor, `is_admin()` and
+  `is_fyp_coordinator()` also require the session's `aal` claim to be
+  `aal2` (`mfa_satisfied()`), so a leaked password alone cannot use admin or
+  coordinator powers — enforced in RLS and every RPC that checks those
+  helpers, not only in the UI. Admins and coordinators should turn it on.
+- No per-account lockout; repeated sign-in attempts are throttled by
+  Supabase Auth rate limits
 
 ### User Roles
 Roles are stored in the `profiles.role` column (`'admin'` or `'lecturer'`),
@@ -21,6 +29,11 @@ through the CMS.
 | **admin** | Profile row with `role='admin'` created by an existing admin | RLS policies + RPC function checks via `is_admin()` helper |
 | **lecturer** | Profile row with `role='lecturer'` created by an admin | RLS policies + RPC function checks via `is_lecturer()` helper |
 | **anonymous** | No Supabase Auth session | RLS `anon` policies (public reads only) |
+
+FYPMS academic roles (student, supervisor, examiner, CSP lecturer,
+programme head, coordinator…) live in `profile_academic_roles` and are
+granted from FYPMS → Users & Roles (`set_user_academic_role`, audited); only
+an admin can grant or revoke `fyp_coordinator`.
 
 ## Row Level Security (RLS)
 
@@ -76,6 +89,11 @@ Per PDPA policy, the following student data is **approved for public display**:
   local migration tooling (now removed); if you need it, obtain it from the
   Supabase dashboard and keep it in a gitignored `.env`
 - The service role key **bypasses all RLS** — treat as a secret
+- The `enroll-students` Edge Function uses the service role only to create
+  missing Auth users; it first checks `is_fyp_coordinator()` with the
+  caller's own token and then calls `enroll_student` as the caller, so the
+  audited RPC still enforces the coordinator check. The key is the
+  platform-provided function secret, never shipped to the browser.
 
 ## Secrets Management
 

@@ -22,7 +22,7 @@ The architecture is feature-first with a layered service abstraction.
 │                  Supabase Cloud                │
 │  ┌──────────────┐  ┌────────────────────┐      │
 │  │ Supabase Auth│  │ Supabase Postgres  │      │
-│  │  (Auth UID)  │  │  44 tables + RLS   │      │
+│  │  (Auth UID)  │  │  45 tables + RLS   │      │
 │  └──────────────┘  └─────────┬──────────┘      │
 │                              │                 │
 │                    Realtime invalidation       │
@@ -112,7 +112,7 @@ are not subscribed; they refresh by refetch-after-mutation.
 
 ### 5. Backend Layer
 
-#### 5.1 Supabase Postgres (44 tables)
+#### 5.1 Supabase Postgres (45 tables)
 | Category | Tables |
 |----------|--------|
 | Expo public (published-only reads) | events, projects, schedule_items, booths, announcements, award_categories, award_winners |
@@ -120,10 +120,10 @@ are not subscribed; they refresh by refetch-after-mutation.
 | FYPMS core | fyp_records, fyp_record_assignments |
 | FYPMS reference | academic_semesters, academic_courses, fyp_course_offerings, profile_academic_roles |
 | FYPMS per-record | fyp_supervision_requests, fyp_supervisor_change_requests, fyp_special_evaluations, fyp_progress_logs, fyp_form_submissions, fyp_form_evaluations, fyp_rubric_templates, fyp_report_submissions, fyp_deliverables, fyp_lean_canvases, fyp_correction_items, fyp_correction_confirmations, fyp_milestones, fyp_milestone_extensions, fyp_marks_summaries, fyp_presentation_sessions, fyp_presentation_slots |
-| FYPMS bridge/audit | fyp_expo_publications, fyp_audit_logs |
+| FYPMS bridge/audit | fyp_expo_publications, fyp_audit_logs, fyp_notifications |
 
 #### 5.2 Security (RLS)
-- All 44 tables have RLS enabled; ~119 policies
+- All 45 tables have RLS enabled; ~119 policies
 - ~55 functions: read-only helpers (`can_read_fyp_record`, `is_csp_lecturer`,
   ...) backing policies, plus ~30 SECURITY DEFINER RPCs for mutations
 - All SECURITY DEFINER functions pin `search_path`
@@ -147,6 +147,21 @@ All critical mutations go through audited SECURITY DEFINER functions:
   (course-code cross-checked), `schedule_presentation_slot`,
   `prepare_expo_publication`, `publish_fyp_record_to_expo`,
   `archive_fyp_record`, coordinator list helpers
+- Semesters and people (S1-S3, U2-U5): `create_academic_semester`,
+  `set_academic_semester_status`, `upsert_course_offering`,
+  `promote_fyp_record`, `set_user_academic_role`, `enroll_student` (via the
+  `enroll-students` Edge Function), `save_rubric_version`,
+  `update_presentation_session` / `delete_presentation_session`
+- Exhibitions (S6, F5): `create_exhibition_event`, `set_current_event`,
+  `import_event_projects`
+- Workflow extras (F1-F8): `fyp_notify_on_change` triggers +
+  `mark_notifications_read`, `update_my_display_name`,
+  `set_fyp_record_standing` / `reinstate_fyp_record`,
+  `reopen_fyp_course_marks`, `fyp_cohort_report`,
+  `list_approved_nominations`, `mfa_satisfied` (inside `is_admin` /
+  `is_fyp_coordinator`)
+
+See `DATABASE_FUNCTIONS.md` for every function.
 
 ## Deployment Targets
 
@@ -180,7 +195,16 @@ Expo roles live in `profiles.role`; FYPMS roles in `profile_academic_roles`
 (8 role codes, incl. `programme_head` for PU approval of nominations). Client role checks only gate the UI — every RPC and RLS
 policy re-validates server-side.
 
-### 5. Defense-in-Depth Storage
+### 5. One active semester, one current exhibition
+`academic_semesters` allows one `active` row and `events` one
+`is_current` row (partial unique indexes). Staff lists follow the active
+semester unless the top-bar selector picks another (or all); the public site
+and the CMS follow the current exhibition. Nothing is copied or deleted when
+either moves on, so past semesters and exhibitions stay readable
+(`/archive` for exhibitions). CSP600 → CSP650 is a new linked record
+(`previous_record_id`) in the later semester.
+
+### 6. Defense-in-Depth Storage
 Private FYPMS buckets enforce path-scoped read/write (`{semester}/{record}/...`);
 the public-assets bucket accepts writes only from coordinators/admins.
 
