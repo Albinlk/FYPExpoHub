@@ -628,6 +628,9 @@ void main() {
 
       await tester.tap(find.text('Evaluate'));
       await tester.pumpAndSettle();
+      // The student's answers sit above the scores, so scroll to the field.
+      await tester.ensureVisible(find.byKey(const Key('score-methodology')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('score-methodology')));
       await tester.pumpAndSettle();
       await tester.tap(find.text('10').last);
