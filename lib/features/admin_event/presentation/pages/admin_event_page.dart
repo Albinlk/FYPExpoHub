@@ -6,6 +6,7 @@ import '../../../../core/state/state_providers.dart';
 import '../../../../core/utils/external_link.dart';
 import '../../../../core/utils/schedule_format.dart';
 import '../../../../core/widgets/admin_actions.dart';
+import '../widgets/exhibitions_section.dart';
 
 class AdminEventPage extends ConsumerStatefulWidget {
   const AdminEventPage({super.key});
@@ -340,6 +341,10 @@ class _AdminEventPageState extends ConsumerState<AdminEventPage> {
             const SizedBox(height: 4),
             Text('Dates, hours, venue, status, images and the event FAQ.', style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant)),
             const SizedBox(height: DesignSystem.spaceXl),
+
+            // Which exhibition is current; new ones (backlog S6).
+            const ExhibitionsSection(),
+            const SizedBox(height: DesignSystem.spaceLg),
 
             Card(
               child: Padding(

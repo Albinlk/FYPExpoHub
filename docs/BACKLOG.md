@@ -1,4 +1,4 @@
-| [x] | S5 || [x] | S3 || [x] | S2 || [x] | S1 |# FYP Expo Hub — Backlog (to-do)
+# FYP Expo Hub — Backlog (to-do)
 
 Open work identified on 27 Sep 2026, after R1–R11 and the G-01…G-34 gap
 register were closed. Tick items as they merge; add the PR number.
@@ -9,13 +9,13 @@ Priority: **H** high · **M** medium · **L** low
 
 | Done | # | Item | Pri |
 |---|---|---|---|
-| [ ] | S1 | Semester management screen (coordinator): create, open (active), close (completed), archive semesters; one active at a time | H |
-| [ ] | S2 | Semester selector on every FYPMS list (records, requests, evaluations, marks, presentations), defaulting to the active semester | H |
-| [ ] | S3 | "Promote to CSP650" action: creates the linked next-semester record (`previous_record_id`), carrying supervisor, examiner and title | H |
+| [x] | S1 | Semester management screen (coordinator): create, open (active), close (completed), archive semesters; one active at a time (#40) | H |
+| [x] | S2 | Semester selector on every FYPMS list (records, requests, evaluations, marks, presentations), defaulting to the active semester (#40) | H |
+| [x] | S3 | "Promote to CSP650" action: creates the linked next-semester record (`previous_record_id`), carrying supervisor, examiner and title (#40) | H |
 | [ ] | S4 | New-intake rollover: bulk-create CSP600 records for a semester from an enrolment list | M |
-| [ ] | S5 | Course setup screen (CSP600 / CSP650 details, offerings per semester) | M |
-| [ ] | S6 | Exhibition: replace the hard-wired event (`kEventSlug = fskm-fyp-2026`) with an **active event** setting; admin can create a new exhibition without overwriting the last one | H |
-| [ ] | S7 | Public "past exhibitions" archive: browse earlier years' projects and award winners | M |
+| [x] | S5 | Course setup screen (CSP600 / CSP650 details, offerings per semester) (#40) | M |
+| [x] | S6 | Exhibition: replace the hard-wired event (`kEventSlug = fskm-fyp-2026`) with an **active event** setting; admin can create a new exhibition without overwriting the last one (#41) | H |
+| [x] | S7 | Public "past exhibitions" archive: browse earlier years' projects and award winners (#41) | M |
 | [ ] | S8 | Tests + docs: semester filtering, promotion, event switching; migration keeps existing data on the 2026 semester/event | H |
 
 ## 2. Missing screens (backend already exists)

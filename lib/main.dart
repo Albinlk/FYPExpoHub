@@ -4,6 +4,7 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app/router.dart';
 import 'app/theme/theme.dart';
+import 'core/supabase/supabase_database_service.dart';
 import 'core/utils/logger.dart';
 
 void main() async {
@@ -30,6 +31,11 @@ void main() async {
         authFlowType: AuthFlowType.pkce,
       ),
     );
+    // Which exhibition is current (backlog S6); capped so a slow network
+    // can't hold the app at the splash screen.
+    await SupabaseDatabaseService(Supabase.instance.client)
+        .loadCurrentEvent()
+        .timeout(const Duration(seconds: 4), onTimeout: () {});
   } catch (e) {
     logDebug('Supabase initialization warning (running in fallback/offline mode): $e');
   }

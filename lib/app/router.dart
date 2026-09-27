@@ -49,6 +49,7 @@ import '../features/fypms/presentation/pages/supervisor_dashboard_page.dart';
 import '../features/admin_announcements/presentation/pages/admin_announcements_page.dart';
 import '../features/admin_auth/presentation/pages/sign_in_page.dart';
 import '../features/admin_auth/presentation/pages/reset_password_page.dart';
+import '../features/public_archive/presentation/pages/archive_page.dart';
 import '../features/admin_awards/presentation/pages/admin_awards_page.dart';
 import '../features/admin_booths/presentation/pages/admin_booths_page.dart';
 import '../features/admin_dashboard/presentation/pages/dashboard_page.dart';
@@ -182,6 +183,16 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                   final projectId = state.pathParameters['projectId'] ?? '';
                   return LecturerVisitDetailPage(projectId: projectId);
                 },
+              ),
+            ],
+          ),
+          GoRoute(
+            path: '/archive',
+            builder: (context, state) => const ArchivePage(),
+            routes: [
+              GoRoute(
+                path: ':slug',
+                builder: (context, state) => ArchivedEventPage(slug: state.pathParameters['slug'] ?? ''),
               ),
             ],
           ),

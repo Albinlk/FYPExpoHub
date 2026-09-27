@@ -8,6 +8,7 @@ import '../../utils/logger.dart';
 import '../../widgets/project_cover_image.dart';
 import 'load_status.dart';
 import 'optimistic_list.dart';
+import '../../supabase/supabase_database_service.dart' show ActiveEvent;
 import 'service_providers.dart';
 
 // ==========================================
@@ -64,7 +65,8 @@ class ProjectsNotifier extends Notifier<List<Project>>
     // counterpart (non-uuid ids), so every edit to one would fail.
     // The bundled fallback loads alongside the request rather than before
     // it, so a slow asset never holds up live rows (or the load status).
-    if (publishedOnly) unawaited(_applyFallback(() => remoteFailed));
+    // The bundled data is the default event's; never show it for another.
+    if (publishedOnly && ActiveEvent.usesBundledData) unawaited(_applyFallback(() => remoteFailed));
     try {
       var first = true;
       await loadRemote(() async {
