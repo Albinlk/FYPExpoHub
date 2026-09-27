@@ -444,6 +444,47 @@ extension FypmsRpcService on SupabaseRpcService {
     return [for (final r in ((data as Map?)?['results'] as List? ?? const [])) Map<String, dynamic>.from(r as Map)];
   }
 
+  /// Coordinator: a new version of a form's rubric (backlog U4).
+  Future<Map<String, dynamic>> saveRubricVersion({
+    required String formCode,
+    required String rubricName,
+    required List<Map<String, dynamic>> criteria,
+    required Map<String, dynamic> evaluatorShares,
+  }) async {
+    return _rpc('save_rubric_version', {
+      'p_form_code': formCode,
+      'p_rubric_name': rubricName,
+      'p_criteria': criteria,
+      'p_evaluator_shares': evaluatorShares,
+    });
+  }
+
+  Future<Map<String, dynamic>> updatePresentationSession({
+    required String sessionId,
+    required String sessionTitle,
+    required DateTime startAt,
+    required DateTime endAt,
+    String? venue,
+    String sessionType = 'defence',
+  }) async {
+    return _rpc('update_presentation_session', {
+      'p_session_id': sessionId,
+      'p_session_title': sessionTitle,
+      'p_start_at': startAt.toUtc().toIso8601String(),
+      'p_end_at': endAt.toUtc().toIso8601String(),
+      'p_venue': venue,
+      'p_session_type': sessionType,
+    });
+  }
+
+  Future<Map<String, dynamic>> deletePresentationSession({required String sessionId}) async {
+    return _rpc('delete_presentation_session', {'p_session_id': sessionId});
+  }
+
+  Future<Map<String, dynamic>> deletePresentationSlot({required String slotId}) async {
+    return _rpc('delete_presentation_slot', {'p_slot_id': slotId});
+  }
+
   /// Coordinator: new semester (planned).
   Future<Map<String, dynamic>> createAcademicSemester({
     required String code,

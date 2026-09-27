@@ -2,29 +2,36 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/fypms/fyp_course_offering.dart';
+import '../../../../core/domain/models/fypms/fyp_presentation_session.dart';
 import '../../../../core/state/fypms_state_providers.dart';
+import '../../../../core/state/state_providers.dart';
+import '../../../../core/supabase/fypms_rpc_service.dart';
 import '../../../../core/utils/fypms_format.dart';
 
 /// Course lecturer / coordinator creates a presentation session for one of
 /// the course offerings they manage (`create_presentation_session`).
 class CreateSessionDialog extends ConsumerStatefulWidget {
-  const CreateSessionDialog({super.key, required this.offerings});
+  const CreateSessionDialog({super.key, required this.offerings, this.session});
 
   final List<FypCourseOffering> offerings;
+
+  /// Set to edit an existing session instead (backlog U5).
+  final FypPresentationSession? session;
 
   @override
   ConsumerState<CreateSessionDialog> createState() => _CreateSessionDialogState();
 }
 
 class _CreateSessionDialogState extends ConsumerState<CreateSessionDialog> {
-  final _code = TextEditingController();
-  final _title = TextEditingController();
-  final _venue = TextEditingController();
-  late String? _offeringId = widget.offerings.firstOrNull?.id;
-  String _type = 'defence';
-  DateTime? _date;
-  TimeOfDay _start = const TimeOfDay(hour: 9, minute: 0);
-  TimeOfDay _end = const TimeOfDay(hour: 13, minute: 0);
+  late final _code = TextEditingController(text: widget.session?.sessionCode ?? '');
+  late final _title = TextEditingController(text: widget.session?.sessionTitle ?? '');
+  late final _venue = TextEditingController(text: widget.session?.venue ?? '');
+  late String? _offeringId = widget.session?.offeringId ?? widget.offerings.firstOrNull?.id;
+  late String _type = widget.session?.sessionType ?? 'defence';
+  late DateTime? _date = widget.session?.startAt.toLocal();
+  late TimeOfDay _start = widget.session == null ? const TimeOfDay(hour: 9, minute: 0) : TimeOfDay.fromDateTime(widget.session!.startAt.toLocal());
+  late TimeOfDay _end = widget.session == null ? const TimeOfDay(hour: 13, minute: 0) : TimeOfDay.fromDateTime(widget.session!.endAt.toLocal());
+  bool get _editing => widget.session != null;
   bool _busy = false;
 
   @override
@@ -59,6 +66,22 @@ class _CreateSessionDialogState extends ConsumerState<CreateSessionDialog> {
   Future<void> _submit() async {
     setState(() => _busy = true);
     try {
+      if (_editing) {
+        await ref.read(supabaseRpcServiceProvider).updatePresentationSession(
+              sessionId: widget.session!.id,
+              sessionTitle: _title.text.trim(),
+              startAt: _at(_start),
+              endAt: _at(_end),
+              venue: _venue.text.trim().isEmpty ? null : _venue.text.trim(),
+              sessionType: _type,
+            );
+        ref.invalidate(fypPresentationSessionsProvider);
+        if (!mounted) return;
+        final m = ScaffoldMessenger.of(context);
+        Navigator.pop(context);
+        m.showSnackBar(const SnackBar(content: Text('Session updated.')));
+        return;
+      }
       await ref.read(createPresentationSessionProvider)(
         offeringId: _offeringId!,
         sessionCode: _code.text.trim(),
@@ -88,7 +111,7 @@ class _CreateSessionDialogState extends ConsumerState<CreateSessionDialog> {
         !_busy;
     return AlertDialog(
       backgroundColor: DesignSystem.surfaceContainerLowest,
-      title: Text('New Session', style: DesignSystem.h2),
+      title: Text(_editing ? 'Edit Session' : 'New Session', style: DesignSystem.h2),
       content: SizedBox(
         width: 480,
         child: SingleChildScrollView(
@@ -157,7 +180,7 @@ class _CreateSessionDialogState extends ConsumerState<CreateSessionDialog> {
       ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-        FilledButton(onPressed: ready ? _submit : null, child: const Text('Create')),
+        FilledButton(onPressed: ready ? _submit : null, child: Text(_editing ? 'Save' : 'Create')),
       ],
     );
   }
