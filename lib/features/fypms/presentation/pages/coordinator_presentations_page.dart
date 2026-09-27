@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/fypms/fyp_presentation_session.dart';
 import '../../../../core/state/fypms_state_providers.dart';
+import '../../../../core/state/state_providers.dart';
+import '../../../../core/supabase/fypms_rpc_service.dart';
+import '../../../../core/widgets/admin_actions.dart';
 import '../widgets/create_session_dialog.dart';
 import '../widgets/fypms_loading_widget.dart';
 
@@ -67,7 +70,20 @@ class CoordinatorPresentationsPage extends ConsumerWidget {
                       '${session.venue ?? 'TBC'}',
                       style: DesignSystem.bodySm,
                     ),
-                    trailing: const Icon(Icons.chevron_right),
+                    trailing: PopupMenuButton<String>(
+                      key: Key('session-menu-${session.sessionCode}'),
+                      tooltip: 'Session actions',
+                      onSelected: (a) => a == 'edit'
+                          ? showDialog<void>(
+                              context: context,
+                              builder: (_) => CreateSessionDialog(offerings: offerings, session: session),
+                            )
+                          : _deleteSession(context, ref, session),
+                      itemBuilder: (_) => const [
+                        PopupMenuItem(value: 'edit', child: Text('Edit…')),
+                        PopupMenuItem(value: 'delete', child: Text('Delete…')),
+                      ],
+                    ),
                     onTap: () => _showSessionDetail(context, ref, session.id),
                   ),
                 );
@@ -76,6 +92,20 @@ class CoordinatorPresentationsPage extends ConsumerWidget {
         },
       ),
     );
+  }
+
+  Future<void> _deleteSession(BuildContext context, WidgetRef ref, FypPresentationSession session) async {
+    final ok = await confirmAction(
+      context,
+      title: 'Delete session',
+      message: 'Delete ${session.sessionCode} — ${session.sessionTitle}? Its scheduled slots are removed too.',
+      confirmLabel: 'Delete',
+    );
+    if (!ok || !context.mounted) return;
+    await runAdminWrite(context, () async {
+      await ref.read(supabaseRpcServiceProvider).deletePresentationSession(sessionId: session.id);
+      ref.invalidate(fypPresentationSessionsProvider);
+    }, success: 'Session deleted.');
   }
 
   void _showSessionDetail(BuildContext context, WidgetRef ref, String sessionId) {
@@ -112,6 +142,14 @@ class CoordinatorPresentationsPage extends ConsumerWidget {
                               '${_formatTime(slot.startAt)} - ${_formatTime(slot.endAt)}'
                               '${slot.room != null ? ' | ${slot.room}' : ''}',
                               style: DesignSystem.bodySm,
+                            ),
+                            trailing: IconButton(
+                              tooltip: 'Remove slot',
+                              icon: const Icon(Icons.delete_outline),
+                              onPressed: () => runAdminWrite(context, () async {
+                                await ref.read(supabaseRpcServiceProvider).deletePresentationSlot(slotId: slot.id);
+                                ref.invalidate(fypPresentationSlotsProvider(sessionId));
+                              }, success: 'Slot removed.'),
                             ),
                           ),
                       ],

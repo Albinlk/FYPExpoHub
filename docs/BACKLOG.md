@@ -25,8 +25,8 @@ Priority: **H** high · **M** medium · **L** low
 | [x] | U1 | Proper student form screens for F2, F3, F4, F7, F9, F10 … (replace the raw-JSON payload box) (#43) | H |
 | [x] | U2 | User role management (admin / coordinator): search users, add / remove FYPMS roles with programme scope, activate / deactivate; audited; coordinators can't grant coordinator / admin (#42) | H |
 | [x] | U3 | Student account creation and bulk enrolment (uses `create_student_account_profile`) (#42) | H |
-| [ ] | U4 | Rubric editor (criteria, weights, evaluator shares, versioned) | M |
-| [ ] | U5 | Edit / delete presentation sessions and slots | L |
+| [x] | U4 | Rubric editor (criteria, weights, evaluator shares, versioned) (#44) | M |
+| [x] | U5 | Edit / delete presentation sessions and slots (#44) | L |
 
 ## 3. Missing functions (need backend work)
 

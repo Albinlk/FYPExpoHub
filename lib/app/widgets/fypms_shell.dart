@@ -240,6 +240,7 @@ List<({String title, IconData icon, String route})> _navItems({
       (title: 'Presentations', icon: Icons.event, route: '/fypms/coordinator/presentations'),
       (title: 'Expo Publications', icon: Icons.public, route: '/fypms/coordinator/expo'),
       (title: 'Mark Allocation', icon: Icons.pie_chart_outline, route: '/fypms/coordinator/mark-allocation'),
+      (title: 'Rubrics', icon: Icons.rule, route: '/fypms/coordinator/rubrics'),
       (title: 'Audit Logs', icon: Icons.history, route: '/fypms/coordinator/audit'),
     ]);
   }

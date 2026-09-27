@@ -40,6 +40,7 @@ import '../features/fypms/presentation/pages/student_milestones_page.dart';
 import '../features/fypms/presentation/pages/student_presentations_page.dart';
 import '../features/fypms/presentation/pages/coordinator_semesters_page.dart';
 import '../features/fypms/presentation/pages/coordinator_users_page.dart';
+import '../features/fypms/presentation/pages/coordinator_rubrics_page.dart';
 import '../features/fypms/presentation/pages/coordinator_enrol_page.dart';
 import '../features/fypms/presentation/widgets/supervisor_change_widgets.dart' show PuNominationsPage;
 import '../features/fypms/presentation/pages/student_progress_page.dart';
@@ -453,6 +454,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/fypms/csp/evaluations',
             builder: (context, state) => const CspEvaluationsPage(),
+          ),
+          GoRoute(
+            path: '/fypms/coordinator/rubrics',
+            builder: (context, state) => const CoordinatorRubricsPage(),
           ),
           GoRoute(
             path: '/fypms/coordinator/users',
