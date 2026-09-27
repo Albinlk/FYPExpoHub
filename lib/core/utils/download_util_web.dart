@@ -8,10 +8,10 @@ import 'package:web/web.dart' as web;
 ///
 /// Uses package:web (not dart:html) so the app compiles to dart2wasm as
 /// well as dart2js.
-void downloadTextFileWeb(String fileName, String content) {
+void downloadTextFileWeb(String fileName, String content, {String mimeType = 'text/csv'}) {
   final bytes = utf8.encode(content);
   final parts = <JSUint8Array>[bytes.toJS].toJS;
-  final blob = web.Blob(parts, web.BlobPropertyBag(type: 'text/csv'));
+  final blob = web.Blob(parts, web.BlobPropertyBag(type: mimeType));
   final url = web.URL.createObjectURL(blob);
   final anchor = web.HTMLAnchorElement()
     ..href = url
