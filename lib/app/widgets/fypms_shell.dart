@@ -5,6 +5,7 @@ import '../../core/supabase/supabase_client_provider.dart';
 import '../../core/state/fypms_state_providers.dart';
 import '../theme/theme.dart';
 import '../../features/fypms/presentation/widgets/semester_selector.dart';
+import '../../features/fypms/presentation/pages/notifications_page.dart';
 
 /// Workspace dashboard routes match exactly only — their sub-pages (e.g.
 /// /fypms/supervisor/evaluations) must not also highlight the dashboard
@@ -109,6 +110,8 @@ class FypmsShell extends ConsumerWidget {
                 children: [
                   // Staff lists follow the chosen semester (backlog S2).
                   if (isStaff) ...[const SemesterSelector(), const SizedBox(width: 24)],
+                  const NotificationBell(),
+                  const SizedBox(width: 8),
                   const Icon(Icons.account_circle, color: Colors.white70),
                   const SizedBox(width: 8),
                   Text(
@@ -128,6 +131,7 @@ class FypmsShell extends ConsumerWidget {
         actions: !isDesktop
             ? [
                 if (isStaff) const SemesterSelector(),
+                const NotificationBell(),
                 IconButton(
                   icon: const Icon(Icons.logout),
                   onPressed: () => _logout(context, ref),
