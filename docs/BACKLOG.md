@@ -38,7 +38,7 @@ Priority: **H** high · **M** medium · **L** low
 | [x] | F4 | Withdraw / incomplete (TL) record statuses and flow (#47) | M |
 | [x] | F5 | Import projects and booths from the Master File (#48) | M |
 | [x] | F6 | Reports / analytics: grade distribution, supervisor workload, cohort progress (#49) | L |
-| [ ] | F7 | PU appointment letters (printable record of approved nominations) | L |
+| [x] | F7 | PU appointment letters (printable record of approved nominations) (#50) | L |
 | [ ] | F8 | Account lockout / MFA (G-32 remainder) | L |
 
 ## 4. Manual / configuration (not code)

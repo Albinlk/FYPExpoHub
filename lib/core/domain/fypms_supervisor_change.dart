@@ -48,7 +48,8 @@ class SupervisorChangeRequest {
   bool get isPending => status == 'pending';
 }
 
-/// A supervisor / examiner nomination awaiting the PU (`list_pending_nominations`).
+/// A supervisor / examiner nomination awaiting the PU (`list_pending_nominations`),
+/// or an approved one (`list_approved_nominations`, which adds the decision).
 class PendingNomination {
   const PendingNomination({
     required this.assignmentId,
@@ -60,6 +61,10 @@ class PendingNomination {
     this.programmeCode,
     this.courseCode,
     this.projectTitle,
+    this.lecturerEmail,
+    this.semesterLabel,
+    this.decidedAt,
+    this.decidedByName,
   });
 
   factory PendingNomination.fromJson(Map<String, dynamic> json) => PendingNomination(
@@ -72,6 +77,10 @@ class PendingNomination {
         programmeCode: json['programme_code'] as String?,
         courseCode: json['course_code'] as String?,
         projectTitle: json['project_title'] as String?,
+        lecturerEmail: json['lecturer_email'] as String?,
+        semesterLabel: json['semester_label'] as String?,
+        decidedAt: DateTime.tryParse(json['decided_at'] as String? ?? ''),
+        decidedByName: json['decided_by_name'] as String?,
       );
 
   final String assignmentId;
@@ -85,6 +94,12 @@ class PendingNomination {
   final String? programmeCode;
   final String? courseCode;
   final String? projectTitle;
+  final String? lecturerEmail;
+  final String? semesterLabel;
+
+  /// When the PU approved it (approved nominations only).
+  final DateTime? decidedAt;
+  final String? decidedByName;
 
   String get roleLabel => switch (academicRole) {
         'co_supervisor' => 'Co-supervisor',

@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
+import '../../../../core/domain/fypms_appointment_letter.dart';
 import '../../../../core/domain/fypms_supervisor_change.dart';
 import '../../../../core/domain/models/fypms/fyp_record.dart';
 import '../../../../core/state/fypms_state_providers.dart';
+import '../../../../core/utils/download_util.dart';
+import '../../../../core/utils/fypms_format.dart';
 
 /// Minimum reason length the server requires.
 const kSupervisorChangeReasonMin = 20;
 
 /// id → name from the public supervisor directory.
 Map<String, String> _names(List<Map<String, dynamic>> directory) => {
-      for (final s in directory)
-        if (s['id'] is String) s['id'] as String: (s['display_name'] as String? ?? ''),
-    };
+  for (final s in directory)
+    if (s['id'] is String) s['id'] as String: (s['display_name'] as String? ?? ''),
+};
 
 /// Student: ask the coordinator for a different supervisor (textbook:
 /// discouraged, and only through the coordinator).
@@ -91,7 +94,10 @@ class _RequestSupervisorChangeDialogState extends ConsumerState<RequestSuperviso
                 items: [
                   const DropdownMenuItem<String?>(value: null, child: Text('Let the coordinator decide')),
                   for (final e in options)
-                    DropdownMenuItem<String?>(value: e.key, child: Text(e.value, overflow: TextOverflow.ellipsis)),
+                    DropdownMenuItem<String?>(
+                      value: e.key,
+                      child: Text(e.value, overflow: TextOverflow.ellipsis),
+                    ),
                 ],
                 onChanged: (v) => setState(() => _proposed = v),
               ),
@@ -152,11 +158,19 @@ class SupervisorChangeSection extends ConsumerWidget {
 class SupervisorChangeRequestsPanel extends ConsumerWidget {
   const SupervisorChangeRequestsPanel({super.key});
 
-  Future<void> _approve(BuildContext context, WidgetRef ref, SupervisorChangeRequest r, Map<String, String> names) async {
+  Future<void> _approve(
+    BuildContext context,
+    WidgetRef ref,
+    SupervisorChangeRequest r,
+    Map<String, String> names,
+  ) async {
     final chosen = await showDialog<String>(
       context: context,
       builder: (_) => _PickSupervisorDialog(
-        names: {for (final e in names.entries) if (e.key != r.currentSupervisorId) e.key: e.value},
+        names: {
+          for (final e in names.entries)
+            if (e.key != r.currentSupervisorId) e.key: e.value,
+        },
         initial: r.proposedSupervisorId,
       ),
     );
@@ -170,8 +184,14 @@ class SupervisorChangeRequestsPanel extends ConsumerWidget {
     await _run(context, ref, r, 'rejected', comment: reason);
   }
 
-  Future<void> _run(BuildContext context, WidgetRef ref, SupervisorChangeRequest r, String decision,
-      {String? comment, String? newSupervisorId}) async {
+  Future<void> _run(
+    BuildContext context,
+    WidgetRef ref,
+    SupervisorChangeRequest r,
+    String decision, {
+    String? comment,
+    String? newSupervisorId,
+  }) async {
     final messenger = ScaffoldMessenger.of(context);
     try {
       await ref.read(decideSupervisorChangeProvider)(
@@ -181,7 +201,9 @@ class SupervisorChangeRequestsPanel extends ConsumerWidget {
         comment: comment,
         newSupervisorId: newSupervisorId,
       );
-      messenger.showSnackBar(SnackBar(content: Text(decision == 'approved' ? 'Supervisor changed.' : 'Request rejected.')));
+      messenger.showSnackBar(
+        SnackBar(content: Text(decision == 'approved' ? 'Supervisor changed.' : 'Request rejected.')),
+      );
     } catch (e) {
       messenger.showSnackBar(SnackBar(content: Text('Failed: $e')));
     }
@@ -200,8 +222,10 @@ class SupervisorChangeRequestsPanel extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Supervisor change requests (${pending.length})',
-                style: DesignSystem.bodyLg.copyWith(fontWeight: FontWeight.bold)),
+            Text(
+              'Supervisor change requests (${pending.length})',
+              style: DesignSystem.bodyLg.copyWith(fontWeight: FontWeight.bold),
+            ),
             for (final r in pending) ...[
               const Divider(),
               Text(
@@ -255,7 +279,10 @@ class _PickSupervisorDialogState extends State<_PickSupervisorDialog> {
           decoration: const InputDecoration(labelText: 'Supervisor'),
           items: [
             for (final e in widget.names.entries)
-              DropdownMenuItem(value: e.key, child: Text(e.value, overflow: TextOverflow.ellipsis)),
+              DropdownMenuItem(
+                value: e.key,
+                child: Text(e.value, overflow: TextOverflow.ellipsis),
+              ),
           ],
           onChanged: (v) => setState(() => _id = v),
         ),
@@ -321,7 +348,9 @@ class PuNominationsPage extends ConsumerWidget {
     final messenger = ScaffoldMessenger.of(context);
     try {
       await ref.read(decideNominationProvider)(n.assignmentId, decision, comment);
-      messenger.showSnackBar(SnackBar(content: Text(decision == 'approved' ? 'Nomination approved.' : 'Nomination rejected.')));
+      messenger.showSnackBar(
+        SnackBar(content: Text(decision == 'approved' ? 'Nomination approved.' : 'Nomination rejected.')),
+      );
     } catch (e) {
       messenger.showSnackBar(SnackBar(content: Text('Failed: $e')));
     }
@@ -330,53 +359,144 @@ class PuNominationsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final nominations = ref.watch(pendingNominationsProvider);
-    return Scaffold(
-      backgroundColor: DesignSystem.background,
-      appBar: AppBar(
-        backgroundColor: DesignSystem.primary,
-        title: Text('Nominations', style: DesignSystem.h3.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        backgroundColor: DesignSystem.background,
+        appBar: AppBar(
+          backgroundColor: DesignSystem.primary,
+          title: Text(
+            'Nominations',
+            style: DesignSystem.h3.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          bottom: const TabBar(
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.white70,
+            indicatorColor: Colors.white,
+            tabs: [
+              Tab(text: 'Awaiting approval'),
+              Tab(text: 'Approved · letters'),
+            ],
+          ),
+        ),
+        body: TabBarView(
+          children: [
+            nominations.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => Center(child: Text('Error: $e')),
+              data: (list) => list.isEmpty
+                  ? const Center(child: Text('No nominations are waiting for your approval.'))
+                  : ListView(
+                      padding: const EdgeInsets.all(DesignSystem.gutter),
+                      children: [
+                        for (final n in list)
+                          Card(
+                            margin: const EdgeInsets.only(bottom: DesignSystem.spaceSm),
+                            child: Padding(
+                              padding: const EdgeInsets.all(DesignSystem.spaceMd),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '${n.roleLabel}: ${n.lecturerName ?? '—'}',
+                                    style: DesignSystem.bodyLg.copyWith(fontWeight: FontWeight.bold),
+                                  ),
+                                  Text(
+                                    '${n.projectTitle ?? 'Untitled'} · ${n.studentName ?? ''}'
+                                    '${n.matricId == null ? '' : ' (${n.matricId})'}',
+                                    style: DesignSystem.bodySm,
+                                  ),
+                                  Text(
+                                    '${n.programmeCode ?? ''} · ${n.courseCode ?? ''}',
+                                    style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant),
+                                  ),
+                                  Wrap(
+                                    spacing: DesignSystem.spaceSm,
+                                    children: [
+                                      TextButton(
+                                        onPressed: () => _decide(context, ref, n, 'rejected'),
+                                        child: const Text('Reject'),
+                                      ),
+                                      FilledButton(
+                                        onPressed: () => _decide(context, ref, n, 'approved'),
+                                        child: const Text('Approve'),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+            ),
+            const ApprovedNominationsList(),
+          ],
+        ),
       ),
-      body: nominations.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
-        data: (list) => list.isEmpty
-            ? const Center(child: Text('No nominations are waiting for your approval.'))
-            : ListView(
-                padding: const EdgeInsets.all(DesignSystem.gutter),
-                children: [
-                  for (final n in list)
-                    Card(
-                      margin: const EdgeInsets.only(bottom: DesignSystem.spaceSm),
-                      child: Padding(
-                        padding: const EdgeInsets.all(DesignSystem.spaceMd),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '${n.roleLabel}: ${n.lecturerName ?? '—'}',
-                              style: DesignSystem.bodyLg.copyWith(fontWeight: FontWeight.bold),
-                            ),
-                            Text(
-                              '${n.projectTitle ?? 'Untitled'} · ${n.studentName ?? ''}'
-                              '${n.matricId == null ? '' : ' (${n.matricId})'}',
-                              style: DesignSystem.bodySm,
-                            ),
-                            Text('${n.programmeCode ?? ''} · ${n.courseCode ?? ''}',
-                                style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant)),
-                            Wrap(
-                              spacing: DesignSystem.spaceSm,
-                              children: [
-                                TextButton(onPressed: () => _decide(context, ref, n, 'rejected'), child: const Text('Reject')),
-                                FilledButton(onPressed: () => _decide(context, ref, n, 'approved'), child: const Text('Approve')),
-                              ],
-                            ),
-                          ],
-                        ),
+    );
+  }
+}
+
+/// Approved appointments with printable letters (backlog F7).
+class ApprovedNominationsList extends ConsumerWidget {
+  const ApprovedNominationsList({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final approved = ref.watch(approvedNominationsProvider);
+    return approved.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(child: Text('Error: $e')),
+      data: (list) => list.isEmpty
+          ? const Center(child: Text('No approved appointments yet.'))
+          : ListView(
+              padding: const EdgeInsets.all(DesignSystem.gutter),
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Letters download as a web page — open it and print, or save as PDF.',
+                        style: DesignSystem.bodySm,
                       ),
                     ),
-                ],
-              ),
-      ),
+                    OutlinedButton.icon(
+                      key: const Key('all-letters'),
+                      onPressed: () => downloadTextFileWeb(
+                        'appointment_letters.html',
+                        appointmentLettersHtml(list),
+                        mimeType: 'text/html',
+                      ),
+                      icon: const Icon(Icons.print),
+                      label: Text('All ${list.length} letters'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: DesignSystem.spaceSm),
+                for (final n in list)
+                  Card(
+                    margin: const EdgeInsets.only(bottom: DesignSystem.spaceSm),
+                    child: ListTile(
+                      title: Text('${n.roleLabel}: ${n.lecturerName ?? '—'}'),
+                      subtitle: Text(
+                        '${n.projectTitle ?? 'Untitled'} · ${n.studentName ?? ''}'
+                        '${n.decidedAt == null ? '' : '\nApproved ${formatFypDate(n.decidedAt!)}'}',
+                      ),
+                      isThreeLine: n.decidedAt != null,
+                      trailing: TextButton.icon(
+                        onPressed: () => downloadTextFileWeb(
+                          appointmentLetterFileName(n),
+                          appointmentLettersHtml([n]),
+                          mimeType: 'text/html',
+                        ),
+                        icon: const Icon(Icons.description_outlined),
+                        label: const Text('Letter'),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
     );
   }
 }
