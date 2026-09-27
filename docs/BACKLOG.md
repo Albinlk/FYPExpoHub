@@ -37,7 +37,7 @@ Priority: **H** high · **M** medium · **L** low
 | [x] | F3 | Reopen finalized marks with a reason (audited) (#47) | M |
 | [x] | F4 | Withdraw / incomplete (TL) record statuses and flow (#47) | M |
 | [x] | F5 | Import projects and booths from the Master File (#48) | M |
-| [ ] | F6 | Reports / analytics: grade distribution, supervisor workload, cohort progress | L |
+| [x] | F6 | Reports / analytics: grade distribution, supervisor workload, cohort progress (#49) | L |
 | [ ] | F7 | PU appointment letters (printable record of approved nominations) | L |
 | [ ] | F8 | Account lockout / MFA (G-32 remainder) | L |
 
