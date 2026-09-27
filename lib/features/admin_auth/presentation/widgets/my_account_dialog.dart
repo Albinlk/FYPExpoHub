@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/supabase/supabase_client_provider.dart';
+import '../../mfa.dart';
 import '../../password_reset.dart';
 
 /// Saves the caller's display name (`update_my_display_name`, backlog F2).
@@ -211,6 +212,8 @@ class _MyAccountDialogState extends ConsumerState<MyAccountDialog> {
                 alignment: Alignment.centerRight,
                 child: TextButton(onPressed: _busy ? null : _changePassword, child: const Text('Change password')),
               ),
+              const Divider(),
+              const MfaSettingsSection(),
             ],
           ),
         ),

@@ -42,6 +42,7 @@ import '../features/fypms/presentation/pages/coordinator_semesters_page.dart';
 import '../features/fypms/presentation/pages/coordinator_users_page.dart';
 import '../features/fypms/presentation/pages/coordinator_rubrics_page.dart';
 import '../features/fypms/presentation/pages/notifications_page.dart';
+import '../features/admin_auth/mfa.dart';
 import '../features/fypms/presentation/pages/coordinator_reports_page.dart';
 import '../features/fypms/presentation/pages/coordinator_enrol_page.dart';
 import '../features/fypms/presentation/widgets/supervisor_change_widgets.dart' show PuNominationsPage;
@@ -230,7 +231,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       // PROTECTED ADMIN SHELL ROUTES
       // -------------------------------------------------------------
       ShellRoute(
-        builder: (context, state, child) => AdminShell(child: child),
+        builder: (context, state, child) => MfaGate(child: AdminShell(child: child)),
         routes: [
           GoRoute(
             path: '/admin',
@@ -304,7 +305,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       // PROTECTED FYPMS SHELL ROUTES (role-aware)
       // -------------------------------------------------------------
       ShellRoute(
-        builder: (context, state, child) => FypmsShell(child: child),
+        builder: (context, state, child) => MfaGate(child: FypmsShell(child: child)),
         routes: [
           GoRoute(
             path: '/fypms',
