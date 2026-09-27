@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fyp_expo_hub/core/domain/models/event.dart';
 import 'package:fyp_expo_hub/core/state/state_providers.dart';
 import 'package:fyp_expo_hub/features/admin_event/presentation/pages/admin_event_page.dart';
+import 'package:fyp_expo_hub/features/public_archive/archive_data.dart';
 
 final saved = <Event>[];
 
@@ -41,12 +42,15 @@ void main() {
   setUp(saved.clear);
 
   Future<void> pump(WidgetTester tester) async {
-    tester.view.physicalSize = const Size(1000, 3200);
+    tester.view.physicalSize = const Size(1000, 4200);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(ProviderScope(
-      overrides: [eventProvider.overrideWith(_EventStub.new)],
+      overrides: [
+        eventProvider.overrideWith(_EventStub.new),
+        exhibitionsProvider.overrideWith((ref) async => const []),
+      ],
       child: const MaterialApp(home: AdminEventPage()),
     ));
     await tester.pumpAndSettle();

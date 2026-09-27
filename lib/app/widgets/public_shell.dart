@@ -150,6 +150,7 @@ class _DesktopNavBar extends StatelessWidget {
                 itemBuilder: (_) => const [
                   PopupMenuItem(value: '/info', child: Text('Exhibition Info')),
                   PopupMenuItem(value: '/faq', child: Text('FAQ')),
+                  PopupMenuItem(value: '/archive', child: Text('Past Exhibitions')),
                   PopupMenuItem(value: '/privacy', child: Text('Privacy Policy')),
                 ],
                 child: Row(
@@ -158,7 +159,7 @@ class _DesktopNavBar extends StatelessWidget {
                     Text(
                       'More',
                       style: DesignSystem.bodyMd.copyWith(
-                        color: _isActive('/info') || _isActive('/faq') || _isActive('/privacy')
+                        color: _isActive('/info') || _isActive('/faq') || _isActive('/privacy') || _isActive('/archive')
                             ? DesignSystem.primary
                             : DesignSystem.onSurfaceVariant,
                       ),
@@ -341,6 +342,7 @@ class _MobileBottomNavBar extends StatelessWidget {
                   Icons.help_outline,
                   '/faq',
                 ),
+                _buildMenuItem(context, 'Past Exhibitions', Icons.history_edu, '/archive'),
                 _buildMenuItem(
                   context,
                   'Privacy Policy',

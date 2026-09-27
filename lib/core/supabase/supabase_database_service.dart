@@ -2,10 +2,24 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../utils/logger.dart';
 import 'row_mappers.dart' show isUuid;
 
-/// The one event this deployment runs. Models carry this slug as their
-/// `eventId`; [SupabaseDatabaseService.resolveEventId] turns it into the
-/// `events.id` uuid that every `event_id` foreign key actually needs.
-const kEventSlug = 'fskm-fyp-2026';
+/// The exhibition this build was first set up for (and whose data the
+/// bundled offline fallback holds).
+const kDefaultEventSlug = 'fskm-fyp-2026';
+
+/// The exhibition the public site and admin currently show (backlog S6).
+/// Starts at [kDefaultEventSlug]; [SupabaseDatabaseService.loadCurrentEvent]
+/// replaces it at startup with the event marked `is_current`.
+abstract final class ActiveEvent {
+  static String slug = kDefaultEventSlug;
+
+  /// Whether the bundled offline data (the default event's) may be shown.
+  static bool get usesBundledData => slug == kDefaultEventSlug;
+}
+
+/// The current event's slug. Models carry it as their `eventId`;
+/// [SupabaseDatabaseService.resolveEventId] turns it into the `events.id`
+/// uuid that every `event_id` foreign key needs.
+String get kEventSlug => ActiveEvent.slug;
 
 class SupabaseDatabaseService {
   final SupabaseClient _client;
@@ -34,6 +48,32 @@ class SupabaseDatabaseService {
     return id;
   }
 
+  /// Reads which exhibition is current (`events.is_current`) into
+  /// [ActiveEvent]; keeps the default when none is marked or on error.
+  Future<void> loadCurrentEvent() async {
+    try {
+      final row = await _client.from('events').select('id, slug').eq('is_current', true).maybeSingle();
+      final slug = row?['slug'] as String?;
+      if (slug != null && slug.isNotEmpty) {
+        ActiveEvent.slug = slug;
+        _eventIdBySlug[slug] = row!['id'] as String;
+      }
+    } catch (e) {
+      logDebug('Supabase loadCurrentEvent error: $e');
+    }
+  }
+
+  /// The current event's uuid, or null if it can't be resolved (lists then
+  /// fall back to unfiltered rather than empty).
+  Future<String?> _currentEventId() async {
+    try {
+      return await resolveEventId(kEventSlug);
+    } catch (e) {
+      logDebug('Supabase current event unresolved: $e');
+      return null;
+    }
+  }
+
   // ---------------------------------------------------
   // PROJECTS
   // ---------------------------------------------------
@@ -44,6 +84,8 @@ class SupabaseDatabaseService {
   }) async {
     try {
       var filter = _client.from('projects').select();
+      final eventId = await _currentEventId();
+      if (eventId != null) filter = filter.eq('event_id', eventId);
       if (publishedOnly) {
         filter = filter.eq('publication_status', 'published');
       }
@@ -85,6 +127,8 @@ class SupabaseDatabaseService {
   }) async {
     try {
       var filter = _client.from('schedule_items').select();
+      final eventId = await _currentEventId();
+      if (eventId != null) filter = filter.eq('event_id', eventId);
       if (publishedOnly) {
         filter = filter
             .eq('publication_status', 'published')
@@ -127,6 +171,8 @@ class SupabaseDatabaseService {
   }) async {
     try {
       var filter = _client.from('booths').select();
+      final eventId = await _currentEventId();
+      if (eventId != null) filter = filter.eq('event_id', eventId);
       if (publishedOnly) {
         filter = filter.eq('publication_status', 'published');
       }
@@ -165,6 +211,8 @@ class SupabaseDatabaseService {
   }) async {
     try {
       var filter = _client.from('announcements').select();
+      final eventId = await _currentEventId();
+      if (eventId != null) filter = filter.eq('event_id', eventId);
       if (publishedOnly) {
         filter = filter.eq('publication_status', 'published');
       }
@@ -205,6 +253,8 @@ class SupabaseDatabaseService {
   }) async {
     try {
       var filter = _client.from('award_winners').select();
+      final eventId = await _currentEventId();
+      if (eventId != null) filter = filter.eq('event_id', eventId);
       if (publishedOnly) {
         filter = filter.eq('publication_status', 'published');
       }
@@ -252,6 +302,38 @@ class SupabaseDatabaseService {
       logDebug('Supabase getEvent error: $e');
       return null;
     }
+  }
+
+  /// Every published exhibition, newest first (the public archive, S7).
+  Future<List<Map<String, dynamic>>> getEventsOnce() async {
+    try {
+      final res = await _client.from('events').select().order('start_at', ascending: false);
+      return List<Map<String, dynamic>>.from(res);
+    } catch (e) {
+      logDebug('Supabase getEventsOnce error: $e');
+      rethrow;
+    }
+  }
+
+  /// A past (or any) exhibition's published projects / award winners.
+  Future<List<Map<String, dynamic>>> getEventProjectsOnce(String eventId) async {
+    final res = await _client
+        .from('projects')
+        .select()
+        .eq('event_id', eventId)
+        .eq('publication_status', 'published')
+        .order('title');
+    return List<Map<String, dynamic>>.from(res);
+  }
+
+  Future<List<Map<String, dynamic>>> getEventAwardWinnersOnce(String eventId) async {
+    final res = await _client
+        .from('award_winners')
+        .select()
+        .eq('event_id', eventId)
+        .eq('publication_status', 'published')
+        .order('created_at');
+    return List<Map<String, dynamic>>.from(res);
   }
 
   // ---------------------------------------------------
