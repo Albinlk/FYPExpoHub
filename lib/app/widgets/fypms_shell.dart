@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/supabase/supabase_client_provider.dart';
 import '../../core/state/fypms_state_providers.dart';
 import '../theme/theme.dart';
+import '../../features/fypms/presentation/widgets/semester_selector.dart';
 
 /// Workspace dashboard routes match exactly only — their sub-pages (e.g.
 /// /fypms/supervisor/evaluations) must not also highlight the dashboard
@@ -50,6 +51,7 @@ class FypmsShell extends ConsumerWidget {
     final isExaminer = ref.watch(isFypExaminerProvider);
     final isCsp = ref.watch(isCspLecturerProvider);
     final isPu = ref.watch(isFypProgrammeHeadProvider);
+    final isStaff = isAdmin || isCoordinator || isSupervisor || isExaminer || isCsp || isPu;
 
     final hasAccess =
         roles.value?.isNotEmpty == true && (isAdmin || isCoordinator || isStudent || isSupervisor || isExaminer || isCsp || isPu);
@@ -105,6 +107,8 @@ class FypmsShell extends ConsumerWidget {
             if (isDesktop)
               Row(
                 children: [
+                  // Staff lists follow the chosen semester (backlog S2).
+                  if (isStaff) ...[const SemesterSelector(), const SizedBox(width: 24)],
                   const Icon(Icons.account_circle, color: Colors.white70),
                   const SizedBox(width: 8),
                   Text(
@@ -123,6 +127,7 @@ class FypmsShell extends ConsumerWidget {
         ),
         actions: !isDesktop
             ? [
+                if (isStaff) const SemesterSelector(),
                 IconButton(
                   icon: const Icon(Icons.logout),
                   onPressed: () => _logout(context, ref),
@@ -228,6 +233,7 @@ List<({String title, IconData icon, String route})> _navItems({
       (title: 'Coordinator Dashboard', icon: Icons.dashboard, route: '/fypms/coordinator'),
       (title: 'All Records', icon: Icons.folder_open, route: '/fypms/coordinator/records'),
       (title: 'Assignments', icon: Icons.assignment_ind, route: '/fypms/coordinator/assignments'),
+      (title: 'Semesters & Courses', icon: Icons.date_range, route: '/fypms/coordinator/semesters'),
       (title: 'Supervision Requests', icon: Icons.mail, route: '/fypms/coordinator/requests'),
       (title: 'Presentations', icon: Icons.event, route: '/fypms/coordinator/presentations'),
       (title: 'Expo Publications', icon: Icons.public, route: '/fypms/coordinator/expo'),

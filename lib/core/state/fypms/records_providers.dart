@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'semester_scope.dart';
 import 'user_scope.dart';
 import '../../domain/models/fypms/fyp_record.dart';
 import '../../supabase/fypms_database_service.dart';
@@ -10,12 +11,18 @@ import '../expo/service_providers.dart';
 // FYP RECORDS (per current user)
 // ==============================================================================
 
-/// All FYP records the current user can see (RLS-scoped).
+/// Keeps only [semesterId]'s records (null = all semesters).
+List<FypRecord> inSemester(List<FypRecord> records, String? semesterId) =>
+    semesterId == null ? records : [for (final r in records) if (r.academicSemesterId == semesterId) r];
+
+/// All FYP records the current user can see (RLS-scoped), in the selected
+/// semester (the active one by default; backlog S2).
 final fypRecordsProvider = FutureProvider<List<FypRecord>>((ref) async {
   ref.watch(fypmsUserScopeProvider);
+  final semesterId = ref.watch(fypmsEffectiveSemesterIdProvider);
   final db = ref.watch(supabaseDbServiceProvider);
   final data = await db.getFypRecordsOnce();
-  return data.map((m) => FypRecord.fromJson(normalizeFypmsKeys(m))).toList();
+  return inSemester(data.map((m) => FypRecord.fromJson(normalizeFypmsKeys(m))).toList(), semesterId);
 });
 
 /// FYP records owned by the current student.
@@ -43,5 +50,8 @@ final assignedFypRecordsProvider =
       .toSet();
   if (recordIds.isEmpty) return const [];
   final rows = await db.getFypRecordsByIdsOnce(recordIds);
-  return rows.map((m) => FypRecord.fromJson(normalizeFypmsKeys(m))).toList();
+  return inSemester(
+    rows.map((m) => FypRecord.fromJson(normalizeFypmsKeys(m))).toList(),
+    ref.watch(fypmsEffectiveSemesterIdProvider),
+  );
 });

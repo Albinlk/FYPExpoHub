@@ -11,6 +11,7 @@ library;
 export 'fypms/roles_providers.dart';
 export 'fypms/reference_data_providers.dart';
 export 'fypms/records_providers.dart';
+export 'fypms/semester_scope.dart';
 export 'fypms/record_resources_providers.dart';
 export 'fypms/coordinator_providers.dart';
 export 'fypms/mutations_providers.dart';

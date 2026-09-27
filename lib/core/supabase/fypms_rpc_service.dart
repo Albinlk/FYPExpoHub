@@ -391,6 +391,63 @@ extension FypmsRpcService on SupabaseRpcService {
     return _rpc('get_exhibition_evaluation', {'p_project_id': projectId, 'p_create': create});
   }
 
+  /// Coordinator: new semester (planned).
+  Future<Map<String, dynamic>> createAcademicSemester({
+    required String code,
+    required String label,
+    required DateTime startDate,
+    required DateTime endDate,
+  }) async {
+    return _rpc('create_academic_semester', {
+      'p_code': code,
+      'p_label': label,
+      'p_start_date': startDate.toIso8601String().substring(0, 10),
+      'p_end_date': endDate.toIso8601String().substring(0, 10),
+    });
+  }
+
+  /// Coordinator: planned -> active -> completed -> archived (one active).
+  Future<Map<String, dynamic>> setAcademicSemesterStatus({required String semesterId, required String status}) async {
+    return _rpc('set_academic_semester_status', {'p_semester_id': semesterId, 'p_status': status});
+  }
+
+  /// Coordinator: course name / credit hours / active flag.
+  Future<Map<String, dynamic>> updateAcademicCourse({
+    required String code,
+    required String name,
+    required int creditHours,
+    required bool isActive,
+  }) async {
+    return _rpc('update_academic_course', {
+      'p_code': code,
+      'p_name': name,
+      'p_credit_hours': creditHours,
+      'p_is_active': isActive,
+    });
+  }
+
+  /// Coordinator: who teaches a course in a semester.
+  Future<Map<String, dynamic>> upsertCourseOffering({
+    required String semesterId,
+    required String courseCode,
+    String? lecturerId,
+    int? maxStudents,
+    bool isActive = true,
+  }) async {
+    return _rpc('upsert_course_offering', {
+      'p_semester_id': semesterId,
+      'p_course_code': courseCode,
+      'p_lecturer_id': lecturerId,
+      'p_max_students': maxStudents,
+      'p_is_active': isActive,
+    });
+  }
+
+  /// Coordinator / CSP600 lecturer: CSP600 record -> linked CSP650 record.
+  Future<Map<String, dynamic>> promoteFypRecord({required String fypRecordId, required String targetSemesterId}) async {
+    return _rpc('promote_fyp_record', {'p_fyp_record_id': fypRecordId, 'p_target_semester_id': targetSemesterId});
+  }
+
   /// Student (or current supervisor) asks the coordinator for a new supervisor.
   Future<Map<String, dynamic>> requestSupervisorChange({
     required String fypRecordId,
