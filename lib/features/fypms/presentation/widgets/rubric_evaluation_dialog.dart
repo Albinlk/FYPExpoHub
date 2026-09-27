@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
+import '../../../../core/domain/fypms_form_definitions.dart';
 import '../../../../core/domain/fypms_rubric.dart';
 import '../../../../core/domain/models/fypms/fyp_form_submission.dart';
 import '../../../../core/state/fypms_state_providers.dart';
+import 'student_form_dialog.dart' show FormAnswersView;
 
 /// Scores one form submission against its textbook rubric: one 0–10 score per
 /// criterion with its band and marks (W × S), and a live total that matches
@@ -95,6 +97,13 @@ class _RubricEvaluationDialogState extends ConsumerState<RubricEvaluationDialog>
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // What the student submitted (backlog U1), above the scores.
+          if (formAnswers(widget.submission.formCode, widget.submission.payload).isNotEmpty) ...[
+            Text('Student submission', style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 4),
+            FormAnswersView(formCode: widget.submission.formCode, payload: widget.submission.payload),
+            const Divider(height: 24),
+          ],
           Text(rubricName, style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
           Text(

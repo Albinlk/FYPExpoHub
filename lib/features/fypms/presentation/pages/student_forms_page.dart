@@ -1,12 +1,9 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/state/fypms_state_providers.dart';
-import '../../../../core/state/state_providers.dart';
-import '../../../../core/supabase/fypms_rpc_service.dart';
 import '../widgets/fypms_loading_widget.dart';
+import '../widgets/student_form_dialog.dart';
 import '../widgets/student_record_workspace.dart';
 
 class StudentFormsPage extends ConsumerWidget {
@@ -100,7 +97,7 @@ class StudentFormsPage extends ConsumerWidget {
                           margin: const EdgeInsets.only(bottom: DesignSystem.spaceSm),
                           shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
                           color: DesignSystem.surfaceContainerLowest,
-                          child: ListTile(
+                          child: ExpansionTile(
                             dense: true,
                             leading: const Icon(Icons.description, color: DesignSystem.primary),
                             title: Text(
@@ -111,6 +108,9 @@ class StudentFormsPage extends ConsumerWidget {
                               'Status: ${sub.status.replaceAll('_', ' ')}',
                               style: DesignSystem.bodySm,
                             ),
+                            expandedAlignment: Alignment.centerLeft,
+                            childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                            children: [FormAnswersView(formCode: sub.formCode, payload: sub.payload)],
                           ),
                         );
                     },
@@ -126,112 +126,9 @@ class StudentFormsPage extends ConsumerWidget {
 
   void _showSubmitFormDialog(
       BuildContext context, WidgetRef ref, String fypRecordId, List<String> formCodes) {
-    final payloadController = TextEditingController(
-      text: '{\n  "title": ""\n}',
-    );
-    String? selectedCode = formCodes.isNotEmpty ? formCodes.first : null;
-
     showDialog<void>(
       context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            final isDesktop = MediaQuery.of(context).size.width >= 768;
-            return AlertDialog(
-              title: Text(
-                'Submit Form',
-                style: (isDesktop ? DesignSystem.h3 : DesignSystem.bodyLg)
-                    .copyWith(color: DesignSystem.primary),
-              ),
-              content: SingleChildScrollView(
-                child: SizedBox(
-                  width: isDesktop ? 500 : MediaQuery.of(context).size.width * 0.85,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      DropdownButtonFormField<String>(
-                        initialValue: selectedCode,
-                        decoration: const InputDecoration(labelText: 'Form Code'),
-                        isExpanded: true,
-                        items: [
-                          for (final code in formCodes)
-                            DropdownMenuItem(value: code, child: Text(code)),
-                        ],
-                        onChanged: (v) {
-                          if (v != null) {
-                            setState(() => selectedCode = v);
-                          }
-                        },
-                      ),
-                      const SizedBox(height: DesignSystem.spaceSm),
-                      TextField(
-                        controller: payloadController,
-                        decoration: const InputDecoration(
-                          labelText: 'Payload (JSON)',
-                          helperText: 'Enter form answers as a JSON object.',
-                        ),
-                        maxLines: 8,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    final code = selectedCode;
-                    if (code == null) return;
-                    Map<String, dynamic>? payload;
-                    try {
-                      final decoded = payloadController.text.trim().isEmpty
-                          ? <String, dynamic>{}
-                          : (jsonDecode(payloadController.text) as Map<String, dynamic>?);
-                      payload = decoded ?? <String, dynamic>{};
-                    } catch (_) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Payload must be valid JSON.')),
-                        );
-                      }
-                      return;
-                    }
-                    Navigator.of(dialogContext).pop();
-                    try {
-                      final rpc = ref.read(supabaseRpcServiceProvider);
-                      await rpc.submitFypForm(
-                        fypRecordId: fypRecordId,
-                        formCode: code,
-                        payload: payload,
-                      );
-                      if (context.mounted) {
-                        ref.invalidate(fypFormSubmissionsProvider(fypRecordId));
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Form submitted successfully.')),
-                        );
-                      }
-                    } catch (e) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Failed to submit: $e')),
-                        );
-                      }
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: DesignSystem.secondary,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: const Text('Submit'),
-                ),
-              ],
-            );
-          },
-        );
-      },
+      builder: (_) => StudentFormDialog(fypRecordId: fypRecordId, formCodes: formCodes),
     );
   }
 }
