@@ -6,6 +6,7 @@ import '../../core/state/fypms_state_providers.dart';
 import '../theme/theme.dart';
 import '../../features/fypms/presentation/widgets/semester_selector.dart';
 import '../../features/fypms/presentation/pages/notifications_page.dart';
+import '../../features/admin_auth/presentation/widgets/my_account_dialog.dart';
 
 /// Workspace dashboard routes match exactly only — their sub-pages (e.g.
 /// /fypms/supervisor/evaluations) must not also highlight the dashboard
@@ -43,7 +44,6 @@ class FypmsShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isDesktop = MediaQuery.of(context).size.width >= 768;
     final location = GoRouterState.of(context).uri.toString();
-    final user = ref.watch(currentAuthUserProvider);
     final roles = ref.watch(fypmsCurrentRolesProvider);
     final isAdmin = ref.watch(isFypAdminProvider);
     final isCoordinator = ref.watch(isFypCoordinatorProvider);
@@ -92,8 +92,6 @@ class FypmsShell extends ConsumerWidget {
     // is unavailable it no-ops and refetch-after-mutation remains the fallback.
     ref.watch(fypmsRealtimeProvider);
 
-    final userEmail = user?.email ?? 'FYPMS User';
-
     return Scaffold(
       appBar: AppBar(
         backgroundColor: DesignSystem.primary,
@@ -112,13 +110,8 @@ class FypmsShell extends ConsumerWidget {
                   if (isStaff) ...[const SemesterSelector(), const SizedBox(width: 24)],
                   const NotificationBell(),
                   const SizedBox(width: 8),
-                  const Icon(Icons.account_circle, color: Colors.white70),
-                  const SizedBox(width: 8),
-                  Text(
-                    userEmail,
-                    style: DesignSystem.bodySm.copyWith(color: Colors.white, fontWeight: FontWeight.w500),
-                  ),
-                  const SizedBox(width: 24),
+                  const MyAccountButton(),
+                  const SizedBox(width: 16),
                   IconButton(
                     icon: const Icon(Icons.logout, color: Colors.white70),
                     onPressed: () => _logout(context, ref),
@@ -132,6 +125,7 @@ class FypmsShell extends ConsumerWidget {
             ? [
                 if (isStaff) const SemesterSelector(),
                 const NotificationBell(),
+                const MyAccountButton(compact: true),
                 IconButton(
                   icon: const Icon(Icons.logout),
                   onPressed: () => _logout(context, ref),

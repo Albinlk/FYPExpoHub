@@ -33,7 +33,7 @@ Priority: **H** high · **M** medium · **L** low
 | Done | # | Item | Pri |
 |---|---|---|---|
 | [x] | F1 | Notifications (email and/or in-app) for requests, submissions, decisions, deadlines (#45) | H |
-| [ ] | F2 | Account self-service: change password while signed in, edit display name | M |
+| [x] | F2 | Account self-service: change password while signed in, edit display name (#46) | M |
 | [ ] | F3 | Reopen finalized marks with a reason (audited) | M |
 | [ ] | F4 | Withdraw / incomplete (TL) record statuses and flow | M |
 | [ ] | F5 | Import projects and booths from the Master File | M |
