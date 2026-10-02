@@ -6,6 +6,7 @@ import '../../../../core/state/fypms_state_providers.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/supabase/fypms_rpc_service.dart';
 import '../../../../core/widgets/async_state.dart';
+import '../../../../core/widgets/admin_actions.dart';
 
 /// Coordinator rubric editor (backlog U4). Saving creates a new version;
 /// past evaluations keep the version they were scored with.
@@ -208,7 +209,7 @@ class _RubricEditorDialogState extends ConsumerState<RubricEditorDialog> {
       if (mounted) {
         setState(() {
           _busy = false;
-          _error = '$e';
+          _error = friendlyError(e);
         });
       }
     }

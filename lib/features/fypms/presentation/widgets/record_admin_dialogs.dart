@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/fypms/fyp_record.dart';
 import '../../../../core/state/fypms_state_providers.dart';
+import '../../../../core/widgets/admin_actions.dart';
 
 /// Record fields the coordinator may correct (`admin_override_fyp_record_field`;
 /// supervisor / examiner changes go through Assignments instead).
@@ -65,7 +66,7 @@ class _OverrideRecordFieldDialogState extends ConsumerState<OverrideRecordFieldD
     } catch (e) {
       if (!mounted) return;
       setState(() => _busy = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: ${friendlyError(e)}')));
     }
   }
 
@@ -154,7 +155,7 @@ class _ArchiveRecordDialogState extends ConsumerState<ArchiveRecordDialog> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _busy = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: ${friendlyError(e)}')));
     }
   }
 
@@ -255,7 +256,7 @@ class _RecordStandingDialogState extends ConsumerState<RecordStandingDialog> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _busy = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: ${friendlyError(e)}')));
     }
   }
 
@@ -327,7 +328,7 @@ class _ReopenMarksDialogState extends ConsumerState<ReopenMarksDialog> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _busy = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: ${friendlyError(e)}')));
     }
   }
 

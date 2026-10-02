@@ -5,6 +5,7 @@ import '../../../../core/domain/models/fypms/fyp_record_assignment.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import '../widgets/fypms_loading_widget.dart';
 import '../../../../core/widgets/async_state.dart';
+import '../../../../core/widgets/admin_actions.dart';
 
 class CoordinatorAssignmentsPage extends ConsumerWidget {
   const CoordinatorAssignmentsPage({super.key});
@@ -161,7 +162,7 @@ class CoordinatorAssignmentsPage extends ConsumerWidget {
                           } catch (e) {
                             if (dialogContext.mounted) {
                               ScaffoldMessenger.of(dialogContext).showSnackBar(
-                                SnackBar(content: Text('Failed: $e')),
+                                SnackBar(content: Text('Failed: ${friendlyError(e)}')),
                               );
                             }
                           }

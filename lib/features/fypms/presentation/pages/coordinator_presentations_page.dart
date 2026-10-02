@@ -313,7 +313,7 @@ class CoordinatorPresentationsPage extends ConsumerWidget {
                           } catch (e) {
                             if (dialogContext.mounted) {
                               ScaffoldMessenger.of(dialogContext).showSnackBar(
-                                SnackBar(content: Text('Failed: $e')),
+                                SnackBar(content: Text('Failed: ${friendlyError(e)}')),
                               );
                             }
                           }

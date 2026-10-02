@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/fypms/academic_semester.dart';
 import '../../../../core/state/fypms_state_providers.dart';
+import '../../../../core/widgets/admin_actions.dart';
 
 /// App-bar dropdown choosing which semester staff lists show (backlog S2):
 /// the active semester by default, any other semester, or all of them.
@@ -69,7 +70,7 @@ class _PromoteRecordDialogState extends ConsumerState<PromoteRecordDialog> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _busy = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: ${friendlyError(e)}')));
     }
   }
 

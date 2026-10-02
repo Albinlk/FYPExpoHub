@@ -93,7 +93,7 @@ class _ImportDetailPageState extends ConsumerState<ImportDetailPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Publish error: $e'), backgroundColor: DesignSystem.error),
+          SnackBar(content: Text('Publish error: ${friendlyError(e)}'), backgroundColor: DesignSystem.error),
         );
       }
     } finally {

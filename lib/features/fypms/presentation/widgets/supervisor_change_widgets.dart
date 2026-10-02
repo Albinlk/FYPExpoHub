@@ -8,6 +8,7 @@ import '../../../../core/state/fypms_state_providers.dart';
 import '../../../../core/utils/download_util.dart';
 import '../../../../core/utils/fypms_format.dart';
 import '../../../../core/widgets/async_state.dart';
+import '../../../../core/widgets/admin_actions.dart';
 
 /// Minimum reason length the server requires.
 const kSupervisorChangeReasonMin = 20;
@@ -51,7 +52,7 @@ class _RequestSupervisorChangeDialogState extends ConsumerState<RequestSuperviso
     } catch (e) {
       if (!mounted) return;
       setState(() => _busy = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: ${friendlyError(e)}')));
     }
   }
 
@@ -206,7 +207,7 @@ class SupervisorChangeRequestsPanel extends ConsumerWidget {
         SnackBar(content: Text(decision == 'approved' ? 'Supervisor changed.' : 'Request rejected.')),
       );
     } catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text('Failed: $e')));
+      messenger.showSnackBar(SnackBar(content: Text('Failed: ${friendlyError(e)}')));
     }
   }
 
@@ -353,7 +354,7 @@ class PuNominationsPage extends ConsumerWidget {
         SnackBar(content: Text(decision == 'approved' ? 'Nomination approved.' : 'Nomination rejected.')),
       );
     } catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text('Failed: $e')));
+      messenger.showSnackBar(SnackBar(content: Text('Failed: ${friendlyError(e)}')));
     }
   }
 

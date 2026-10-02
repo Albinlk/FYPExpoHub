@@ -5,6 +5,7 @@ import '../../../../core/domain/models/fypms/fyp_rubric_template.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import '../widgets/fypms_loading_widget.dart';
 import '../../../../core/widgets/async_state.dart';
+import '../../../../core/widgets/admin_actions.dart';
 
 /// How each form contributes to the CSP600 / CSP650 grade (textbook shares).
 /// The coordinator sets the F2 / F3 / F4 split of CSP600's formulation 30 %,
@@ -172,7 +173,7 @@ class _FormulationSharesCardState extends ConsumerState<_FormulationSharesCard> 
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: ${friendlyError(e)}')));
       }
     } finally {
       if (mounted) setState(() => _saving = false);

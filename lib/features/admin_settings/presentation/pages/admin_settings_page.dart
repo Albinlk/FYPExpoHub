@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/state/state_providers.dart';
+import '../../../../core/widgets/admin_actions.dart';
 
 class AdminSettingsPage extends ConsumerStatefulWidget {
   const AdminSettingsPage({super.key});
@@ -84,7 +85,7 @@ class _AdminSettingsPageState extends ConsumerState<AdminSettingsPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving settings: $e'), backgroundColor: DesignSystem.error),
+          SnackBar(content: Text('Error saving settings: ${friendlyError(e)}'), backgroundColor: DesignSystem.error),
         );
       }
     }

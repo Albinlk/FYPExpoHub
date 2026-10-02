@@ -9,6 +9,7 @@ import '../../../../core/state/state_providers.dart';
 import '../../../../core/utils/download_util.dart';
 import '../widgets/summary_cards.dart';
 import '../widgets/visit_data_table.dart';
+import '../../../../core/widgets/admin_actions.dart';
 
 class AdminVisitsPage extends ConsumerStatefulWidget {
   const AdminVisitsPage({super.key});
@@ -85,7 +86,7 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}'), backgroundColor: DesignSystem.error),
+          SnackBar(content: Text('Error: ${friendlyError(e)}'), backgroundColor: DesignSystem.error),
         );
       }
     }

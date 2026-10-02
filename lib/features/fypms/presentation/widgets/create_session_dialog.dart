@@ -7,6 +7,7 @@ import '../../../../core/state/fypms_state_providers.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/supabase/fypms_rpc_service.dart';
 import '../../../../core/utils/fypms_format.dart';
+import '../../../../core/widgets/admin_actions.dart';
 
 /// Course lecturer / coordinator creates a presentation session for one of
 /// the course offerings they manage (`create_presentation_session`).
@@ -98,7 +99,7 @@ class _CreateSessionDialogState extends ConsumerState<CreateSessionDialog> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _busy = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: ${friendlyError(e)}')));
     }
   }
 

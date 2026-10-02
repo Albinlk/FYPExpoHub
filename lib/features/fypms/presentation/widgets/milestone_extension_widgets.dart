@@ -5,6 +5,7 @@ import '../../../../core/domain/fypms_milestone_extension.dart';
 import '../../../../core/domain/models/fypms/fyp_milestone.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import '../../../../core/utils/fypms_format.dart';
+import '../../../../core/widgets/admin_actions.dart';
 
 /// Student: ask to move a milestone's target date. The server requires a
 /// reason, a date after the current target and not in the past, and allows
@@ -65,7 +66,7 @@ class _RequestExtensionDialogState extends ConsumerState<RequestExtensionDialog>
     } catch (e) {
       if (!mounted) return;
       setState(() => _busy = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: ${friendlyError(e)}')));
     }
   }
 

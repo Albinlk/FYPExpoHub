@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher_string.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/supabase/supabase_client_provider.dart';
 import '../../password_reset.dart';
+import '../../../../core/widgets/admin_actions.dart';
 
 void _goToMainSite() {
   launchUrlString('https://fskmjasinfypexhibition.site/');
@@ -75,7 +76,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
       });
     } catch (e) {
       setState(() {
-        _errorMessage = 'Sign in failed: ${e.toString()}';
+        _errorMessage = 'Sign in failed: ${friendlyError(e)}';
       });
     } finally {
       if (mounted) {

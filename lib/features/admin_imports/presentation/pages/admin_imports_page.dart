@@ -12,6 +12,7 @@ import '../../../../core/supabase/row_mappers.dart';
 import '../../../../core/supabase/supabase_client_provider.dart';
 import '../../../../core/supabase/supabase_database_service.dart' show kEventSlug;
 import '../../../../core/state/state_providers.dart';
+import '../../../../core/widgets/admin_actions.dart';
 
 class AdminImportsPage extends ConsumerStatefulWidget {
   const AdminImportsPage({super.key});
@@ -266,7 +267,7 @@ class _AdminImportsPageState extends ConsumerState<AdminImportsPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error parsing Excel: $e'), backgroundColor: DesignSystem.error),
+          SnackBar(content: Text('Error parsing Excel: ${friendlyError(e)}'), backgroundColor: DesignSystem.error),
         );
       }
     } finally {

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/fypms_users.dart';
 import '../../../../core/state/fypms_state_providers.dart';
+import '../../../../core/widgets/admin_actions.dart';
 
 /// Users & Roles (backlog U2): search people, add / remove FYPMS roles
 /// (optionally per programme), activate / deactivate accounts, and — for
@@ -42,7 +43,7 @@ class _CoordinatorUsersPageState extends ConsumerState<CoordinatorUsersPage> {
       final users = await ref.read(userAdminProvider).search(_search.text.trim());
       if (mounted) setState(() => _users = users);
     } catch (e) {
-      if (mounted) setState(() => _error = '$e');
+      if (mounted) setState(() => _error = friendlyError(e));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -55,7 +56,7 @@ class _CoordinatorUsersPageState extends ConsumerState<CoordinatorUsersPage> {
       messenger.showSnackBar(SnackBar(content: Text(success)));
       await _load();
     } catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text('Failed: $e')));
+      messenger.showSnackBar(SnackBar(content: Text('Failed: ${friendlyError(e)}')));
     }
   }
 

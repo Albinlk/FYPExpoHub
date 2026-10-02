@@ -13,6 +13,7 @@ import '../../../../core/widgets/project_cover_image.dart';
 import '../../../fypms/presentation/widgets/rubric_evaluation_dialog.dart';
 import '../widgets/mark_visited_dialog.dart';
 import '../widgets/undo_visit_dialog.dart';
+import '../../../../core/widgets/admin_actions.dart';
 
 class LecturerVisitDetailPage extends ConsumerStatefulWidget {
   final String projectId;
@@ -103,7 +104,7 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
       if (!mounted) return;
       setState(() => _isOpeningScore = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not open the evaluation: $e'), backgroundColor: DesignSystem.error),
+        SnackBar(content: Text('Could not open the evaluation: ${friendlyError(e)}'), backgroundColor: DesignSystem.error),
       );
     }
   }
@@ -141,7 +142,7 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
           ? 'You are not allowed to cancel this visit.'
           : e.toString().contains('expired') || e.toString().contains('window')
               ? 'The undo window for this visit has expired.'
-              : 'Error: ${e.toString()}';
+              : 'Error: ${friendlyError(e)}';
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(msg), backgroundColor: DesignSystem.error),

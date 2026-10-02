@@ -5,6 +5,7 @@ import '../../../../app/theme/theme.dart';
 import '../../../../core/supabase/supabase_client_provider.dart';
 import '../../mfa.dart';
 import '../../password_reset.dart';
+import '../../../../core/widgets/admin_actions.dart';
 
 /// Saves the caller's display name (`update_my_display_name`, backlog F2).
 final updateMyDisplayNameProvider = Provider<Future<void> Function(String name)>((ref) {
@@ -147,7 +148,7 @@ class _MyAccountDialogState extends ConsumerState<MyAccountDialog> {
   static String _clean(Object e) {
     if (e is AuthException) return e.message;
     if (e is PostgrestException) return e.message.replaceFirst(RegExp(r'^[a-z-]+: '), '');
-    return '$e';
+    return friendlyError(e);
   }
 
   @override

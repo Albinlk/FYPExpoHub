@@ -7,6 +7,7 @@ import '../../../../core/domain/models/fypms/fyp_form_submission.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import 'student_form_dialog.dart' show FormAnswersView;
 import '../../../../core/widgets/async_state.dart';
+import '../../../../core/widgets/admin_actions.dart';
 
 /// Scores one form submission against its textbook rubric: one 0–10 score per
 /// criterion with its band and marks (W × S), and a live total that matches
@@ -56,7 +57,7 @@ class _RubricEvaluationDialogState extends ConsumerState<RubricEvaluationDialog>
     } catch (e) {
       if (!mounted) return;
       setState(() => _submitting = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ${friendlyError(e)}')));
     }
   }
 

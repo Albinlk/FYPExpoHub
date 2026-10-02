@@ -7,6 +7,7 @@ import '../../../../core/state/fypms_state_providers.dart';
 import '../widgets/fypms_loading_widget.dart';
 import 'student_reports_page.dart' show ReportSubmissionCard;
 import '../../../../core/widgets/async_state.dart';
+import '../../../../core/widgets/admin_actions.dart';
 
 /// F6 endorsement: the supervisor checks the report and its plagiarism report
 /// (similarity <= 30 %) and endorses it for review, or returns it.
@@ -135,7 +136,7 @@ class _EndorseActionsState extends ConsumerState<_EndorseActions> {
     } catch (e) {
       if (mounted) {
         setState(() => _busy = false);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: ${friendlyError(e)}')));
       }
     }
   }

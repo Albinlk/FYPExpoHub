@@ -9,6 +9,7 @@ import '../../../../core/utils/fypms_format.dart';
 import '../widgets/fypms_loading_widget.dart';
 import '../widgets/milestone_extension_widgets.dart';
 import '../../../../core/widgets/async_state.dart';
+import '../../../../core/widgets/admin_actions.dart';
 
 class CspMilestonesPage extends ConsumerStatefulWidget {
   const CspMilestonesPage({super.key});
@@ -320,7 +321,7 @@ class _MilestonesList extends ConsumerWidget {
                           } catch (e) {
                             if (dialogContext.mounted) {
                               ScaffoldMessenger.of(dialogContext).showSnackBar(
-                                SnackBar(content: Text('Failed: $e')),
+                                SnackBar(content: Text('Failed: ${friendlyError(e)}')),
                               );
                             }
                           }

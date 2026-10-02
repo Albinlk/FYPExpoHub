@@ -8,6 +8,7 @@ import '../widgets/correction_evidence_dialog.dart' show kCorrectionEvidenceBuck
 import '../widgets/fypms_file_link.dart';
 import '../widgets/fypms_loading_widget.dart';
 import '../../../../core/widgets/async_state.dart';
+import '../../../../core/widgets/admin_actions.dart';
 
 class SupervisorCorrectionsPage extends ConsumerWidget {
   const SupervisorCorrectionsPage({super.key});
@@ -205,7 +206,7 @@ class _RecordCorrectionsSection extends ConsumerWidget {
                             setState(() => isSubmitting = false);
                             if (dialogContext.mounted) {
                               ScaffoldMessenger.of(dialogContext).showSnackBar(
-                                SnackBar(content: Text('Failed: $e')),
+                                SnackBar(content: Text('Failed: ${friendlyError(e)}')),
                               );
                             }
                           }
@@ -314,7 +315,7 @@ class _RecordCorrectionsSection extends ConsumerWidget {
                           } catch (e) {
                             if (dialogContext.mounted) {
                               ScaffoldMessenger.of(dialogContext).showSnackBar(
-                                SnackBar(content: Text('Failed: $e')),
+                                SnackBar(content: Text('Failed: ${friendlyError(e)}')),
                               );
                             }
                           }

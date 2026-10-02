@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../app/theme/theme.dart';
 import '../../core/supabase/supabase_client_provider.dart';
+import '../../core/widgets/admin_actions.dart';
 
 /// Authenticator-app (TOTP) MFA (backlog F8). Once a verified factor
 /// exists, the database only honours admin / coordinator powers in an
@@ -207,7 +208,7 @@ class _MfaSettingsSectionState extends ConsumerState<MfaSettingsSection> {
     } on AuthException catch (e) {
       if (mounted) setState(() => _message = e.message);
     } catch (e) {
-      if (mounted) setState(() => _message = '$e');
+      if (mounted) setState(() => _message = friendlyError(e));
     } finally {
       if (mounted) setState(() => _busy = false);
     }

@@ -7,6 +7,7 @@ import '../../../../core/domain/models/fypms/fyp_record.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/supabase/fypms_rpc_service.dart';
+import '../../../../core/widgets/admin_actions.dart';
 
 const kCorrectionEvidenceBucket = 'fyp-correction-evidence';
 
@@ -75,7 +76,7 @@ class _CorrectionEvidenceDialogState extends ConsumerState<CorrectionEvidenceDia
     } catch (e) {
       if (!mounted) return;
       setState(() => _busy = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to submit evidence: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to submit evidence: ${friendlyError(e)}')));
     }
   }
 

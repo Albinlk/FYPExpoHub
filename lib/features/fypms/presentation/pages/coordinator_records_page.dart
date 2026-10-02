@@ -9,6 +9,7 @@ import '../widgets/fypms_loading_widget.dart';
 import '../widgets/record_admin_dialogs.dart';
 import '../widgets/semester_selector.dart';
 import '../../../../core/widgets/async_state.dart';
+import '../../../../core/widgets/admin_actions.dart';
 
 class CoordinatorRecordsPage extends ConsumerWidget {
   const CoordinatorRecordsPage({super.key});
@@ -283,7 +284,7 @@ class CoordinatorRecordsPage extends ConsumerWidget {
                           } catch (e) {
                             if (dialogContext.mounted) {
                               ScaffoldMessenger.of(dialogContext).showSnackBar(
-                                SnackBar(content: Text('Failed: $e')),
+                                SnackBar(content: Text('Failed: ${friendlyError(e)}')),
                               );
                             }
                           }

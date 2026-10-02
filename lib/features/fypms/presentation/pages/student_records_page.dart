@@ -9,6 +9,7 @@ import '../../../../core/supabase/supabase_client_provider.dart';
 import '../../../../core/supabase/fypms_rpc_service.dart';
 import '../widgets/fypms_loading_widget.dart';
 import '../../../../core/widgets/async_state.dart';
+import '../../../../core/widgets/admin_actions.dart';
 
 class StudentRecordsPage extends ConsumerWidget {
   const StudentRecordsPage({super.key});
@@ -247,7 +248,7 @@ class StudentRecordsPage extends ConsumerWidget {
                           } catch (e) {
                             if (dialogContext.mounted) {
                               ScaffoldMessenger.of(dialogContext).showSnackBar(
-                                SnackBar(content: Text('Failed: $e')),
+                                SnackBar(content: Text('Failed: ${friendlyError(e)}')),
                               );
                             }
                           }

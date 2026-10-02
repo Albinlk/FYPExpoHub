@@ -11,6 +11,7 @@ import '../widgets/consultation_attendance_banner.dart';
 import '../widgets/fypms_loading_widget.dart';
 import '../widgets/student_record_workspace.dart';
 import '../../../../core/widgets/async_state.dart';
+import '../../../../core/widgets/admin_actions.dart';
 
 /// F5 Proposal/Project In-Progress Form: one entry per supervision meeting
 /// (date, completed activity, next activity), signed by the supervisor, with
@@ -187,7 +188,7 @@ class _ConsultationLogDialogState extends ConsumerState<ConsultationLogDialog> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _submitting = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to log: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to log: ${friendlyError(e)}')));
     }
   }
 

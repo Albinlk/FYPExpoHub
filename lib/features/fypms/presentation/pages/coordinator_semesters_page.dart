@@ -7,6 +7,7 @@ import '../../../../core/domain/models/fypms/fyp_course_offering.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import '../../../../core/utils/fypms_format.dart';
 import '../../../../core/widgets/async_state.dart';
+import '../../../../core/widgets/admin_actions.dart';
 
 /// Coordinator: semesters (planned -> active -> completed -> archived; one
 /// active), who teaches CSP600 / CSP650 in each, and the course details
@@ -25,7 +26,7 @@ class _CoordinatorSemestersPageState extends ConsumerState<CoordinatorSemestersP
       await action();
       messenger.showSnackBar(SnackBar(content: Text(success)));
     } catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text('Failed: $e')));
+      messenger.showSnackBar(SnackBar(content: Text('Failed: ${friendlyError(e)}')));
     }
   }
 
@@ -235,7 +236,7 @@ class _NewSemesterDialogState extends ConsumerState<_NewSemesterDialog> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _busy = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: ${friendlyError(e)}')));
     }
   }
 
@@ -328,7 +329,7 @@ class _OfferingDialogState extends ConsumerState<_OfferingDialog> {
       nav.pop();
       messenger.showSnackBar(SnackBar(content: Text('${widget.course.code} offering saved.')));
     } catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text('Failed: $e')));
+      messenger.showSnackBar(SnackBar(content: Text('Failed: ${friendlyError(e)}')));
     }
   }
 
@@ -401,7 +402,7 @@ class _CourseDialogState extends ConsumerState<_CourseDialog> {
       nav.pop();
       messenger.showSnackBar(const SnackBar(content: Text('Course saved.')));
     } catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text('Failed: $e')));
+      messenger.showSnackBar(SnackBar(content: Text('Failed: ${friendlyError(e)}')));
     }
   }
 

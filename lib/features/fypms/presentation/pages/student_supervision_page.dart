@@ -10,6 +10,7 @@ import '../widgets/fypms_loading_widget.dart';
 import '../widgets/supervisor_change_widgets.dart';
 import '../widgets/student_record_workspace.dart';
 import '../../../../core/widgets/async_state.dart';
+import '../../../../core/widgets/admin_actions.dart';
 
 /// F1 Mutual Acceptance: the student names the supervisor (and co-supervisor)
 /// who agreed to supervise them and the project area and title; the
@@ -181,7 +182,7 @@ class _F1RequestDialogState extends ConsumerState<_F1RequestDialog> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _submitting = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to submit: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to submit: ${friendlyError(e)}')));
     }
   }
 
@@ -213,7 +214,7 @@ class _F1RequestDialogState extends ConsumerState<_F1RequestDialog> {
                   child: CircularProgressIndicator(),
                 ),
                 error: (e, _) => Text(
-                  'Could not load supervisors: $e',
+                  'Could not load supervisors: ${friendlyError(e)}',
                   style: DesignSystem.bodySm.copyWith(color: DesignSystem.error),
                 ),
                 data: (staff) {

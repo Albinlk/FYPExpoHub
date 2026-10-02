@@ -13,6 +13,7 @@ import '../widgets/fypms_file_link.dart';
 import '../widgets/fypms_loading_widget.dart';
 import '../widgets/student_record_workspace.dart';
 import '../../../../core/widgets/async_state.dart';
+import '../../../../core/widgets/admin_actions.dart';
 
 /// F6(a) proposal / F6(b) final report submissions: the report, its
 /// similarity index (max 30 %) and the original plagiarism report, endorsed by
@@ -267,7 +268,7 @@ class _ReportSubmissionDialogState extends ConsumerState<ReportSubmissionDialog>
     } catch (e) {
       if (!mounted) return;
       setState(() => _uploading = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to submit: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to submit: ${friendlyError(e)}')));
     }
   }
 

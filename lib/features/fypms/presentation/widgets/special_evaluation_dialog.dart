@@ -5,6 +5,7 @@ import '../../../../core/domain/fypms_special_evaluation.dart';
 import '../../../../core/domain/models/fypms/fyp_record.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import '../../../../core/widgets/async_state.dart';
+import '../../../../core/widgets/admin_actions.dart';
 
 /// F14: the CSP650 lecturer checks the four textbook conditions for special
 /// evaluation. Progress + LMC comes from the F9 / F13 evaluations; the final
@@ -59,7 +60,7 @@ class _SpecialEvaluationDialogState extends ConsumerState<SpecialEvaluationDialo
     } catch (e) {
       if (!mounted) return;
       setState(() => _busy = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: ${friendlyError(e)}')));
     }
   }
 

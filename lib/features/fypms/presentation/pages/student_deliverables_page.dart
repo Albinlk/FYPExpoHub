@@ -14,6 +14,7 @@ import '../widgets/fypms_file_link.dart';
 import '../widgets/fypms_loading_widget.dart';
 import '../widgets/student_record_workspace.dart';
 import '../../../../core/widgets/async_state.dart';
+import '../../../../core/widgets/admin_actions.dart';
 
 const _bucket = 'fyp-deliverables';
 
@@ -256,7 +257,7 @@ class _DeliverableUploadDialogState extends ConsumerState<DeliverableUploadDialo
     } catch (e) {
       if (!mounted) return;
       setState(() => _busy = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to submit: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to submit: ${friendlyError(e)}')));
     }
   }
 

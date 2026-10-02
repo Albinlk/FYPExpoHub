@@ -7,6 +7,7 @@ import '../../../../core/supabase/fypms_rpc_service.dart';
 import '../widgets/fypms_loading_widget.dart';
 import '../widgets/student_record_workspace.dart';
 import '../../../../core/widgets/async_state.dart';
+import '../../../../core/widgets/admin_actions.dart';
 
 /// Standard Lean Canvas (F13) blocks.
 const List<({String key, String label, String hint})> fypmsLeanCanvasBlocks = [
@@ -111,7 +112,7 @@ class _CanvasEditorState extends ConsumerState<_CanvasEditor> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save: $e')),
+          SnackBar(content: Text('Failed to save: ${friendlyError(e)}')),
         );
       }
     } finally {
