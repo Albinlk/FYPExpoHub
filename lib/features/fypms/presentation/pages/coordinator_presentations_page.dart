@@ -8,6 +8,7 @@ import '../../../../core/supabase/fypms_rpc_service.dart';
 import '../../../../core/widgets/admin_actions.dart';
 import '../widgets/create_session_dialog.dart';
 import '../widgets/fypms_loading_widget.dart';
+import '../../../../core/widgets/async_state.dart';
 
 /// Presentation sessions and slots, for the coordinator (all courses) and
 /// the CSP lecturers (their own course offerings, per RLS).
@@ -43,7 +44,7 @@ class CoordinatorPresentationsPage extends ConsumerWidget {
             ),
       body: sessions.when(
         loading: () => const FypmsLoadingWidget(),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypPresentationSessionsProvider), what: 'this page'),
         data: (list) {
           if (list.isEmpty) {
             return const Center(child: Text('No presentation sessions scheduled yet.'));
@@ -125,7 +126,7 @@ class CoordinatorPresentationsPage extends ConsumerWidget {
                 final slots = ref.watch(fypPresentationSlotsProvider(sessionId));
                 return slots.when(
                   loading: () => const Center(child: CircularProgressIndicator()),
-                  error: (e, _) => Text('Error: $e'),
+                  error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypPresentationSlotsProvider(sessionId)), what: 'this section'),
                   data: (slotList) {
                     if (slotList.isEmpty) {
                       return const Text('No slots scheduled for this session yet.');
@@ -227,7 +228,7 @@ class CoordinatorPresentationsPage extends ConsumerWidget {
                         final records = ref.watch(fypRecordsProvider);
                         return records.when(
                           loading: () => const LinearProgressIndicator(),
-                          error: (e, _) => Text('Error: $e'),
+                          error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypRecordsProvider), what: 'this section'),
                           data: (items) => DropdownButtonFormField<String>(
                             initialValue: recordId,
                             decoration: const InputDecoration(labelText: 'FYP Record'),

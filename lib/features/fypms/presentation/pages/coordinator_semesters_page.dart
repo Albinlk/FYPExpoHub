@@ -6,6 +6,7 @@ import '../../../../core/domain/models/fypms/academic_semester.dart';
 import '../../../../core/domain/models/fypms/fyp_course_offering.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import '../../../../core/utils/fypms_format.dart';
+import '../../../../core/widgets/async_state.dart';
 
 /// Coordinator: semesters (planned -> active -> completed -> archived; one
 /// active), who teaches CSP600 / CSP650 in each, and the course details
@@ -59,7 +60,7 @@ class _CoordinatorSemestersPageState extends ConsumerState<CoordinatorSemestersP
       ),
       body: semesters.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypmsSemestersProvider), what: 'this page'),
         data: (list) {
           final sorted = [...list]..sort((a, b) => b.startDate.compareTo(a.startDate));
           return ListView(

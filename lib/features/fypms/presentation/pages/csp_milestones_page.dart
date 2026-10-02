@@ -8,6 +8,7 @@ import '../../../../core/supabase/fypms_rpc_service.dart';
 import '../../../../core/utils/fypms_format.dart';
 import '../widgets/fypms_loading_widget.dart';
 import '../widgets/milestone_extension_widgets.dart';
+import '../../../../core/widgets/async_state.dart';
 
 class CspMilestonesPage extends ConsumerStatefulWidget {
   const CspMilestonesPage({super.key});
@@ -39,7 +40,7 @@ class _CspMilestonesPageState extends ConsumerState<CspMilestonesPage> {
       ),
       body: records.when(
         loading: () => const FypmsLoadingWidget(),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypRecordsProvider), what: 'this page'),
         data: (list) {
           if (list.isEmpty) {
             return const Center(
@@ -120,7 +121,7 @@ class _MilestonesList extends ConsumerWidget {
         Expanded(
           child: milestones.when(
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(child: Text('Error: $e')),
+            error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypMilestonesProvider(recordId)), what: 'this page'),
             data: (list) {
               if (list.isEmpty) {
                 return const Center(child: Text('No milestones defined.'));

@@ -6,6 +6,7 @@ import '../../../../core/state/fypms_state_providers.dart';
 import '../../../../core/utils/fypms_format.dart';
 import '../widgets/consultation_attendance_banner.dart';
 import '../widgets/fypms_loading_widget.dart';
+import '../../../../core/widgets/async_state.dart';
 
 class SupervisorProgressPage extends ConsumerWidget {
   const SupervisorProgressPage({super.key});
@@ -27,7 +28,7 @@ class SupervisorProgressPage extends ConsumerWidget {
       ),
       body: assigned.when(
         loading: () => const FypmsLoadingWidget(),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(assignedFypRecordsProvider(null)), what: 'this page'),
         data: (records) {
           if (records.isEmpty) {
             return const Center(child: Text('No records assigned to you.'));
@@ -67,7 +68,7 @@ class _RecordProgressSection extends ConsumerWidget {
         ),
         logs.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Text('Error: $e'),
+          error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypProgressLogsProvider(record.id)), what: 'this section'),
           data: (list) {
             if (list.isEmpty) {
               return const Padding(

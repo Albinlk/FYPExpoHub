@@ -6,6 +6,7 @@ import '../../../../core/state/state_providers.dart';
 import '../../../../core/supabase/fypms_rpc_service.dart';
 import '../widgets/fypms_loading_widget.dart';
 import '../widgets/student_record_workspace.dart';
+import '../../../../core/widgets/async_state.dart';
 
 /// Standard Lean Canvas (F13) blocks.
 const List<({String key, String label, String hint})> fypmsLeanCanvasBlocks = [
@@ -39,7 +40,7 @@ class StudentLeanCanvasPage extends ConsumerWidget {
         final canvas = ref.watch(fypLeanCanvasProvider(record.id));
         return canvas.when(
           loading: () => const FypmsLoadingWidget(),
-          error: (e, _) => Center(child: Text('Error: $e')),
+          error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypLeanCanvasProvider(record.id)), what: 'this page'),
           data: (existing) {
             final initialBlocks = existing?.blocks ?? const <String, dynamic>{};
             return _CanvasEditor(

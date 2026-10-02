@@ -9,6 +9,7 @@ import '../../../../core/utils/fypms_format.dart';
 import '../widgets/fypms_loading_widget.dart';
 import '../widgets/supervisor_change_widgets.dart';
 import '../widgets/student_record_workspace.dart';
+import '../../../../core/widgets/async_state.dart';
 
 /// F1 Mutual Acceptance: the student names the supervisor (and co-supervisor)
 /// who agreed to supervise them and the project area and title; the
@@ -54,7 +55,7 @@ class StudentSupervisionPage extends ConsumerWidget {
             Expanded(
               child: requests.when(
                 loading: () => const FypmsLoadingWidget(),
-                error: (e, _) => Center(child: Text('Error: $e')),
+                error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypSupervisionRequestsProvider(record.id)), what: 'this page'),
                 data: (items) {
                   if (items.isEmpty) {
                     return Center(

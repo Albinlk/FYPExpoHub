@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import '../widgets/fypms_loading_widget.dart';
+import '../../../../core/widgets/async_state.dart';
 
 class CoordinatorDashboardPage extends ConsumerWidget {
   const CoordinatorDashboardPage({super.key});
@@ -23,7 +24,7 @@ class CoordinatorDashboardPage extends ConsumerWidget {
       ),
       body: records.when(
         loading: () => const FypmsLoadingWidget(),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypRecordsProvider), what: 'this page'),
         data: (recordList) => ListView(
           padding: const EdgeInsets.all(DesignSystem.gutter),
           children: [

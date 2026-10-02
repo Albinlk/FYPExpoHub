@@ -6,6 +6,7 @@ import '../../../../core/domain/models/fypms/fyp_record.dart';
 import '../../../../core/supabase/supabase_client_provider.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import '../../../../core/utils/fypms_format.dart';
+import '../../../../core/widgets/async_state.dart';
 
 class StudentDashboardPage extends ConsumerWidget {
   const StudentDashboardPage({super.key});
@@ -28,7 +29,7 @@ class StudentDashboardPage extends ConsumerWidget {
         padding: const EdgeInsets.all(DesignSystem.gutter),
         child: records.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('Error loading records: $e')),
+          error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(myFypRecordsProvider), what: 'records'),
           data: (list) {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,

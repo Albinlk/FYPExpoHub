@@ -8,6 +8,7 @@ import '../widgets/correction_evidence_dialog.dart';
 import '../widgets/fypms_file_link.dart';
 import '../widgets/fypms_loading_widget.dart';
 import '../widgets/student_record_workspace.dart';
+import '../../../../core/widgets/async_state.dart';
 
 class StudentCorrectionsPage extends ConsumerWidget {
   const StudentCorrectionsPage({super.key});
@@ -36,7 +37,7 @@ class StudentCorrectionsPage extends ConsumerWidget {
             Expanded(
               child: items.when(
                 loading: () => const FypmsLoadingWidget(),
-                error: (e, _) => Center(child: Text('Error: $e')),
+                error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypCorrectionItemsProvider(record.id)), what: 'this page'),
                 data: (list) {
                   if (list.isEmpty) {
                     return Center(

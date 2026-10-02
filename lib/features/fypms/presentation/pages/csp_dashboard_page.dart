@@ -6,6 +6,7 @@ import '../../../../core/domain/models/fypms/academic_semester.dart';
 import '../../../../core/domain/models/fypms/fyp_course_offering.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import '../widgets/fypms_loading_widget.dart';
+import '../../../../core/widgets/async_state.dart';
 
 class CspDashboardPage extends ConsumerWidget {
   const CspDashboardPage({super.key});
@@ -26,7 +27,7 @@ class CspDashboardPage extends ConsumerWidget {
       ),
       body: offerings.when(
         loading: () => const FypmsLoadingWidget(),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(myFypmsOfferingsProvider), what: 'this page'),
         data: (list) => ListView(
           padding: const EdgeInsets.all(DesignSystem.gutter),
           children: [

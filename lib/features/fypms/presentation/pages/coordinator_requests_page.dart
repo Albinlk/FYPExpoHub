@@ -7,6 +7,7 @@ import '../../../../core/domain/models/fypms/fyp_supervision_request.dart';
 import '../widgets/fypms_loading_widget.dart';
 import '../widgets/supervisor_change_widgets.dart';
 import '../widgets/supervision_request_card.dart';
+import '../../../../core/widgets/async_state.dart';
 
 /// Pending F1 requests across all records; the coordinator may decide on the
 /// chosen supervisor's behalf.
@@ -30,16 +31,16 @@ class CoordinatorRequestsPage extends ConsumerWidget {
       body: Column(
         children: [
           const SupervisorChangeRequestsPanel(),
-          Expanded(child: _f1Requests(requests, records)),
+          Expanded(child: _f1Requests(ref, requests, records)),
         ],
       ),
     );
   }
 
-  Widget _f1Requests(AsyncValue<List<FypSupervisionRequest>> requests, List<FypRecord> records) {
+  Widget _f1Requests(WidgetRef ref, AsyncValue<List<FypSupervisionRequest>> requests, List<FypRecord> records) {
     return requests.when(
         loading: () => const FypmsLoadingWidget(),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypPendingSupervisionRequestsProvider), what: 'this page'),
         data: (pending) {
           if (pending.isEmpty) {
             return const Center(child: Text('No pending supervision requests.'));

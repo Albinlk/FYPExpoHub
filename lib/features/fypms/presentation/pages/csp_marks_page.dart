@@ -7,6 +7,7 @@ import '../../../../core/state/fypms_state_providers.dart';
 import '../../../../core/utils/download_util.dart';
 import '../../domain/res_export.dart';
 import '../widgets/fypms_loading_widget.dart';
+import '../../../../core/widgets/async_state.dart';
 
 /// Course marks computed from the rubric evaluations (textbook shares), with
 /// a Finalize action once every evaluator has scored.
@@ -57,7 +58,7 @@ class CspMarksPage extends ConsumerWidget {
       ),
       body: records.when(
         loading: () => const FypmsLoadingWidget(),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypRecordsProvider), what: 'this page'),
         data: (list) {
           if (list.isEmpty) {
             return const Center(child: Text('No records found to finalize marks.'));
@@ -113,7 +114,7 @@ class _RecordMarksSection extends ConsumerWidget {
         ),
         summaries.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Text('Error: $e'),
+          error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypMarksSummariesProvider(record.id)), what: 'this section'),
           data: (list) {
             if (list.isEmpty) {
               return const Padding(

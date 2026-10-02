@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/supabase/supabase_client_provider.dart';
+import '../../../../core/widgets/async_state.dart';
 
 /// One `audit_logs` row as shown to admins.
 class AuditEntry {
@@ -92,7 +93,7 @@ class _AdminAuditPageState extends ConsumerState<AdminAuditPage> {
     return Scaffold(
       body: logs.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Could not load the audit log: $e')),
+        error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(adminAuditLogsProvider), what: 'the audit log'),
         data: (all) {
           final actions = ['All', ...{for (final e in all) e.action}.toList()..sort()];
           final q = _search.text.trim().toLowerCase();

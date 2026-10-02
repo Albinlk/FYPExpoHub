@@ -30,35 +30,45 @@ class AsyncErrorView extends StatelessWidget {
         horizontal: DesignSystem.spaceMd,
       ),
       child: Center(
-        child: Semantics(
-          liveRegion: true,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.error_outline, size: 40, color: DesignSystem.onSurfaceVariant),
-              const SizedBox(height: DesignSystem.spaceSm),
-              Text(
-                "Couldn't load $what.",
-                key: const Key('async-error-title'),
-                textAlign: TextAlign.center,
-                style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: DesignSystem.spaceXs),
-              Text(
-                friendlyError(error),
-                key: const Key('async-error-detail'),
-                textAlign: TextAlign.center,
-                style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant),
-              ),
-              if (onRetry != null) ...[
-                const SizedBox(height: DesignSystem.spaceMd),
-                OutlinedButton.icon(
-                  onPressed: onRetry,
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Try Again'),
+        child: SingleChildScrollView(
+          child: Semantics(
+            liveRegion: true,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.error_outline,
+                  size: 40,
+                  color: DesignSystem.onSurfaceVariant,
                 ),
+                const SizedBox(height: DesignSystem.spaceSm),
+                Text(
+                  "Couldn't load $what.",
+                  key: const Key('async-error-title'),
+                  textAlign: TextAlign.center,
+                  style: DesignSystem.bodyMd.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: DesignSystem.spaceXs),
+                Text(
+                  friendlyError(error),
+                  key: const Key('async-error-detail'),
+                  textAlign: TextAlign.center,
+                  style: DesignSystem.bodySm.copyWith(
+                    color: DesignSystem.onSurfaceVariant,
+                  ),
+                ),
+                if (onRetry != null) ...[
+                  const SizedBox(height: DesignSystem.spaceMd),
+                  OutlinedButton.icon(
+                    onPressed: onRetry,
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Try Again'),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),

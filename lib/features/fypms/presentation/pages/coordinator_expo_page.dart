@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import '../widgets/fypms_loading_widget.dart';
+import '../../../../core/widgets/async_state.dart';
 
 class CoordinatorExpoPage extends ConsumerWidget {
   const CoordinatorExpoPage({super.key});
@@ -23,7 +24,7 @@ class CoordinatorExpoPage extends ConsumerWidget {
       ),
       body: publications.when(
         loading: () => const FypmsLoadingWidget(),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypExpoPublicationsProvider), what: 'this page'),
         data: (pubs) {
           final eventTitleById = <String, String>{
             for (final e in events.asData?.value ?? [])
@@ -108,7 +109,7 @@ class CoordinatorExpoPage extends ConsumerWidget {
                       final records = ref.watch(fypRecordsProvider);
                       return records.when(
                         loading: () => const LinearProgressIndicator(),
-                        error: (e, _) => Text('Error: $e'),
+                        error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypRecordsProvider), what: 'this section'),
                         data: (items) => DropdownButtonFormField<String>(
                           initialValue: recordId,
                           decoration: const InputDecoration(labelText: 'FYP Record'),
@@ -135,7 +136,7 @@ class CoordinatorExpoPage extends ConsumerWidget {
                       final events = ref.watch(fypPublishedEventsProvider);
                       return events.when(
                         loading: () => const LinearProgressIndicator(),
-                        error: (e, _) => Text('Error: $e'),
+                        error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypPublishedEventsProvider), what: 'this section'),
                         data: (items) => DropdownButtonFormField<String>(
                           initialValue: eventId,
                           decoration: const InputDecoration(labelText: 'Event'),

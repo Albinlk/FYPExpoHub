@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/supabase/supabase_client_provider.dart';
 import '../../../../core/utils/fypms_format.dart';
+import '../../../../core/widgets/async_state.dart';
 
 /// One in-app notification (`fyp_notifications`, backlog F1).
 class FypNotification {
@@ -119,7 +120,7 @@ class NotificationsPage extends ConsumerWidget {
       ),
       body: list.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Could not load notifications: $e')),
+        error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypNotificationsProvider), what: 'notifications'),
         data: (items) => items.isEmpty
             ? const Center(child: Text('Nothing new. You will see requests, decisions and results here.'))
             : ListView.separated(

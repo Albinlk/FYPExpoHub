@@ -5,6 +5,7 @@ import '../../../../core/domain/models/fypms/fyp_rubric_template.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/supabase/fypms_rpc_service.dart';
+import '../../../../core/widgets/async_state.dart';
 
 /// Coordinator rubric editor (backlog U4). Saving creates a new version;
 /// past evaluations keep the version they were scored with.
@@ -34,7 +35,7 @@ class CoordinatorRubricsPage extends ConsumerWidget {
       ),
       body: rubrics.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypRubricTemplatesProvider), what: 'this page'),
         data: (all) {
           final list = activeRubrics(all);
           return ListView(

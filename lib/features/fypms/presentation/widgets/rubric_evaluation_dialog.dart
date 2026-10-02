@@ -6,6 +6,7 @@ import '../../../../core/domain/fypms_rubric.dart';
 import '../../../../core/domain/models/fypms/fyp_form_submission.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import 'student_form_dialog.dart' show FormAnswersView;
+import '../../../../core/widgets/async_state.dart';
 
 /// Scores one form submission against its textbook rubric: one 0–10 score per
 /// criterion with its band and marks (W × S), and a live total that matches
@@ -73,7 +74,7 @@ class _RubricEvaluationDialogState extends ConsumerState<RubricEvaluationDialog>
         width: 560,
         child: rubric.when(
           loading: () => const SizedBox(height: 120, child: Center(child: CircularProgressIndicator())),
-          error: (e, _) => Text('Could not load the rubric: $e'),
+          error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypActiveRubricProvider(widget.submission.formCode)), what: 'the rubric'),
           data: (template) => template == null
               ? Text('No rubric is set up for ${widget.submission.formCode}.')
               : _buildForm(template.rubricName, criteria!),

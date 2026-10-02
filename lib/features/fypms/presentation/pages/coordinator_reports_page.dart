@@ -5,6 +5,7 @@ import '../../../../core/state/fypms_state_providers.dart';
 import '../../../../core/supabase/supabase_client_provider.dart';
 import '../../../../core/utils/download_util.dart';
 import '../../../../core/utils/fypms_format.dart';
+import '../../../../core/widgets/async_state.dart';
 
 /// One lecturer's active assignments in the report.
 class WorkloadRow {
@@ -104,7 +105,7 @@ class CoordinatorReportsPage extends ConsumerWidget {
       backgroundColor: DesignSystem.background,
       body: report.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Could not load the report: $e')),
+        error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypCohortReportProvider), what: 'the report'),
         data: (r) => ListView(
           padding: const EdgeInsets.all(DesignSystem.gutter),
           children: [

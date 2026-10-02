@@ -8,6 +8,7 @@ import '../../../../core/state/state_providers.dart';
 import '../../../../core/supabase/supabase_client_provider.dart';
 import '../../../../core/supabase/fypms_rpc_service.dart';
 import '../widgets/fypms_loading_widget.dart';
+import '../../../../core/widgets/async_state.dart';
 
 class StudentRecordsPage extends ConsumerWidget {
   const StudentRecordsPage({super.key});
@@ -41,7 +42,7 @@ class StudentRecordsPage extends ConsumerWidget {
       ),
       body: records.when(
         loading: () => const FypmsLoadingWidget(),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(myFypRecordsProvider), what: 'this page'),
         data: (list) {
           if (list.isEmpty) {
             return Center(
@@ -115,7 +116,7 @@ class StudentRecordsPage extends ConsumerWidget {
                         final semesters = ref.watch(fypmsSemestersProvider);
                         return semesters.when(
                           loading: () => const LinearProgressIndicator(),
-                          error: (e, _) => Text('Error: $e'),
+                          error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypmsSemestersProvider), what: 'this section'),
                           data: (items) {
                             final active = items
                                 .where((s) => s.status == 'active')
@@ -142,7 +143,7 @@ class StudentRecordsPage extends ConsumerWidget {
                         final courses = ref.watch(fypmsCoursesProvider);
                         return courses.when(
                           loading: () => const LinearProgressIndicator(),
-                          error: (e, _) => Text('Error: $e'),
+                          error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypmsCoursesProvider), what: 'this section'),
                           data: (items) {
                             final csp = items
                                 .where((c) => c.code == 'CSP600' || c.code == 'CSP650')

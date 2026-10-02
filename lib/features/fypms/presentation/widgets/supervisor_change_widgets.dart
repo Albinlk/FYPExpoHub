@@ -7,6 +7,7 @@ import '../../../../core/domain/models/fypms/fyp_record.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import '../../../../core/utils/download_util.dart';
 import '../../../../core/utils/fypms_format.dart';
+import '../../../../core/widgets/async_state.dart';
 
 /// Minimum reason length the server requires.
 const kSupervisorChangeReasonMin = 20;
@@ -383,7 +384,7 @@ class PuNominationsPage extends ConsumerWidget {
           children: [
             nominations.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('Error: $e')),
+              error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(pendingNominationsProvider), what: 'this page'),
               data: (list) => list.isEmpty
                   ? const Center(child: Text('No nominations are waiting for your approval.'))
                   : ListView(
@@ -447,7 +448,7 @@ class ApprovedNominationsList extends ConsumerWidget {
     final approved = ref.watch(approvedNominationsProvider);
     return approved.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('Error: $e')),
+      error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(approvedNominationsProvider), what: 'this page'),
       data: (list) => list.isEmpty
           ? const Center(child: Text('No approved appointments yet.'))
           : ListView(

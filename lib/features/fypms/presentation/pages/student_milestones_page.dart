@@ -6,6 +6,7 @@ import '../../../../core/utils/fypms_format.dart';
 import '../widgets/fypms_loading_widget.dart';
 import '../widgets/milestone_extension_widgets.dart';
 import '../widgets/student_record_workspace.dart';
+import '../../../../core/widgets/async_state.dart';
 
 class StudentMilestonesPage extends ConsumerWidget {
   const StudentMilestonesPage({super.key});
@@ -29,7 +30,7 @@ class StudentMilestonesPage extends ConsumerWidget {
             Expanded(
               child: milestones.when(
                 loading: () => const FypmsLoadingWidget(),
-                error: (e, _) => Center(child: Text('Error: $e')),
+                error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypMilestonesProvider(record.id)), what: 'this page'),
                 data: (list) {
                   if (list.isEmpty) {
                     return Center(

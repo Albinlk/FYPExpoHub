@@ -8,6 +8,7 @@ import '../../../../core/supabase/supabase_client_provider.dart';
 import '../../../../core/domain/models/import_models.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../domain/import_checks.dart';
+import '../../../../core/widgets/async_state.dart';
 
 class ImportDetailPage extends ConsumerStatefulWidget {
   final String importId;
@@ -148,7 +149,7 @@ class _ImportDetailPageState extends ConsumerState<ImportDetailPage> {
             issuesAsync.when(
               data: (issues) => issues.isEmpty ? const SizedBox.shrink() : _IssuesCard(issues: issues),
               loading: () => const SizedBox.shrink(),
-              error: (e, _) => Text('Error loading validation issues: $e'),
+              error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(validationIssuesProvider(widget.importId)), what: 'validation issues'),
             ),
 
             // Schedule Candidates
@@ -204,7 +205,7 @@ class _ImportDetailPageState extends ConsumerState<ImportDetailPage> {
                         );
                       },
                       loading: () => const Center(child: CircularProgressIndicator()),
-                      error: (e, _) => Text('Error loading schedule candidates: $e'),
+                      error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(scheduleCandidatesProvider(widget.importId)), what: 'schedule candidates'),
                     ),
                   ],
                 ),
@@ -261,7 +262,7 @@ class _ImportDetailPageState extends ConsumerState<ImportDetailPage> {
                         );
                       },
                       loading: () => const Center(child: CircularProgressIndicator()),
-                      error: (e, _) => Text('Error loading award candidates: $e'),
+                      error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(awardCandidatesProvider(widget.importId)), what: 'award candidates'),
                     ),
                   ],
                 ),
@@ -293,7 +294,7 @@ class _ImportDetailPageState extends ConsumerState<ImportDetailPage> {
                         );
                       },
                       loading: () => const Center(child: CircularProgressIndicator()),
-                      error: (e, _) => Text('Error loading skips: $e'),
+                      error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(privacySkipsProvider(widget.importId)), what: 'skips'),
                     ),
                   ],
                 ),

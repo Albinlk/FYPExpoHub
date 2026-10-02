@@ -13,6 +13,7 @@ import '../../../../core/utils/external_link.dart';
 import '../widgets/fypms_file_link.dart';
 import '../widgets/fypms_loading_widget.dart';
 import '../widgets/student_record_workspace.dart';
+import '../../../../core/widgets/async_state.dart';
 
 const _bucket = 'fyp-deliverables';
 
@@ -30,7 +31,7 @@ class StudentDeliverablesPage extends ConsumerWidget {
         final deliverables = ref.watch(fypDeliverablesProvider(record.id));
         return deliverables.when(
           loading: () => const FypmsLoadingWidget(),
-          error: (e, _) => Center(child: Text('Error: $e')),
+          error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypDeliverablesProvider(record.id)), what: 'this page'),
           data: (items) => _Body(record: record, items: items),
         );
       },

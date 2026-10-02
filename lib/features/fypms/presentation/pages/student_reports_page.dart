@@ -12,6 +12,7 @@ import '../../../../core/supabase/fypms_rpc_service.dart';
 import '../widgets/fypms_file_link.dart';
 import '../widgets/fypms_loading_widget.dart';
 import '../widgets/student_record_workspace.dart';
+import '../../../../core/widgets/async_state.dart';
 
 /// F6(a) proposal / F6(b) final report submissions: the report, its
 /// similarity index (max 30 %) and the original plagiarism report, endorsed by
@@ -51,7 +52,7 @@ class StudentReportsPage extends ConsumerWidget {
             Expanded(
               child: reports.when(
                 loading: () => const FypmsLoadingWidget(),
-                error: (e, _) => Center(child: Text('Error: $e')),
+                error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypReportSubmissionsProvider(record.id)), what: 'this page'),
                 data: (items) {
                   if (items.isEmpty) {
                     return Center(

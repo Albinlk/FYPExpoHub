@@ -4,6 +4,7 @@ import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/fypms/fyp_record_assignment.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import '../widgets/fypms_loading_widget.dart';
+import '../../../../core/widgets/async_state.dart';
 
 class CoordinatorAssignmentsPage extends ConsumerWidget {
   const CoordinatorAssignmentsPage({super.key});
@@ -23,7 +24,7 @@ class CoordinatorAssignmentsPage extends ConsumerWidget {
       ),
       body: records.when(
         loading: () => const FypmsLoadingWidget(),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypRecordsProvider), what: 'this page'),
         data: (list) {
           if (list.isEmpty) {
             return const Center(child: Text('No FYP records to assign.'));
@@ -111,7 +112,7 @@ class CoordinatorAssignmentsPage extends ConsumerWidget {
                       ref.watch(fypStaffProvider(const ['supervisor', 'co_supervisor', 'examiner']));
                   return staff.when(
                     loading: () => const LinearProgressIndicator(),
-                    error: (e, _) => Text('Error: $e'),
+                    error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypStaffProvider(const ['supervisor', 'co_supervisor', 'examiner'])), what: 'this section'),
                     data: (items) => DropdownButtonFormField<String>(
                       initialValue: staffId,
                       decoration: const InputDecoration(labelText: 'Staff Member'),

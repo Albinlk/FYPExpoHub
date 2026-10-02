@@ -5,6 +5,7 @@ import '../../../../core/state/fypms_state_providers.dart';
 import '../../../../core/utils/fypms_format.dart';
 import '../widgets/fypms_loading_widget.dart';
 import '../widgets/student_record_workspace.dart';
+import '../../../../core/widgets/async_state.dart';
 
 /// The student's scheduled presentation slots (progress presentation,
 /// defence, exhibition) with the session's venue and time.
@@ -24,7 +25,7 @@ class StudentPresentationsPage extends ConsumerWidget {
         final slots = ref.watch(fypRecordPresentationsProvider(record.id));
         return slots.when(
           loading: () => const FypmsLoadingWidget(),
-          error: (e, _) => Center(child: Text('Error: $e')),
+          error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypRecordPresentationsProvider(record.id)), what: 'this page'),
           data: (list) {
             if (list.isEmpty) {
               return Center(

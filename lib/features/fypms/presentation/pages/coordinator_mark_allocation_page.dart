@@ -4,6 +4,7 @@ import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/fypms/fyp_rubric_template.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import '../widgets/fypms_loading_widget.dart';
+import '../../../../core/widgets/async_state.dart';
 
 /// How each form contributes to the CSP600 / CSP650 grade (textbook shares).
 /// The coordinator sets the F2 / F3 / F4 split of CSP600's formulation 30 %,
@@ -31,7 +32,7 @@ class CoordinatorMarkAllocationPage extends ConsumerWidget {
       ),
       body: rubrics.when(
         loading: () => const FypmsLoadingWidget(),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypRubricTemplatesProvider), what: 'this page'),
         data: (list) {
           final byForm = {for (final r in list) r.formCode: r};
           return ListView(

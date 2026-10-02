@@ -10,6 +10,7 @@ import '../../../../core/supabase/fypms_rpc_service.dart';
 import '../widgets/consultation_attendance_banner.dart';
 import '../widgets/fypms_loading_widget.dart';
 import '../widgets/student_record_workspace.dart';
+import '../../../../core/widgets/async_state.dart';
 
 /// F5 Proposal/Project In-Progress Form: one entry per supervision meeting
 /// (date, completed activity, next activity), signed by the supervisor, with
@@ -54,7 +55,7 @@ class StudentProgressPage extends ConsumerWidget {
             Expanded(
               child: logs.when(
                 loading: () => const FypmsLoadingWidget(),
-                error: (e, _) => Center(child: Text('Error: $e')),
+                error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypProgressLogsProvider(record.id)), what: 'this page'),
                 data: (items) {
                   if (items.isEmpty) {
                     return Center(
