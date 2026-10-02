@@ -9,8 +9,19 @@ String friendlyError(Object e) {
     return e.message.isEmpty ? 'The database rejected the change.' : e.message;
   }
   if (e is AuthException) return e.message;
-  return e.toString().replaceFirst(RegExp(r'^(Exception|StateError|Bad state): '), '');
+  final text = e.toString();
+  if (_looksLikeNetworkFailure(text)) {
+    return 'Could not reach the server. Check your connection and try again.';
+  }
+  return text.replaceFirst(RegExp(r'^(Exception|StateError|Bad state): '), '');
 }
+
+bool _looksLikeNetworkFailure(String text) =>
+    text.contains('Failed to fetch') ||
+    text.contains('ClientException') ||
+    text.contains('SocketException') ||
+    text.contains('XMLHttpRequest') ||
+    text.contains('TimeoutException');
 
 /// Awaits an admin write, then shows [success] only if it actually
 /// persisted, or the real error if it didn't. Returns whether it succeeded.
@@ -63,11 +74,15 @@ Future<bool> confirmDelete(BuildContext context, String what) async {
 
 /// Asks before an action with public or bulk effect; resolves to false if
 /// dismissed.
+///
+/// [destructive] paints the confirm button in the error colour (use it for
+/// anything that cannot be reversed from the UI).
 Future<bool> confirmAction(
   BuildContext context, {
   required String title,
   required String message,
   required String confirmLabel,
+  bool destructive = false,
 }) async {
   final ok = await showDialog<bool>(
     context: context,
@@ -80,6 +95,11 @@ Future<bool> confirmAction(
           child: const Text('Cancel'),
         ),
         FilledButton(
+          style: destructive
+              ? FilledButton.styleFrom(
+                  backgroundColor: Theme.of(dialogContext).colorScheme.error,
+                )
+              : null,
           onPressed: () => Navigator.of(dialogContext).pop(true),
           child: Text(confirmLabel),
         ),
@@ -87,6 +107,38 @@ Future<bool> confirmAction(
     ),
   );
   return ok ?? false;
+}
+
+/// Shows [message] with an Undo action for a few seconds. [onUndo] runs only
+/// if the user taps Undo; use it for fast, reversible changes where a confirm
+/// dialog would be heavy-handed.
+void showUndoSnackBar(
+  BuildContext context, {
+  required String message,
+  required Future<void> Function() onUndo,
+  Duration duration = const Duration(seconds: 8),
+}) {
+  final messenger = ScaffoldMessenger.of(context);
+  final errorColor = Theme.of(context).colorScheme.error;
+  messenger.showSnackBar(SnackBar(
+    content: Text(message),
+    duration: duration,
+    showCloseIcon: true,
+    action: SnackBarAction(
+      label: 'Undo',
+      onPressed: () async {
+        try {
+          await onUndo();
+        } catch (e) {
+          messenger.showSnackBar(SnackBar(
+            content: Text('Could not undo: ${friendlyError(e)}'),
+            backgroundColor: errorColor,
+            duration: const Duration(seconds: 6),
+          ));
+        }
+      },
+    ),
+  ));
 }
 
 /// Confirms taking an item off the public site (publishing needs no prompt).
