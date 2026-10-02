@@ -97,6 +97,9 @@ void main() {
 
     await tester.tap(find.byKey(const Key('semester-2027_1-active')));
     await tester.pumpAndSettle();
+    expect(find.text('Make active 2027_1?'), findsOneWidget);
+    await tester.tap(find.widgetWithText(FilledButton, 'Make active'));
+    await tester.pumpAndSettle();
     expect(admin.calls, ['s27:active']);
   });
 

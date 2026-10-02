@@ -101,10 +101,23 @@ class _CoordinatorSemestersPageState extends ConsumerState<CoordinatorSemestersP
                             for (final (status, label) in _next[s.status] ?? const <(String, String)>[])
                               OutlinedButton(
                                 key: Key('semester-${s.code}-$status'),
-                                onPressed: () => _run(
-                                  () => ref.read(semesterAdminProvider).setStatus(s.id, status),
-                                  '${s.code} is now $status.',
-                                ),
+                                onPressed: () async {
+                                  // A status change moves the whole cohort's scope.
+                                  final ok = await confirmAction(
+                                    context,
+                                    title: '$label ${s.code}?',
+                                    message: status == 'active'
+                                        ? 'Staff lists and the semester selector will switch to ${s.code}, '
+                                            'and any other active semester is completed.'
+                                        : 'This changes ${s.code} to $status for everyone.',
+                                    confirmLabel: label,
+                                  );
+                                  if (!ok || !mounted) return;
+                                  await _run(
+                                    () => ref.read(semesterAdminProvider).setStatus(s.id, status),
+                                    '${s.code} is now $status.',
+                                  );
+                                },
                                 child: Text(label),
                               ),
                           ],

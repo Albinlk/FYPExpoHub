@@ -199,7 +199,19 @@ class CoordinatorExpoPage extends ConsumerWidget {
     );
   }
 
+  /// Publications being published right now; a second tap is ignored.
+  static final Set<String> _inFlight = {};
+
   Future<void> _publish(BuildContext context, WidgetRef ref, String publicationId) async {
+    if (_inFlight.contains(publicationId)) return;
+    final ok = await confirmAction(
+      context,
+      title: 'Publish To The Public Expo?',
+      message: 'This project becomes visible on the public site straight away.',
+      confirmLabel: 'Publish',
+    );
+    if (!ok || !context.mounted) return;
+    if (!_inFlight.add(publicationId)) return;
     try {
       await ref.read(publishFypRecordToExpoProvider)(publicationId);
       if (context.mounted) {
@@ -213,6 +225,8 @@ class CoordinatorExpoPage extends ConsumerWidget {
           SnackBar(content: Text('Failed: ${friendlyError(e)}')),
         );
       }
+    } finally {
+      _inFlight.remove(publicationId);
     }
   }
 }

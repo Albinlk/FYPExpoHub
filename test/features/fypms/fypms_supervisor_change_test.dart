@@ -129,6 +129,9 @@ void main() {
 
     await tester.tap(find.widgetWithText(FilledButton, 'Approve').first);
     await tester.pumpAndSettle();
+    expect(calls, isEmpty, reason: 'approval asks first');
+    await tester.tap(find.widgetWithText(FilledButton, 'Approve Nomination'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Reject').last);
     await tester.pumpAndSettle();
     await tester.enterText(find.byKey(const Key('decision-reason')), 'Examiner is the co-author');

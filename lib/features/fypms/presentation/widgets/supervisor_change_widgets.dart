@@ -340,13 +340,28 @@ class _ReasonDialogState extends State<_ReasonDialog> {
 class PuNominationsPage extends ConsumerWidget {
   const PuNominationsPage({super.key});
 
+  /// Nominations being decided right now; a second tap on the same row is ignored.
+  static final Set<String> _inFlight = {};
+
   Future<void> _decide(BuildContext context, WidgetRef ref, PendingNomination n, String decision) async {
+    if (_inFlight.contains(n.assignmentId)) return;
     String? comment;
     if (decision == 'rejected') {
       comment = await showDialog<String>(context: context, builder: (_) => const _ReasonDialog());
       if (comment == null) return;
+    } else {
+      // Approval drives the appointment letter and cannot be undone here.
+      final ok = await confirmAction(
+        context,
+        title: 'Approve This Nomination?',
+        message: 'Approving the nomination for ${n.studentName ?? 'this student'} creates the '
+            'appointment and its letter. This cannot be undone from this page.',
+        confirmLabel: 'Approve Nomination',
+      );
+      if (!ok) return;
     }
     if (!context.mounted) return;
+    if (!_inFlight.add(n.assignmentId)) return;
     final messenger = ScaffoldMessenger.of(context);
     try {
       await ref.read(decideNominationProvider)(n.assignmentId, decision, comment);
@@ -355,6 +370,8 @@ class PuNominationsPage extends ConsumerWidget {
       );
     } catch (e) {
       messenger.showSnackBar(SnackBar(content: Text('Failed: ${friendlyError(e)}')));
+    } finally {
+      _inFlight.remove(n.assignmentId);
     }
   }
 

@@ -800,6 +800,9 @@ void main() {
       );
 
       await tester.tap(find.text('Publish'));
+      await tester.pumpAndSettle();
+      expect(called, isEmpty, reason: 'asks before going public');
+      await tester.tap(find.widgetWithText(FilledButton, 'Publish').last);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
 
