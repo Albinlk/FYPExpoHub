@@ -230,7 +230,21 @@ class _MfaSettingsSectionState extends ConsumerState<MfaSettingsSection> {
           Align(
             alignment: Alignment.centerRight,
             child: TextButton(
-              onPressed: _busy ? null : () => _run(() => ref.read(mfaServiceProvider).disable(state.value!.enabledFactorId!)),
+              onPressed: _busy
+                  ? null
+                  : () async {
+                      final factorId = state.value!.enabledFactorId!;
+                      final ok = await confirmAction(
+                        context,
+                        title: 'Turn Off Two-Step Verification?',
+                        message: 'Your account will be protected by your password alone. '
+                            'Admin and coordinator powers may stop working until you turn it on again.',
+                        confirmLabel: 'Turn Off',
+                        destructive: true,
+                      );
+                      if (!ok || !mounted) return;
+                      await _run(() => ref.read(mfaServiceProvider).disable(factorId));
+                    },
               child: const Text('Turn off'),
             ),
           ),

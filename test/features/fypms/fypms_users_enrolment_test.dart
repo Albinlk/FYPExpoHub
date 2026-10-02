@@ -95,7 +95,12 @@ void main() {
 
     await tester.tap(find.byTooltip('Remove role').first);
     await tester.pumpAndSettle();
+    expect(_fake.calls, isEmpty, reason: 'removing a role asks first');
+    await tester.tap(find.widgetWithText(FilledButton, 'Remove Role'));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('active-aminah@uitm.edu.my')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Deactivate'));
     await tester.pumpAndSettle();
     expect(_fake.calls, ['role:u1:supervisor::false', 'active:u1:false']);
   });

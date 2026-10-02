@@ -117,12 +117,27 @@ class _CoordinatorUsersPageState extends ConsumerState<CoordinatorUsersPage> {
                             ],
                           ),
                         ),
-                        Switch(
-                          key: Key('active-${u.email}'),
-                          value: u.isActive,
-                          onChanged: (v) => _run(
-                            () => ref.read(userAdminProvider).setActive(u.id, v),
-                            v ? '${u.displayName} activated.' : '${u.displayName} deactivated.',
+                        Semantics(
+                          label: 'Account active for ${u.displayName}',
+                          child: Switch(
+                            key: Key('active-${u.email}'),
+                            value: u.isActive,
+                            onChanged: (v) async {
+                              if (!v) {
+                                final ok = await confirmAction(
+                                  context,
+                                  title: 'Deactivate ${u.displayName}?',
+                                  message: 'They will be unable to sign in until you activate the account again.',
+                                  confirmLabel: 'Deactivate',
+                                  destructive: true,
+                                );
+                                if (!ok || !mounted) return;
+                              }
+                              await _run(
+                                () => ref.read(userAdminProvider).setActive(u.id, v),
+                                v ? '${u.displayName} activated.' : '${u.displayName} deactivated.',
+                              );
+                            },
                           ),
                         ),
                       ],
@@ -141,9 +156,17 @@ class _CoordinatorUsersPageState extends ConsumerState<CoordinatorUsersPage> {
                               DropdownMenuItem(value: 'lecturer', child: Text('Lecturer')),
                               DropdownMenuItem(value: 'student', child: Text('Student')),
                             ],
-                            onChanged: (v) => v == null || v == u.role
-                                ? null
-                                : _run(() => ref.read(userAdminProvider).setAccountType(u.id, v), 'Account type changed.'),
+                            onChanged: (v) async {
+                              if (v == null || v == u.role) return;
+                              final ok = await confirmAction(
+                                context,
+                                title: 'Change Account Type?',
+                                message: '${u.displayName} will become a $v account. This changes what they can open.',
+                                confirmLabel: 'Change Type',
+                              );
+                              if (!ok || !mounted) return;
+                              await _run(() => ref.read(userAdminProvider).setAccountType(u.id, v), 'Account type changed.');
+                            },
                           )
                         else
                           Chip(label: Text(u.role)),
@@ -153,10 +176,21 @@ class _CoordinatorUsersPageState extends ConsumerState<CoordinatorUsersPage> {
                             deleteButtonTooltipMessage: 'Remove role',
                             onDeleted: role == 'fyp_coordinator' && !isAdmin
                                 ? null
-                                : () => _run(
+                                : () async {
+                                    final label = kAcademicRoleLabels[role] ?? role;
+                                    final ok = await confirmAction(
+                                      context,
+                                      title: 'Remove $label?',
+                                      message: '${u.displayName} loses the $label role and its access.',
+                                      confirmLabel: 'Remove Role',
+                                      destructive: true,
+                                    );
+                                    if (!ok || !mounted) return;
+                                    await _run(
                                       () => ref.read(userAdminProvider).setRole(u.id, role, programmeCode: programme, active: false),
-                                      '${kAcademicRoleLabels[role]} removed.',
-                                    ),
+                                      '$label removed.',
+                                    );
+                                  },
                           ),
                         TextButton.icon(
                           onPressed: () => _addRole(u),
