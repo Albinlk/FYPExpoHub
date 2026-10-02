@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/widgets/admin_actions.dart';
+import '../../../../core/widgets/async_state.dart';
 
 class AdminSettingsPage extends ConsumerStatefulWidget {
   const AdminSettingsPage({super.key});
@@ -24,6 +25,7 @@ class _AdminSettingsPageState extends ConsumerState<AdminSettingsPage> {
   Object? _visitOpenAt;
   Object? _visitCloseAt;
   bool _isLoading = true;
+  Object? _loadError;
 
   @override
   void initState() {
@@ -39,10 +41,22 @@ class _AdminSettingsPageState extends ConsumerState<AdminSettingsPage> {
     super.dispose();
   }
 
-  void _loadSettings() async {
+  Future<void> _loadSettings() async {
     final db = ref.read(supabaseDbServiceProvider);
-    final excelData = await db.getSetting('excel_import');
-    final visitData = await db.getSetting('visit_tracker');
+    final Map<String, dynamic>? excelData;
+    final Map<String, dynamic>? visitData;
+    try {
+      excelData = await db.getSettingStrict('excel_import');
+      visitData = await db.getSettingStrict('visit_tracker');
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _loadError = e;
+          _isLoading = false;
+        });
+      }
+      return;
+    }
     if (mounted) {
       setState(() {
         _maxSizeController.text = excelData?['maxFileSize'] as String? ?? '10 MB';
@@ -108,7 +122,19 @@ class _AdminSettingsPageState extends ConsumerState<AdminSettingsPage> {
               child: Padding(
                 padding: const EdgeInsets.all(DesignSystem.spaceLg),
                 child: _isLoading
-                    ? const Center(child: CircularProgressIndicator())
+                    ? const AsyncLoadingView(what: 'settings')
+                    : _loadError != null
+                    ? AsyncErrorView(
+                        error: _loadError!,
+                        what: 'settings',
+                        onRetry: () {
+                          setState(() {
+                            _loadError = null;
+                            _isLoading = true;
+                          });
+                          _loadSettings();
+                        },
+                      )
                     : Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [

@@ -349,6 +349,14 @@ class SupabaseDatabaseService {
     }
   }
 
+  /// Like [getSetting] but lets a failure through, for screens that edit the
+  /// value: showing defaults after a failed read and then saving would
+  /// overwrite the real setting.
+  Future<Map<String, dynamic>?> getSettingStrict(String key) async {
+    final data = await _client.from('settings').select().eq('key', key).maybeSingle();
+    return data != null ? (data['value'] as Map<String, dynamic>?) : null;
+  }
+
   Future<void> setSetting(String key, Map<String, dynamic> value) async {
     try {
       await _client.from('settings').upsert({

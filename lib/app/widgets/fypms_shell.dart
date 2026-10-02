@@ -7,6 +7,7 @@ import '../theme/theme.dart';
 import '../../features/fypms/presentation/widgets/semester_selector.dart';
 import '../../features/fypms/presentation/pages/notifications_page.dart';
 import '../../features/admin_auth/presentation/widgets/my_account_dialog.dart';
+import '../../core/widgets/async_state.dart';
 
 /// Workspace dashboard routes match exactly only — their sub-pages (e.g.
 /// /fypms/supervisor/evaluations) must not also highlight the dashboard
@@ -53,6 +54,19 @@ class FypmsShell extends ConsumerWidget {
     final isCsp = ref.watch(isCspLecturerProvider);
     final isPu = ref.watch(isFypProgrammeHeadProvider);
     final isStaff = isAdmin || isCoordinator || isSupervisor || isExaminer || isCsp || isPu;
+
+    // A role lookup that is still running or has failed is not "no access".
+    if (!roles.hasValue) {
+      return Scaffold(
+        body: roles.hasError
+            ? AsyncErrorView(
+                error: roles.error!,
+                what: 'your FYPMS access',
+                onRetry: () => ref.invalidate(fypmsCurrentRolesProvider),
+              )
+            : const AsyncLoadingView(what: 'your FYPMS access'),
+      );
+    }
 
     final hasAccess =
         roles.value?.isNotEmpty == true && (isAdmin || isCoordinator || isStudent || isSupervisor || isExaminer || isCsp || isPu);

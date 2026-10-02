@@ -10,6 +10,7 @@ import '../../../../core/utils/download_util.dart';
 import '../widgets/summary_cards.dart';
 import '../widgets/visit_data_table.dart';
 import '../../../../core/widgets/admin_actions.dart';
+import '../../../../core/widgets/async_state.dart';
 
 class AdminVisitsPage extends ConsumerStatefulWidget {
   const AdminVisitsPage({super.key});
@@ -106,8 +107,25 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
   Widget build(BuildContext context) {
     final isDesktop = MediaQuery.of(context).size.width >= 768;
     final padding = isDesktop ? DesignSystem.marginDesktop : DesignSystem.marginMobile;
-    final assignments = ref.watch(allAssignmentsProvider).asData?.value ?? [];
-    final visits = ref.watch(allVisitsProvider).asData?.value ?? [];
+    final assignmentsAsync = ref.watch(allAssignmentsProvider);
+    final visitsAsync = ref.watch(allVisitsProvider);
+    // Never render zeros / an empty table for data that has not loaded or failed.
+    if (!assignmentsAsync.hasValue || !visitsAsync.hasValue) {
+      final failure = assignmentsAsync.error ?? visitsAsync.error;
+      if (failure != null) {
+        return AsyncErrorView(
+          error: failure,
+          what: 'student visits',
+          onRetry: () {
+            ref.invalidate(allAssignmentsProvider);
+            ref.invalidate(allVisitsProvider);
+          },
+        );
+      }
+      return const AsyncLoadingView(what: 'student visits');
+    }
+    final assignments = assignmentsAsync.requireValue;
+    final visits = visitsAsync.requireValue;
     final projects = ref.watch(projectsProvider);
 
     // O(1) project lookup by id

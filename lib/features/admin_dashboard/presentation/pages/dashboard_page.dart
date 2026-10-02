@@ -20,8 +20,9 @@ class DashboardPage extends ConsumerWidget {
     final fypRecords = ref.watch(fypRecordsProvider);
     final pendingRequests = ref.watch(fypPendingSupervisionRequestsProvider);
 
-    final totalFypRecords = fypRecords.value?.length ?? 0;
-    final totalPendingRequests = pendingRequests.value?.length ?? 0;
+    // "–" until the count is known, so loading or failure is never shown as 0.
+    final totalFypRecords = fypRecords.hasValue ? '${fypRecords.requireValue.length}' : '–';
+    final totalPendingRequests = pendingRequests.hasValue ? '${pendingRequests.requireValue.length}' : '–';
 
     return Scaffold(
       body: SingleChildScrollView(
@@ -47,8 +48,8 @@ class DashboardPage extends ConsumerWidget {
                 _buildStatCard('Booths Available', '${booths.length}', Icons.map, Colors.green),
                 _buildStatCard('Event Schedules', '${schedule.length}', Icons.schedule, Colors.orange),
                 _buildStatCard('Files Imported', '${imports.length}', Icons.file_upload, Colors.purple),
-                _buildStatCard('FYP Records', '$totalFypRecords', Icons.school, Colors.teal),
-                _buildStatCard('Pending Requests', '$totalPendingRequests', Icons.mail_outline, Colors.red),
+                _buildStatCard('FYP Records', totalFypRecords, Icons.school, Colors.teal),
+                _buildStatCard('Pending Requests', totalPendingRequests, Icons.mail_outline, Colors.red),
               ],
             ),
 
