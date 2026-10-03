@@ -8,6 +8,7 @@ import '../../../../core/supabase/supabase_client_provider.dart';
 import '../../../../core/widgets/admin_actions.dart';
 import '../../../../core/widgets/async_state.dart';
 import '../../domain/assignment_matching.dart';
+import '../../../../core/layout/responsive.dart';
 
 /// G-07: who supervises / examines which project. Lecturers can only mark
 /// visits for projects they are assigned to, so this is what makes
@@ -284,8 +285,8 @@ class _AssignDialogState extends State<_AssignDialog> {
     return AlertDialog(
       title: const Text('Assign lecturer'),
       content: SizedBox(
-        width: 420,
-        child: Column(
+        width: dialogWidth(context, 420),
+        child: SingleChildScrollView(child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -314,7 +315,7 @@ class _AssignDialogState extends State<_AssignDialog> {
               onChanged: (v) => setState(() => _role = v ?? 'supervisor'),
             ),
           ],
-        ),
+        )),
       ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),

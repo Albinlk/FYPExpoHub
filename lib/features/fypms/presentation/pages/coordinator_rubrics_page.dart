@@ -7,6 +7,7 @@ import '../../../../core/state/state_providers.dart';
 import '../../../../core/supabase/fypms_rpc_service.dart';
 import '../../../../core/widgets/async_state.dart';
 import '../../../../core/widgets/admin_actions.dart';
+import '../../../../core/layout/responsive.dart';
 
 /// Coordinator rubric editor (backlog U4). Saving creates a new version;
 /// past evaluations keep the version they were scored with.
@@ -220,7 +221,7 @@ class _RubricEditorDialogState extends ConsumerState<RubricEditorDialog> {
     return AlertDialog(
       title: Text('Edit ${widget.rubric.formCode} rubric'),
       content: SizedBox(
-        width: 620,
+        width: dialogWidth(context, 620),
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,

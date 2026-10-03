@@ -9,6 +9,7 @@ import '../../../../core/utils/download_util.dart';
 import '../../../../core/utils/fypms_format.dart';
 import '../../../../core/widgets/async_state.dart';
 import '../../../../core/widgets/admin_actions.dart';
+import '../../../../core/layout/responsive.dart';
 
 /// Minimum reason length the server requires.
 const kSupervisorChangeReasonMin = 20;
@@ -67,7 +68,7 @@ class _RequestSupervisorChangeDialogState extends ConsumerState<RequestSuperviso
     return AlertDialog(
       title: const Text('Request supervisor change'),
       content: SizedBox(
-        width: 460,
+        width: dialogWidth(context, 460),
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -273,7 +274,7 @@ class _PickSupervisorDialogState extends State<_PickSupervisorDialog> {
     return AlertDialog(
       title: const Text('New supervisor'),
       content: SizedBox(
-        width: 420,
+        width: dialogWidth(context, 420),
         child: DropdownButtonFormField<String>(
           key: const Key('new-supervisor'),
           initialValue: _id,

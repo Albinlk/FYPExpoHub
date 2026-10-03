@@ -8,6 +8,7 @@ import '../../../../core/state/fypms_state_providers.dart';
 import '../../../../core/utils/fypms_format.dart';
 import '../../../../core/widgets/async_state.dart';
 import '../../../../core/widgets/admin_actions.dart';
+import '../../../../core/layout/responsive.dart';
 
 /// Coordinator: semesters (planned -> active -> completed -> archived; one
 /// active), who teaches CSP600 / CSP650 in each, and the course details
@@ -264,8 +265,8 @@ class _NewSemesterDialogState extends ConsumerState<_NewSemesterDialog> {
     return AlertDialog(
       title: const Text('New Semester'),
       content: SizedBox(
-        width: 420,
-        child: Column(
+        width: dialogWidth(context, 420),
+        child: SingleChildScrollView(child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
@@ -297,7 +298,7 @@ class _NewSemesterDialogState extends ConsumerState<_NewSemesterDialog> {
               ],
             ),
           ],
-        ),
+        )),
       ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
@@ -351,8 +352,8 @@ class _OfferingDialogState extends ConsumerState<_OfferingDialog> {
     return AlertDialog(
       title: Text('${widget.course.code} in ${widget.semester.code}'),
       content: SizedBox(
-        width: 420,
-        child: Column(
+        width: dialogWidth(context, 420),
+        child: SingleChildScrollView(child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             DropdownButtonFormField<String?>(
@@ -372,7 +373,7 @@ class _OfferingDialogState extends ConsumerState<_OfferingDialog> {
               decoration: const InputDecoration(labelText: 'Maximum students (optional)'),
             ),
           ],
-        ),
+        )),
       ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
@@ -424,8 +425,8 @@ class _CourseDialogState extends ConsumerState<_CourseDialog> {
     return AlertDialog(
       title: Text(widget.course.code),
       content: SizedBox(
-        width: 420,
-        child: Column(
+        width: dialogWidth(context, 420),
+        child: SingleChildScrollView(child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(controller: _name, decoration: const InputDecoration(labelText: 'Name')),
@@ -441,7 +442,7 @@ class _CourseDialogState extends ConsumerState<_CourseDialog> {
               title: const Text('Active'),
             ),
           ],
-        ),
+        )),
       ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),

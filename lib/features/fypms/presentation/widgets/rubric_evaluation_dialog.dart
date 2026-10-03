@@ -8,6 +8,7 @@ import '../../../../core/state/fypms_state_providers.dart';
 import 'student_form_dialog.dart' show FormAnswersView;
 import '../../../../core/widgets/async_state.dart';
 import '../../../../core/widgets/admin_actions.dart';
+import '../../../../core/layout/responsive.dart';
 
 /// Scores one form submission against its textbook rubric: one 0–10 score per
 /// criterion with its band and marks (W × S), and a live total that matches
@@ -72,7 +73,7 @@ class _RubricEvaluationDialogState extends ConsumerState<RubricEvaluationDialog>
       backgroundColor: DesignSystem.surfaceContainerLowest,
       title: Text('Evaluate Submission', style: DesignSystem.h2),
       content: SizedBox(
-        width: 560,
+        width: dialogWidth(context, 560),
         child: rubric.when(
           loading: () => const SizedBox(height: 120, child: Center(child: CircularProgressIndicator())),
           error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypActiveRubricProvider(widget.submission.formCode)), what: 'the rubric'),

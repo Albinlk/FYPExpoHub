@@ -4,6 +4,7 @@ import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/fypms/fyp_record.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import '../../../../core/widgets/admin_actions.dart';
+import '../../../../core/layout/responsive.dart';
 
 /// Record fields the coordinator may correct (`admin_override_fyp_record_field`;
 /// supervisor / examiner changes go through Assignments instead).
@@ -78,7 +79,7 @@ class _OverrideRecordFieldDialogState extends ConsumerState<OverrideRecordFieldD
       backgroundColor: DesignSystem.surfaceContainerLowest,
       title: Text('Edit Record Field', style: DesignSystem.h2),
       content: SizedBox(
-        width: 480,
+        width: dialogWidth(context, 480),
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -165,8 +166,8 @@ class _ArchiveRecordDialogState extends ConsumerState<ArchiveRecordDialog> {
       backgroundColor: DesignSystem.surfaceContainerLowest,
       title: Text('Archive Record', style: DesignSystem.h2),
       content: SizedBox(
-        width: 440,
-        child: Column(
+        width: dialogWidth(context, 440),
+        child: SingleChildScrollView(child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -182,7 +183,7 @@ class _ArchiveRecordDialogState extends ConsumerState<ArchiveRecordDialog> {
               decoration: const InputDecoration(labelText: 'Reason'),
             ),
           ],
-        ),
+        )),
       ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
@@ -268,8 +269,8 @@ class _RecordStandingDialogState extends ConsumerState<RecordStandingDialog> {
       backgroundColor: DesignSystem.surfaceContainerLowest,
       title: Text(title, style: DesignSystem.h2),
       content: SizedBox(
-        width: 440,
-        child: Column(
+        width: dialogWidth(context, 440),
+        child: SingleChildScrollView(child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -281,7 +282,7 @@ class _RecordStandingDialogState extends ConsumerState<RecordStandingDialog> {
               decoration: const InputDecoration(labelText: 'Reason (kept in the audit log)'),
             ),
           ],
-        ),
+        )),
       ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
@@ -339,8 +340,8 @@ class _ReopenMarksDialogState extends ConsumerState<ReopenMarksDialog> {
       backgroundColor: DesignSystem.surfaceContainerLowest,
       title: Text('Reopen Finalized Marks', style: DesignSystem.h2),
       content: SizedBox(
-        width: 460,
-        child: Column(
+        width: dialogWidth(context, 460),
+        child: SingleChildScrollView(child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -366,7 +367,7 @@ class _ReopenMarksDialogState extends ConsumerState<ReopenMarksDialog> {
               decoration: const InputDecoration(labelText: 'Reason (at least 10 characters)'),
             ),
           ],
-        ),
+        )),
       ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),

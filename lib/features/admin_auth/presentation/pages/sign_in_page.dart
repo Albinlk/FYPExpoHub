@@ -288,7 +288,7 @@ class _ForgotPasswordDialogState extends ConsumerState<ForgotPasswordDialog> {
     return AlertDialog(
       title: const Text('Reset password'),
       content: SizedBox(
-        width: 400,
+        width: dialogWidth(context, 400),
         child: _sent
             ? const Text(
                 'If an account exists for that email, a password reset link is on its way. '

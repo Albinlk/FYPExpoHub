@@ -9,6 +9,7 @@ import '../../domain/res_export.dart';
 import '../widgets/fypms_loading_widget.dart';
 import '../../../../core/widgets/async_state.dart';
 import '../../../../core/widgets/admin_actions.dart';
+import '../../../../core/layout/responsive.dart';
 
 /// Course marks computed from the rubric evaluations (textbook shares), with
 /// a Finalize action once every evaluator has scored.
@@ -188,7 +189,7 @@ class _CourseMarksDialogState extends ConsumerState<_CourseMarksDialog> {
       backgroundColor: DesignSystem.surfaceContainerLowest,
       title: Text('Finalize Course Marks', style: DesignSystem.h2),
       content: SizedBox(
-        width: 560,
+        width: dialogWidth(context, 560),
         child: marks.when(
           loading: () => const SizedBox(height: 120, child: Center(child: CircularProgressIndicator())),
           error: (e, _) => Text('Could not compute marks: ${friendlyError(e)}'),

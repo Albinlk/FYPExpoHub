@@ -123,7 +123,7 @@ class CoordinatorPresentationsPage extends ConsumerWidget {
           backgroundColor: DesignSystem.surfaceContainerLowest,
           title: Text('Presentation Slots', style: DesignSystem.h2),
           content: SizedBox(
-            width: 480,
+            width: dialogWidth(context, 480),
             child: Consumer(
               builder: (context, ref, _) {
                 final slots = ref.watch(fypPresentationSlotsProvider(sessionId));

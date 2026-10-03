@@ -6,6 +6,7 @@ import '../../../../core/supabase/supabase_client_provider.dart';
 import '../../mfa.dart';
 import '../../password_reset.dart';
 import '../../../../core/widgets/admin_actions.dart';
+import '../../../../core/layout/responsive.dart';
 
 /// Saves the caller's display name (`update_my_display_name`, backlog F2).
 final updateMyDisplayNameProvider = Provider<Future<void> Function(String name)>((ref) {
@@ -162,7 +163,7 @@ class _MyAccountDialogState extends ConsumerState<MyAccountDialog> {
     return AlertDialog(
       title: const Text('My Account'),
       content: SizedBox(
-        width: 420,
+        width: dialogWidth(context, 420),
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,

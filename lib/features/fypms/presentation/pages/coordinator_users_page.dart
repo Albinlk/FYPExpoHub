@@ -4,6 +4,7 @@ import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/fypms_users.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import '../../../../core/widgets/admin_actions.dart';
+import '../../../../core/layout/responsive.dart';
 
 /// Users & Roles (backlog U2): search people, add / remove FYPMS roles
 /// (optionally per programme), activate / deactivate accounts, and — for
@@ -233,8 +234,8 @@ class _AddRoleDialogState extends ConsumerState<_AddRoleDialog> {
     return AlertDialog(
       title: Text('Add role — ${widget.user.displayName}'),
       content: SizedBox(
-        width: 420,
-        child: Column(
+        width: dialogWidth(context, 420),
+        child: SingleChildScrollView(child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             DropdownButtonFormField<String>(
@@ -256,7 +257,7 @@ class _AddRoleDialogState extends ConsumerState<_AddRoleDialog> {
               ),
             ),
           ],
-        ),
+        )),
       ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
