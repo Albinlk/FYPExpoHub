@@ -7,6 +7,7 @@ import '../../../../app/theme/theme.dart';
 import '../../../../core/supabase/supabase_client_provider.dart';
 import '../../password_reset.dart';
 import '../../../../core/widgets/admin_actions.dart';
+import '../../../../core/layout/responsive.dart';
 
 void _goToMainSite() {
   launchUrlString('https://fskmjasinfypexhibition.site/');
@@ -24,6 +25,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _hidePassword = true;
   String? _errorMessage;
 
   @override
@@ -76,7 +78,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
       });
     } catch (e) {
       setState(() {
-        _errorMessage = 'Sign in failed: ${friendlyError(e)}';
+        _errorMessage = 'Could not sign in: ${friendlyError(e)}';
       });
     } finally {
       if (mounted) {
@@ -94,14 +96,14 @@ class _SignInPageState extends ConsumerState<SignInPage> {
       body: Center(
         child: SingleChildScrollView(
           child: Container(
-            width: 420,
+            width: dialogWidth(context, 420, gutter: 0),
             padding: const EdgeInsets.all(DesignSystem.spaceXl),
             child: Card(
               shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusXl),
               elevation: 4,
               child: Padding(
                 padding: const EdgeInsets.all(DesignSystem.spaceLg),
-                child: Form(
+                child: AutofillGroup(child: Form(
                   key: _formKey,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -123,7 +125,9 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                       const Divider(height: 32),
 
                       if (_errorMessage != null) ...[
-                        Container(
+                        Semantics(
+                          liveRegion: true,
+                          child: Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
                             color: DesignSystem.errorContainer,
@@ -134,15 +138,18 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                             style: DesignSystem.bodySm.copyWith(color: DesignSystem.onErrorContainer),
                           ),
                         ),
+                        ),
                         const SizedBox(height: 16),
                       ],
 
-                      Text('Official Email', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.primary)),
-                      const SizedBox(height: 6),
                       TextFormField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
+                        textInputAction: TextInputAction.next,
+                        autofillHints: const [AutofillHints.username, AutofillHints.email],
+                        enableSuggestions: false,
                         decoration: const InputDecoration(
+                          labelText: 'Official Email',
                           hintText: 'e.g. admin@uitm.edu.my',
                           prefixIcon: Icon(Icons.email_outlined),
                         ),
@@ -154,20 +161,24 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                       ),
                       const SizedBox(height: 16),
 
-                      Text('Password', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.primary)),
-                      const SizedBox(height: 6),
                       TextFormField(
                         controller: _passwordController,
-                        obscureText: true,
-                        decoration: const InputDecoration(
+                        obscureText: _hidePassword,
+                        textInputAction: TextInputAction.done,
+                        autofillHints: const [AutofillHints.password],
+                        onFieldSubmitted: (_) => _isLoading ? null : _signIn(),
+                        decoration: InputDecoration(
+                          labelText: 'Password',
                           hintText: 'Enter your password',
-                          prefixIcon: Icon(Icons.lock_outline),
+                          prefixIcon: const Icon(Icons.lock_outline),
+                          suffixIcon: IconButton(
+                            tooltip: _hidePassword ? 'Show password' : 'Hide password',
+                            icon: Icon(_hidePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined),
+                            onPressed: () => setState(() => _hidePassword = !_hidePassword),
+                          ),
                         ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) return 'Password is required';
-                          if (value.length < 6) return 'Please enter at least 6 characters';
-                          return null;
-                        },
+                        // Only presence is checked here: the server decides what a valid password is.
+                        validator: (value) => value == null || value.isEmpty ? 'Password is required' : null,
                       ),
                       Align(
                         alignment: Alignment.centerRight,
@@ -195,7 +206,11 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                               ? const SizedBox(
                                   width: 20,
                                   height: 20,
-                                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                    semanticsLabel: 'Signing in',
+                                  ),
                                 )
                               : Text('Sign In', style: DesignSystem.button),
                         ),
@@ -212,7 +227,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                       ),
                     ],
                   ),
-                ),
+                )),
               ),
             ),
           ),

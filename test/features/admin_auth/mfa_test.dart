@@ -82,4 +82,45 @@ void main() {
     expect(calls, ['enrol', 'verify f-new 654321']);
     expect(find.text('Two-step verification is on.'), findsOneWidget);
   });
+
+  testWidgets('a pasted code with a space is cleaned instead of truncated', (tester) async {
+    final calls = <String>[];
+    await tester.pumpWidget(_app(
+      calls,
+      const MfaState(enabledFactorId: 'f1', needsChallenge: true),
+      const MfaGate(child: Text('workspace')),
+    ));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('mfa-code')), '123 456');
+    await tester.pump();
+    expect(find.text('123456'), findsOneWidget);
+    await tester.tap(find.text('Verify'));
+    await tester.pumpAndSettle();
+    expect(calls.last, 'verify f1 123456');
+  });
+
+  testWidgets('turning two-step verification off asks first', (tester) async {
+    final calls = <String>[];
+    await tester.pumpWidget(_app(
+      calls,
+      const MfaState(enabledFactorId: 'f1', needsChallenge: false),
+      const Scaffold(body: SingleChildScrollView(child: MfaSettingsSection())),
+    ));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Turn off'));
+    await tester.pumpAndSettle();
+    expect(find.text('Turn Off Two-Step Verification?'), findsOneWidget);
+    expect(calls, isEmpty, reason: 'nothing happens until confirmed');
+
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(calls, isEmpty);
+
+    await tester.tap(find.text('Turn off'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Turn Off'));
+    await tester.pumpAndSettle();
+    expect(calls, ['disable f1']);
+  });
 }
