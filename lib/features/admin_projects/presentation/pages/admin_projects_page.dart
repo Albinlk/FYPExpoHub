@@ -39,7 +39,7 @@ class AdminProjectsPage extends ConsumerWidget {
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, setState) {
-            final isDesktop = MediaQuery.of(context).size.width >= 768;
+            final isDesktop = MediaQuery.sizeOf(context).width >= 768;
             return AlertDialog(
               title: Text(
                 item == null ? 'Add New Project' : 'Update Project', 
@@ -47,7 +47,7 @@ class AdminProjectsPage extends ConsumerWidget {
               ),
               content: SingleChildScrollView(
                 child: SizedBox(
-                  width: isDesktop ? 600 : MediaQuery.of(context).size.width * 0.85,
+                  width: isDesktop ? 600 : MediaQuery.sizeOf(context).width * 0.85,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -270,7 +270,7 @@ class AdminProjectsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
     final projects = ref.watch(projectsProvider);
 
     return Scaffold(
@@ -387,7 +387,7 @@ class AdminProjectsPage extends ConsumerWidget {
                                               ),
                                               child: Text(
                                                 'FEATURED',
-                                                style: TextStyle(color: Colors.amber.shade800, fontWeight: FontWeight.bold, fontSize: 8),
+                                                style: TextStyle(color: Colors.amber.shade800, fontWeight: FontWeight.bold, fontSize: 11),
                                               ),
                                             ),
                                         ],
@@ -430,7 +430,7 @@ class AdminProjectsPage extends ConsumerWidget {
                                           isPublished ? 'Published' : 'Draft',
                                           style: DesignSystem.labelCaps.copyWith(
                                             color: isPublished ? DesignSystem.onSecondaryContainer : DesignSystem.primary,
-                                            fontSize: 10,
+                                            fontSize: 11,
                                           ),
                                         ),
                                       ),

@@ -12,7 +12,7 @@ class FeedbackFormWidget extends ConsumerStatefulWidget {
   const FeedbackFormWidget({super.key});
 
   static void show(BuildContext context, WidgetRef ref) {
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
 
     // The form pops `true` only after the submission is confirmed saved, so
     // closing it with the X no longer shows a "thank you".
@@ -115,8 +115,8 @@ class _FeedbackFormWidgetState extends ConsumerState<FeedbackFormWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
-    final width = isDesktop ? 500.0 : MediaQuery.of(context).size.width * 0.9;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
+    final width = isDesktop ? 500.0 : MediaQuery.sizeOf(context).width * 0.9;
 
     return Container(
       width: width,
@@ -174,12 +174,22 @@ class _FeedbackFormWidgetState extends ConsumerState<FeedbackFormWidget> {
                     const SizedBox(height: DesignSystem.spaceXs),
                     Row(
                       children: List.generate(5, (i) {
-                        return GestureDetector(
-                          onTap: () => setState(() => _rating = i + 1),
-                          child: Icon(
-                            i < _rating ? Icons.star : Icons.star_border,
-                            color: DesignSystem.secondaryContainer,
-                            size: 28,
+                        final starred = i < _rating;
+                        return Semantics(
+                          // Announced as "3 stars, selected" and reachable by keyboard.
+                          label: '${i + 1} ${i == 0 ? 'star' : 'stars'}',
+                          selected: _rating == i + 1,
+                          button: true,
+                          excludeSemantics: true,
+                          child: IconButton(
+                            tooltip: '${i + 1} ${i == 0 ? 'star' : 'stars'}',
+                            onPressed: () => setState(() => _rating = i + 1),
+                            icon: Icon(
+                              starred ? Icons.star : Icons.star_border,
+                              // Dark enough to read on white (the apricot token was ~1.9:1).
+                              color: DesignSystem.secondary,
+                              size: 28,
+                            ),
                           ),
                         );
                       }),

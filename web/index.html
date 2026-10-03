@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <!--
     If you are serving your web app in a path other than the root, change the
@@ -17,8 +17,7 @@
   <base href="$FLUTTER_BASE_HREF">
 
   <meta charset="UTF-8">
-  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="description" content="FYP Expo Hub - UiTM FSKM Final Year Project Exhibition">
 
   <!-- Link previews (WhatsApp, Telegram, social) -->
@@ -86,7 +85,7 @@
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="fyp_expo_hub">
+  <meta name="apple-mobile-web-app-title" content="FYP Expo Hub">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
@@ -95,15 +94,21 @@
   <title>FYP Expo Hub</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#2A1838">
+  <meta name="color-scheme" content="light">
 </head>
 <body>
   <!-- Branded splash: visible at byte-zero while the Flutter engine
        downloads; removed by flutter_bootstrap.js on first frame. -->
-  <div id="splash">
+  <noscript>
+    <p style="font-family:sans-serif;padding:24px;max-width:36em">
+      FYP Expo Hub needs JavaScript. Please turn it on in your browser settings and reload this page.
+    </p>
+  </noscript>
+  <div id="splash" role="status" aria-live="polite">
     <div class="splash-inner">
       <div class="splash-logo">FYP Expo Hub</div>
       <div class="splash-sub">FSKM Final Year Project Exhibition</div>
-      <div class="splash-spinner"></div>
+      <div class="splash-spinner" aria-hidden="true"></div>
       <div class="splash-loading">Loading…</div>
     </div>
   </div>
@@ -156,7 +161,11 @@
     .splash-loading {
       font-size: 11px;
       letter-spacing: 1px;
-      color: rgba(255, 255, 255, 0.45);
+      color: rgba(255, 255, 255, 0.78);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .splash-spinner { animation: none; border-top-color: rgba(255, 255, 255, 0.9); }
+      #splash { transition: none !important; }
     }
   </style>
 

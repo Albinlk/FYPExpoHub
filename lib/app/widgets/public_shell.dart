@@ -18,7 +18,7 @@ class PublicShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final location = GoRouterState.of(context).uri.toString();
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
     // Only rebuild the shell when the sign-in *state* flips, not on every
     // lecturer/auth/Firestore emit (avoids rebuilding the whole nav).
     final lecturerSignedIn = ref.watch(
@@ -101,7 +101,11 @@ class _DesktopNavBar extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // Left: App Logo
-          GestureDetector(
+          Semantics(
+            link: true,
+            label: 'FYP Expo Hub, go to the home page',
+            excludeSemantics: true,
+            child: InkWell(
             onTap: () => _navigateTo(context, '/'),
             child: MouseRegion(
               cursor: SystemMouseCursors.click,
@@ -113,6 +117,7 @@ class _DesktopNavBar extends StatelessWidget {
                 ),
               ),
             ),
+          ),
           ),
 
           // Center: Links. Flexible + horizontal scroll so the row never runs

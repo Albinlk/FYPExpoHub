@@ -6,6 +6,7 @@ import '../../../../core/state/fypms_state_providers.dart';
 import 'fypms_loading_widget.dart';
 import 'rubric_evaluation_dialog.dart';
 import 'special_evaluation_dialog.dart';
+import '../../../../core/widgets/async_state.dart';
 
 /// The evaluations list shared by the supervisor, examiner and CSP-lecturer
 /// workspaces. Only forms [role] evaluates (see [fypmsFormEvaluatorRoles])
@@ -39,7 +40,7 @@ class FormEvaluationsView extends StatelessWidget {
       ),
       body: records.when(
         loading: () => const FypmsLoadingWidget(),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => AsyncErrorView(error: e, what: 'this page'),
         data: (list) {
           if (list.isEmpty) {
             return Center(child: Text(emptyText));
@@ -104,7 +105,7 @@ class _RecordEvaluationSection extends ConsumerWidget {
           ),
         submissions.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Text('Error: $e'),
+          error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypFormSubmissionsProvider(record.id)), what: 'this section'),
           data: (all) {
             final list = [for (final s in all) if (fypmsCanEvaluate(s.formCode, role)) s];
             if (list.isEmpty) {

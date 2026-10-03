@@ -116,7 +116,7 @@ class TitleSimilarClusterWidget extends StatelessWidget {
           Text(
             label,
             style: DesignSystem.labelCaps
-                .copyWith(color: Colors.orange.shade800, fontSize: 9),
+                .copyWith(color: Colors.orange.shade800, fontSize: 11),
           ),
         ],
       ),

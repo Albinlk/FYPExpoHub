@@ -12,6 +12,8 @@ import '../../../../core/supabase/fypms_rpc_service.dart';
 import '../widgets/fypms_file_link.dart';
 import '../widgets/fypms_loading_widget.dart';
 import '../widgets/student_record_workspace.dart';
+import '../../../../core/widgets/async_state.dart';
+import '../../../../core/widgets/admin_actions.dart';
 
 /// F6(a) proposal / F6(b) final report submissions: the report, its
 /// similarity index (max 30 %) and the original plagiarism report, endorsed by
@@ -51,7 +53,7 @@ class StudentReportsPage extends ConsumerWidget {
             Expanded(
               child: reports.when(
                 loading: () => const FypmsLoadingWidget(),
-                error: (e, _) => Center(child: Text('Error: $e')),
+                error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypReportSubmissionsProvider(record.id)), what: 'this page'),
                 data: (items) {
                   if (items.isEmpty) {
                     return Center(
@@ -266,7 +268,7 @@ class _ReportSubmissionDialogState extends ConsumerState<ReportSubmissionDialog>
     } catch (e) {
       if (!mounted) return;
       setState(() => _uploading = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to submit: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to submit: ${friendlyError(e)}')));
     }
   }
 
@@ -275,7 +277,7 @@ class _ReportSubmissionDialogState extends ConsumerState<ReportSubmissionDialog>
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
     final similarityError = _similarity.text.isEmpty ? null : similarityProblem(_similarity.text);
     final anyCount = _pages.text.isNotEmpty || _references.text.isNotEmpty || _academic.text.isNotEmpty;
     final countsProblem = reportCountsProblem(_reportType, _pages.text, _references.text, _academic.text);
@@ -294,7 +296,7 @@ class _ReportSubmissionDialogState extends ConsumerState<ReportSubmissionDialog>
       ),
       content: SingleChildScrollView(
         child: SizedBox(
-          width: isDesktop ? 500 : MediaQuery.of(context).size.width * 0.85,
+          width: isDesktop ? 500 : MediaQuery.sizeOf(context).width * 0.85,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -415,7 +417,7 @@ class _ReportSubmissionDialogState extends ConsumerState<ReportSubmissionDialog>
             backgroundColor: DesignSystem.secondary,
             foregroundColor: Colors.white,
           ),
-          child: Text(_uploading ? 'Uploading...' : 'Submit'),
+          child: Text(_uploading ? 'Uploading…' : 'Submit'),
         ),
       ],
     );

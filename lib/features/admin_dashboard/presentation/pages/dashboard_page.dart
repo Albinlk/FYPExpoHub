@@ -11,7 +11,7 @@ class DashboardPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
 
     final projects = ref.watch(projectsProvider);
     final booths = ref.watch(boothsProvider);
@@ -20,8 +20,9 @@ class DashboardPage extends ConsumerWidget {
     final fypRecords = ref.watch(fypRecordsProvider);
     final pendingRequests = ref.watch(fypPendingSupervisionRequestsProvider);
 
-    final totalFypRecords = fypRecords.value?.length ?? 0;
-    final totalPendingRequests = pendingRequests.value?.length ?? 0;
+    // "–" until the count is known, so loading or failure is never shown as 0.
+    final totalFypRecords = fypRecords.hasValue ? '${fypRecords.requireValue.length}' : '–';
+    final totalPendingRequests = pendingRequests.hasValue ? '${pendingRequests.requireValue.length}' : '–';
 
     return Scaffold(
       body: SingleChildScrollView(
@@ -35,20 +36,24 @@ class DashboardPage extends ConsumerWidget {
             const SizedBox(height: DesignSystem.spaceXl),
 
             // Statistics Grid
-            GridView.count(
+            GridView(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: isDesktop ? 4 : 2,
-              crossAxisSpacing: DesignSystem.spaceMd,
-              mainAxisSpacing: DesignSystem.spaceMd,
-              childAspectRatio: isDesktop ? 1.5 : 1.2,
+              // A fixed row height that grows with the font size, not an
+              // aspect ratio that clips the number at large text scales.
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: isDesktop ? 4 : (MediaQuery.sizeOf(context).width < 340 ? 1 : 2),
+                crossAxisSpacing: DesignSystem.spaceMd,
+                mainAxisSpacing: DesignSystem.spaceMd,
+                mainAxisExtent: 112 * MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.3),
+              ),
               children: [
                 _buildStatCard('Total Projects', '${projects.length}', Icons.folder, Colors.blue),
                 _buildStatCard('Booths Available', '${booths.length}', Icons.map, Colors.green),
                 _buildStatCard('Event Schedules', '${schedule.length}', Icons.schedule, Colors.orange),
                 _buildStatCard('Files Imported', '${imports.length}', Icons.file_upload, Colors.purple),
-                _buildStatCard('FYP Records', '$totalFypRecords', Icons.school, Colors.teal),
-                _buildStatCard('Pending Requests', '$totalPendingRequests', Icons.mail_outline, Colors.red),
+                _buildStatCard('FYP Records', totalFypRecords, Icons.school, Colors.teal),
+                _buildStatCard('Pending Requests', totalPendingRequests, Icons.mail_outline, Colors.red),
               ],
             ),
 
@@ -226,7 +231,7 @@ class DashboardPage extends ConsumerWidget {
                                     statusText,
                                     style: DesignSystem.labelCaps.copyWith(
                                       color: isPending ? DesignSystem.onSecondaryContainer : DesignSystem.primary,
-                                      fontSize: 10,
+                                      fontSize: 11,
                                     ),
                                   ),
                                 ),

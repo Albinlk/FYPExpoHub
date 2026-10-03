@@ -26,7 +26,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
     final padding = isDesktop ? DesignSystem.marginDesktop : DesignSystem.marginMobile;
     final event = ref.watch(eventProvider);
 
@@ -116,8 +116,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                           },
                           decoration: InputDecoration(
                             hintText: isDesktop
-                                ? 'Search projects, supervisors, or keywords...'
-                                : 'Search projects...',
+                                ? 'Search projects, supervisors, or keywords…'
+                                : 'Search projects…',
                             prefixIcon: const Icon(Icons.search, color: DesignSystem.primary),
                             suffixIcon: ElevatedButton(
                               onPressed: () {
@@ -234,11 +234,11 @@ class _HomePageState extends ConsumerState<HomePage> {
                         return GridView.builder(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
-                          gridDelegate: ProjectCard.gridDelegate(MediaQuery.sizeOf(context).width),
+                          gridDelegate: ProjectCard.gridDelegate(MediaQuery.sizeOf(context).width, textScale: MediaQuery.textScalerOf(context).scale(1)),
                           itemCount: display.length,
                           itemBuilder: (context, index) => ProjectCard(
                             project: display[index],
-                            onTap: () => context.go('/projects/${display[index].slug}'),
+                            onTap: () => context.push('/projects/${display[index].slug}'),
                           ),
                         );
                       }
@@ -253,7 +253,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                           child: ProjectCard(
                             project: display[index],
                             imageHeight: 160,
-                            onTap: () => context.go('/projects/${display[index].slug}'),
+                            onTap: () => context.push('/projects/${display[index].slug}'),
                           ),
                         ),
                       );
@@ -432,7 +432,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 textAlign: TextAlign.center,
                 style: DesignSystem.labelCaps.copyWith(
                   color: Colors.white60,
-                  fontSize: 10,
+                  fontSize: 11,
                   letterSpacing: 0.5,
                 ),
               ),
@@ -552,7 +552,7 @@ class _CountdownTimerState extends State<_CountdownTimer> {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
 
     if (_concluded) {
       return _statusBadge(
@@ -579,7 +579,14 @@ class _CountdownTimerState extends State<_CountdownTimer> {
 
     // FittedBox scales the 4-item strip down on narrow screens instead of
     // overflowing (pre-existing 25px overflow at ~390px).
-    return FittedBox(
+    // One sentence for screen readers, updated per minute rather than every
+    // second so it is not read out four times a second.
+    return Semantics(
+      label: 'Starts in $days ${days == 1 ? 'day' : 'days'}, '
+          '$hours ${hours == 1 ? 'hour' : 'hours'} and '
+          '$minutes ${minutes == 1 ? 'minute' : 'minutes'}',
+      excludeSemantics: true,
+      child: FittedBox(
       fit: BoxFit.scaleDown,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -592,6 +599,7 @@ class _CountdownTimerState extends State<_CountdownTimer> {
           _buildCountdownDivider(),
           _buildCountdownItem(seconds.toString().padLeft(2, '0'), 'Secs', isDesktop),
         ],
+      ),
       ),
     );
   }
@@ -647,7 +655,7 @@ class _CountdownTimerState extends State<_CountdownTimer> {
           const SizedBox(height: 2),
           Text(
             label,
-            style: DesignSystem.labelCaps.copyWith(color: Colors.white60, fontSize: 10),
+            style: DesignSystem.labelCaps.copyWith(color: Colors.white60, fontSize: 11),
           ),
         ],
       ),

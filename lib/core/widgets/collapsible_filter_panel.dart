@@ -71,7 +71,7 @@ class CollapsibleFilterPanel extends StatelessWidget {
               ),
             ],
             AnimatedSize(
-              duration: const Duration(milliseconds: 200),
+              duration: MediaQuery.disableAnimationsOf(context) ? Duration.zero : const Duration(milliseconds: 200),
               curve: Curves.easeInOut,
               alignment: Alignment.topCenter,
               child: expanded
@@ -197,7 +197,7 @@ class _FilterToggle extends StatelessWidget {
           backgroundColor: DesignSystem.secondary,
           textStyle: const TextStyle(
             color: Colors.white,
-            fontSize: 10,
+            fontSize: 11,
             fontWeight: FontWeight.bold,
           ),
           child: Icon(

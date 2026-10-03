@@ -8,6 +8,8 @@ import '../../../../core/state/state_providers.dart';
 import '../../../../core/supabase/supabase_client_provider.dart';
 import '../../../../core/supabase/supabase_database_service.dart' show kEventSlug;
 import '../../domain/project_import.dart';
+import '../../../../core/widgets/admin_actions.dart';
+import '../../../../core/layout/responsive.dart';
 
 /// Applies previewed rows to the current exhibition (`import_event_projects`).
 /// [onDuplicate] is 'skip' or 'update'.
@@ -104,7 +106,7 @@ class _ProjectImportDialogState extends ConsumerState<ProjectImportDialog> {
     try {
       _load(file!.name, projectGridFromFile(file.name, file.bytes!));
     } catch (e) {
-      setState(() => _error = 'Could not read ${file!.name}: $e');
+      setState(() => _error = 'Could not read ${file!.name}: ${friendlyError(e)}');
     }
   }
 
@@ -126,7 +128,7 @@ class _ProjectImportDialogState extends ConsumerState<ProjectImportDialog> {
       );
       if (mounted) setState(() => _result = res);
     } catch (e) {
-      if (mounted) setState(() => _error = 'Import failed: $e');
+      if (mounted) setState(() => _error = 'Import failed: ${friendlyError(e)}');
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -142,7 +144,7 @@ class _ProjectImportDialogState extends ConsumerState<ProjectImportDialog> {
       backgroundColor: DesignSystem.surfaceContainerLowest,
       title: Text('Import Projects & Booths', style: DesignSystem.h2),
       content: SizedBox(
-        width: 720,
+        width: dialogWidth(context, 720),
         height: 520,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

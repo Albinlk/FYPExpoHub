@@ -16,7 +16,7 @@ class SchedulePage extends ConsumerStatefulWidget {
 class _SchedulePageState extends ConsumerState<SchedulePage> {
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
     final padding = isDesktop ? DesignSystem.marginDesktop : DesignSystem.marginMobile;
 
     final event = ref.watch(eventProvider);
@@ -202,7 +202,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
                                       ),
                                       child: Text(
                                         'Internal',
-                                        style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onTertiaryContainer, fontSize: 10),
+                                        style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onTertiaryContainer, fontSize: 11),
                                       ),
                                     ),
                                   if (isOngoing)
@@ -215,7 +215,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
                                       ),
                                       child: Text(
                                         'Ongoing',
-                                        style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSecondaryContainer, fontSize: 10),
+                                        style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSecondaryContainer, fontSize: 11),
                                       ),
                                     ),
                                 ],

@@ -7,6 +7,8 @@ import '../theme/theme.dart';
 import '../../features/fypms/presentation/widgets/semester_selector.dart';
 import '../../features/fypms/presentation/pages/notifications_page.dart';
 import '../../features/admin_auth/presentation/widgets/my_account_dialog.dart';
+import '../../core/widgets/async_state.dart';
+import '../../core/layout/responsive.dart';
 
 /// Workspace dashboard routes match exactly only — their sub-pages (e.g.
 /// /fypms/supervisor/evaluations) must not also highlight the dashboard
@@ -42,7 +44,7 @@ class FypmsShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
     final location = GoRouterState.of(context).uri.toString();
     final roles = ref.watch(fypmsCurrentRolesProvider);
     final isAdmin = ref.watch(isFypAdminProvider);
@@ -53,6 +55,19 @@ class FypmsShell extends ConsumerWidget {
     final isCsp = ref.watch(isCspLecturerProvider);
     final isPu = ref.watch(isFypProgrammeHeadProvider);
     final isStaff = isAdmin || isCoordinator || isSupervisor || isExaminer || isCsp || isPu;
+
+    // A role lookup that is still running or has failed is not "no access".
+    if (!roles.hasValue) {
+      return Scaffold(
+        body: roles.hasError
+            ? AsyncErrorView(
+                error: roles.error!,
+                what: 'your FYPMS access',
+                onRetry: () => ref.invalidate(fypmsCurrentRolesProvider),
+              )
+            : const AsyncLoadingView(what: 'your FYPMS access'),
+      );
+    }
 
     final hasAccess =
         roles.value?.isNotEmpty == true && (isAdmin || isCoordinator || isStudent || isSupervisor || isExaminer || isCsp || isPu);
@@ -99,9 +114,14 @@ class FypmsShell extends ConsumerWidget {
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'FYP Management System',
-              style: DesignSystem.h3.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+            Flexible(
+              child: Text(
+                // Phones need the room for the action icons.
+                Breakpoints.isNarrow(context) ? 'FYPMS' : 'FYP Management System',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: DesignSystem.h3.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
             ),
             if (isDesktop)
               Row(
@@ -126,15 +146,17 @@ class FypmsShell extends ConsumerWidget {
                 if (isStaff) const SemesterSelector(),
                 const NotificationBell(),
                 const MyAccountButton(compact: true),
-                IconButton(
-                  icon: const Icon(Icons.logout),
-                  onPressed: () => _logout(context, ref),
-                  tooltip: 'Sign Out',
-                ),
+                // On the narrowest phones Sign Out lives in the menu instead.
+                if (!Breakpoints.isNarrow(context))
+                  IconButton(
+                    icon: const Icon(Icons.logout),
+                    onPressed: () => _logout(context, ref),
+                    tooltip: 'Sign Out',
+                  ),
               ]
             : null,
       ),
-      drawer: !isDesktop ? _FypmsDrawer(currentPath: location, isAdmin: isAdmin, isCoordinator: isCoordinator, isStudent: isStudent, isSupervisor: isSupervisor, isExaminer: isExaminer, isCsp: isCsp, isPu: isPu) : null,
+      drawer: !isDesktop ? _FypmsDrawer(onSignOut: () => _logout(context, ref), currentPath: location, isAdmin: isAdmin, isCoordinator: isCoordinator, isStudent: isStudent, isSupervisor: isSupervisor, isExaminer: isExaminer, isCsp: isCsp, isPu: isPu) : null,
       body: Row(
         children: [
           if (isDesktop)
@@ -357,8 +379,10 @@ class _FypmsDrawer extends StatelessWidget {
   final bool isExaminer;
   final bool isCsp;
   final bool isPu;
+  final VoidCallback onSignOut;
 
   const _FypmsDrawer({
+    required this.onSignOut,
     required this.currentPath,
     required this.isAdmin,
     required this.isCoordinator,
@@ -408,6 +432,19 @@ class _FypmsDrawer extends StatelessWidget {
             Material(
               type: MaterialType.transparency,
               child: ListTile(
+                leading: const Icon(Icons.logout, color: Colors.white70, size: 20),
+                title: Text('Sign Out', style: DesignSystem.bodySm.copyWith(color: Colors.white70)),
+                onTap: () {
+                  Navigator.pop(context);
+                  onSignOut();
+                },
+                shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
+                dense: true,
+              ),
+            ),
+            Material(
+              type: MaterialType.transparency,
+              child: ListTile(
                 leading: const Icon(Icons.arrow_back, color: Colors.white70, size: 20),
                 title: Text(
                   'Back to Public Portal',
@@ -447,6 +484,7 @@ class _FypmsDrawer extends StatelessWidget {
               fontWeight: active ? FontWeight.bold : FontWeight.normal,
             ),
           ),
+          selected: active,
           onTap: () {
             Navigator.pop(context);
             context.go(route);

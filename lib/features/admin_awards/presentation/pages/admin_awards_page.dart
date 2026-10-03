@@ -8,12 +8,13 @@ import '../../../../core/state/state_providers.dart';
 import '../../../../core/supabase/supabase_database_service.dart' show kEventSlug;
 import '../../../../core/widgets/admin_actions.dart';
 import '../widgets/award_categories_section.dart';
+import '../../../../core/layout/responsive.dart';
 
 class AdminAwardsPage extends ConsumerWidget {
   const AdminAwardsPage({super.key});
 
   void _showAddEditDialog(BuildContext context, WidgetRef ref, [PublishedAwardWinner? item]) {
-    final titleController = TextEditingController(text: item?.projectTitle ?? 'Gold Innovation Award');
+    final titleController = TextEditingController(text: item?.projectTitle ?? '');
     final descController = TextEditingController(text: item?.description ?? '');
     final sponsorController = TextEditingController(text: item?.sponsor ?? '');
     
@@ -23,6 +24,7 @@ class AdminAwardsPage extends ConsumerWidget {
         categories.any((c) => c.id == item?.awardCategoryId) ? item!.awardCategoryId : null;
     String status = item?.publicationStatus ?? 'published';
     bool saving = false;
+    String? error;
 
     final projects = ref.read(projectsProvider);
 
@@ -31,12 +33,12 @@ class AdminAwardsPage extends ConsumerWidget {
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, setState) {
-            final isDesktop = MediaQuery.of(context).size.width >= 768;
+            final isDesktop = MediaQuery.sizeOf(context).width >= 768;
             return AlertDialog(
               title: Text(item == null ? 'Add Award Record' : 'Update Award Record', style: (isDesktop ? DesignSystem.h3 : DesignSystem.bodyLg).copyWith(color: DesignSystem.primary)),
               content: SingleChildScrollView(
                 child: SizedBox(
-                  width: isDesktop ? 500 : MediaQuery.of(context).size.width * 0.85,
+                  width: dialogWidth(context, 500),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -63,7 +65,10 @@ class AdminAwardsPage extends ConsumerWidget {
                       ],
                       TextField(
                         controller: titleController,
-                        decoration: const InputDecoration(labelText: 'Category / Award Name'),
+                        decoration: const InputDecoration(
+                          labelText: 'Category / Award Name',
+                          hintText: 'e.g. Gold Innovation Award',
+                        ),
                       ),
                       const SizedBox(height: DesignSystem.spaceSm),
                       TextField(
@@ -81,7 +86,11 @@ class AdminAwardsPage extends ConsumerWidget {
                       const SizedBox(height: DesignSystem.spaceSm),
                       DropdownButtonFormField<String?>(
                         initialValue: selectedProjectId,
-                        decoration: const InputDecoration(contentPadding: EdgeInsets.symmetric(horizontal: 12)),
+                        isExpanded: true,
+                        decoration: const InputDecoration(
+                          labelText: 'Winning Project (required)',
+                          contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                        ),
                         hint: const Text('Select Project'),
                         items: [
                           const DropdownMenuItem<String?>(
@@ -91,7 +100,7 @@ class AdminAwardsPage extends ConsumerWidget {
                           ...projects.map((p) {
                             return DropdownMenuItem<String?>(
                               value: p.id,
-                              child: Text(p.title.length > 30 ? '${p.title.substring(0, 30)}...' : p.title),
+                              child: Text(p.title, overflow: TextOverflow.ellipsis),
                             );
                           }),
                         ],
@@ -117,6 +126,13 @@ class AdminAwardsPage extends ConsumerWidget {
                           }
                         },
                       )),
+                      if (error != null) ...[
+                        const SizedBox(height: DesignSystem.spaceSm),
+                        Semantics(
+                          liveRegion: true,
+                          child: Text(error!, style: DesignSystem.bodySm.copyWith(color: DesignSystem.error)),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -128,7 +144,16 @@ class AdminAwardsPage extends ConsumerWidget {
                 ),
                 ElevatedButton(
                   onPressed: saving ? null : () async {
-                    if (titleController.text.trim().isEmpty) return;
+                    if (titleController.text.trim().isEmpty) {
+                      setState(() => error = 'Enter the award name.');
+                      return;
+                    }
+                    if (selectedProjectId == null) {
+                      // Without a project the public page would show "N/A" for the team.
+                      setState(() => error = 'Choose the winning project.');
+                      return;
+                    }
+                    setState(() => error = null);
 
                     // Fetch student names from selected project
                     final associatedProj = projects.cast<Project?>().firstWhere(
@@ -219,7 +244,7 @@ class AdminAwardsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
     final awards = ref.watch(awardsProvider);
 
     return Scaffold(
@@ -339,7 +364,7 @@ class AdminAwardsPage extends ConsumerWidget {
                                           isPublished ? 'Published' : 'Draft',
                                           style: DesignSystem.labelCaps.copyWith(
                                             color: isPublished ? DesignSystem.onSecondaryContainer : DesignSystem.primary,
-                                            fontSize: 10,
+                                            fontSize: 11,
                                           ),
                                         ),
                                       ),

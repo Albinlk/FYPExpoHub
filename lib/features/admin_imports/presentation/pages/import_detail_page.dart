@@ -8,6 +8,7 @@ import '../../../../core/supabase/supabase_client_provider.dart';
 import '../../../../core/domain/models/import_models.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../domain/import_checks.dart';
+import '../../../../core/widgets/async_state.dart';
 
 class ImportDetailPage extends ConsumerStatefulWidget {
   final String importId;
@@ -84,7 +85,7 @@ class _ImportDetailPageState extends ConsumerState<ImportDetailPage> {
               '${res["published_awards"] ?? 0} awards added'
               '${replaced > 0 ? ', $replaced old items replaced' : ''}.',
             ),
-            backgroundColor: Colors.green,
+            backgroundColor: DesignSystem.tertiary,
           ),
         );
         context.go('/admin/imports');
@@ -92,7 +93,7 @@ class _ImportDetailPageState extends ConsumerState<ImportDetailPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Publish error: $e'), backgroundColor: DesignSystem.error),
+          SnackBar(content: Text('Publish error: ${friendlyError(e)}'), backgroundColor: DesignSystem.error),
         );
       }
     } finally {
@@ -123,18 +124,22 @@ class _ImportDetailPageState extends ConsumerState<ImportDetailPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            // Wrap, not Row: the title and the long button label would overflow on a phone.
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: DesignSystem.spaceMd,
+              runSpacing: DesignSystem.spaceSm,
               children: [
                 Text('Staged Import Candidates', style: DesignSystem.h2Mobile.copyWith(color: DesignSystem.primary)),
                 ElevatedButton.icon(
                   onPressed: _isPublishing ? null : _publish,
                   icon: _isPublishing
-                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white, semanticsLabel: 'Publishing'))
                       : const Icon(Icons.check_circle),
                   label: const Text('Approve & Publish Selected'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
+                    backgroundColor: DesignSystem.tertiary,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                     shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
@@ -148,7 +153,7 @@ class _ImportDetailPageState extends ConsumerState<ImportDetailPage> {
             issuesAsync.when(
               data: (issues) => issues.isEmpty ? const SizedBox.shrink() : _IssuesCard(issues: issues),
               loading: () => const SizedBox.shrink(),
-              error: (e, _) => Text('Error loading validation issues: $e'),
+              error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(validationIssuesProvider(widget.importId)), what: 'validation issues'),
             ),
 
             // Schedule Candidates
@@ -204,7 +209,7 @@ class _ImportDetailPageState extends ConsumerState<ImportDetailPage> {
                         );
                       },
                       loading: () => const Center(child: CircularProgressIndicator()),
-                      error: (e, _) => Text('Error loading schedule candidates: $e'),
+                      error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(scheduleCandidatesProvider(widget.importId)), what: 'schedule candidates'),
                     ),
                   ],
                 ),
@@ -261,7 +266,7 @@ class _ImportDetailPageState extends ConsumerState<ImportDetailPage> {
                         );
                       },
                       loading: () => const Center(child: CircularProgressIndicator()),
-                      error: (e, _) => Text('Error loading award candidates: $e'),
+                      error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(awardCandidatesProvider(widget.importId)), what: 'award candidates'),
                     ),
                   ],
                 ),
@@ -293,7 +298,7 @@ class _ImportDetailPageState extends ConsumerState<ImportDetailPage> {
                         );
                       },
                       loading: () => const Center(child: CircularProgressIndicator()),
-                      error: (e, _) => Text('Error loading skips: $e'),
+                      error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(privacySkipsProvider(widget.importId)), what: 'skips'),
                     ),
                   ],
                 ),

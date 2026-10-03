@@ -13,6 +13,8 @@ import '../../../../core/utils/external_link.dart';
 import '../widgets/fypms_file_link.dart';
 import '../widgets/fypms_loading_widget.dart';
 import '../widgets/student_record_workspace.dart';
+import '../../../../core/widgets/async_state.dart';
+import '../../../../core/widgets/admin_actions.dart';
 
 const _bucket = 'fyp-deliverables';
 
@@ -30,7 +32,7 @@ class StudentDeliverablesPage extends ConsumerWidget {
         final deliverables = ref.watch(fypDeliverablesProvider(record.id));
         return deliverables.when(
           loading: () => const FypmsLoadingWidget(),
-          error: (e, _) => Center(child: Text('Error: $e')),
+          error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypDeliverablesProvider(record.id)), what: 'this page'),
           data: (items) => _Body(record: record, items: items),
         );
       },
@@ -172,7 +174,7 @@ class _OpenButton extends StatelessWidget {
       onPressed: uri == null ? null : () => launchUrl(uri, webOnlyWindowName: '_blank'),
       icon: const Icon(Icons.open_in_new, size: 16),
       label: const Text('Open'),
-      style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+      style: TextButton.styleFrom(visualDensity: VisualDensity.standard),
     );
   }
 }
@@ -255,13 +257,13 @@ class _DeliverableUploadDialogState extends ConsumerState<DeliverableUploadDialo
     } catch (e) {
       if (!mounted) return;
       setState(() => _busy = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to submit: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to submit: ${friendlyError(e)}')));
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
     final spec = widget.spec;
     final ready = !_busy && _title.text.trim().isNotEmpty && (_useLink ? _linkValid : _file != null);
     final types = spec.extensions.isEmpty ? 'any file' : spec.extensions.map((e) => '.$e').join(' / ');
@@ -270,7 +272,7 @@ class _DeliverableUploadDialogState extends ConsumerState<DeliverableUploadDialo
       title: Text(spec.title, style: (isDesktop ? DesignSystem.h3 : DesignSystem.bodyLg).copyWith(color: DesignSystem.primary)),
       content: SingleChildScrollView(
         child: SizedBox(
-          width: isDesktop ? 480 : MediaQuery.of(context).size.width * 0.85,
+          width: isDesktop ? 480 : MediaQuery.sizeOf(context).width * 0.85,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -331,7 +333,7 @@ class _DeliverableUploadDialogState extends ConsumerState<DeliverableUploadDialo
         ElevatedButton(
           onPressed: ready ? _submit : null,
           style: ElevatedButton.styleFrom(backgroundColor: DesignSystem.secondary, foregroundColor: Colors.white),
-          child: Text(_busy ? 'Uploading...' : 'Submit'),
+          child: Text(_busy ? 'Uploading…' : 'Submit'),
         ),
       ],
     );

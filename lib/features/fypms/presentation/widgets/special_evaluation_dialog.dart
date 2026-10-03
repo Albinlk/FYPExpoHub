@@ -4,6 +4,9 @@ import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/fypms_special_evaluation.dart';
 import '../../../../core/domain/models/fypms/fyp_record.dart';
 import '../../../../core/state/fypms_state_providers.dart';
+import '../../../../core/widgets/async_state.dart';
+import '../../../../core/widgets/admin_actions.dart';
+import '../../../../core/layout/responsive.dart';
 
 /// F14: the CSP650 lecturer checks the four textbook conditions for special
 /// evaluation. Progress + LMC comes from the F9 / F13 evaluations; the final
@@ -58,7 +61,7 @@ class _SpecialEvaluationDialogState extends ConsumerState<SpecialEvaluationDialo
     } catch (e) {
       if (!mounted) return;
       setState(() => _busy = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: ${friendlyError(e)}')));
     }
   }
 
@@ -77,10 +80,10 @@ class _SpecialEvaluationDialogState extends ConsumerState<SpecialEvaluationDialo
       backgroundColor: DesignSystem.surfaceContainerLowest,
       title: Text('F14 — Special Evaluation', style: DesignSystem.h2),
       content: SizedBox(
-        width: 560,
+        width: dialogWidth(context, 560),
         child: checks.when(
           loading: () => const SizedBox(height: 120, child: Center(child: CircularProgressIndicator())),
-          error: (e, _) => Text('Could not load the checks: $e'),
+          error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypSpecialEvaluationChecksProvider(widget.record.id)), what: 'the checks'),
           data: (c) => SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,

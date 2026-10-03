@@ -28,7 +28,7 @@ class AdminShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
     final location = GoRouterState.of(context).uri.toString();
 
     return Scaffold(
@@ -38,9 +38,13 @@ class AdminShell extends ConsumerWidget {
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'FYP Expo Hub CMS',
-              style: DesignSystem.h3.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+            Flexible(
+              child: Text(
+                'FYP Expo Hub CMS',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: DesignSystem.h3.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
             ),
             if (isDesktop)
               Row(
@@ -67,7 +71,12 @@ class AdminShell extends ConsumerWidget {
               ]
             : null,
       ),
-      drawer: !isDesktop ? _AdminDrawer(currentPath: location) : null,
+      drawer: !isDesktop
+          ? _AdminDrawer(
+              currentPath: location,
+              onSendFeedback: () => FeedbackFormWidget.show(context, ref),
+            )
+          : null,
       body: Row(
         children: [
           if (isDesktop) _AdminSidebar(currentPath: location),
@@ -89,12 +98,9 @@ class AdminShell extends ConsumerWidget {
                               backgroundColor: DesignSystem.secondary,
                               foregroundColor: Colors.white,
                             )
-                          : FloatingActionButton(
-                              onPressed: () => FeedbackFormWidget.show(context, ref),
-                              backgroundColor: DesignSystem.secondary,
-                              foregroundColor: Colors.white,
-                              child: const Icon(Icons.feedback_outlined, size: 24),
-                            ),
+                          // On phones the button would cover Save buttons and table
+                          // rows, so Send Feedback lives in the menu instead.
+                          : const SizedBox.shrink(),
                     ),
                   ),
                 ],
@@ -191,6 +197,7 @@ class _AdminSidebar extends StatelessWidget {
               fontWeight: active ? FontWeight.bold : FontWeight.normal,
             ),
           ),
+          selected: active,
           onTap: () => context.go(route),
           shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
           dense: true,
@@ -202,8 +209,9 @@ class _AdminSidebar extends StatelessWidget {
 
 class _AdminDrawer extends StatelessWidget {
   final String currentPath;
+  final VoidCallback onSendFeedback;
 
-  const _AdminDrawer({required this.currentPath});
+  const _AdminDrawer({required this.currentPath, required this.onSendFeedback});
 
   @override
   Widget build(BuildContext context) {
@@ -253,6 +261,19 @@ class _AdminDrawer extends StatelessWidget {
             Material(
               type: MaterialType.transparency,
               child: ListTile(
+                leading: const Icon(Icons.rate_review_outlined, color: Colors.white70, size: 20),
+                title: Text('Send Feedback', style: DesignSystem.bodySm.copyWith(color: Colors.white70)),
+                onTap: () {
+                  Navigator.pop(context);
+                  onSendFeedback();
+                },
+                shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
+                dense: true,
+              ),
+            ),
+            Material(
+              type: MaterialType.transparency,
+              child: ListTile(
                 leading: const Icon(Icons.arrow_back, color: Colors.white70, size: 20),
                 title: Text(
                   'Back to Public Portal',
@@ -292,6 +313,7 @@ class _AdminDrawer extends StatelessWidget {
               fontWeight: active ? FontWeight.bold : FontWeight.normal,
             ),
           ),
+          selected: active,
           onTap: () {
             Navigator.pop(context);
             context.go(route);

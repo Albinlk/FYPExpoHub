@@ -1,10 +1,13 @@
 import 'dart:convert';
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../app/theme/theme.dart';
 import '../../core/supabase/supabase_client_provider.dart';
+import '../../core/widgets/admin_actions.dart';
+import '../../core/widgets/busy_button.dart';
 
 /// Authenticator-app (TOTP) MFA (backlog F8). Once a verified factor
 /// exists, the database only honours admin / coordinator powers in an
@@ -137,7 +140,10 @@ class _MfaChallengeViewState extends ConsumerState<MfaChallengeView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
+      // Scrolls so the keyboard and a large font never push Verify off screen.
+      body: SafeArea(
+       child: SingleChildScrollView(
+        child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 380),
           child: Padding(
@@ -158,20 +164,27 @@ class _MfaChallengeViewState extends ConsumerState<MfaChallengeView> {
                   autofocus: true,
                   keyboardType: TextInputType.number,
                   textAlign: TextAlign.center,
-                  maxLength: 6,
+                  autofillHints: const [AutofillHints.oneTimeCode],
+                  inputFormatters: [_sixDigitCode],
                   onSubmitted: (_) => _verify(),
-                  decoration: InputDecoration(border: const OutlineInputBorder(), errorText: _error, counterText: ''),
+                  decoration: InputDecoration(
+                    labelText: '6-digit code',
+                    border: const OutlineInputBorder(),
+                    errorText: _error,
+                  ),
                 ),
                 const SizedBox(height: DesignSystem.spaceMd),
                 SizedBox(
                   width: double.infinity,
-                  child: FilledButton(onPressed: _busy ? null : _verify, child: const Text('Verify')),
+                  child: BusyButton(label: 'Verify', busyLabel: 'Verifying…', busy: _busy, onPressed: _verify),
                 ),
                 TextButton(onPressed: _busy ? null : _signOut, child: const Text('Sign out')),
               ],
             ),
           ),
         ),
+        ),
+       ),
       ),
     );
   }
@@ -207,7 +220,7 @@ class _MfaSettingsSectionState extends ConsumerState<MfaSettingsSection> {
     } on AuthException catch (e) {
       if (mounted) setState(() => _message = e.message);
     } catch (e) {
-      if (mounted) setState(() => _message = '$e');
+      if (mounted) setState(() => _message = friendlyError(e));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -229,7 +242,21 @@ class _MfaSettingsSectionState extends ConsumerState<MfaSettingsSection> {
           Align(
             alignment: Alignment.centerRight,
             child: TextButton(
-              onPressed: _busy ? null : () => _run(() => ref.read(mfaServiceProvider).disable(state.value!.enabledFactorId!)),
+              onPressed: _busy
+                  ? null
+                  : () async {
+                      final factorId = state.value!.enabledFactorId!;
+                      final ok = await confirmAction(
+                        context,
+                        title: 'Turn Off Two-Step Verification?',
+                        message: 'Your account will be protected by your password alone. '
+                            'Admin and coordinator powers may stop working until you turn it on again.',
+                        confirmLabel: 'Turn Off',
+                        destructive: true,
+                      );
+                      if (!ok || !mounted) return;
+                      await _run(() => ref.read(mfaServiceProvider).disable(factorId));
+                    },
               child: const Text('Turn off'),
             ),
           ),
@@ -260,6 +287,7 @@ class _MfaSettingsSectionState extends ConsumerState<MfaSettingsSection> {
               color: Colors.white,
               padding: const EdgeInsets.all(8),
               child: Image.network(
+                semanticLabel: 'QR code to scan with your authenticator app',
                 'data:image/svg+xml;base64,${base64Encode(utf8.encode(enrolment.qrSvg))}',
                 width: 180,
                 height: 180,
@@ -273,7 +301,8 @@ class _MfaSettingsSectionState extends ConsumerState<MfaSettingsSection> {
             key: const Key('mfa-enrol-code'),
             controller: _code,
             keyboardType: TextInputType.number,
-            maxLength: 6,
+            autofillHints: const [AutofillHints.oneTimeCode],
+            inputFormatters: [_sixDigitCode],
             decoration: const InputDecoration(labelText: '6-digit code', border: OutlineInputBorder(), isDense: true),
           ),
           Align(
@@ -299,3 +328,14 @@ class _MfaSettingsSectionState extends ConsumerState<MfaSettingsSection> {
     );
   }
 }
+
+/// Keeps digits only and caps at six, so pasting "123 456" from an
+/// authenticator app works instead of being truncated at the space.
+final TextInputFormatter _sixDigitCode = TextInputFormatter.withFunction((oldValue, newValue) {
+  final digits = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
+  final capped = digits.length > 6 ? digits.substring(0, 6) : digits;
+  return TextEditingValue(
+    text: capped,
+    selection: TextSelection.collapsed(offset: capped.length),
+  );
+});

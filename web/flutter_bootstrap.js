@@ -5,7 +5,11 @@
 // X-Frame-Options / frame-ancestors header, so refuse to run those routes
 // inside someone else's frame. Public pages stay embeddable.
 (function () {
-  var protectedArea = /^\/(admin|lecturer|fypms)(\/|$)/.test(location.pathname);
+  // The admin subdomain redirects "/" to the sign-in page client-side, after
+  // this check has run, so the whole host counts as protected.
+  var protectedArea =
+    /^\/(admin|lecturer|fypms)(\/|$)/.test(location.pathname) ||
+    /^admin\./.test(location.hostname);
   if (protectedArea && window.top !== window.self) {
     document.documentElement.style.display = 'none';
     try {
@@ -36,8 +40,14 @@ _flutter.loader.load({
 
     // Display the HTML splash (defined in index.html) until the first
     // Flutter frame is ready, then fade it out.
-    const appRunner = await engineInitializer.initializeEngine();
-    await appRunner.runApp();
+    try {
+      const appRunner = await engineInitializer.initializeEngine();
+      await appRunner.runApp();
+    } catch (e) {
+      console.error('App failed to start:', e);
+      showStartupError();
+      return;
+    }
     const splash = document.querySelector('#splash');
     if (splash) {
       splash.classList.add('splash-fade');
@@ -45,3 +55,36 @@ _flutter.loader.load({
     }
   },
 });
+
+// If the engine never starts (offline, blocked script, unsupported browser)
+// the splash would spin forever; say what happened and offer a reload.
+function showStartupError() {
+  var splash = document.querySelector('#splash');
+  if (!splash) return;
+  var loading = splash.querySelector('.splash-loading');
+  if (loading) {
+    loading.textContent = 'Could not start the app. Check your connection and try again.';
+    loading.style.fontSize = '14px';
+    loading.style.letterSpacing = 'normal';
+    loading.style.maxWidth = '24em';
+    loading.style.textAlign = 'center';
+  }
+  var spinner = splash.querySelector('.splash-spinner');
+  if (spinner) spinner.style.display = 'none';
+  if (!splash.querySelector('.splash-retry')) {
+    var button = document.createElement('button');
+    button.className = 'splash-retry';
+    button.textContent = 'Reload';
+    button.style.cssText =
+      'margin-top:16px;padding:10px 24px;font-size:16px;border:0;border-radius:8px;cursor:pointer;';
+    button.onclick = function () { location.reload(); };
+    (loading ? loading.parentNode : splash).appendChild(button);
+  }
+}
+
+window.setTimeout(function () {
+  if (document.querySelector('#splash') && !document.querySelector('flt-glass-pane')) {
+    var loading = document.querySelector('#splash .splash-loading');
+    if (loading) loading.textContent = 'Still loading… this is taking longer than usual.';
+  }
+}, 15000);

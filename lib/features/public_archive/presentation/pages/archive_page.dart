@@ -5,6 +5,7 @@ import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/project.dart';
 import '../../../../core/widgets/project_card.dart';
 import '../../archive_data.dart';
+import '../../../../core/widgets/async_state.dart';
 
 /// Public list of past exhibitions (backlog S7). The current one is the rest
 /// of the site; earlier ones keep their projects and award winners here.
@@ -14,7 +15,7 @@ class ArchivePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final events = ref.watch(exhibitionsProvider);
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
     return SingleChildScrollView(
       padding: EdgeInsets.symmetric(
         horizontal: isDesktop ? DesignSystem.marginDesktop : DesignSystem.marginMobile,
@@ -32,8 +33,11 @@ class ArchivePage extends ConsumerWidget {
           const SizedBox(height: DesignSystem.spaceLg),
           events.when(
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Text("Couldn't load past exhibitions. Check your connection and try again.",
-                style: DesignSystem.bodyMd.copyWith(color: DesignSystem.onSurfaceVariant)),
+            error: (e, _) => AsyncErrorView(
+              error: e,
+              what: 'past exhibitions',
+              onRetry: () => ref.invalidate(exhibitionsProvider),
+            ),
             data: (list) {
               final past = [for (final e in list) if (!e.isCurrent) e];
               if (past.isEmpty) {
@@ -92,15 +96,14 @@ class ArchivedEventPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final data = ref.watch(archivedEventProvider(slug));
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
     final pad = isDesktop ? DesignSystem.marginDesktop : DesignSystem.marginMobile;
     return data.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(DesignSystem.spaceLg),
-          child: Text('This exhibition could not be found.', style: DesignSystem.bodyMd),
-        ),
+      error: (e, _) => AsyncErrorView(
+        error: e,
+        what: 'this exhibition',
+        onRetry: () => ref.invalidate(archivedEventProvider(slug)),
       ),
       data: (d) {
         final (event, projects, winners) = d;
@@ -118,7 +121,7 @@ class ArchivedEventPage extends ConsumerWidget {
                       label: const Text('Past exhibitions'),
                     ),
                     Text(event.title, style: DesignSystem.pageTitle(context).copyWith(color: DesignSystem.primary)),
-                    Text('${event.year}${event.venue == null ? '' : ' · ${event.venue}'} · ${projects.length} projects',
+                    Text('${event.year}${event.venue == null ? '' : ' · ${event.venue}'} · ${projects.length} ${projects.length == 1 ? 'project' : 'projects'}',
                         style: DesignSystem.bodyMd.copyWith(color: DesignSystem.onSurfaceVariant)),
                     if (winners.isNotEmpty) ...[
                       const SizedBox(height: DesignSystem.spaceLg),
@@ -140,7 +143,7 @@ class ArchivedEventPage extends ConsumerWidget {
             SliverPadding(
               padding: EdgeInsets.fromLTRB(pad, 0, pad, DesignSystem.spaceXl),
               sliver: SliverGrid(
-                gridDelegate: ProjectCard.gridDelegate(MediaQuery.sizeOf(context).width),
+                gridDelegate: ProjectCard.gridDelegate(MediaQuery.sizeOf(context).width, textScale: MediaQuery.textScalerOf(context).scale(1)),
                 delegate: SliverChildBuilderDelegate(
                   (context, i) => ProjectCard(project: projects[i], onTap: () => _showProject(context, projects[i])),
                   childCount: projects.length,

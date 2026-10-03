@@ -5,6 +5,7 @@ import '../../../../core/state/fypms_state_providers.dart';
 import '../widgets/fypms_loading_widget.dart';
 import '../widgets/student_form_dialog.dart';
 import '../widgets/student_record_workspace.dart';
+import '../../../../core/widgets/async_state.dart';
 
 class StudentFormsPage extends ConsumerWidget {
   const StudentFormsPage({super.key});
@@ -76,7 +77,7 @@ class StudentFormsPage extends ConsumerWidget {
             Expanded(
               child: submissions.when(
                 loading: () => const FypmsLoadingWidget(),
-                error: (e, _) => Center(child: Text('Error: $e')),
+                error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypFormSubmissionsProvider(record.id)), what: 'this page'),
                 data: (items) {
                   if (items.isEmpty) {
                     return Center(

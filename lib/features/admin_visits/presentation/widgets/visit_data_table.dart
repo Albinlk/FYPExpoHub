@@ -23,7 +23,7 @@ class VisitDataTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
 
     if (isDesktop) {
       return SingleChildScrollView(
@@ -115,7 +115,7 @@ class VisitDataTable extends StatelessWidget {
       ),
       child: Text(isSv ? 'SV' : 'EX', style: DesignSystem.labelCaps.copyWith(
         color: isSv ? DesignSystem.primary : DesignSystem.tertiary,
-        fontSize: 10,
+        fontSize: 11,
       )),
     );
   }
@@ -125,7 +125,7 @@ class VisitDataTable extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
         decoration: BoxDecoration(color: DesignSystem.errorContainer, borderRadius: DesignSystem.radiusSm),
-        child: Text('Voided', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onErrorContainer, fontSize: 10)),
+        child: Text('Voided', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onErrorContainer, fontSize: 11)),
       );
     }
     if (isCompleted) {
@@ -137,7 +137,7 @@ class VisitDataTable extends StatelessWidget {
           children: [
             Icon(Icons.check_circle, size: 10, color: DesignSystem.onTertiaryContainer),
             const SizedBox(width: 3),
-            Text('Visited', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onTertiaryContainer, fontSize: 10)),
+            Text('Visited', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onTertiaryContainer, fontSize: 11)),
           ],
         ),
       );
@@ -145,7 +145,7 @@ class VisitDataTable extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(color: DesignSystem.surfaceContainerHighest, borderRadius: DesignSystem.radiusSm),
-      child: Text('Not Yet', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSurfaceVariant, fontSize: 10)),
+      child: Text('Not Yet', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSurfaceVariant, fontSize: 11)),
     );
   }
 
@@ -154,8 +154,8 @@ class VisitDataTable extends StatelessWidget {
       return TextButton.icon(
         onPressed: () => onVoid(visit),
         icon: const Icon(Icons.cancel_outlined, size: 14),
-        label: Text('Void', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.error, fontSize: 10)),
-        style: TextButton.styleFrom(foregroundColor: DesignSystem.error, padding: EdgeInsets.zero, visualDensity: VisualDensity.compact),
+        label: Text('Void', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.error, fontSize: 11)),
+        style: TextButton.styleFrom(foregroundColor: DesignSystem.error, padding: EdgeInsets.zero, visualDensity: VisualDensity.standard),
       );
     }
     return const SizedBox.shrink();

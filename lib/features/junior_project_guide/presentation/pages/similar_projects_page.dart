@@ -112,7 +112,7 @@ class _MatchTile extends StatelessWidget {
     if (!hasDetailPage) return content;
     return InkWell(
       borderRadius: DesignSystem.radiusLg,
-      onTap: () => context.go('/projects/${p.slug}'),
+      onTap: () => context.push('/projects/${p.slug}'),
       child: content,
     );
   }
@@ -129,7 +129,7 @@ class _MatchTile extends StatelessWidget {
         label,
         style: DesignSystem.labelCaps.copyWith(
           color: DesignSystem.primary,
-          fontSize: 10,
+          fontSize: 11,
         ),
       ),
     );

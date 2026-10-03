@@ -95,7 +95,12 @@ self.addEventListener('fetch', (event) => {
       (async () => {
         const cache = await caches.open(DOC_CACHE);
         try {
-          const response = await fetch(request);
+          // On a slow or lossy connection fall back to the cached page after
+          // 6s instead of leaving the visitor on a blank tab.
+          const timeout = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('navigation timeout')), 6000),
+          );
+          const response = await Promise.race([fetch(request), timeout]);
           if (response && response.ok) cache.put(request, response.clone());
           return response;
         } catch (e) {
@@ -104,6 +109,8 @@ self.addEventListener('fetch', (event) => {
           // SPA fallback for deep links while offline.
           const index = await cache.match('/index.html', { ignoreSearch: true });
           if (index) return index;
+          // Nothing cached: keep waiting for the network rather than failing early.
+          if (e && e.message === 'navigation timeout') return fetch(request);
           return Response.error();
         }
       })(),

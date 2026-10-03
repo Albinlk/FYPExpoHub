@@ -8,6 +8,8 @@ import '../../../../core/supabase/fypms_rpc_service.dart';
 import '../widgets/fypms_loading_widget.dart';
 import '../widgets/record_admin_dialogs.dart';
 import '../widgets/semester_selector.dart';
+import '../../../../core/widgets/async_state.dart';
+import '../../../../core/widgets/admin_actions.dart';
 
 class CoordinatorRecordsPage extends ConsumerWidget {
   const CoordinatorRecordsPage({super.key});
@@ -41,7 +43,7 @@ class CoordinatorRecordsPage extends ConsumerWidget {
       ),
       body: records.when(
         loading: () => const FypmsLoadingWidget(),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypRecordsProvider), what: 'this page'),
         data: (list) {
           if (list.isEmpty) {
             return Center(
@@ -152,7 +154,7 @@ class CoordinatorRecordsPage extends ConsumerWidget {
                         final semesters = ref.watch(fypmsSemestersProvider);
                         return semesters.when(
                           loading: () => const LinearProgressIndicator(),
-                          error: (e, _) => Text('Error: $e'),
+                          error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypmsSemestersProvider), what: 'this section'),
                           data: (items) => DropdownButtonFormField<String>(
                             initialValue: semesterId,
                             decoration: const InputDecoration(labelText: 'Academic Semester'),
@@ -174,7 +176,7 @@ class CoordinatorRecordsPage extends ConsumerWidget {
                         final students = ref.watch(fypStudentsProvider);
                         return students.when(
                           loading: () => const LinearProgressIndicator(),
-                          error: (e, _) => Text('Error: $e'),
+                          error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypStudentsProvider), what: 'this section'),
                           data: (items) => DropdownButtonFormField<String>(
                             initialValue: studentId,
                             decoration: const InputDecoration(labelText: 'Student'),
@@ -203,7 +205,7 @@ class CoordinatorRecordsPage extends ConsumerWidget {
                         final courses = ref.watch(fypmsCoursesProvider);
                         return courses.when(
                           loading: () => const LinearProgressIndicator(),
-                          error: (e, _) => Text('Error: $e'),
+                          error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypmsCoursesProvider), what: 'this section'),
                           data: (items) {
                             final csp = items
                                 .where((c) => c.code == 'CSP600' || c.code == 'CSP650')
@@ -282,7 +284,7 @@ class CoordinatorRecordsPage extends ConsumerWidget {
                           } catch (e) {
                             if (dialogContext.mounted) {
                               ScaffoldMessenger.of(dialogContext).showSnackBar(
-                                SnackBar(content: Text('Failed: $e')),
+                                SnackBar(content: Text('Failed: ${friendlyError(e)}')),
                               );
                             }
                           }

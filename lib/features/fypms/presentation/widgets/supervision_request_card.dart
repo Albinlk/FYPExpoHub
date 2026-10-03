@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/fypms/fyp_supervision_request.dart';
 import '../../../../core/state/fypms_state_providers.dart';
+import '../../../../core/widgets/admin_actions.dart';
 
 /// One F1 Mutual Acceptance request: project title and area, the chosen
 /// supervisor and co-supervisor, the student's rationale and, when [canDecide],
@@ -62,7 +63,7 @@ class _SupervisionRequestCardState extends ConsumerState<SupervisionRequestCard>
     } catch (e) {
       if (mounted) {
         setState(() => _deciding = false);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: ${friendlyError(e)}')));
       }
     }
   }

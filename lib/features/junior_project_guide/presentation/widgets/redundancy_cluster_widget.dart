@@ -186,7 +186,7 @@ class RedundancyClusterWidget extends ConsumerWidget {
           const SizedBox(width: 4),
           Text(
             label,
-            style: DesignSystem.labelCaps.copyWith(color: color, fontSize: 9),
+            style: DesignSystem.labelCaps.copyWith(color: color, fontSize: 11),
           ),
         ],
       ),

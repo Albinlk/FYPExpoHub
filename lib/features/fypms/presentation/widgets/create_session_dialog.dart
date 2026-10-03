@@ -7,6 +7,9 @@ import '../../../../core/state/fypms_state_providers.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/supabase/fypms_rpc_service.dart';
 import '../../../../core/utils/fypms_format.dart';
+import '../../../../core/widgets/admin_actions.dart';
+import '../../../../core/widgets/busy_button.dart';
+import '../../../../core/layout/responsive.dart';
 
 /// Course lecturer / coordinator creates a presentation session for one of
 /// the course offerings they manage (`create_presentation_session`).
@@ -26,6 +29,7 @@ class _CreateSessionDialogState extends ConsumerState<CreateSessionDialog> {
   late final _code = TextEditingController(text: widget.session?.sessionCode ?? '');
   late final _title = TextEditingController(text: widget.session?.sessionTitle ?? '');
   late final _venue = TextEditingController(text: widget.session?.venue ?? '');
+  String? _error;
   late String? _offeringId = widget.session?.offeringId ?? widget.offerings.firstOrNull?.id;
   late String _type = widget.session?.sessionType ?? 'defence';
   late DateTime? _date = widget.session?.startAt.toLocal();
@@ -64,7 +68,10 @@ class _CreateSessionDialogState extends ConsumerState<CreateSessionDialog> {
   }
 
   Future<void> _submit() async {
-    setState(() => _busy = true);
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
     try {
       if (_editing) {
         await ref.read(supabaseRpcServiceProvider).updatePresentationSession(
@@ -97,8 +104,10 @@ class _CreateSessionDialogState extends ConsumerState<CreateSessionDialog> {
       messenger.showSnackBar(const SnackBar(content: Text('Session created.')));
     } catch (e) {
       if (!mounted) return;
-      setState(() => _busy = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
+      setState(() {
+        _busy = false;
+        _error = 'Could not save the session: ${friendlyError(e)}';
+      });
     }
   }
 
@@ -113,7 +122,7 @@ class _CreateSessionDialogState extends ConsumerState<CreateSessionDialog> {
       backgroundColor: DesignSystem.surfaceContainerLowest,
       title: Text(_editing ? 'Edit Session' : 'New Session', style: DesignSystem.h2),
       content: SizedBox(
-        width: 480,
+        width: dialogWidth(context, 480),
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -121,19 +130,26 @@ class _CreateSessionDialogState extends ConsumerState<CreateSessionDialog> {
               DropdownButtonFormField<String>(
                 initialValue: _offeringId,
                 isExpanded: true,
-                decoration: const InputDecoration(labelText: 'Course'),
+                decoration: InputDecoration(
+                  labelText: 'Course',
+                  helperText: _editing ? 'Cannot be changed after the session is created.' : null,
+                ),
                 items: [
                   for (final o in widget.offerings)
                     DropdownMenuItem(value: o.id, child: Text(o.courseCode, overflow: TextOverflow.ellipsis)),
                 ],
-                onChanged: (v) => setState(() => _offeringId = v),
+                onChanged: _editing || _busy ? null : (v) => setState(() => _offeringId = v),
               ),
               TextField(
                 key: const Key('session-code'),
                 controller: _code,
+                enabled: !_editing && !_busy,
                 onChanged: (_) => setState(() {}),
                 textCapitalization: TextCapitalization.characters,
-                decoration: const InputDecoration(labelText: 'Code (e.g. P2)'),
+                decoration: InputDecoration(
+                  labelText: 'Code (e.g. P2)',
+                  helperText: _editing ? 'Cannot be changed after the session is created.' : null,
+                ),
               ),
               TextField(
                 key: const Key('session-title'),
@@ -174,13 +190,26 @@ class _CreateSessionDialogState extends ConsumerState<CreateSessionDialog> {
                     style: DesignSystem.bodySm.copyWith(color: DesignSystem.error),
                   ),
                 ),
+              if (_error != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: DesignSystem.spaceSm),
+                  child: Semantics(
+                    liveRegion: true,
+                    child: Text(_error!, style: DesignSystem.bodySm.copyWith(color: DesignSystem.error)),
+                  ),
+                ),
             ],
           ),
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-        FilledButton(onPressed: ready ? _submit : null, child: Text(_editing ? 'Save' : 'Create')),
+        TextButton(onPressed: _busy ? null : () => Navigator.pop(context), child: const Text('Cancel')),
+        BusyButton(
+          label: _editing ? 'Save' : 'Create',
+          busyLabel: _editing ? 'Saving…' : 'Creating…',
+          busy: _busy,
+          onPressed: ready || _busy ? _submit : null,
+        ),
       ],
     );
   }

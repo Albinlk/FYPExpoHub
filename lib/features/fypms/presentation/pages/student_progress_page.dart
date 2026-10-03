@@ -10,6 +10,8 @@ import '../../../../core/supabase/fypms_rpc_service.dart';
 import '../widgets/consultation_attendance_banner.dart';
 import '../widgets/fypms_loading_widget.dart';
 import '../widgets/student_record_workspace.dart';
+import '../../../../core/widgets/async_state.dart';
+import '../../../../core/widgets/admin_actions.dart';
 
 /// F5 Proposal/Project In-Progress Form: one entry per supervision meeting
 /// (date, completed activity, next activity), signed by the supervisor, with
@@ -54,7 +56,7 @@ class StudentProgressPage extends ConsumerWidget {
             Expanded(
               child: logs.when(
                 loading: () => const FypmsLoadingWidget(),
-                error: (e, _) => Center(child: Text('Error: $e')),
+                error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypProgressLogsProvider(record.id)), what: 'this page'),
                 data: (items) {
                   if (items.isEmpty) {
                     return Center(
@@ -186,13 +188,13 @@ class _ConsultationLogDialogState extends ConsumerState<ConsultationLogDialog> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _submitting = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to log: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to log: ${friendlyError(e)}')));
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
     final semester = ref
         .watch(fypmsSemestersProvider)
         .value
@@ -210,7 +212,7 @@ class _ConsultationLogDialogState extends ConsumerState<ConsultationLogDialog> {
       ),
       content: SingleChildScrollView(
         child: SizedBox(
-          width: isDesktop ? 500 : MediaQuery.of(context).size.width * 0.85,
+          width: isDesktop ? 500 : MediaQuery.sizeOf(context).width * 0.85,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [

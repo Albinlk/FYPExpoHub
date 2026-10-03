@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' show AuthException;
 import '../../../../app/theme/theme.dart';
 import '../../../../core/supabase/supabase_client_provider.dart';
 import '../../password_reset.dart';
+import '../../../../core/widgets/admin_actions.dart';
 
 /// Landing page of the password-recovery email. With PKCE, Supabase
 /// exchanges the link's code for a short-lived session on load; the user
@@ -47,7 +48,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
     } on AuthException catch (e) {
       if (mounted) setState(() => _error = e.message);
     } catch (e) {
-      if (mounted) setState(() => _error = 'Could not update the password: $e');
+      if (mounted) setState(() => _error = 'Could not update the password: ${friendlyError(e)}');
     } finally {
       if (mounted) setState(() => _busy = false);
     }

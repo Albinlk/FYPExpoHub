@@ -7,6 +7,9 @@ import '../../../../core/domain/models/fypms/fyp_record.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import '../../../../core/utils/download_util.dart';
 import '../../../../core/utils/fypms_format.dart';
+import '../../../../core/widgets/async_state.dart';
+import '../../../../core/widgets/admin_actions.dart';
+import '../../../../core/layout/responsive.dart';
 
 /// Minimum reason length the server requires.
 const kSupervisorChangeReasonMin = 20;
@@ -50,7 +53,7 @@ class _RequestSupervisorChangeDialogState extends ConsumerState<RequestSuperviso
     } catch (e) {
       if (!mounted) return;
       setState(() => _busy = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: ${friendlyError(e)}')));
     }
   }
 
@@ -65,7 +68,7 @@ class _RequestSupervisorChangeDialogState extends ConsumerState<RequestSuperviso
     return AlertDialog(
       title: const Text('Request supervisor change'),
       content: SizedBox(
-        width: 460,
+        width: dialogWidth(context, 460),
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -205,7 +208,7 @@ class SupervisorChangeRequestsPanel extends ConsumerWidget {
         SnackBar(content: Text(decision == 'approved' ? 'Supervisor changed.' : 'Request rejected.')),
       );
     } catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text('Failed: $e')));
+      messenger.showSnackBar(SnackBar(content: Text('Failed: ${friendlyError(e)}')));
     }
   }
 
@@ -271,7 +274,7 @@ class _PickSupervisorDialogState extends State<_PickSupervisorDialog> {
     return AlertDialog(
       title: const Text('New supervisor'),
       content: SizedBox(
-        width: 420,
+        width: dialogWidth(context, 420),
         child: DropdownButtonFormField<String>(
           key: const Key('new-supervisor'),
           initialValue: _id,
@@ -338,13 +341,28 @@ class _ReasonDialogState extends State<_ReasonDialog> {
 class PuNominationsPage extends ConsumerWidget {
   const PuNominationsPage({super.key});
 
+  /// Nominations being decided right now; a second tap on the same row is ignored.
+  static final Set<String> _inFlight = {};
+
   Future<void> _decide(BuildContext context, WidgetRef ref, PendingNomination n, String decision) async {
+    if (_inFlight.contains(n.assignmentId)) return;
     String? comment;
     if (decision == 'rejected') {
       comment = await showDialog<String>(context: context, builder: (_) => const _ReasonDialog());
       if (comment == null) return;
+    } else {
+      // Approval drives the appointment letter and cannot be undone here.
+      final ok = await confirmAction(
+        context,
+        title: 'Approve This Nomination?',
+        message: 'Approving the nomination for ${n.studentName ?? 'this student'} creates the '
+            'appointment and its letter. This cannot be undone from this page.',
+        confirmLabel: 'Approve Nomination',
+      );
+      if (!ok) return;
     }
     if (!context.mounted) return;
+    if (!_inFlight.add(n.assignmentId)) return;
     final messenger = ScaffoldMessenger.of(context);
     try {
       await ref.read(decideNominationProvider)(n.assignmentId, decision, comment);
@@ -352,7 +370,9 @@ class PuNominationsPage extends ConsumerWidget {
         SnackBar(content: Text(decision == 'approved' ? 'Nomination approved.' : 'Nomination rejected.')),
       );
     } catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text('Failed: $e')));
+      messenger.showSnackBar(SnackBar(content: Text('Failed: ${friendlyError(e)}')));
+    } finally {
+      _inFlight.remove(n.assignmentId);
     }
   }
 
@@ -383,7 +403,7 @@ class PuNominationsPage extends ConsumerWidget {
           children: [
             nominations.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('Error: $e')),
+              error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(pendingNominationsProvider), what: 'this page'),
               data: (list) => list.isEmpty
                   ? const Center(child: Text('No nominations are waiting for your approval.'))
                   : ListView(
@@ -447,7 +467,7 @@ class ApprovedNominationsList extends ConsumerWidget {
     final approved = ref.watch(approvedNominationsProvider);
     return approved.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('Error: $e')),
+      error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(approvedNominationsProvider), what: 'this page'),
       data: (list) => list.isEmpty
           ? const Center(child: Text('No approved appointments yet.'))
           : ListView(

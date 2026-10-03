@@ -6,6 +6,9 @@ import '../../../../core/domain/models/fypms/academic_semester.dart';
 import '../../../../core/domain/models/fypms/fyp_course_offering.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import '../../../../core/utils/fypms_format.dart';
+import '../../../../core/widgets/async_state.dart';
+import '../../../../core/widgets/admin_actions.dart';
+import '../../../../core/layout/responsive.dart';
 
 /// Coordinator: semesters (planned -> active -> completed -> archived; one
 /// active), who teaches CSP600 / CSP650 in each, and the course details
@@ -24,7 +27,7 @@ class _CoordinatorSemestersPageState extends ConsumerState<CoordinatorSemestersP
       await action();
       messenger.showSnackBar(SnackBar(content: Text(success)));
     } catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text('Failed: $e')));
+      messenger.showSnackBar(SnackBar(content: Text('Failed: ${friendlyError(e)}')));
     }
   }
 
@@ -59,7 +62,7 @@ class _CoordinatorSemestersPageState extends ConsumerState<CoordinatorSemestersP
       ),
       body: semesters.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypmsSemestersProvider), what: 'this page'),
         data: (list) {
           final sorted = [...list]..sort((a, b) => b.startDate.compareTo(a.startDate));
           return ListView(
@@ -99,10 +102,23 @@ class _CoordinatorSemestersPageState extends ConsumerState<CoordinatorSemestersP
                             for (final (status, label) in _next[s.status] ?? const <(String, String)>[])
                               OutlinedButton(
                                 key: Key('semester-${s.code}-$status'),
-                                onPressed: () => _run(
-                                  () => ref.read(semesterAdminProvider).setStatus(s.id, status),
-                                  '${s.code} is now $status.',
-                                ),
+                                onPressed: () async {
+                                  // A status change moves the whole cohort's scope.
+                                  final ok = await confirmAction(
+                                    context,
+                                    title: '$label ${s.code}?',
+                                    message: status == 'active'
+                                        ? 'Staff lists and the semester selector will switch to ${s.code}, '
+                                            'and any other active semester is completed.'
+                                        : 'This changes ${s.code} to $status for everyone.',
+                                    confirmLabel: label,
+                                  );
+                                  if (!ok || !mounted) return;
+                                  await _run(
+                                    () => ref.read(semesterAdminProvider).setStatus(s.id, status),
+                                    '${s.code} is now $status.',
+                                  );
+                                },
                                 child: Text(label),
                               ),
                           ],
@@ -234,7 +250,7 @@ class _NewSemesterDialogState extends ConsumerState<_NewSemesterDialog> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _busy = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: ${friendlyError(e)}')));
     }
   }
 
@@ -249,8 +265,8 @@ class _NewSemesterDialogState extends ConsumerState<_NewSemesterDialog> {
     return AlertDialog(
       title: const Text('New Semester'),
       content: SizedBox(
-        width: 420,
-        child: Column(
+        width: dialogWidth(context, 420),
+        child: SingleChildScrollView(child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
@@ -282,7 +298,7 @@ class _NewSemesterDialogState extends ConsumerState<_NewSemesterDialog> {
               ],
             ),
           ],
-        ),
+        )),
       ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
@@ -327,7 +343,7 @@ class _OfferingDialogState extends ConsumerState<_OfferingDialog> {
       nav.pop();
       messenger.showSnackBar(SnackBar(content: Text('${widget.course.code} offering saved.')));
     } catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text('Failed: $e')));
+      messenger.showSnackBar(SnackBar(content: Text('Failed: ${friendlyError(e)}')));
     }
   }
 
@@ -336,8 +352,8 @@ class _OfferingDialogState extends ConsumerState<_OfferingDialog> {
     return AlertDialog(
       title: Text('${widget.course.code} in ${widget.semester.code}'),
       content: SizedBox(
-        width: 420,
-        child: Column(
+        width: dialogWidth(context, 420),
+        child: SingleChildScrollView(child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             DropdownButtonFormField<String?>(
@@ -357,7 +373,7 @@ class _OfferingDialogState extends ConsumerState<_OfferingDialog> {
               decoration: const InputDecoration(labelText: 'Maximum students (optional)'),
             ),
           ],
-        ),
+        )),
       ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
@@ -400,7 +416,7 @@ class _CourseDialogState extends ConsumerState<_CourseDialog> {
       nav.pop();
       messenger.showSnackBar(const SnackBar(content: Text('Course saved.')));
     } catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text('Failed: $e')));
+      messenger.showSnackBar(SnackBar(content: Text('Failed: ${friendlyError(e)}')));
     }
   }
 
@@ -409,8 +425,8 @@ class _CourseDialogState extends ConsumerState<_CourseDialog> {
     return AlertDialog(
       title: Text(widget.course.code),
       content: SizedBox(
-        width: 420,
-        child: Column(
+        width: dialogWidth(context, 420),
+        child: SingleChildScrollView(child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(controller: _name, decoration: const InputDecoration(labelText: 'Name')),
@@ -426,7 +442,7 @@ class _CourseDialogState extends ConsumerState<_CourseDialog> {
               title: const Text('Active'),
             ),
           ],
-        ),
+        )),
       ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),

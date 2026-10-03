@@ -30,7 +30,7 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
     final padding = isDesktop ? DesignSystem.marginDesktop : DesignSystem.marginMobile;
     final lecturer = ref.watch(lecturerAuthProvider);
     final assignments = ref.watch(lecturerAssignmentsProvider);
@@ -140,7 +140,7 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
                       controller: _searchController,
                       onChanged: (_) => setState(() {}),
                       decoration: const InputDecoration(
-                        hintText: 'Search projects, students, booths...',
+                        hintText: 'Search projects, students, booths…',
                         prefixIcon: Icon(Icons.search, color: DesignSystem.primary),
                       ),
                     ),
@@ -169,14 +169,14 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
               _buildEmptyState(_searchController.text.isNotEmpty || _roleFilter != 'All' || _statusFilter != 'All')
             else ...[
               Text(
-                '${filteredAssignments.length} projects found',
+                '${filteredAssignments.length} ${filteredAssignments.length == 1 ? 'project' : 'projects'} found',
                 style: DesignSystem.labelCaps.copyWith(color: DesignSystem.primary),
               ),
               const SizedBox(height: DesignSystem.spaceMd),
               GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: ProjectCard.gridDelegate(MediaQuery.sizeOf(context).width, extraBodyHeight: 90),
+                gridDelegate: ProjectCard.gridDelegate(MediaQuery.sizeOf(context).width, textScale: MediaQuery.textScalerOf(context).scale(1), extraBodyHeight: 90),
                 itemCount: filteredAssignments.length,
                 itemBuilder: (context, index) {
                   return _buildVisitCard(
@@ -279,7 +279,7 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
                 }
               }),
               selectedColor: label.contains('Role') ? DesignSystem.primary : label.contains('Day') ? DesignSystem.secondary : DesignSystem.tertiary,
-              visualDensity: VisualDensity.compact,
+              visualDensity: VisualDensity.standard,
             ),
           );
         }),
@@ -310,7 +310,7 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
       ),
       child: Text(
         assignment.role == 'supervisor' ? 'SV' : 'EX',
-        style: DesignSystem.labelCaps.copyWith(color: Colors.white, fontSize: 10),
+        style: DesignSystem.labelCaps.copyWith(color: Colors.white, fontSize: 11),
       ),
     );
 
@@ -339,7 +339,7 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
               ),
               child: Text(
                 project.presentationDay!.split(' - ').first,
-                style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSecondaryContainer, fontSize: 10),
+                style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSecondaryContainer, fontSize: 11),
               ),
             ),
         ],
@@ -355,7 +355,7 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
           color: DesignSystem.error,
           borderRadius: DesignSystem.radiusSm,
         ),
-        child: Text('Voided', style: DesignSystem.labelCaps.copyWith(color: Colors.white, fontSize: 9)),
+        child: Text('Voided', style: DesignSystem.labelCaps.copyWith(color: Colors.white, fontSize: 11)),
       );
     }
     if (isCompleted) {
@@ -373,7 +373,7 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
           children: [
             const Icon(Icons.check_circle, size: 10, color: Colors.white),
             const SizedBox(width: 3),
-            Text(timeStr, style: DesignSystem.labelCaps.copyWith(color: Colors.white, fontSize: 9)),
+            Text(timeStr, style: DesignSystem.labelCaps.copyWith(color: Colors.white, fontSize: 11)),
           ],
         ),
       );
@@ -384,7 +384,7 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
         color: Colors.black54,
         borderRadius: DesignSystem.radiusSm,
       ),
-      child: Text('Not Yet', style: DesignSystem.labelCaps.copyWith(color: Colors.white, fontSize: 9)),
+      child: Text('Not Yet', style: DesignSystem.labelCaps.copyWith(color: Colors.white, fontSize: 11)),
     );
   }
 }

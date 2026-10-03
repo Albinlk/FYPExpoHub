@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import '../widgets/fypms_loading_widget.dart';
+import '../../../../core/widgets/async_state.dart';
 
 class SupervisorDashboardPage extends ConsumerWidget {
   const SupervisorDashboardPage({super.key});
@@ -23,7 +24,7 @@ class SupervisorDashboardPage extends ConsumerWidget {
       ),
       body: assigned.when(
         loading: () => const FypmsLoadingWidget(),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(assignedFypRecordsProvider(null)), what: 'this page'),
         data: (records) => ListView(
           padding: const EdgeInsets.all(DesignSystem.gutter),
           children: [

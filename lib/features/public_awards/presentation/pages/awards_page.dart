@@ -28,7 +28,7 @@ class AwardsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
     final padding = isDesktop ? DesignSystem.marginDesktop : DesignSystem.marginMobile;
 
     final allAwards = ref.watch(publicAwardsProvider);
@@ -131,7 +131,7 @@ class AwardsPage extends ConsumerWidget {
                                 softWrap: true,
                               ),
                               const SizedBox(height: DesignSystem.spaceSm),
-                              Text('Student(s): $teamName', style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant), softWrap: true),
+                              Text('Team: $teamName', style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant), softWrap: true),
                               Text('Supervisor: $supervisor', style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant, fontStyle: FontStyle.italic), softWrap: true),
                               if (award.sponsor?.isNotEmpty == true)
                                 Text('Sponsor: ${award.sponsor}', style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant), softWrap: true),
@@ -144,7 +144,7 @@ class AwardsPage extends ConsumerWidget {
                                 Align(
                                   alignment: Alignment.centerLeft,
                                   child: TextButton.icon(
-                                    onPressed: () => context.go('/projects/${associatedProj.slug}'),
+                                    onPressed: () => context.push('/projects/${associatedProj.slug}'),
                                     icon: const Icon(Icons.arrow_forward, size: 16),
                                     label: const Text('View project'),
                                   ),
@@ -167,7 +167,7 @@ class AwardsPage extends ConsumerWidget {
                                       ),
                                       child: Text(
                                         'UiTM Official Award',
-                                        style: DesignSystem.labelCaps.copyWith(color: Colors.white, fontSize: 8),
+                                        style: DesignSystem.labelCaps.copyWith(color: Colors.white, fontSize: 11),
                                       ),
                                     ),
                                   ],

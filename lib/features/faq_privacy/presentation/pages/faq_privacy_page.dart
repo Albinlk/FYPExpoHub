@@ -12,7 +12,7 @@ class FaqPrivacyPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final event = ref.watch(eventProvider);
     final contactEmail = event.publicContactEmail.trim().isNotEmpty ? event.publicContactEmail.trim() : 'fskmfypexpo@uitm.edu.my';
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
     final padding = isDesktop ? DesignSystem.marginDesktop : DesignSystem.marginMobile;
 
     return Scaffold(

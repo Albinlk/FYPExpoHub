@@ -29,7 +29,7 @@ class _LecturerPageState extends ConsumerState<LecturerPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
     final padding = isDesktop ? DesignSystem.marginDesktop : DesignSystem.marginMobile;
 
     // `publicProjectsProvider` already only exposes `published` projects.
@@ -92,7 +92,7 @@ class _LecturerPageState extends ConsumerState<LecturerPage> {
                                     );
                                   },
                                   decoration: const InputDecoration(
-                                    hintText: 'Enter your full name...',
+                                    hintText: 'Enter your full name…',
                                     prefixIcon: Icon(Icons.person_search, color: DesignSystem.primary),
                                   ),
                                 ),
@@ -164,7 +164,7 @@ class _LecturerPageState extends ConsumerState<LecturerPage> {
                       ),
                     )
                   else
-                    Text('Found ${filteredProjects.length} projects:', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.primary)),
+                    Text('Found ${filteredProjects.length} ${filteredProjects.length == 1 ? 'project' : 'projects'}:', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.primary)),
                 ],
               ),
             ),
@@ -173,7 +173,7 @@ class _LecturerPageState extends ConsumerState<LecturerPage> {
             SliverPadding(
               padding: EdgeInsets.symmetric(horizontal: padding),
               sliver: SliverGrid(
-                gridDelegate: ProjectCard.gridDelegate(MediaQuery.sizeOf(context).width, extraBodyHeight: 40),
+                gridDelegate: ProjectCard.gridDelegate(MediaQuery.sizeOf(context).width, textScale: MediaQuery.textScalerOf(context).scale(1), extraBodyHeight: 40),
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
                     final project = filteredProjects[index];

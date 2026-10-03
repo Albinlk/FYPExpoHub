@@ -7,6 +7,7 @@ import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/fypms_users.dart';
 import '../../../../core/domain/models/fypms/academic_semester.dart';
 import '../../../../core/state/fypms_state_providers.dart';
+import '../../../../core/widgets/admin_actions.dart';
 
 /// Enrol Students (backlog U3, S4): paste or upload a class list
 /// (`email, name, matric, programme` per line) for a semester and course.
@@ -47,7 +48,7 @@ class _CoordinatorEnrolPageState extends ConsumerState<CoordinatorEnrolPage> {
       final results = await ref.read(userAdminProvider).enrol(_semesterId!, _course, rows);
       if (mounted) setState(() => _results = results);
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Enrolment failed: $e')));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Enrolment failed: ${friendlyError(e)}')));
     } finally {
       if (mounted) setState(() => _busy = false);
     }

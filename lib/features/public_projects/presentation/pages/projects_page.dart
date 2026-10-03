@@ -94,7 +94,7 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
     final padding = isDesktop
         ? DesignSystem.marginDesktop
         : DesignSystem.marginMobile;
@@ -211,7 +211,7 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
                   horizontal: padding,
                 ).copyWith(bottom: DesignSystem.spaceXl),
                 sliver: SliverGrid(
-                  gridDelegate: ProjectCard.gridDelegate(MediaQuery.sizeOf(context).width),
+                  gridDelegate: ProjectCard.gridDelegate(MediaQuery.sizeOf(context).width, textScale: MediaQuery.textScalerOf(context).scale(1)),
                   delegate: SliverChildBuilderDelegate((context, index) {
                     final project = filteredProjects[index];
                     return StaggeredEntrance(
@@ -219,7 +219,7 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
                       child: ProjectCard(
                         project: project,
                         heroTag: projectCoverHeroTag(project.id),
-                        onTap: () => context.go('/projects/${project.slug}'),
+                        onTap: () => context.push('/projects/${project.slug}'),
                       ),
                     );
                   }, childCount: filteredProjects.length),
@@ -238,8 +238,8 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
       decoration: InputDecoration(
         isDense: !isDesktop,
         hintText: isDesktop
-            ? 'Search by project title, student, or supervisor...'
-            : 'Search projects...',
+            ? 'Search by project title, student, or supervisor…'
+            : 'Search projects…',
         prefixIcon: const Icon(Icons.search, color: DesignSystem.primary),
       ),
     );

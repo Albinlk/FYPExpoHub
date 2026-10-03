@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import '../widgets/fypms_loading_widget.dart';
+import '../../../../core/widgets/async_state.dart';
+import '../../../../core/widgets/admin_actions.dart';
 
 class CoordinatorExpoPage extends ConsumerWidget {
   const CoordinatorExpoPage({super.key});
@@ -23,7 +25,7 @@ class CoordinatorExpoPage extends ConsumerWidget {
       ),
       body: publications.when(
         loading: () => const FypmsLoadingWidget(),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypExpoPublicationsProvider), what: 'this page'),
         data: (pubs) {
           final eventTitleById = <String, String>{
             for (final e in events.asData?.value ?? [])
@@ -108,7 +110,7 @@ class CoordinatorExpoPage extends ConsumerWidget {
                       final records = ref.watch(fypRecordsProvider);
                       return records.when(
                         loading: () => const LinearProgressIndicator(),
-                        error: (e, _) => Text('Error: $e'),
+                        error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypRecordsProvider), what: 'this section'),
                         data: (items) => DropdownButtonFormField<String>(
                           initialValue: recordId,
                           decoration: const InputDecoration(labelText: 'FYP Record'),
@@ -135,7 +137,7 @@ class CoordinatorExpoPage extends ConsumerWidget {
                       final events = ref.watch(fypPublishedEventsProvider);
                       return events.when(
                         loading: () => const LinearProgressIndicator(),
-                        error: (e, _) => Text('Error: $e'),
+                        error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypPublishedEventsProvider), what: 'this section'),
                         data: (items) => DropdownButtonFormField<String>(
                           initialValue: eventId,
                           decoration: const InputDecoration(labelText: 'Event'),
@@ -182,7 +184,7 @@ class CoordinatorExpoPage extends ConsumerWidget {
                           } catch (e) {
                             if (dialogContext.mounted) {
                               ScaffoldMessenger.of(dialogContext).showSnackBar(
-                                SnackBar(content: Text('Failed: $e')),
+                                SnackBar(content: Text('Failed: ${friendlyError(e)}')),
                               );
                             }
                           }
@@ -197,7 +199,19 @@ class CoordinatorExpoPage extends ConsumerWidget {
     );
   }
 
+  /// Publications being published right now; a second tap is ignored.
+  static final Set<String> _inFlight = {};
+
   Future<void> _publish(BuildContext context, WidgetRef ref, String publicationId) async {
+    if (_inFlight.contains(publicationId)) return;
+    final ok = await confirmAction(
+      context,
+      title: 'Publish To The Public Expo?',
+      message: 'This project becomes visible on the public site straight away.',
+      confirmLabel: 'Publish',
+    );
+    if (!ok || !context.mounted) return;
+    if (!_inFlight.add(publicationId)) return;
     try {
       await ref.read(publishFypRecordToExpoProvider)(publicationId);
       if (context.mounted) {
@@ -208,9 +222,11 @@ class CoordinatorExpoPage extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed: $e')),
+          SnackBar(content: Text('Failed: ${friendlyError(e)}')),
         );
       }
+    } finally {
+      _inFlight.remove(publicationId);
     }
   }
 }

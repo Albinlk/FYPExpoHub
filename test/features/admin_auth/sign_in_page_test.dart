@@ -83,4 +83,34 @@ void main() {
 
     expect(find.textContaining('Invalid email or password'), findsOneWidget);
   });
+
+  testWidgets('Enter in the password field signs in; the eye button reveals the password', (tester) async {
+    await pumpPage(tester);
+
+    final fields = find.byType(TextFormField);
+    await tester.enterText(fields.at(0), 'admin@uitm.edu.my');
+    await tester.enterText(fields.at(1), 'secret1');
+
+    expect(find.byTooltip('Show password'), findsOneWidget);
+    await tester.tap(find.byTooltip('Show password'));
+    await tester.pump();
+    expect(find.byTooltip('Hide password'), findsOneWidget);
+
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(requests.where((r) => r.url.path.endsWith('/auth/v1/token')), hasLength(1));
+  });
+
+  testWidgets('a short password is not rejected client-side', (tester) async {
+    await pumpPage(tester);
+    final fields = find.byType(TextFormField);
+    await tester.enterText(fields.at(0), 'admin@uitm.edu.my');
+    await tester.enterText(fields.at(1), 'abc');
+    await tester.tap(find.byType(ElevatedButton).first);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.textContaining('at least 6'), findsNothing);
+    expect(requests.where((r) => r.url.path.endsWith('/auth/v1/token')), hasLength(1));
+  });
 }

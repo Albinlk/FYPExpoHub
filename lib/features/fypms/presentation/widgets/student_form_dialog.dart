@@ -5,6 +5,8 @@ import '../../../../core/domain/fypms_form_definitions.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/supabase/fypms_rpc_service.dart';
+import '../../../../core/widgets/admin_actions.dart';
+import '../../../../core/layout/responsive.dart';
 
 /// Student: choose a form and answer its questions (backlog U1; replaces
 /// the raw-JSON payload box). Answers are checked before submitting.
@@ -60,7 +62,7 @@ class _StudentFormDialogState extends ConsumerState<StudentFormDialog> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _busy = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to submit: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to submit: ${friendlyError(e)}')));
     }
   }
 
@@ -71,7 +73,7 @@ class _StudentFormDialogState extends ConsumerState<StudentFormDialog> {
     return AlertDialog(
       title: const Text('Submit Form'),
       content: SizedBox(
-        width: 560,
+        width: dialogWidth(context, 560),
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,

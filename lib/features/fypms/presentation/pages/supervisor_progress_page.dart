@@ -6,6 +6,9 @@ import '../../../../core/state/fypms_state_providers.dart';
 import '../../../../core/utils/fypms_format.dart';
 import '../widgets/consultation_attendance_banner.dart';
 import '../widgets/fypms_loading_widget.dart';
+import '../../../../core/widgets/async_state.dart';
+import '../../../../core/widgets/admin_actions.dart';
+import '../../../../core/widgets/busy_button.dart';
 
 class SupervisorProgressPage extends ConsumerWidget {
   const SupervisorProgressPage({super.key});
@@ -27,7 +30,7 @@ class SupervisorProgressPage extends ConsumerWidget {
       ),
       body: assigned.when(
         loading: () => const FypmsLoadingWidget(),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(assignedFypRecordsProvider(null)), what: 'this page'),
         data: (records) {
           if (records.isEmpty) {
             return const Center(child: Text('No records assigned to you.'));
@@ -67,7 +70,7 @@ class _RecordProgressSection extends ConsumerWidget {
         ),
         logs.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Text('Error: $e'),
+          error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypProgressLogsProvider(record.id)), what: 'this section'),
           data: (list) {
             if (list.isEmpty) {
               return const Padding(
@@ -116,72 +119,123 @@ class _RecordProgressSection extends ConsumerWidget {
   }
 
   void _showReviewDialog(BuildContext context, WidgetRef ref, String recordId, String logId) {
-    final decisionController = TextEditingController();
-    String decision = 'validated';
-
-    showDialog<void>(
+    showDialog<String>(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor: DesignSystem.surfaceContainerLowest,
-          title: Text('Review Progress Log', style: DesignSystem.h2),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              DropdownButtonFormField<String>(
-                initialValue: decision,
-                decoration: const InputDecoration(labelText: 'Decision'),
-                items: const [
-                  DropdownMenuItem(value: 'validated', child: Text('Validate')),
-                  DropdownMenuItem(value: 'rejected', child: Text('Reject')),
-                ],
-                onChanged: (v) => decision = v!,
+      // A stray tap outside must not discard a typed comment.
+      barrierDismissible: false,
+      builder: (_) => _ReviewProgressDialog(recordId: recordId, logId: logId),
+    ).then((decision) {
+      if (decision != null && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Log ${decision.toLowerCase()}.')),
+        );
+      }
+    });
+  }
+}
+
+class _ReviewProgressDialog extends ConsumerStatefulWidget {
+  const _ReviewProgressDialog({required this.recordId, required this.logId});
+
+  final String recordId;
+  final String logId;
+
+  @override
+  ConsumerState<_ReviewProgressDialog> createState() => _ReviewProgressDialogState();
+}
+
+class _ReviewProgressDialogState extends ConsumerState<_ReviewProgressDialog> {
+  final _comment = TextEditingController();
+  String _decision = 'validated';
+  bool _busy = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _comment.dispose();
+    super.dispose();
+  }
+
+  bool get _needsReason => _decision == 'rejected';
+
+  Future<void> _submit() async {
+    final comment = _comment.text.trim();
+    if (_needsReason && comment.isEmpty) {
+      setState(() => _error = 'Tell the student why the log is not accepted so they know what to fix.');
+      return;
+    }
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      await ref.read(validateProgressLogProvider)(
+        widget.logId,
+        _decision,
+        comment.isEmpty ? null : comment,
+        widget.recordId,
+      );
+      if (mounted) Navigator.pop(context, _decision);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _error = 'Could not submit the review: ${friendlyError(e)}';
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: DesignSystem.surfaceContainerLowest,
+      title: Text('Review Progress Log', style: DesignSystem.h2),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            DropdownButtonFormField<String>(
+              initialValue: _decision,
+              isExpanded: true,
+              decoration: const InputDecoration(labelText: 'Decision'),
+              items: const [
+                DropdownMenuItem(value: 'validated', child: Text('Validate')),
+                DropdownMenuItem(value: 'rejected', child: Text('Reject')),
+              ],
+              onChanged: _busy ? null : (v) => setState(() => _decision = v!),
+            ),
+            const SizedBox(height: DesignSystem.spaceMd),
+            TextField(
+              controller: _comment,
+              enabled: !_busy,
+              decoration: InputDecoration(
+                labelText: _needsReason ? 'Reason For Rejecting (required)' : 'Validation Comment (optional)',
               ),
-              const SizedBox(height: DesignSystem.spaceMd),
-              TextField(
-                controller: decisionController,
-                decoration: const InputDecoration(labelText: 'Validation Comment (optional)'),
-                maxLines: 3,
+              keyboardType: TextInputType.multiline,
+              maxLines: 3,
+            ),
+            if (_error != null) ...[
+              const SizedBox(height: DesignSystem.spaceSm),
+              Semantics(
+                liveRegion: true,
+                child: Text(_error!, style: DesignSystem.bodySm.copyWith(color: DesignSystem.error)),
               ),
             ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () async {
-                try {
-                  await ref.read(validateProgressLogProvider)(
-                    logId,
-                    decision,
-                    decisionController.text.trim().isEmpty
-                        ? null
-                        : decisionController.text.trim(),
-                    recordId,
-                  );
-                  if (dialogContext.mounted) {
-                    Navigator.pop(dialogContext);
-                  }
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Log ${decision.toLowerCase()}.')),
-                    );
-                  }
-                } catch (e) {
-                  if (dialogContext.mounted) {
-                    ScaffoldMessenger.of(dialogContext).showSnackBar(
-                      SnackBar(content: Text('Failed: $e')),
-                    );
-                  }
-                }
-              },
-              child: const Text('Submit'),
-            ),
           ],
-        );
-      },
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _busy ? null : () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        BusyButton(
+          label: 'Submit',
+          busyLabel: 'Submitting…',
+          busy: _busy,
+          onPressed: _submit,
+        ),
+      ],
     );
   }
 }

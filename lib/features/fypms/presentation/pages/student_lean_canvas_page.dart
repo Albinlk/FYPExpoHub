@@ -6,6 +6,8 @@ import '../../../../core/state/state_providers.dart';
 import '../../../../core/supabase/fypms_rpc_service.dart';
 import '../widgets/fypms_loading_widget.dart';
 import '../widgets/student_record_workspace.dart';
+import '../../../../core/widgets/async_state.dart';
+import '../../../../core/widgets/admin_actions.dart';
 
 /// Standard Lean Canvas (F13) blocks.
 const List<({String key, String label, String hint})> fypmsLeanCanvasBlocks = [
@@ -39,7 +41,7 @@ class StudentLeanCanvasPage extends ConsumerWidget {
         final canvas = ref.watch(fypLeanCanvasProvider(record.id));
         return canvas.when(
           loading: () => const FypmsLoadingWidget(),
-          error: (e, _) => Center(child: Text('Error: $e')),
+          error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypLeanCanvasProvider(record.id)), what: 'this page'),
           data: (existing) {
             final initialBlocks = existing?.blocks ?? const <String, dynamic>{};
             return _CanvasEditor(
@@ -110,7 +112,7 @@ class _CanvasEditorState extends ConsumerState<_CanvasEditor> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save: $e')),
+          SnackBar(content: Text('Failed to save: ${friendlyError(e)}')),
         );
       }
     } finally {
@@ -160,7 +162,8 @@ class _CanvasEditorState extends ConsumerState<_CanvasEditor> {
         Expanded(
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final columns = constraints.maxWidth >= 1100 ? 3 : 2;
+              // One column on phones: two tiny text boxes side by side are unusable.
+              final columns = constraints.maxWidth >= 1100 ? 3 : (constraints.maxWidth >= 600 ? 2 : 1);
               return GridView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: DesignSystem.gutter),
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -168,6 +171,7 @@ class _CanvasEditorState extends ConsumerState<_CanvasEditor> {
                   crossAxisSpacing: DesignSystem.spaceMd,
                   mainAxisSpacing: DesignSystem.spaceMd,
                   childAspectRatio: columns == 3 ? 1.1 : 0.9,
+                  mainAxisExtent: columns == 1 ? 240 * MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.3) : null,
                 ),
                 itemCount: fypmsLeanCanvasBlocks.length,
                 itemBuilder: (context, index) {

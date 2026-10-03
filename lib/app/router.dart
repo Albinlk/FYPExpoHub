@@ -551,7 +551,7 @@ class _NotFoundPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
     final padding =
         isDesktop ? DesignSystem.marginDesktop : DesignSystem.marginMobile;
     return Scaffold(
@@ -664,11 +664,34 @@ class RouteTitleObserver extends NavigatorObserver {
     }
     if (path == '/faq') return t('FAQ');
     if (path == '/privacy') return t('Privacy Policy');
+    if (path == '/archive' || path.startsWith('/archive/')) return t('Past Exhibitions');
+    if (path == '/reset-password') return t('Reset Password');
     if (path == '/admin') return t('Admin Dashboard');
-    if (path.startsWith('/admin/')) return t('Admin');
-    if (path.startsWith('/fypms')) return t('FYPMS');
+    if (path == '/admin/sign-in') return t('Sign In');
+    if (path.startsWith('/admin/')) return t('Admin · ${_segmentLabel(path)}');
+    if (path == '/fypms') return t('FYPMS');
+    if (path.startsWith('/fypms')) return t('FYPMS · ${_segmentLabel(path)}');
     return '';
   }
+
+  /// "/admin/imports/abc-123" → "Imports"; "/fypms/pu/nominations" → "Nominations".
+  /// Id-like trailing segments (digits, uuids) are skipped.
+  static String _segmentLabel(String path) {
+    final parts = path.split('/').where((p) => p.isNotEmpty).toList();
+    var i = parts.length - 1;
+    while (i > 1 && RegExp(r'^[0-9a-f-]{8,}$|^\d+$').hasMatch(parts[i])) {
+      i--;
+    }
+    final raw = parts.length > 1 ? parts[i] : parts.first;
+    return raw
+        .split(RegExp(r'[-_]'))
+        .where((w) => w.isNotEmpty)
+        .map((w) => '${w[0].toUpperCase()}${w.substring(1)}')
+        .join(' ');
+  }
+
+  /// Exposed for tests.
+  static String titleForPath(String path) => _titleForPath(path);
 
   static void _setDocumentTitle(String title) {
     // Web sets document.title via conditional import; no-op elsewhere.

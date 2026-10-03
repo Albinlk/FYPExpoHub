@@ -8,6 +8,10 @@ import '../../../../core/supabase/fypms_rpc_service.dart';
 import '../../../../core/widgets/admin_actions.dart';
 import '../widgets/create_session_dialog.dart';
 import '../widgets/fypms_loading_widget.dart';
+import '../../../../core/widgets/async_state.dart';
+import 'package:flutter/services.dart';
+import '../../../../core/widgets/busy_button.dart';
+import '../../../../core/layout/responsive.dart';
 
 /// Presentation sessions and slots, for the coordinator (all courses) and
 /// the CSP lecturers (their own course offerings, per RLS).
@@ -43,7 +47,7 @@ class CoordinatorPresentationsPage extends ConsumerWidget {
             ),
       body: sessions.when(
         loading: () => const FypmsLoadingWidget(),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypPresentationSessionsProvider), what: 'this page'),
         data: (list) {
           if (list.isEmpty) {
             return const Center(child: Text('No presentation sessions scheduled yet.'));
@@ -119,13 +123,13 @@ class CoordinatorPresentationsPage extends ConsumerWidget {
           backgroundColor: DesignSystem.surfaceContainerLowest,
           title: Text('Presentation Slots', style: DesignSystem.h2),
           content: SizedBox(
-            width: 480,
+            width: dialogWidth(context, 480),
             child: Consumer(
               builder: (context, ref, _) {
                 final slots = ref.watch(fypPresentationSlotsProvider(sessionId));
                 return slots.when(
                   loading: () => const Center(child: CircularProgressIndicator()),
-                  error: (e, _) => Text('Error: $e'),
+                  error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypPresentationSlotsProvider(sessionId)), what: 'this section'),
                   data: (slotList) {
                     if (slotList.isEmpty) {
                       return const Text('No slots scheduled for this session yet.');
@@ -146,10 +150,14 @@ class CoordinatorPresentationsPage extends ConsumerWidget {
                             trailing: IconButton(
                               tooltip: 'Remove slot',
                               icon: const Icon(Icons.delete_outline),
-                              onPressed: () => runAdminWrite(context, () async {
-                                await ref.read(supabaseRpcServiceProvider).deletePresentationSlot(slotId: slot.id);
-                                ref.invalidate(fypPresentationSlotsProvider(sessionId));
-                              }, success: 'Slot removed.'),
+                              onPressed: () async {
+                                final ok = await confirmDelete(context, 'slot ${slot.slotNumber}');
+                                if (!ok || !context.mounted) return;
+                                await runAdminWrite(context, () async {
+                                  await ref.read(supabaseRpcServiceProvider).deletePresentationSlot(slotId: slot.id);
+                                  ref.invalidate(fypPresentationSlotsProvider(sessionId));
+                                }, success: 'Slot removed.');
+                              },
                             ),
                           ),
                       ],
@@ -184,9 +192,13 @@ class CoordinatorPresentationsPage extends ConsumerWidget {
     final baseDate = session.eventDate.toLocal();
     var startAt = DateTime(baseDate.year, baseDate.month, baseDate.day, 9, 0);
     var endAt = DateTime(baseDate.year, baseDate.month, baseDate.day, 9, 30);
+    var busy = false;
+    String? error;
 
     showDialog<void>(
       context: context,
+      // A stray tap outside must not discard what was entered.
+      barrierDismissible: false,
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, setState) {
@@ -218,8 +230,9 @@ class CoordinatorPresentationsPage extends ConsumerWidget {
               backgroundColor: DesignSystem.surfaceContainerLowest,
               title: Text('Schedule Slot', style: DesignSystem.h2),
               content: SizedBox(
-                width: 400,
-                child: Column(
+                width: dialogWidth(dialogContext, 400),
+                child: SingleChildScrollView(
+                  child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Consumer(
@@ -227,7 +240,7 @@ class CoordinatorPresentationsPage extends ConsumerWidget {
                         final records = ref.watch(fypRecordsProvider);
                         return records.when(
                           loading: () => const LinearProgressIndicator(),
-                          error: (e, _) => Text('Error: $e'),
+                          error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypRecordsProvider), what: 'this section'),
                           data: (items) => DropdownButtonFormField<String>(
                             initialValue: recordId,
                             decoration: const InputDecoration(labelText: 'FYP Record'),
@@ -252,6 +265,7 @@ class CoordinatorPresentationsPage extends ConsumerWidget {
                     TextField(
                       controller: slotController,
                       keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       onChanged: (_) => setState(() {}),
                       decoration: const InputDecoration(labelText: 'Slot Number'),
                     ),
@@ -278,23 +292,47 @@ class CoordinatorPresentationsPage extends ConsumerWidget {
                       controller: roomController,
                       decoration: const InputDecoration(labelText: 'Room (optional)'),
                     ),
+                    if (error != null) ...[
+                      const SizedBox(height: DesignSystem.spaceSm),
+                      Semantics(
+                        liveRegion: true,
+                        child: Text(error!, style: DesignSystem.bodySm.copyWith(color: DesignSystem.error)),
+                      ),
+                    ],
                   ],
+                ),
                 ),
               ),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.pop(dialogContext),
+                  onPressed: busy ? null : () => Navigator.pop(dialogContext),
                   child: const Text('Cancel'),
                 ),
-                FilledButton(
+                BusyButton(
+                  label: 'Schedule',
+                  busyLabel: 'Scheduling…',
+                  busy: busy,
                   onPressed: recordId == null || slotController.text.trim().isEmpty
                       ? null
                       : () async {
+                          final slotNumber = int.tryParse(slotController.text.trim());
+                          if (slotNumber == null || slotNumber < 1) {
+                            setState(() => error = 'Enter a slot number of 1 or more.');
+                            return;
+                          }
+                          if (!endAt.isAfter(startAt)) {
+                            setState(() => error = 'The end time must be after the start time.');
+                            return;
+                          }
+                          setState(() {
+                            busy = true;
+                            error = null;
+                          });
                           try {
                             await ref.read(schedulePresentationSlotProvider)(
                               session.id,
                               recordId!,
-                              int.parse(slotController.text.trim()),
+                              slotNumber,
                               startAt,
                               endAt,
                               roomController.text.trim().isEmpty
@@ -311,13 +349,13 @@ class CoordinatorPresentationsPage extends ConsumerWidget {
                             }
                           } catch (e) {
                             if (dialogContext.mounted) {
-                              ScaffoldMessenger.of(dialogContext).showSnackBar(
-                                SnackBar(content: Text('Failed: $e')),
-                              );
+                              setState(() {
+                                busy = false;
+                                error = 'Could not schedule the slot: ${friendlyError(e)}';
+                              });
                             }
                           }
                         },
-                  child: const Text('Schedule'),
                 ),
               ],
             );

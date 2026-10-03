@@ -6,6 +6,7 @@ import '../../../../core/supabase/supabase_client_provider.dart';
 import '../../../../core/supabase/supabase_database_service.dart' show ActiveEvent;
 import '../../../../core/widgets/admin_actions.dart';
 import '../../../public_archive/archive_data.dart';
+import '../../../../core/layout/responsive.dart';
 
 /// Admin: every exhibition, which one is current, and a new one (backlog S6).
 /// Switching keeps the old exhibition's data; it moves to the archive.
@@ -160,8 +161,8 @@ class _NewExhibitionDialogState extends ConsumerState<_NewExhibitionDialog> {
     return AlertDialog(
       title: const Text('New exhibition'),
       content: SizedBox(
-        width: 420,
-        child: Column(
+        width: dialogWidth(context, 420),
+        child: SingleChildScrollView(child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
@@ -186,7 +187,7 @@ class _NewExhibitionDialogState extends ConsumerState<_NewExhibitionDialog> {
               ],
             ),
           ],
-        ),
+        )),
       ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),

@@ -5,6 +5,7 @@ import '../../../../core/domain/models/award_category.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/supabase/supabase_database_service.dart' show kEventSlug;
 import '../../../../core/widgets/admin_actions.dart';
+import '../../../../core/layout/responsive.dart';
 
 /// G-07: the admin manages award categories (title, description, order,
 /// shown / hidden); winners are then filed under one.
@@ -136,7 +137,7 @@ class _CategoryDialogState extends State<_CategoryDialog> {
     return AlertDialog(
       title: Text(widget.category == null ? 'Add Category' : 'Edit Category'),
       content: SizedBox(
-        width: 440,
+        width: dialogWidth(context, 440),
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,

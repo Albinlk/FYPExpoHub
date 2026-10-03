@@ -4,6 +4,7 @@ import '../../../../app/theme/theme.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import '../widgets/fypms_loading_widget.dart';
 import '../widgets/supervision_request_card.dart';
+import '../../../../core/widgets/async_state.dart';
 
 /// F1 Mutual Acceptance requests that name the lecturer. The chosen supervisor
 /// accepts or declines (textbook: the supervisor signs F1); a named
@@ -26,7 +27,7 @@ class SupervisorRequestsPage extends ConsumerWidget {
       ),
       body: requests.when(
         loading: () => const FypmsLoadingWidget(),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(mySupervisionRequestsProvider), what: 'this page'),
         data: (list) {
           if (list.isEmpty) {
             return const Center(child: Text('No students have asked you to supervise them yet.'));

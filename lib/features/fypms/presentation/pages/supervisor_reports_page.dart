@@ -6,6 +6,8 @@ import '../../../../core/domain/models/fypms/fyp_report_submission.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import '../widgets/fypms_loading_widget.dart';
 import 'student_reports_page.dart' show ReportSubmissionCard;
+import '../../../../core/widgets/async_state.dart';
+import '../../../../core/widgets/admin_actions.dart';
 
 /// F6 endorsement: the supervisor checks the report and its plagiarism report
 /// (similarity <= 30 %) and endorses it for review, or returns it.
@@ -29,7 +31,7 @@ class SupervisorReportsPage extends ConsumerWidget {
       ),
       body: main.when(
         loading: () => const FypmsLoadingWidget(),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(assignedFypRecordsProvider('supervisor')), what: 'this page'),
         data: (mainRecords) {
           final records = <String, FypRecord>{
             for (final r in mainRecords) r.id: r,
@@ -69,7 +71,7 @@ class _RecordReports extends ConsumerWidget {
         ),
         reports.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Text('Error: $e'),
+          error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypReportSubmissionsProvider(record.id)), what: 'this section'),
           data: (list) => list.isEmpty
               ? const Padding(
                   padding: EdgeInsets.only(bottom: DesignSystem.spaceMd),
@@ -134,7 +136,7 @@ class _EndorseActionsState extends ConsumerState<_EndorseActions> {
     } catch (e) {
       if (mounted) {
         setState(() => _busy = false);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: ${friendlyError(e)}')));
       }
     }
   }

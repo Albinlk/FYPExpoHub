@@ -37,7 +37,7 @@ class ProjectRowWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
     final isUnique = simCount == 0;
     final bg = (rowIndex != null && rowIndex! % 2 == 1)
         ? DesignSystem.surfaceContainerLow
@@ -48,7 +48,7 @@ class ProjectRowWidget extends ConsumerWidget {
       // so their rows aren't links to a "Project not found" screen.
       onTap: Csp600CsvLoader.isCsp600(project)
           ? null
-          : () => context.go('/projects/${project.slug}'),
+          : () => context.push('/projects/${project.slug}'),
       borderRadius: DesignSystem.radiusLg,
       child: Container(
         decoration: BoxDecoration(
@@ -92,7 +92,7 @@ class ProjectRowWidget extends ConsumerWidget {
                     color: section == 'CSP650'
                         ? DesignSystem.onSecondaryContainer
                         : DesignSystem.onTertiaryContainer,
-                    fontSize: 10,
+                    fontSize: 11,
                   ),
                 ),
               ),
@@ -126,7 +126,7 @@ class ProjectRowWidget extends ConsumerWidget {
                           project.category,
                           style: DesignSystem.labelCaps.copyWith(
                             color: DesignSystem.primary,
-                            fontSize: 9,
+                            fontSize: 11,
                           ),
                         ),
                       ),
@@ -193,7 +193,7 @@ class ProjectRowWidget extends ConsumerWidget {
                   project.programmeCode,
                   style: DesignSystem.labelCaps.copyWith(
                     color: DesignSystem.onSurfaceVariant,
-                    fontSize: 10,
+                    fontSize: 11,
                   ),
                   textAlign: TextAlign.center,
                   maxLines: 1,
@@ -223,7 +223,7 @@ class ProjectRowWidget extends ConsumerWidget {
                           tag,
                           style: DesignSystem.labelCaps.copyWith(
                             color: DesignSystem.primary,
-                            fontSize: 9,
+                            fontSize: 11,
                             letterSpacing: 0.3,
                           ),
                           maxLines: 1,
@@ -242,7 +242,7 @@ class ProjectRowWidget extends ConsumerWidget {
                           '+${tags.length - 3}',
                           style: DesignSystem.labelCaps.copyWith(
                             color: DesignSystem.onSurfaceVariant,
-                            fontSize: 9,
+                            fontSize: 11,
                           ),
                         ),
                       ),
@@ -330,7 +330,7 @@ class ProjectRowWidget extends ConsumerWidget {
                 project.programmeCode,
                 style: DesignSystem.labelCaps.copyWith(
                   color: DesignSystem.onSurfaceVariant,
-                  fontSize: 10,
+                  fontSize: 11,
                 ),
               ),
             ),
@@ -349,7 +349,7 @@ class ProjectRowWidget extends ConsumerWidget {
                     color: section == 'CSP650'
                         ? DesignSystem.onSecondaryContainer
                         : DesignSystem.onTertiaryContainer,
-                    fontSize: 10,
+                    fontSize: 11,
                   ),
                 ),
               ),
@@ -361,7 +361,7 @@ class ProjectRowWidget extends ConsumerWidget {
               ),
               child: Text(
                 project.category,
-                style: DesignSystem.labelCaps.copyWith(color: DesignSystem.primary, fontSize: 9),
+                style: DesignSystem.labelCaps.copyWith(color: DesignSystem.primary, fontSize: 11),
               ),
             ),
           ],
@@ -390,7 +390,7 @@ class ProjectRowWidget extends ConsumerWidget {
                   overflow: TextOverflow.ellipsis,
                   style: DesignSystem.labelCaps.copyWith(
                     color: DesignSystem.primary,
-                    fontSize: 10,
+                    fontSize: 11,
                   ),
                 ),
               );
@@ -437,7 +437,7 @@ class ProjectRowWidget extends ConsumerWidget {
                 suffix,
                 style: DesignSystem.labelCaps.copyWith(
                   color: DesignSystem.onSurfaceVariant,
-                  fontSize: 8,
+                  fontSize: 11,
                 ),
               ),
             ],
@@ -472,7 +472,7 @@ class ProjectRowWidget extends ConsumerWidget {
               'Unique',
               style: DesignSystem.labelCaps.copyWith(
                 color: Colors.green.shade700,
-                fontSize: 9,
+                fontSize: 11,
               ),
             ),
           ],
@@ -495,7 +495,7 @@ class ProjectRowWidget extends ConsumerWidget {
             '$count similar',
             style: DesignSystem.labelCaps.copyWith(
               color: DesignSystem.error,
-              fontSize: 9,
+              fontSize: 11,
             ),
           ),
         ],

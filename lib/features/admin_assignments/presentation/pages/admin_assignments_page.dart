@@ -6,7 +6,9 @@ import '../../../../core/domain/models/project_lecturer_assignment.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/supabase/supabase_client_provider.dart';
 import '../../../../core/widgets/admin_actions.dart';
+import '../../../../core/widgets/async_state.dart';
 import '../../domain/assignment_matching.dart';
+import '../../../../core/layout/responsive.dart';
 
 /// G-07: who supervises / examines which project. Lecturers can only mark
 /// visits for projects they are assigned to, so this is what makes
@@ -109,11 +111,27 @@ class _AdminAssignmentsPageState extends ConsumerState<AdminAssignmentsPage> {
   Widget build(BuildContext context) {
     final projects = ref.watch(projectsProvider);
     final assignmentsAsync = ref.watch(allAssignmentsProvider);
+    final lecturersAsync = ref.watch(allLecturersProvider);
+    // Matching against an empty list would propose duplicates of existing
+    // assignments, so wait for (or fail visibly on) both lists.
+    if (!assignmentsAsync.hasValue || !lecturersAsync.hasValue) {
+      final failure = assignmentsAsync.error ?? lecturersAsync.error;
+      if (failure != null) {
+        return AsyncErrorView(
+          error: failure,
+          what: 'lecturer assignments',
+          onRetry: () {
+            ref.invalidate(allAssignmentsProvider);
+            ref.invalidate(allLecturersProvider);
+          },
+        );
+      }
+      return const AsyncLoadingView(what: 'lecturer assignments');
+    }
     final lecturers = [
-      for (final m in ref.watch(allLecturersProvider).value ?? const <Map<String, dynamic>>[])
-        ?LecturerRef.fromRow(m),
+      for (final m in lecturersAsync.requireValue) ?LecturerRef.fromRow(m),
     ];
-    final assignments = assignmentsAsync.value ?? const <ProjectLecturerAssignment>[];
+    final assignments = assignmentsAsync.requireValue;
     final match = proposeAssignments(projects: projects, lecturers: lecturers, existing: assignments);
     final byProject = <String, List<ProjectLecturerAssignment>>{};
     for (final a in assignments) {
@@ -267,8 +285,8 @@ class _AssignDialogState extends State<_AssignDialog> {
     return AlertDialog(
       title: const Text('Assign lecturer'),
       content: SizedBox(
-        width: 420,
-        child: Column(
+        width: dialogWidth(context, 420),
+        child: SingleChildScrollView(child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -297,7 +315,7 @@ class _AssignDialogState extends State<_AssignDialog> {
               onChanged: (v) => setState(() => _role = v ?? 'supervisor'),
             ),
           ],
-        ),
+        )),
       ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),

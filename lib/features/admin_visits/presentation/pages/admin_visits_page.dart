@@ -9,6 +9,8 @@ import '../../../../core/state/state_providers.dart';
 import '../../../../core/utils/download_util.dart';
 import '../widgets/summary_cards.dart';
 import '../widgets/visit_data_table.dart';
+import '../../../../core/widgets/admin_actions.dart';
+import '../../../../core/widgets/async_state.dart';
 
 class AdminVisitsPage extends ConsumerStatefulWidget {
   const AdminVisitsPage({super.key});
@@ -85,7 +87,7 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}'), backgroundColor: DesignSystem.error),
+          SnackBar(content: Text('Error: ${friendlyError(e)}'), backgroundColor: DesignSystem.error),
         );
       }
     }
@@ -103,10 +105,27 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
     final padding = isDesktop ? DesignSystem.marginDesktop : DesignSystem.marginMobile;
-    final assignments = ref.watch(allAssignmentsProvider).asData?.value ?? [];
-    final visits = ref.watch(allVisitsProvider).asData?.value ?? [];
+    final assignmentsAsync = ref.watch(allAssignmentsProvider);
+    final visitsAsync = ref.watch(allVisitsProvider);
+    // Never render zeros / an empty table for data that has not loaded or failed.
+    if (!assignmentsAsync.hasValue || !visitsAsync.hasValue) {
+      final failure = assignmentsAsync.error ?? visitsAsync.error;
+      if (failure != null) {
+        return AsyncErrorView(
+          error: failure,
+          what: 'student visits',
+          onRetry: () {
+            ref.invalidate(allAssignmentsProvider);
+            ref.invalidate(allVisitsProvider);
+          },
+        );
+      }
+      return const AsyncLoadingView(what: 'student visits');
+    }
+    final assignments = assignmentsAsync.requireValue;
+    final visits = visitsAsync.requireValue;
     final projects = ref.watch(projectsProvider);
 
     // O(1) project lookup by id
@@ -183,7 +202,7 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
                       controller: _searchController,
                       onChanged: (_) => setState(() {}),
                       decoration: const InputDecoration(
-                        hintText: 'Search lecturers, projects, students, booths...',
+                        hintText: 'Search lecturers, projects, students, booths…',
                         prefixIcon: Icon(Icons.search, color: DesignSystem.primary),
                       ),
                     ),
@@ -340,7 +359,7 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
                 ),
                 subtitle: Text(
                   '${v.visitRole == 'supervisor' ? 'SV' : 'EX'} • ${_formatVisitTime(v)}${v.visitNote != null && v.visitNote!.isNotEmpty ? ' • ${v.visitNote}' : ''}${isVoided ? ' • Voided: ${v.voidReason}' : ''}',
-                  style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSurfaceVariant, fontSize: 10),
+                  style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSurfaceVariant, fontSize: 11),
                 ),
                 trailing: isCompleted
                     ? TextButton.icon(
@@ -379,7 +398,7 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
                 }
               }),
               selectedColor: DesignSystem.primary,
-              visualDensity: VisualDensity.compact,
+              visualDensity: VisualDensity.standard,
             ),
           );
         }),

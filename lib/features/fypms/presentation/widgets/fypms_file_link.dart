@@ -33,7 +33,7 @@ class FypmsFileLink extends ConsumerWidget {
       onPressed: () => _open(context, ref),
       icon: const Icon(Icons.open_in_new, size: 16),
       label: Text(label),
-      style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+      style: TextButton.styleFrom(visualDensity: VisualDensity.standard),
     );
   }
 }

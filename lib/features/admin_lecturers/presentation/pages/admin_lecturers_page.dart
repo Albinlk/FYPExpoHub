@@ -17,11 +17,11 @@ class AdminLecturersPage extends ConsumerWidget {
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, setState) {
-            final isDesktop = MediaQuery.of(context).size.width >= 768;
+            final isDesktop = MediaQuery.sizeOf(context).width >= 768;
             return AlertDialog(
               title: Text('Add Lecturer', style: (isDesktop ? DesignSystem.h3 : DesignSystem.bodyLg)),
               content: SizedBox(
-                width: isDesktop ? 400 : MediaQuery.of(context).size.width * 0.85,
+                width: isDesktop ? 400 : MediaQuery.sizeOf(context).width * 0.85,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -181,7 +181,7 @@ class AdminLecturersPage extends ConsumerWidget {
     if (!ok || !context.mounted) return;
     final messenger = ScaffoldMessenger.of(context);
     messenger.showSnackBar(
-      const SnackBar(content: Text('Updating lecturer IDs in assignments...')),
+      const SnackBar(content: Text('Updating lecturer IDs in assignments…')),
     );
     try {
       final db = ref.read(supabaseDbServiceProvider);
@@ -254,7 +254,7 @@ class AdminLecturersPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
     final lecturersAsync = ref.watch(allLecturersProvider);
 
     return Scaffold(

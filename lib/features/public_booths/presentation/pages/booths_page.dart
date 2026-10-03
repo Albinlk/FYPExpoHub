@@ -211,7 +211,7 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
     final padding = isDesktop ? DesignSystem.marginDesktop : DesignSystem.marginMobile;
 
     final projects = ref.watch(publicProjectsProvider);
@@ -288,7 +288,7 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
                               },
                               decoration: InputDecoration(
                                 hintText:
-                                    'Search by booth number, project title, or student name...',
+                                    'Search by booth number, project title, or student name…',
                                 prefixIcon: Icon(Icons.search, color: DesignSystem.primary),
                               ),
                             ),
@@ -322,7 +322,7 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
                         },
                         decoration: InputDecoration(
                           isDense: true,
-                          hintText: 'Search booth, title, student...',
+                          hintText: 'Search booth, title, student…',
                           prefixIcon: Icon(Icons.search, color: DesignSystem.primary),
                         ),
                       ),
@@ -409,6 +409,8 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
     return SizedBox(
       width: width,
       child: DropdownButtonFormField<String>(
+        // initialValue is only read once; re-key so a programmatic change shows.
+        key: ValueKey('day-$_selectedDay'),
         initialValue: _selectedDay,
         isDense: isDense,
         isExpanded: true,
@@ -444,6 +446,7 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
     return SizedBox(
       width: width,
       child: DropdownButtonFormField<String>(
+        key: ValueKey('venue-$_selectedVenue'),
         initialValue: _selectedVenue,
         isDense: isDense,
         decoration: InputDecoration(
@@ -467,6 +470,7 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
     return SizedBox(
       width: width,
       child: DropdownButtonFormField<String>(
+        key: ValueKey('program-$_selectedProgram'),
         initialValue: _selectedProgram,
         isDense: isDense,
         decoration: InputDecoration(
@@ -569,7 +573,7 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
               return Card(
                 margin: EdgeInsets.zero,
                 child: ListTile(
-                  onTap: () => context.go('/projects/${p.slug}'),
+                  onTap: () => context.push('/projects/${p.slug}'),
                   leading: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
                     child: Image.network(

@@ -30,6 +30,9 @@ class _Db extends SupabaseDatabaseService {
       };
 
   @override
+  Future<Map<String, dynamic>?> getSettingStrict(String key) => getSetting(key);
+
+  @override
   Future<void> setSetting(String key, Map<String, dynamic> value) async => saved[key] = value;
 }
 

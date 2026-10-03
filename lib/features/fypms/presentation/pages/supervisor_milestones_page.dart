@@ -5,6 +5,7 @@ import '../../../../core/domain/models/fypms/fyp_record.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import '../../../../core/utils/fypms_format.dart';
 import '../widgets/fypms_loading_widget.dart';
+import '../../../../core/widgets/async_state.dart';
 
 /// Milestones of the supervisor's students, read-only: the course lecturer or
 /// coordinator sets them (create_or_update_milestone), so offering add/edit
@@ -27,7 +28,7 @@ class SupervisorMilestonesPage extends ConsumerWidget {
       ),
       body: assigned.when(
         loading: () => const FypmsLoadingWidget(),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(assignedFypRecordsProvider(null)), what: 'this page'),
         data: (records) {
           if (records.isEmpty) {
             return const Center(child: Text('No records assigned to you.'));
@@ -74,7 +75,7 @@ class _RecordMilestonesSection extends ConsumerWidget {
         ),
         milestones.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Text('Error: $e'),
+          error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypMilestonesProvider(record.id)), what: 'this section'),
           data: (list) {
             if (list.isEmpty) {
               return const Padding(

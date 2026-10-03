@@ -54,20 +54,23 @@ String _letterBody(PendingNomination n) => '''
 /// One HTML document holding a letter per nomination.
 String appointmentLettersHtml(List<PendingNomination> nominations) => '''
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><title>Appointment letters</title>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Appointment letters</title>
 <style>
-  body { font-family: Georgia, 'Times New Roman', serif; color: #111; margin: 0; }
+  @page { size: A4; margin: 18mm; }
+  body { font-family: Georgia, 'Times New Roman', serif; color: #111; margin: 0; overflow-wrap: anywhere; }
   .letter { max-width: 720px; margin: 40px auto; padding: 0 32px; page-break-after: always; }
   .letter:last-child { page-break-after: auto; }
   header { display: flex; justify-content: space-between; border-bottom: 2px solid #4b2e83; padding-bottom: 12px; }
   .faculty { font-weight: bold; }
   h1 { font-size: 20px; margin: 24px 0 12px; }
-  table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; break-inside: avoid; }
   th, td { text-align: left; padding: 6px 8px; border: 1px solid #ccc; vertical-align: top; }
   th { width: 30%; background: #f4f1fa; }
-  .sign { margin-top: 48px; }
+  .sign { margin-top: 48px; break-inside: avoid; }
   .note { font-size: 12px; color: #555; margin-top: 32px; }
-  @media print { .letter { margin: 0 auto; } }
+  th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  @media print { .letter { margin: 0 auto; padding: 0; } }
 </style></head><body>
 ${nominations.map(_letterBody).join('\n')}
 </body></html>

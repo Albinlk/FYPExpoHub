@@ -9,6 +9,8 @@ import '../../../../core/utils/fypms_format.dart';
 import '../widgets/fypms_loading_widget.dart';
 import '../widgets/supervisor_change_widgets.dart';
 import '../widgets/student_record_workspace.dart';
+import '../../../../core/widgets/async_state.dart';
+import '../../../../core/widgets/admin_actions.dart';
 
 /// F1 Mutual Acceptance: the student names the supervisor (and co-supervisor)
 /// who agreed to supervise them and the project area and title; the
@@ -54,7 +56,7 @@ class StudentSupervisionPage extends ConsumerWidget {
             Expanded(
               child: requests.when(
                 loading: () => const FypmsLoadingWidget(),
-                error: (e, _) => Center(child: Text('Error: $e')),
+                error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypSupervisionRequestsProvider(record.id)), what: 'this page'),
                 data: (items) {
                   if (items.isEmpty) {
                     return Center(
@@ -180,13 +182,13 @@ class _F1RequestDialogState extends ConsumerState<_F1RequestDialog> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _submitting = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to submit: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to submit: ${friendlyError(e)}')));
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
     final directory = ref.watch(supervisorsDirectoryProvider);
     final ready = _supervisorId != null && _trimmed(_title) != null && !_submitting;
 
@@ -197,7 +199,7 @@ class _F1RequestDialogState extends ConsumerState<_F1RequestDialog> {
       ),
       content: SingleChildScrollView(
         child: SizedBox(
-          width: isDesktop ? 500 : MediaQuery.of(context).size.width * 0.85,
+          width: isDesktop ? 500 : MediaQuery.sizeOf(context).width * 0.85,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -212,7 +214,7 @@ class _F1RequestDialogState extends ConsumerState<_F1RequestDialog> {
                   child: CircularProgressIndicator(),
                 ),
                 error: (e, _) => Text(
-                  'Could not load supervisors: $e',
+                  'Could not load supervisors: ${friendlyError(e)}',
                   style: DesignSystem.bodySm.copyWith(color: DesignSystem.error),
                 ),
                 data: (staff) {
