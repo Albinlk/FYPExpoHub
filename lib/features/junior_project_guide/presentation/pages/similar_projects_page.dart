@@ -129,7 +129,7 @@ class _MatchTile extends StatelessWidget {
         label,
         style: DesignSystem.labelCaps.copyWith(
           color: DesignSystem.primary,
-          fontSize: 10,
+          fontSize: 11,
         ),
       ),
     );

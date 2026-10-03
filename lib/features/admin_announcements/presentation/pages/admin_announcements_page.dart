@@ -301,7 +301,7 @@ class AdminAnnouncementsPage extends ConsumerWidget {
                                           isPublished ? 'Published' : 'Draft',
                                           style: DesignSystem.labelCaps.copyWith(
                                             color: isPublished ? DesignSystem.onSecondaryContainer : DesignSystem.primary,
-                                            fontSize: 10,
+                                            fontSize: 11,
                                           ),
                                         ),
                                       ),

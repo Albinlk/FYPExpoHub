@@ -92,7 +92,7 @@ class _LecturerPageState extends ConsumerState<LecturerPage> {
                                     );
                                   },
                                   decoration: const InputDecoration(
-                                    hintText: 'Enter your full name...',
+                                    hintText: 'Enter your full name…',
                                     prefixIcon: Icon(Icons.person_search, color: DesignSystem.primary),
                                   ),
                                 ),

@@ -153,7 +153,7 @@ class _AdminFeedbackPageState extends ConsumerState<AdminFeedbackPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSurfaceVariant, fontSize: 10)),
+          Text(label, style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSurfaceVariant, fontSize: 11)),
           const SizedBox(height: 2),
           Text(
             value,
@@ -227,7 +227,7 @@ class _AdminFeedbackPageState extends ConsumerState<AdminFeedbackPage> {
                             child: TextFormField(
                               controller: _searchController,
                               decoration: InputDecoration(
-                                hintText: 'Search feedback...',
+                                hintText: 'Search feedback…',
                                 prefixIcon: const Icon(Icons.search, size: 18),
                                 hintStyle: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant),
                               ),
@@ -256,7 +256,7 @@ class _AdminFeedbackPageState extends ConsumerState<AdminFeedbackPage> {
                       const SizedBox(height: DesignSystem.spaceMd),
                       TextFormField(
                         controller: _searchController,
-                        decoration: const InputDecoration(hintText: 'Search feedback...'),
+                        decoration: const InputDecoration(hintText: 'Search feedback…'),
                         onChanged: (_) => setState(() {}),
                       ),
                       const SizedBox(height: DesignSystem.spaceMd),
@@ -325,7 +325,7 @@ class _AdminFeedbackPageState extends ConsumerState<AdminFeedbackPage> {
                                   _statusLabel(entry.status),
                                   style: DesignSystem.labelCaps.copyWith(
                                     color: _statusColor(entry.status),
-                                    fontSize: 10,
+                                    fontSize: 11,
                                   ),
                                 ),
                               ),
@@ -349,7 +349,7 @@ class _AdminFeedbackPageState extends ConsumerState<AdminFeedbackPage> {
                                 crossAxisAlignment: WrapCrossAlignment.center,
                                 children: [
                                   if (entry.rating != null) ...[
-                                    Icon(Icons.star, color: DesignSystem.secondaryContainer, size: 14),
+                                    Icon(Icons.star, color: DesignSystem.secondary, size: 14),
                                     const SizedBox(width: 2),
                                     Text(entry.rating.toString(), style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant)),
                                   ],
@@ -403,7 +403,7 @@ class _AdminFeedbackPageState extends ConsumerState<AdminFeedbackPage> {
     return FilterChip(
       label: Text(label, style: DesignSystem.labelCaps.copyWith(
         color: selected ? Colors.white : DesignSystem.primary,
-        fontSize: 10,
+        fontSize: 11,
       )),
       selected: selected,
       onSelected: (_) {

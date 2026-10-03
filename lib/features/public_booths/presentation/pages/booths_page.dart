@@ -288,7 +288,7 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
                               },
                               decoration: InputDecoration(
                                 hintText:
-                                    'Search by booth number, project title, or student name...',
+                                    'Search by booth number, project title, or student name…',
                                 prefixIcon: Icon(Icons.search, color: DesignSystem.primary),
                               ),
                             ),
@@ -322,7 +322,7 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
                         },
                         decoration: InputDecoration(
                           isDense: true,
-                          hintText: 'Search booth, title, student...',
+                          hintText: 'Search booth, title, student…',
                           prefixIcon: Icon(Icons.search, color: DesignSystem.primary),
                         ),
                       ),

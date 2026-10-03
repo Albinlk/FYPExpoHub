@@ -181,7 +181,7 @@ class AdminLecturersPage extends ConsumerWidget {
     if (!ok || !context.mounted) return;
     final messenger = ScaffoldMessenger.of(context);
     messenger.showSnackBar(
-      const SnackBar(content: Text('Updating lecturer IDs in assignments...')),
+      const SnackBar(content: Text('Updating lecturer IDs in assignments…')),
     );
     try {
       final db = ref.read(supabaseDbServiceProvider);

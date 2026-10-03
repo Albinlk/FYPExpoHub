@@ -90,7 +90,7 @@ class AnnouncementsPage extends ConsumerWidget {
                                               ann.category,
                                               style: DesignSystem.labelCaps.copyWith(
                                                 color: isPinned ? DesignSystem.onSecondaryContainer : DesignSystem.primary,
-                                                fontSize: 10,
+                                                fontSize: 11,
                                               ),
                                               softWrap: true,
                                               overflow: TextOverflow.ellipsis,

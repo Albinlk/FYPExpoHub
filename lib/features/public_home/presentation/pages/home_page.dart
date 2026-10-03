@@ -116,8 +116,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                           },
                           decoration: InputDecoration(
                             hintText: isDesktop
-                                ? 'Search projects, supervisors, or keywords...'
-                                : 'Search projects...',
+                                ? 'Search projects, supervisors, or keywords…'
+                                : 'Search projects…',
                             prefixIcon: const Icon(Icons.search, color: DesignSystem.primary),
                             suffixIcon: ElevatedButton(
                               onPressed: () {
@@ -432,7 +432,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 textAlign: TextAlign.center,
                 style: DesignSystem.labelCaps.copyWith(
                   color: Colors.white60,
-                  fontSize: 10,
+                  fontSize: 11,
                   letterSpacing: 0.5,
                 ),
               ),
@@ -655,7 +655,7 @@ class _CountdownTimerState extends State<_CountdownTimer> {
           const SizedBox(height: 2),
           Text(
             label,
-            style: DesignSystem.labelCaps.copyWith(color: Colors.white60, fontSize: 10),
+            style: DesignSystem.labelCaps.copyWith(color: Colors.white60, fontSize: 11),
           ),
         ],
       ),

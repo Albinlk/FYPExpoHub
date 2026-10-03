@@ -46,7 +46,7 @@ Color workflowStatusColor(String status) {
     case 'project_completed':
       return const Color(0xFF2E7D32); // success green
     case 'project_archived':
-      return DesignSystem.outlineVariant;
+      return DesignSystem.onSurfaceVariant;
     case 'withdrawn':
       return DesignSystem.error;
     case 'incomplete':

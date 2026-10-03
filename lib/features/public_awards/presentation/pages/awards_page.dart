@@ -167,7 +167,7 @@ class AwardsPage extends ConsumerWidget {
                                       ),
                                       child: Text(
                                         'UiTM Official Award',
-                                        style: DesignSystem.labelCaps.copyWith(color: Colors.white, fontSize: 8),
+                                        style: DesignSystem.labelCaps.copyWith(color: Colors.white, fontSize: 11),
                                       ),
                                     ),
                                   ],

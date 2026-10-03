@@ -333,7 +333,7 @@ class _DeliverableUploadDialogState extends ConsumerState<DeliverableUploadDialo
         ElevatedButton(
           onPressed: ready ? _submit : null,
           style: ElevatedButton.styleFrom(backgroundColor: DesignSystem.secondary, foregroundColor: Colors.white),
-          child: Text(_busy ? 'Uploading...' : 'Submit'),
+          child: Text(_busy ? 'Uploading…' : 'Submit'),
         ),
       ],
     );

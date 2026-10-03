@@ -227,7 +227,7 @@ class DashboardPage extends ConsumerWidget {
                                     statusText,
                                     style: DesignSystem.labelCaps.copyWith(
                                       color: isPending ? DesignSystem.onSecondaryContainer : DesignSystem.primary,
-                                      fontSize: 10,
+                                      fontSize: 11,
                                     ),
                                   ),
                                 ),

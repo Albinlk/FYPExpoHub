@@ -376,7 +376,7 @@ class AdminSchedulePage extends ConsumerWidget {
                                             ),
                                             child: Text(
                                               dayText,
-                                              style: DesignSystem.labelCaps.copyWith(color: DesignSystem.primary, fontSize: 8),
+                                              style: DesignSystem.labelCaps.copyWith(color: DesignSystem.primary, fontSize: 11),
                                             ),
                                           ),
                                         ],
@@ -419,7 +419,7 @@ class AdminSchedulePage extends ConsumerWidget {
                                           isPublished ? 'Published' : 'Draft',
                                           style: DesignSystem.labelCaps.copyWith(
                                             color: isPublished ? DesignSystem.onSecondaryContainer : DesignSystem.primary,
-                                            fontSize: 10,
+                                            fontSize: 11,
                                           ),
                                         ),
                                       ),

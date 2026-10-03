@@ -140,7 +140,7 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
                       controller: _searchController,
                       onChanged: (_) => setState(() {}),
                       decoration: const InputDecoration(
-                        hintText: 'Search projects, students, booths...',
+                        hintText: 'Search projects, students, booths…',
                         prefixIcon: Icon(Icons.search, color: DesignSystem.primary),
                       ),
                     ),
@@ -310,7 +310,7 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
       ),
       child: Text(
         assignment.role == 'supervisor' ? 'SV' : 'EX',
-        style: DesignSystem.labelCaps.copyWith(color: Colors.white, fontSize: 10),
+        style: DesignSystem.labelCaps.copyWith(color: Colors.white, fontSize: 11),
       ),
     );
 
@@ -339,7 +339,7 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
               ),
               child: Text(
                 project.presentationDay!.split(' - ').first,
-                style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSecondaryContainer, fontSize: 10),
+                style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSecondaryContainer, fontSize: 11),
               ),
             ),
         ],
@@ -355,7 +355,7 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
           color: DesignSystem.error,
           borderRadius: DesignSystem.radiusSm,
         ),
-        child: Text('Voided', style: DesignSystem.labelCaps.copyWith(color: Colors.white, fontSize: 9)),
+        child: Text('Voided', style: DesignSystem.labelCaps.copyWith(color: Colors.white, fontSize: 11)),
       );
     }
     if (isCompleted) {
@@ -373,7 +373,7 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
           children: [
             const Icon(Icons.check_circle, size: 10, color: Colors.white),
             const SizedBox(width: 3),
-            Text(timeStr, style: DesignSystem.labelCaps.copyWith(color: Colors.white, fontSize: 9)),
+            Text(timeStr, style: DesignSystem.labelCaps.copyWith(color: Colors.white, fontSize: 11)),
           ],
         ),
       );
@@ -384,7 +384,7 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
         color: Colors.black54,
         borderRadius: DesignSystem.radiusSm,
       ),
-      child: Text('Not Yet', style: DesignSystem.labelCaps.copyWith(color: Colors.white, fontSize: 9)),
+      child: Text('Not Yet', style: DesignSystem.labelCaps.copyWith(color: Colors.white, fontSize: 11)),
     );
   }
 }

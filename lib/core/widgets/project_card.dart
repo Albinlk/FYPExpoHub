@@ -167,7 +167,7 @@ class ProjectCard extends StatelessWidget {
                 'Industry Candidate',
                 style: DesignSystem.labelCaps.copyWith(
                   color: Colors.white,
-                  fontSize: 10,
+                  fontSize: 11,
                 ),
               ),
             ),
@@ -181,7 +181,7 @@ class ProjectCard extends StatelessWidget {
               project.category,
               style: DesignSystem.labelCaps.copyWith(
                 color: Colors.white,
-                fontSize: 10,
+                fontSize: 11,
               ),
             ),
           ),
@@ -252,7 +252,7 @@ class ProjectCard extends StatelessWidget {
       style: DesignSystem.labelCaps.copyWith(
         color: DesignSystem.secondary,
         fontWeight: FontWeight.bold,
-        fontSize: 10,
+        fontSize: 11,
       ),
       maxLines: 1,
       overflow: TextOverflow.ellipsis,

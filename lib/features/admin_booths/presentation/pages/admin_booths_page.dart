@@ -305,7 +305,7 @@ class AdminBoothsPage extends ConsumerWidget {
                                         associatedProj != null ? 'Active' : 'Vacant',
                                         style: DesignSystem.labelCaps.copyWith(
                                           color: associatedProj != null ? DesignSystem.onSecondaryContainer : DesignSystem.onSurfaceVariant,
-                                          fontSize: 10,
+                                          fontSize: 11,
                                         ),
                                       ),
                                     ),

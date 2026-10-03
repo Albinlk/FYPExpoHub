@@ -238,8 +238,8 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
       decoration: InputDecoration(
         isDense: !isDesktop,
         hintText: isDesktop
-            ? 'Search by project title, student, or supervisor...'
-            : 'Search projects...',
+            ? 'Search by project title, student, or supervisor…'
+            : 'Search projects…',
         prefixIcon: const Icon(Icons.search, color: DesignSystem.primary),
       ),
     );

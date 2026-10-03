@@ -202,7 +202,7 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
                       controller: _searchController,
                       onChanged: (_) => setState(() {}),
                       decoration: const InputDecoration(
-                        hintText: 'Search lecturers, projects, students, booths...',
+                        hintText: 'Search lecturers, projects, students, booths…',
                         prefixIcon: Icon(Icons.search, color: DesignSystem.primary),
                       ),
                     ),
@@ -359,7 +359,7 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
                 ),
                 subtitle: Text(
                   '${v.visitRole == 'supervisor' ? 'SV' : 'EX'} • ${_formatVisitTime(v)}${v.visitNote != null && v.visitNote!.isNotEmpty ? ' • ${v.visitNote}' : ''}${isVoided ? ' • Voided: ${v.voidReason}' : ''}',
-                  style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSurfaceVariant, fontSize: 10),
+                  style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSurfaceVariant, fontSize: 11),
                 ),
                 trailing: isCompleted
                     ? TextButton.icon(

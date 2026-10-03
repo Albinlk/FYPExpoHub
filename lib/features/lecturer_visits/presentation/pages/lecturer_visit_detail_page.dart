@@ -205,7 +205,7 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
                                 const SizedBox(width: 4),
                                 const Text(
                                   'Industry Candidate',
-                                  style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600),
+                                  style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
                                 ),
                               ],
                             ),

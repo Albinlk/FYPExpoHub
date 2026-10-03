@@ -202,7 +202,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
                                       ),
                                       child: Text(
                                         'Internal',
-                                        style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onTertiaryContainer, fontSize: 10),
+                                        style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onTertiaryContainer, fontSize: 11),
                                       ),
                                     ),
                                   if (isOngoing)
@@ -215,7 +215,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
                                       ),
                                       child: Text(
                                         'Ongoing',
-                                        style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSecondaryContainer, fontSize: 10),
+                                        style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSecondaryContainer, fontSize: 11),
                                       ),
                                     ),
                                 ],

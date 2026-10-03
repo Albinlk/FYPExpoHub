@@ -387,7 +387,7 @@ class AdminProjectsPage extends ConsumerWidget {
                                               ),
                                               child: Text(
                                                 'FEATURED',
-                                                style: TextStyle(color: Colors.amber.shade800, fontWeight: FontWeight.bold, fontSize: 8),
+                                                style: TextStyle(color: Colors.amber.shade800, fontWeight: FontWeight.bold, fontSize: 11),
                                               ),
                                             ),
                                         ],
@@ -430,7 +430,7 @@ class AdminProjectsPage extends ConsumerWidget {
                                           isPublished ? 'Published' : 'Draft',
                                           style: DesignSystem.labelCaps.copyWith(
                                             color: isPublished ? DesignSystem.onSecondaryContainer : DesignSystem.primary,
-                                            fontSize: 10,
+                                            fontSize: 11,
                                           ),
                                         ),
                                       ),

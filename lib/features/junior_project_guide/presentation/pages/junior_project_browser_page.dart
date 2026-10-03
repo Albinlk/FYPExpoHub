@@ -286,7 +286,7 @@ class _JuniorProjectBrowserPageState
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 8),
             child: Text(
-              'Loading CSP600 proposals...',
+              'Loading CSP600 proposals…',
               style: TextStyle(
                 fontStyle: FontStyle.italic,
                 color: DesignSystem.onSurfaceVariant,
@@ -497,7 +497,7 @@ class _JuniorProjectBrowserPageState
                   controller: _searchController,
                   onChanged: _onSearchChanged,
                   decoration: InputDecoration(
-                    hintText: 'Search by project title, supervisor, or tech tags...',
+                    hintText: 'Search by project title, supervisor, or tech tags…',
                     prefixIcon:
                         const Icon(Icons.search, color: DesignSystem.primary),
                     suffixIcon: _searchController.text.isNotEmpty
@@ -537,7 +537,7 @@ class _JuniorProjectBrowserPageState
             controller: _searchController,
             onChanged: _onSearchChanged,
             decoration: InputDecoration(
-              hintText: 'Search title, supervisor, tags...',
+              hintText: 'Search title, supervisor, tags…',
               prefixIcon: const Icon(Icons.search, color: DesignSystem.primary),
               isDense: true,
               suffixIcon: _searchController.text.isNotEmpty
@@ -883,7 +883,7 @@ class _JuniorProjectBrowserPageState
         '$label: $count $noun',
         style: DesignSystem.labelCaps.copyWith(
           color: fg,
-          fontSize: 10,
+          fontSize: 11,
         ),
       ),
     );
@@ -987,7 +987,7 @@ class _JuniorProjectBrowserPageState
           text,
           style: DesignSystem.labelCaps.copyWith(
             color: DesignSystem.onSurfaceVariant,
-            fontSize: 10,
+            fontSize: 11,
             letterSpacing: 0.6,
           ),
         ),

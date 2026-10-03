@@ -64,7 +64,7 @@ class _AdminImportsPageState extends ConsumerState<AdminImportsPage> {
 
     setState(() {
       _isProcessing = true;
-      _statusMessage = 'Parsing Excel sheets in browser memory...';
+      _statusMessage = 'Parsing Excel sheets in browser memory…';
     });
 
     try {
@@ -238,7 +238,7 @@ class _AdminImportsPageState extends ConsumerState<AdminImportsPage> {
         },
       );
 
-      setState(() => _statusMessage = 'Saving staged rows...');
+      setState(() => _statusMessage = 'Saving staged rows…');
       final db = ref.read(supabaseDbServiceProvider);
       final eventId = await db.resolveEventId(kEventSlug);
       // One transaction: either the import and every staged row land, or
@@ -260,7 +260,7 @@ class _AdminImportsPageState extends ConsumerState<AdminImportsPage> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Excel parsed and staged successfully!'), backgroundColor: Colors.green),
+          const SnackBar(content: Text('Excel parsed and staged successfully!'), backgroundColor: DesignSystem.tertiary),
         );
         context.go('/admin/imports/$importId');
       }
@@ -311,7 +311,7 @@ class _AdminImportsPageState extends ConsumerState<AdminImportsPage> {
                   icon: _isProcessing
                       ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                       : const Icon(Icons.upload_file),
-                  label: Text(_isProcessing ? 'Processing...' : 'Upload & Parse .xlsx'),
+                  label: Text(_isProcessing ? 'Processing…' : 'Upload & Parse .xlsx'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: DesignSystem.secondary,
                     foregroundColor: Colors.white,

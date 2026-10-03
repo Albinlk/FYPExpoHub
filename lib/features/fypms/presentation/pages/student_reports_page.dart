@@ -417,7 +417,7 @@ class _ReportSubmissionDialogState extends ConsumerState<ReportSubmissionDialog>
             backgroundColor: DesignSystem.secondary,
             foregroundColor: Colors.white,
           ),
-          child: Text(_uploading ? 'Uploading...' : 'Submit'),
+          child: Text(_uploading ? 'Uploading…' : 'Submit'),
         ),
       ],
     );

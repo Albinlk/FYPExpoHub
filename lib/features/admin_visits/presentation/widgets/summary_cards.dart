@@ -84,7 +84,7 @@ class SummaryCardsRow extends StatelessWidget {
                   SizedBox(width: 180, child: AdminSummaryCard(title: 'Percentage', value: '$pct%', icon: Icons.pie_chart, color: DesignSystem.tertiary)),
                   SizedBox(width: 180, child: AdminSummaryCard(title: 'SV Completed', value: '$svCompleted / $svTotal', icon: Icons.person, color: DesignSystem.primary)),
                   SizedBox(width: 180, child: AdminSummaryCard(title: 'EX Completed', value: '$exCompleted / $exTotal', icon: Icons.person_outline, color: DesignSystem.tertiary)),
-                  SizedBox(width: 180, child: AdminSummaryCard(title: 'Today', value: '$visitedToday', icon: Icons.today, color: DesignSystem.secondaryContainer)),
+                  SizedBox(width: 180, child: AdminSummaryCard(title: 'Today', value: '$visitedToday', icon: Icons.today, color: DesignSystem.secondary)),
                   SizedBox(width: 180, child: AdminSummaryCard(title: 'Voided', value: '$voided', icon: Icons.cancel, color: DesignSystem.error)),
                 ],
               )
@@ -102,7 +102,7 @@ class SummaryCardsRow extends StatelessWidget {
                     children: [
                       Expanded(child: AdminSummaryCard(title: 'Percentage', value: '$pct%', icon: Icons.pie_chart, color: DesignSystem.tertiary)),
                       const SizedBox(width: DesignSystem.spaceSm),
-                      Expanded(child: AdminSummaryCard(title: 'Today', value: '$visitedToday', icon: Icons.today, color: DesignSystem.secondaryContainer)),
+                      Expanded(child: AdminSummaryCard(title: 'Today', value: '$visitedToday', icon: Icons.today, color: DesignSystem.secondary)),
                     ],
                   ),
                   const SizedBox(height: DesignSystem.spaceSm),

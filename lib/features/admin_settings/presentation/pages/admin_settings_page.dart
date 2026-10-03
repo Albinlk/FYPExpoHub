@@ -117,7 +117,7 @@ class _AdminSettingsPageState extends ConsumerState<AdminSettingsPage> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Settings saved successfully!'), backgroundColor: Colors.green),
+          const SnackBar(content: Text('Settings saved successfully!'), backgroundColor: DesignSystem.tertiary),
         );
       }
     } catch (e) {

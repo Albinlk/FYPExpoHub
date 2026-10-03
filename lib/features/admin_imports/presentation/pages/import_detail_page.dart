@@ -85,7 +85,7 @@ class _ImportDetailPageState extends ConsumerState<ImportDetailPage> {
               '${res["published_awards"] ?? 0} awards added'
               '${replaced > 0 ? ', $replaced old items replaced' : ''}.',
             ),
-            backgroundColor: Colors.green,
+            backgroundColor: DesignSystem.tertiary,
           ),
         );
         context.go('/admin/imports');
@@ -135,7 +135,7 @@ class _ImportDetailPageState extends ConsumerState<ImportDetailPage> {
                       : const Icon(Icons.check_circle),
                   label: const Text('Approve & Publish Selected'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
+                    backgroundColor: DesignSystem.tertiary,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                     shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),

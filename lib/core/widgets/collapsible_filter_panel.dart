@@ -197,7 +197,7 @@ class _FilterToggle extends StatelessWidget {
           backgroundColor: DesignSystem.secondary,
           textStyle: const TextStyle(
             color: Colors.white,
-            fontSize: 10,
+            fontSize: 11,
             fontWeight: FontWeight.bold,
           ),
           child: Icon(

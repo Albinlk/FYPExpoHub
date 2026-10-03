@@ -27,6 +27,8 @@ void main() {
     'secondary on card': (DesignSystem.secondary, white),
     'white on primary (app bars, buttons)': (DesignSystem.onPrimary, DesignSystem.primary),
     'white on secondary (buttons)': (white, DesignSystem.secondary),
+    'white on tertiary (success snackbars)': (white, DesignSystem.tertiary),
+    'muted text on card (archived status)': (DesignSystem.onSurfaceVariant, white),
     'lilac on plum': (DesignSystem.onPrimaryContainer, DesignSystem.primaryContainer),
     'umber on apricot': (DesignSystem.onSecondaryContainer, DesignSystem.secondaryContainer),
     'mint on verdigris': (DesignSystem.onTertiaryContainer, DesignSystem.tertiaryContainer),
