@@ -238,7 +238,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                           itemCount: display.length,
                           itemBuilder: (context, index) => ProjectCard(
                             project: display[index],
-                            onTap: () => context.go('/projects/${display[index].slug}'),
+                            onTap: () => context.push('/projects/${display[index].slug}'),
                           ),
                         );
                       }
@@ -253,7 +253,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                           child: ProjectCard(
                             project: display[index],
                             imageHeight: 160,
-                            onTap: () => context.go('/projects/${display[index].slug}'),
+                            onTap: () => context.push('/projects/${display[index].slug}'),
                           ),
                         ),
                       );

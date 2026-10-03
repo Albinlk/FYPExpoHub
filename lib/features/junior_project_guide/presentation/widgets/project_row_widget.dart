@@ -48,7 +48,7 @@ class ProjectRowWidget extends ConsumerWidget {
       // so their rows aren't links to a "Project not found" screen.
       onTap: Csp600CsvLoader.isCsp600(project)
           ? null
-          : () => context.go('/projects/${project.slug}'),
+          : () => context.push('/projects/${project.slug}'),
       borderRadius: DesignSystem.radiusLg,
       child: Container(
         decoration: BoxDecoration(

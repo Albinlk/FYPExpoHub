@@ -144,7 +144,7 @@ class AwardsPage extends ConsumerWidget {
                                 Align(
                                   alignment: Alignment.centerLeft,
                                   child: TextButton.icon(
-                                    onPressed: () => context.go('/projects/${associatedProj.slug}'),
+                                    onPressed: () => context.push('/projects/${associatedProj.slug}'),
                                     icon: const Icon(Icons.arrow_forward, size: 16),
                                     label: const Text('View project'),
                                   ),

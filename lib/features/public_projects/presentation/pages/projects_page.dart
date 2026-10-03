@@ -219,7 +219,7 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
                       child: ProjectCard(
                         project: project,
                         heroTag: projectCoverHeroTag(project.id),
-                        onTap: () => context.go('/projects/${project.slug}'),
+                        onTap: () => context.push('/projects/${project.slug}'),
                       ),
                     );
                   }, childCount: filteredProjects.length),

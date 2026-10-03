@@ -573,7 +573,7 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
               return Card(
                 margin: EdgeInsets.zero,
                 child: ListTile(
-                  onTap: () => context.go('/projects/${p.slug}'),
+                  onTap: () => context.push('/projects/${p.slug}'),
                   leading: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
                     child: Image.network(
