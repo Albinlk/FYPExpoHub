@@ -131,7 +131,7 @@ class AwardsPage extends ConsumerWidget {
                                 softWrap: true,
                               ),
                               const SizedBox(height: DesignSystem.spaceSm),
-                              Text('Student(s): $teamName', style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant), softWrap: true),
+                              Text('Team: $teamName', style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant), softWrap: true),
                               Text('Supervisor: $supervisor', style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant, fontStyle: FontStyle.italic), softWrap: true),
                               if (award.sponsor?.isNotEmpty == true)
                                 Text('Sponsor: ${award.sponsor}', style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant), softWrap: true),

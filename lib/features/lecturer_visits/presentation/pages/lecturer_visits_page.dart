@@ -169,7 +169,7 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
               _buildEmptyState(_searchController.text.isNotEmpty || _roleFilter != 'All' || _statusFilter != 'All')
             else ...[
               Text(
-                '${filteredAssignments.length} projects found',
+                '${filteredAssignments.length} ${filteredAssignments.length == 1 ? 'project' : 'projects'} found',
                 style: DesignSystem.labelCaps.copyWith(color: DesignSystem.primary),
               ),
               const SizedBox(height: DesignSystem.spaceMd),

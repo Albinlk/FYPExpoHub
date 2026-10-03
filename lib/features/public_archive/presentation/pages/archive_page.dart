@@ -121,7 +121,7 @@ class ArchivedEventPage extends ConsumerWidget {
                       label: const Text('Past exhibitions'),
                     ),
                     Text(event.title, style: DesignSystem.pageTitle(context).copyWith(color: DesignSystem.primary)),
-                    Text('${event.year}${event.venue == null ? '' : ' · ${event.venue}'} · ${projects.length} projects',
+                    Text('${event.year}${event.venue == null ? '' : ' · ${event.venue}'} · ${projects.length} ${projects.length == 1 ? 'project' : 'projects'}',
                         style: DesignSystem.bodyMd.copyWith(color: DesignSystem.onSurfaceVariant)),
                     if (winners.isNotEmpty) ...[
                       const SizedBox(height: DesignSystem.spaceLg),

@@ -164,7 +164,7 @@ class _LecturerPageState extends ConsumerState<LecturerPage> {
                       ),
                     )
                   else
-                    Text('Found ${filteredProjects.length} projects:', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.primary)),
+                    Text('Found ${filteredProjects.length} ${filteredProjects.length == 1 ? 'project' : 'projects'}:', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.primary)),
                 ],
               ),
             ),

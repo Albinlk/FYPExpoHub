@@ -1089,7 +1089,7 @@ class _JuniorProjectBrowserPageState
         if (tagClusters.isNotEmpty) ...[
           _reportSectionHeader(
             'Similar by Tech Stack',
-            '${tagClusters.length} group(s) sharing 2+ technology categories',
+            '${tagClusters.length} ${tagClusters.length == 1 ? 'group shares' : 'groups share'} 2+ technology categories',
             isDesktop,
           ),
           const SizedBox(height: DesignSystem.spaceSm),
@@ -1106,7 +1106,7 @@ class _JuniorProjectBrowserPageState
         if (titleClusters.isNotEmpty) ...[
           _reportSectionHeader(
             'Similar by Project Title',
-            '${titleClusters.length} group(s) with near-identical wording',
+            '${titleClusters.length} ${titleClusters.length == 1 ? 'group has' : 'groups have'} near-identical wording',
             isDesktop,
           ),
           const SizedBox(height: DesignSystem.spaceSm),
