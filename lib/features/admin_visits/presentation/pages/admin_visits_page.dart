@@ -105,7 +105,7 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
     final padding = isDesktop ? DesignSystem.marginDesktop : DesignSystem.marginMobile;
     final assignmentsAsync = ref.watch(allAssignmentsProvider);
     final visitsAsync = ref.watch(allVisitsProvider);
@@ -398,7 +398,7 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
                 }
               }),
               selectedColor: DesignSystem.primary,
-              visualDensity: VisualDensity.compact,
+              visualDensity: VisualDensity.standard,
             ),
           );
         }),

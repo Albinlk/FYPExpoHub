@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/widgets.dart';
 
 /// The one set of layout breakpoints (logical px). Use these instead of
-/// repeating `MediaQuery.of(context).size.width >= 768`.
+/// repeating `MediaQuery.sizeOf(context).width >= 768`.
 abstract final class Breakpoints {
   /// At or above this width the desktop layout is used (side nav, tables).
   static const double desktop = 768;

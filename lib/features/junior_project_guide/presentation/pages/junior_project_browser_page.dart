@@ -201,7 +201,7 @@ class _JuniorProjectBrowserPageState
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
 
     final csp650Async = ref.watch(publicProjectsProvider);
     final csp600Async = ref.watch(csp600ProposalsProvider);

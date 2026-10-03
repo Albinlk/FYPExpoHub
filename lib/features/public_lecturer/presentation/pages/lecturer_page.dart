@@ -29,7 +29,7 @@ class _LecturerPageState extends ConsumerState<LecturerPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
     final padding = isDesktop ? DesignSystem.marginDesktop : DesignSystem.marginMobile;
 
     // `publicProjectsProvider` already only exposes `published` projects.

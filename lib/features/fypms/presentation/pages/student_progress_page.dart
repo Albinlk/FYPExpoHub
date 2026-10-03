@@ -194,7 +194,7 @@ class _ConsultationLogDialogState extends ConsumerState<ConsultationLogDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
     final semester = ref
         .watch(fypmsSemestersProvider)
         .value
@@ -212,7 +212,7 @@ class _ConsultationLogDialogState extends ConsumerState<ConsultationLogDialog> {
       ),
       content: SingleChildScrollView(
         child: SizedBox(
-          width: isDesktop ? 500 : MediaQuery.of(context).size.width * 0.85,
+          width: isDesktop ? 500 : MediaQuery.sizeOf(context).width * 0.85,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [

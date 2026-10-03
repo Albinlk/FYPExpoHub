@@ -30,7 +30,7 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
     final padding = isDesktop ? DesignSystem.marginDesktop : DesignSystem.marginMobile;
     final lecturer = ref.watch(lecturerAuthProvider);
     final assignments = ref.watch(lecturerAssignmentsProvider);
@@ -279,7 +279,7 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
                 }
               }),
               selectedColor: label.contains('Role') ? DesignSystem.primary : label.contains('Day') ? DesignSystem.secondary : DesignSystem.tertiary,
-              visualDensity: VisualDensity.compact,
+              visualDensity: VisualDensity.standard,
             ),
           );
         }),

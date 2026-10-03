@@ -284,7 +284,7 @@ class _AdminImportsPageState extends ConsumerState<AdminImportsPage> {
   Widget build(BuildContext context) {
     final imports = ref.watch(importsProvider);
     // ignore: unused_local_variable
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
 
     return Scaffold(
       body: SingleChildScrollView(

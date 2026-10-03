@@ -23,7 +23,7 @@ class VisitDataTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
 
     if (isDesktop) {
       return SingleChildScrollView(
@@ -155,7 +155,7 @@ class VisitDataTable extends StatelessWidget {
         onPressed: () => onVoid(visit),
         icon: const Icon(Icons.cancel_outlined, size: 14),
         label: Text('Void', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.error, fontSize: 11)),
-        style: TextButton.styleFrom(foregroundColor: DesignSystem.error, padding: EdgeInsets.zero, visualDensity: VisualDensity.compact),
+        style: TextButton.styleFrom(foregroundColor: DesignSystem.error, padding: EdgeInsets.zero, visualDensity: VisualDensity.standard),
       );
     }
     return const SizedBox.shrink();

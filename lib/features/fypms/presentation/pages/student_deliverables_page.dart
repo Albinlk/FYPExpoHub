@@ -174,7 +174,7 @@ class _OpenButton extends StatelessWidget {
       onPressed: uri == null ? null : () => launchUrl(uri, webOnlyWindowName: '_blank'),
       icon: const Icon(Icons.open_in_new, size: 16),
       label: const Text('Open'),
-      style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+      style: TextButton.styleFrom(visualDensity: VisualDensity.standard),
     );
   }
 }
@@ -263,7 +263,7 @@ class _DeliverableUploadDialogState extends ConsumerState<DeliverableUploadDialo
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
     final spec = widget.spec;
     final ready = !_busy && _title.text.trim().isNotEmpty && (_useLink ? _linkValid : _file != null);
     final types = spec.extensions.isEmpty ? 'any file' : spec.extensions.map((e) => '.$e').join(' / ');
@@ -272,7 +272,7 @@ class _DeliverableUploadDialogState extends ConsumerState<DeliverableUploadDialo
       title: Text(spec.title, style: (isDesktop ? DesignSystem.h3 : DesignSystem.bodyLg).copyWith(color: DesignSystem.primary)),
       content: SingleChildScrollView(
         child: SizedBox(
-          width: isDesktop ? 480 : MediaQuery.of(context).size.width * 0.85,
+          width: isDesktop ? 480 : MediaQuery.sizeOf(context).width * 0.85,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,

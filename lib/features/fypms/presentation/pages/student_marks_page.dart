@@ -104,7 +104,7 @@ class StudentMarksPage extends ConsumerWidget {
                                               '${e.key}: ${e.value}',
                                               style: DesignSystem.bodySm,
                                             ),
-                                            visualDensity: VisualDensity.compact,
+                                            visualDensity: VisualDensity.standard,
                                             backgroundColor: DesignSystem.surfaceContainerLow,
                                             side: BorderSide.none,
                                           ),

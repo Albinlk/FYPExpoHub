@@ -56,7 +56,7 @@ class _AdminFeedbackPageState extends ConsumerState<AdminFeedbackPage> {
     showDialog<void>(
       context: context,
       builder: (dialogContext) {
-        final isDesktop = MediaQuery.of(context).size.width >= 768;
+        final isDesktop = MediaQuery.sizeOf(context).width >= 768;
         return AlertDialog(
           title: Text(
             'Feedback Details',
@@ -65,7 +65,7 @@ class _AdminFeedbackPageState extends ConsumerState<AdminFeedbackPage> {
           ),
           content: SingleChildScrollView(
             child: SizedBox(
-              width: isDesktop ? 600 : MediaQuery.of(context).size.width * 0.9,
+              width: isDesktop ? 600 : MediaQuery.sizeOf(context).width * 0.9,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -198,7 +198,7 @@ class _AdminFeedbackPageState extends ConsumerState<AdminFeedbackPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
     final padding = isDesktop ? DesignSystem.marginDesktop : DesignSystem.marginMobile;
     final entries = ref.watch(feedbackEntriesProvider);
     final filtered = _applyFilters(entries);

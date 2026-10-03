@@ -277,7 +277,7 @@ class _ReportSubmissionDialogState extends ConsumerState<ReportSubmissionDialog>
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
     final similarityError = _similarity.text.isEmpty ? null : similarityProblem(_similarity.text);
     final anyCount = _pages.text.isNotEmpty || _references.text.isNotEmpty || _academic.text.isNotEmpty;
     final countsProblem = reportCountsProblem(_reportType, _pages.text, _references.text, _academic.text);
@@ -296,7 +296,7 @@ class _ReportSubmissionDialogState extends ConsumerState<ReportSubmissionDialog>
       ),
       content: SingleChildScrollView(
         child: SizedBox(
-          width: isDesktop ? 500 : MediaQuery.of(context).size.width * 0.85,
+          width: isDesktop ? 500 : MediaQuery.sizeOf(context).width * 0.85,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [

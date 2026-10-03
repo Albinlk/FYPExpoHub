@@ -171,6 +171,14 @@ class AppTheme {
         onErrorContainer: DesignSystem.onErrorContainer,
       ),
       scaffoldBackgroundColor: DesignSystem.background,
+      // Desktop browsers default to a compact density that shrinks touch
+      // targets below 48dp; keep the standard size everywhere.
+      visualDensity: VisualDensity.standard,
+      materialTapTargetSize: MaterialTapTargetSize.padded,
+      filledButtonTheme: FilledButtonThemeData(style: FilledButton.styleFrom(minimumSize: const Size(48, 48))),
+      elevatedButtonTheme: ElevatedButtonThemeData(style: ElevatedButton.styleFrom(minimumSize: const Size(48, 48))),
+      outlinedButtonTheme: OutlinedButtonThemeData(style: OutlinedButton.styleFrom(minimumSize: const Size(48, 48))),
+      textButtonTheme: TextButtonThemeData(style: TextButton.styleFrom(minimumSize: const Size(48, 48))),
       fontFamily: 'Inter',
       textTheme: const TextTheme(
         displayLarge: DesignSystem.h1,

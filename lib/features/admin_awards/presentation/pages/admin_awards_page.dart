@@ -33,7 +33,7 @@ class AdminAwardsPage extends ConsumerWidget {
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, setState) {
-            final isDesktop = MediaQuery.of(context).size.width >= 768;
+            final isDesktop = MediaQuery.sizeOf(context).width >= 768;
             return AlertDialog(
               title: Text(item == null ? 'Add Award Record' : 'Update Award Record', style: (isDesktop ? DesignSystem.h3 : DesignSystem.bodyLg).copyWith(color: DesignSystem.primary)),
               content: SingleChildScrollView(
@@ -244,7 +244,7 @@ class AdminAwardsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
     final awards = ref.watch(awardsProvider);
 
     return Scaffold(

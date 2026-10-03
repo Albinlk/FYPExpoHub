@@ -15,7 +15,7 @@ class ArchivePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final events = ref.watch(exhibitionsProvider);
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
     return SingleChildScrollView(
       padding: EdgeInsets.symmetric(
         horizontal: isDesktop ? DesignSystem.marginDesktop : DesignSystem.marginMobile,
@@ -96,7 +96,7 @@ class ArchivedEventPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final data = ref.watch(archivedEventProvider(slug));
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
     final pad = isDesktop ? DesignSystem.marginDesktop : DesignSystem.marginMobile;
     return data.when(
       loading: () => const Center(child: CircularProgressIndicator()),

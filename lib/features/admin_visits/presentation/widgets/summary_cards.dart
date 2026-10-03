@@ -68,7 +68,7 @@ class SummaryCardsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final pct = totalRequired > 0 ? (completed / totalRequired * 100).toStringAsFixed(1) : '0.0';
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

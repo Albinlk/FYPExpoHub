@@ -68,12 +68,12 @@ class AdminSchedulePage extends ConsumerWidget {
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, setState) {
-            final isDesktop = MediaQuery.of(context).size.width >= 768;
+            final isDesktop = MediaQuery.sizeOf(context).width >= 768;
             return AlertDialog(
               title: Text(item == null ? 'Add Tentative Slot' : 'Update Tentative Slot', style: (isDesktop ? DesignSystem.h3 : DesignSystem.bodyLg).copyWith(color: DesignSystem.primary)),
               content: SingleChildScrollView(
                 child: SizedBox(
-                  width: isDesktop ? 500 : MediaQuery.of(context).size.width * 0.85,
+                  width: isDesktop ? 500 : MediaQuery.sizeOf(context).width * 0.85,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -277,7 +277,7 @@ class AdminSchedulePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
     final scheduleItems = [...ref.watch(scheduleProvider)]..sort(compareScheduleItems);
     final event = ref.watch(eventProvider);
     final days = scheduleDays(event.startAt, event.endAt, scheduleItems);

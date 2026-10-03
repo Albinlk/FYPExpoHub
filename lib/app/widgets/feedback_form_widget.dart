@@ -12,7 +12,7 @@ class FeedbackFormWidget extends ConsumerStatefulWidget {
   const FeedbackFormWidget({super.key});
 
   static void show(BuildContext context, WidgetRef ref) {
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
 
     // The form pops `true` only after the submission is confirmed saved, so
     // closing it with the X no longer shows a "thank you".
@@ -115,8 +115,8 @@ class _FeedbackFormWidgetState extends ConsumerState<FeedbackFormWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
-    final width = isDesktop ? 500.0 : MediaQuery.of(context).size.width * 0.9;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
+    final width = isDesktop ? 500.0 : MediaQuery.sizeOf(context).width * 0.9;
 
     return Container(
       width: width,

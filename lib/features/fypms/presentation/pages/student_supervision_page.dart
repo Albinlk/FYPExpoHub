@@ -188,7 +188,7 @@ class _F1RequestDialogState extends ConsumerState<_F1RequestDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 768;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
     final directory = ref.watch(supervisorsDirectoryProvider);
     final ready = _supervisorId != null && _trimmed(_title) != null && !_submitting;
 
@@ -199,7 +199,7 @@ class _F1RequestDialogState extends ConsumerState<_F1RequestDialog> {
       ),
       content: SingleChildScrollView(
         child: SizedBox(
-          width: isDesktop ? 500 : MediaQuery.of(context).size.width * 0.85,
+          width: isDesktop ? 500 : MediaQuery.sizeOf(context).width * 0.85,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
