@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/widgets/project_card.dart';
+import '../../../../core/utils/url_state.dart';
 
 class LecturerPage extends ConsumerStatefulWidget {
   const LecturerPage({super.key});
@@ -13,12 +14,32 @@ class LecturerPage extends ConsumerStatefulWidget {
   ConsumerState<LecturerPage> createState() => _LecturerPageState();
 }
 
-class _LecturerPageState extends ConsumerState<LecturerPage> {
+class _LecturerPageState extends ConsumerState<LecturerPage> with UrlStateSync<LecturerPage> {
   final TextEditingController _nameController = TextEditingController();
   Timer? _searchDebounce;
   String _selectedRole = 'All';
   String _selectedDay = 'All';
   bool _calonIndustriOnly = false;
+  bool _readQuery = false;
+
+  static const _roles = ['All', 'Supervisor', 'Examiner'];
+  static const _days = ['All', 'Day 1 - 06 Aug 2026', 'Day 2 - 07 Aug 2026'];
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // A shared or refreshed link restores the search and filters; unknown
+    // values are ignored so a stale link cannot break a dropdown.
+    if (_readQuery) return;
+    _readQuery = true;
+    final params = GoRouterState.of(context).uri.queryParameters;
+    _nameController.text = params['name'] ?? '';
+    final role = params['role'];
+    if (_roles.contains(role)) _selectedRole = role!;
+    final day = params['day'];
+    if (_days.contains(day)) _selectedDay = day!;
+    _calonIndustriOnly = params['industry'] == 'true';
+  }
 
   @override
   void dispose() {
@@ -29,6 +50,12 @@ class _LecturerPageState extends ConsumerState<LecturerPage> {
 
   @override
   Widget build(BuildContext context) {
+    syncUrl({
+      'name': _nameController.text,
+      'role': _selectedRole == 'All' ? null : _selectedRole,
+      'day': _selectedDay == 'All' ? null : _selectedDay,
+      'industry': _calonIndustriOnly ? 'true' : null,
+    });
     final isDesktop = MediaQuery.sizeOf(context).width >= 768;
     final padding = isDesktop ? DesignSystem.marginDesktop : DesignSystem.marginMobile;
 
@@ -119,9 +146,9 @@ class _LecturerPageState extends ConsumerState<LecturerPage> {
                           if (isDesktop)
                             Row(
                               children: [
-                                Expanded(child: _buildDropdown('Role', _selectedRole, ['All', 'Supervisor', 'Examiner'], (val) => setState(() => _selectedRole = val!))),
+                                Expanded(child: _buildDropdown('Role', _selectedRole, _roles, (val) => setState(() => _selectedRole = val!))),
                                 const SizedBox(width: DesignSystem.spaceMd),
-                                Expanded(child: _buildDropdown('Day', _selectedDay, ['All', 'Day 1 - 06 Aug 2026', 'Day 2 - 07 Aug 2026'], (val) => setState(() => _selectedDay = val!))),
+                                Expanded(child: _buildDropdown('Day', _selectedDay, _days, (val) => setState(() => _selectedDay = val!))),
                                 const SizedBox(width: DesignSystem.spaceMd),
                                 Expanded(child: _buildDropdown('Type', _calonIndustriOnly ? 'Industry Candidate' : 'All', ['All', 'Industry Candidate'], (val) => setState(() => _calonIndustriOnly = val == 'Industry Candidate'))),
                               ],
@@ -129,9 +156,9 @@ class _LecturerPageState extends ConsumerState<LecturerPage> {
                           else
                             Column(
                               children: [
-                                _buildDropdown('Role', _selectedRole, ['All', 'Supervisor', 'Examiner'], (val) => setState(() => _selectedRole = val!)),
+                                _buildDropdown('Role', _selectedRole, _roles, (val) => setState(() => _selectedRole = val!)),
                                 const SizedBox(height: DesignSystem.spaceSm),
-                                _buildDropdown('Day', _selectedDay, ['All', 'Day 1 - 06 Aug 2026', 'Day 2 - 07 Aug 2026'], (val) => setState(() => _selectedDay = val!)),
+                                _buildDropdown('Day', _selectedDay, _days, (val) => setState(() => _selectedDay = val!)),
                                 const SizedBox(height: DesignSystem.spaceSm),
                                 _buildDropdown('Type', _calonIndustriOnly ? 'Industry Candidate' : 'All', ['All', 'Industry Candidate'], (val) => setState(() => _calonIndustriOnly = val == 'Industry Candidate')),
                               ],

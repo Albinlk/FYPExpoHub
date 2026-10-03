@@ -7,6 +7,7 @@ import '../../../../core/widgets/public_load_state.dart';
 import '../../../../core/domain/models/project.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/widgets/collapsible_filter_panel.dart';
+import '../../../../core/utils/url_state.dart';
 
 class BoothsPage extends ConsumerStatefulWidget {
   const BoothsPage({super.key});
@@ -15,7 +16,7 @@ class BoothsPage extends ConsumerStatefulWidget {
   ConsumerState<BoothsPage> createState() => _BoothsPageState();
 }
 
-class _BoothsPageState extends ConsumerState<BoothsPage> {
+class _BoothsPageState extends ConsumerState<BoothsPage> with UrlStateSync<BoothsPage> {
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
   String _selectedDay = 'Day 1 - 06 Aug 2026';
@@ -63,6 +64,12 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
       if (day != null && _dayOrder.contains(day)) {
         _selectedDay = day;
       }
+      // Shared / refreshed links keep the venue and programme filters too. Values
+      // that no longer exist are ignored by the dropdowns (they show "All").
+      final venue = params['venue'];
+      if (venue != null && venue.isNotEmpty) _selectedVenue = venue;
+      final program = params['program'];
+      if (program != null && program.isNotEmpty) _selectedProgram = program;
     }
   }
 
@@ -248,6 +255,13 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
     );
 
     final hasProjects = filtered.isNotEmpty;
+
+    syncUrl({
+      'day': _selectedDay == 'Day 1 - 06 Aug 2026' ? null : _selectedDay,
+      'venue': _selectedVenue == 'All' ? null : _selectedVenue,
+      'program': _selectedProgram == 'All' ? null : _selectedProgram,
+      'search': _searchController.text,
+    });
 
     return Scaffold(
       body: CustomScrollView(
@@ -443,11 +457,13 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
     double? width,
     bool isDense = false,
   }) {
+    // A venue from an old link that no longer exists shows as "All".
+    final venueValue = sortedVenues.contains(_selectedVenue) ? _selectedVenue : 'All';
     return SizedBox(
       width: width,
       child: DropdownButtonFormField<String>(
-        key: ValueKey('venue-$_selectedVenue'),
-        initialValue: _selectedVenue,
+        key: ValueKey('venue-$venueValue'),
+        initialValue: venueValue,
         isDense: isDense,
         decoration: InputDecoration(
           labelText: 'Venue',
@@ -470,8 +486,8 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
     return SizedBox(
       width: width,
       child: DropdownButtonFormField<String>(
-        key: ValueKey('program-$_selectedProgram'),
-        initialValue: _selectedProgram,
+        key: ValueKey('program-${programItems.contains(_selectedProgram) ? _selectedProgram : 'All'}'),
+        initialValue: programItems.contains(_selectedProgram) ? _selectedProgram : 'All',
         isDense: isDense,
         decoration: InputDecoration(
           labelText: 'Program',

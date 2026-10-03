@@ -8,6 +8,7 @@ import '../../../../core/widgets/entrance_animation.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/widgets/collapsible_filter_panel.dart';
 import '../../../../core/widgets/project_card.dart';
+import '../../../../core/utils/url_state.dart';
 
 class ProjectsPage extends ConsumerStatefulWidget {
   const ProjectsPage({super.key});
@@ -16,7 +17,7 @@ class ProjectsPage extends ConsumerStatefulWidget {
   ConsumerState<ProjectsPage> createState() => _ProjectsPageState();
 }
 
-class _ProjectsPageState extends ConsumerState<ProjectsPage> {
+class _ProjectsPageState extends ConsumerState<ProjectsPage> with UrlStateSync<ProjectsPage> {
   final TextEditingController _searchController = TextEditingController();
   String _selectedProgramme = 'All';
   String _selectedCategory = 'All';
@@ -49,10 +50,19 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && !_initialized) {
         _initialized = true;
-        final searchQuery =
-            GoRouterState.of(context).uri.queryParameters['search'] ?? '';
-        if (searchQuery.isNotEmpty) {
+        final params = GoRouterState.of(context).uri.queryParameters;
+        final searchQuery = params['search'] ?? '';
+        // Filters from a shared or refreshed link; unknown values are ignored.
+        final programme = params['programme'];
+        final category = params['category'];
+        if (searchQuery.isNotEmpty ||
+            _programmes.contains(programme) ||
+            _categories.contains(category) ||
+            params['industry'] == 'true') {
           _searchController.text = searchQuery;
+          if (_programmes.contains(programme)) _selectedProgramme = programme!;
+          if (_categories.contains(category)) _selectedCategory = category!;
+          _calonIndustriOnly = params['industry'] == 'true';
           setState(() {});
         }
       }
@@ -94,6 +104,12 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
 
   @override
   Widget build(BuildContext context) {
+    syncUrl({
+      'search': _searchController.text,
+      'programme': _selectedProgramme == 'All' ? null : _selectedProgramme,
+      'category': _selectedCategory == 'All' ? null : _selectedCategory,
+      'industry': _calonIndustriOnly ? 'true' : null,
+    });
     final isDesktop = MediaQuery.sizeOf(context).width >= 768;
     final padding = isDesktop
         ? DesignSystem.marginDesktop
