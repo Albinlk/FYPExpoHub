@@ -144,7 +144,7 @@ class ProjectCoverImage extends StatelessWidget {
         memCacheHeight: targetH,
         maxWidthDiskCache: targetW,
         maxHeightDiskCache: targetH,
-        fadeInDuration: const Duration(milliseconds: 200),
+        fadeInDuration: MediaQuery.disableAnimationsOf(context) ? Duration.zero : const Duration(milliseconds: 200),
         placeholder: (_, _) => _buildGeneratedCover(),
         errorWidget: (_, _, _) => _buildGeneratedCover(),
       );

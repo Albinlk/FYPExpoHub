@@ -282,6 +282,7 @@ class _MfaSettingsSectionState extends ConsumerState<MfaSettingsSection> {
               color: Colors.white,
               padding: const EdgeInsets.all(8),
               child: Image.network(
+                semanticLabel: 'QR code to scan with your authenticator app',
                 'data:image/svg+xml;base64,${base64Encode(utf8.encode(enrolment.qrSvg))}',
                 width: 180,
                 height: 180,

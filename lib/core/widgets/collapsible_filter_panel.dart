@@ -71,7 +71,7 @@ class CollapsibleFilterPanel extends StatelessWidget {
               ),
             ],
             AnimatedSize(
-              duration: const Duration(milliseconds: 200),
+              duration: MediaQuery.disableAnimationsOf(context) ? Duration.zero : const Duration(milliseconds: 200),
               curve: Curves.easeInOut,
               alignment: Alignment.topCenter,
               child: expanded

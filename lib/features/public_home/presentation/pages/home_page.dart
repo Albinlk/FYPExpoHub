@@ -579,7 +579,14 @@ class _CountdownTimerState extends State<_CountdownTimer> {
 
     // FittedBox scales the 4-item strip down on narrow screens instead of
     // overflowing (pre-existing 25px overflow at ~390px).
-    return FittedBox(
+    // One sentence for screen readers, updated per minute rather than every
+    // second so it is not read out four times a second.
+    return Semantics(
+      label: 'Starts in $days ${days == 1 ? 'day' : 'days'}, '
+          '$hours ${hours == 1 ? 'hour' : 'hours'} and '
+          '$minutes ${minutes == 1 ? 'minute' : 'minutes'}',
+      excludeSemantics: true,
+      child: FittedBox(
       fit: BoxFit.scaleDown,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -592,6 +599,7 @@ class _CountdownTimerState extends State<_CountdownTimer> {
           _buildCountdownDivider(),
           _buildCountdownItem(seconds.toString().padLeft(2, '0'), 'Secs', isDesktop),
         ],
+      ),
       ),
     );
   }
