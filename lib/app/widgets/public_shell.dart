@@ -101,7 +101,11 @@ class _DesktopNavBar extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // Left: App Logo
-          GestureDetector(
+          Semantics(
+            link: true,
+            label: 'FYP Expo Hub, go to the home page',
+            excludeSemantics: true,
+            child: InkWell(
             onTap: () => _navigateTo(context, '/'),
             child: MouseRegion(
               cursor: SystemMouseCursors.click,
@@ -113,6 +117,7 @@ class _DesktopNavBar extends StatelessWidget {
                 ),
               ),
             ),
+          ),
           ),
 
           // Center: Links. Flexible + horizontal scroll so the row never runs

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../app/theme/theme.dart';
 import '../../core/supabase/supabase_client_provider.dart';
 import '../../core/widgets/admin_actions.dart';
+import '../../core/widgets/busy_button.dart';
 
 /// Authenticator-app (TOTP) MFA (backlog F8). Once a verified factor
 /// exists, the database only honours admin / coordinator powers in an
@@ -159,14 +161,19 @@ class _MfaChallengeViewState extends ConsumerState<MfaChallengeView> {
                   autofocus: true,
                   keyboardType: TextInputType.number,
                   textAlign: TextAlign.center,
-                  maxLength: 6,
+                  autofillHints: const [AutofillHints.oneTimeCode],
+                  inputFormatters: [_sixDigitCode],
                   onSubmitted: (_) => _verify(),
-                  decoration: InputDecoration(border: const OutlineInputBorder(), errorText: _error, counterText: ''),
+                  decoration: InputDecoration(
+                    labelText: '6-digit code',
+                    border: const OutlineInputBorder(),
+                    errorText: _error,
+                  ),
                 ),
                 const SizedBox(height: DesignSystem.spaceMd),
                 SizedBox(
                   width: double.infinity,
-                  child: FilledButton(onPressed: _busy ? null : _verify, child: const Text('Verify')),
+                  child: BusyButton(label: 'Verify', busyLabel: 'Verifying…', busy: _busy, onPressed: _verify),
                 ),
                 TextButton(onPressed: _busy ? null : _signOut, child: const Text('Sign out')),
               ],
@@ -288,7 +295,8 @@ class _MfaSettingsSectionState extends ConsumerState<MfaSettingsSection> {
             key: const Key('mfa-enrol-code'),
             controller: _code,
             keyboardType: TextInputType.number,
-            maxLength: 6,
+            autofillHints: const [AutofillHints.oneTimeCode],
+            inputFormatters: [_sixDigitCode],
             decoration: const InputDecoration(labelText: '6-digit code', border: OutlineInputBorder(), isDense: true),
           ),
           Align(
@@ -314,3 +322,14 @@ class _MfaSettingsSectionState extends ConsumerState<MfaSettingsSection> {
     );
   }
 }
+
+/// Keeps digits only and caps at six, so pasting "123 456" from an
+/// authenticator app works instead of being truncated at the space.
+final TextInputFormatter _sixDigitCode = TextInputFormatter.withFunction((oldValue, newValue) {
+  final digits = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
+  final capped = digits.length > 6 ? digits.substring(0, 6) : digits;
+  return TextEditingValue(
+    text: capped,
+    selection: TextSelection.collapsed(offset: capped.length),
+  );
+});

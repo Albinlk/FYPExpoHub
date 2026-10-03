@@ -4,6 +4,9 @@ import '../../../../app/theme/theme.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/widgets/admin_actions.dart';
 import '../../../../core/widgets/async_state.dart';
+import 'package:flutter/services.dart';
+import '../../../../core/widgets/busy_button.dart';
+import '../../../admin_imports/domain/import_checks.dart';
 
 class AdminSettingsPage extends ConsumerStatefulWidget {
   const AdminSettingsPage({super.key});
@@ -26,6 +29,8 @@ class _AdminSettingsPageState extends ConsumerState<AdminSettingsPage> {
   Object? _visitCloseAt;
   bool _isLoading = true;
   Object? _loadError;
+  bool _saving = false;
+  String? _saveError;
 
   @override
   void initState() {
@@ -73,6 +78,25 @@ class _AdminSettingsPageState extends ConsumerState<AdminSettingsPage> {
   }
 
   void _save() async {
+    if (_saving) return;
+    // Say what is wrong instead of silently saving a different value.
+    final minutes = int.tryParse(_undoWindowController.text.trim());
+    if (minutes == null || minutes < 1) {
+      setState(() => _saveError = 'Enter the undo window as a whole number of minutes, 1 or more.');
+      return;
+    }
+    if (parseFileSize(_maxSizeController.text) == null) {
+      setState(() => _saveError = 'Enter the maximum file size like 10 MB, 500 KB or 2.5 MB.');
+      return;
+    }
+    if (_worksheetsController.text.trim().isEmpty) {
+      setState(() => _saveError = 'Enter at least one mandatory worksheet name.');
+      return;
+    }
+    setState(() {
+      _saving = true;
+      _saveError = null;
+    });
     final db = ref.read(supabaseDbServiceProvider);
     try {
       await db.setSetting('excel_import', {
@@ -87,7 +111,7 @@ class _AdminSettingsPageState extends ConsumerState<AdminSettingsPage> {
         'allowVisitsAfterEvent': _allowAfter,
         'visitOpenAt': _visitOpenAt,
         'visitCloseAt': _visitCloseAt,
-        'lecturerUndoWindowMinutes': int.tryParse(_undoWindowController.text) ?? 30,
+        'lecturerUndoWindowMinutes': minutes,
         'updatedAt': DateTime.now().toIso8601String(),
       });
 
@@ -102,6 +126,8 @@ class _AdminSettingsPageState extends ConsumerState<AdminSettingsPage> {
           SnackBar(content: Text('Error saving settings: ${friendlyError(e)}'), backgroundColor: DesignSystem.error),
         );
       }
+    } finally {
+      if (mounted) setState(() => _saving = false);
     }
   }
 
@@ -145,7 +171,11 @@ class _AdminSettingsPageState extends ConsumerState<AdminSettingsPage> {
                           const SizedBox(height: 6),
                           TextFormField(
                             controller: _maxSizeController,
-                            decoration: const InputDecoration(prefixIcon: Icon(Icons.line_weight)),
+                            decoration: const InputDecoration(
+                              labelText: 'Maximum File Size',
+                              helperText: 'For example 10 MB, 500 KB or 2.5 MB',
+                              prefixIcon: Icon(Icons.line_weight),
+                            ),
                           ),
                           const SizedBox(height: 16),
 
@@ -153,7 +183,11 @@ class _AdminSettingsPageState extends ConsumerState<AdminSettingsPage> {
                           const SizedBox(height: 6),
                           TextFormField(
                             controller: _worksheetsController,
-                            decoration: const InputDecoration(prefixIcon: Icon(Icons.table_chart)),
+                            decoration: const InputDecoration(
+                              labelText: 'Mandatory Worksheet Names',
+                              helperText: 'Comma-separated, for example TENTATIF, PEMENANG ANUGERAH',
+                              prefixIcon: Icon(Icons.table_chart),
+                            ),
                           ),
                           const SizedBox(height: 24),
 
@@ -191,19 +225,33 @@ class _AdminSettingsPageState extends ConsumerState<AdminSettingsPage> {
                           TextFormField(
                             controller: _undoWindowController,
                             keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(prefixIcon: Icon(Icons.timer_outlined)),
+                            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                            decoration: const InputDecoration(
+                              labelText: 'Lecturer Undo Window (Minutes)',
+                              helperText: 'How long a lecturer can cancel a visit after marking it',
+                              prefixIcon: Icon(Icons.timer_outlined),
+                            ),
                           ),
+                          if (_saveError != null) ...[
+                            const SizedBox(height: 8),
+                            Semantics(
+                              liveRegion: true,
+                              child: Text(_saveError!, style: DesignSystem.bodySm.copyWith(color: DesignSystem.error)),
+                            ),
+                          ],
                           const SizedBox(height: 24),
 
-                          ElevatedButton(
+                          BusyButton(
+                            label: 'Save Configuration',
+                            busyLabel: 'Saving…',
+                            busy: _saving,
                             onPressed: _save,
-                            style: ElevatedButton.styleFrom(
+                            style: FilledButton.styleFrom(
                               backgroundColor: DesignSystem.primary,
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                               shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
                             ),
-                            child: const Text('Save Configuration'),
                           ),
                         ],
                       ),

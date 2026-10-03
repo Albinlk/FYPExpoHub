@@ -90,6 +90,7 @@ class AdminShell extends ConsumerWidget {
                               foregroundColor: Colors.white,
                             )
                           : FloatingActionButton(
+                              tooltip: 'Send Feedback',
                               onPressed: () => FeedbackFormWidget.show(context, ref),
                               backgroundColor: DesignSystem.secondary,
                               foregroundColor: Colors.white,
