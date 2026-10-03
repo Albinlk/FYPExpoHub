@@ -357,10 +357,6 @@ class _MilestonesList extends ConsumerWidget {
           },
         );
       },
-    ).whenComplete(() {
-      codeController.dispose();
-      titleController.dispose();
-      descController.dispose();
-    });
+    );
   }
 }
