@@ -9,6 +9,8 @@ import 'package:fyp_expo_hub/core/supabase/supabase_client_provider.dart';
 /// Unknown URLs render the branded 404 page (errorPageBuilder) with
 /// working navigation buttons.
 void main() {
+  routeTitleTests();
+
   final originalErrorHandler = FlutterError.onError;
   setUp(() {
     FlutterError.onError = (details) {
@@ -82,5 +84,25 @@ void main() {
     // Pure logic check of the observer's mapping.
     final router = await pumpWithBadUri(tester, '/');
     expect(router.routerDelegate.currentConfiguration.uri.path, '/');
+  });
+}
+
+void routeTitleTests() {
+  group('document titles', () {
+    String t(String path) => RouteTitleObserver.titleForPath(path);
+
+    test('archive, reset and sign-in pages get their own titles', () {
+      expect(t('/archive'), 'Past Exhibitions · FYP Expo Hub');
+      expect(t('/archive/2026'), 'Past Exhibitions · FYP Expo Hub');
+      expect(t('/reset-password'), 'Reset Password · FYP Expo Hub');
+      expect(t('/admin/sign-in'), 'Sign In · FYP Expo Hub');
+    });
+
+    test('admin and FYPMS pages name the page, not just the area', () {
+      expect(t('/admin/imports'), 'Admin · Imports · FYP Expo Hub');
+      expect(t('/admin/imports/9f3c2a10-aaaa-bbbb-cccc-1234567890ab'), 'Admin · Imports · FYP Expo Hub');
+      expect(t('/fypms/pu/nominations'), 'FYPMS · Nominations · FYP Expo Hub');
+      expect(t('/fypms/coordinator/users'), 'FYPMS · Users · FYP Expo Hub');
+    });
   });
 }
