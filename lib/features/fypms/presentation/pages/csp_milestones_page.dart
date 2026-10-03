@@ -10,6 +10,7 @@ import '../widgets/fypms_loading_widget.dart';
 import '../widgets/milestone_extension_widgets.dart';
 import '../../../../core/widgets/async_state.dart';
 import '../../../../core/widgets/admin_actions.dart';
+import '../../../../core/widgets/busy_button.dart';
 
 class CspMilestonesPage extends ConsumerStatefulWidget {
   const CspMilestonesPage({super.key});
@@ -198,9 +199,13 @@ class _MilestonesList extends ConsumerWidget {
     final descController = TextEditingController(text: milestone?.description);
     DateTime selectedDate = milestone?.targetDate ?? DateTime.now();
     String status = milestone?.status ?? 'pending';
+    var busy = false;
+    String? error;
 
     showDialog<void>(
       context: context,
+      // A stray tap outside must not discard what was typed.
+      barrierDismissible: false,
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (dialogContext, setState) {
@@ -217,6 +222,7 @@ class _MilestonesList extends ConsumerWidget {
                   children: [
                     TextField(
                       controller: codeController,
+                      onChanged: (_) => setState(() {}),
                       decoration: const InputDecoration(
                         labelText: 'Milestone Code',
                       ),
@@ -224,6 +230,7 @@ class _MilestonesList extends ConsumerWidget {
                     const SizedBox(height: DesignSystem.spaceMd),
                     TextField(
                       controller: titleController,
+                      onChanged: (_) => setState(() {}),
                       decoration: const InputDecoration(labelText: 'Title'),
                     ),
                     const SizedBox(height: DesignSystem.spaceMd),
@@ -279,22 +286,39 @@ class _MilestonesList extends ConsumerWidget {
                           child: Text('Overdue'),
                         ),
                       ],
-                      onChanged: (v) => setState(() => status = v!),
+                      onChanged: busy ? null : (v) => setState(() => status = v!),
                     ),
+                    if (error != null) ...[
+                      const SizedBox(height: DesignSystem.spaceSm),
+                      Semantics(
+                        liveRegion: true,
+                        child: Text(
+                          error!,
+                          style: DesignSystem.bodySm.copyWith(color: DesignSystem.error),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.pop(dialogContext),
+                  onPressed: busy ? null : () => Navigator.pop(dialogContext),
                   child: const Text('Cancel'),
                 ),
-                FilledButton(
+                BusyButton(
+                  label: 'Save',
+                  busyLabel: 'Saving…',
+                  busy: busy,
                   onPressed:
                       codeController.text.trim().isEmpty ||
                           titleController.text.trim().isEmpty
                       ? null
                       : () async {
+                          setState(() {
+                            busy = true;
+                            error = null;
+                          });
                           try {
                             final rpc = ref.read(supabaseRpcServiceProvider);
                             await rpc.createOrUpdateMilestone(
@@ -320,19 +344,23 @@ class _MilestonesList extends ConsumerWidget {
                             }
                           } catch (e) {
                             if (dialogContext.mounted) {
-                              ScaffoldMessenger.of(dialogContext).showSnackBar(
-                                SnackBar(content: Text('Failed: ${friendlyError(e)}')),
-                              );
+                              setState(() {
+                                busy = false;
+                                error = 'Could not save the milestone: ${friendlyError(e)}';
+                              });
                             }
                           }
                         },
-                  child: const Text('Save'),
                 ),
               ],
             );
           },
         );
       },
-    );
+    ).whenComplete(() {
+      codeController.dispose();
+      titleController.dispose();
+      descController.dispose();
+    });
   }
 }
