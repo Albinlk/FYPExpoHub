@@ -7,9 +7,38 @@ import '../../../../core/state/state_providers.dart';
 import '../../../../core/supabase/supabase_database_service.dart' show kEventSlug;
 import '../../../../core/utils/schedule_format.dart';
 import '../../../../core/widgets/admin_actions.dart';
+import '../../../../core/supabase/row_mappers.dart';
 
 class AdminSchedulePage extends ConsumerWidget {
   const AdminSchedulePage({super.key});
+
+  /// A time field that takes typed text ("09:00 AM") or a picker, so the
+  /// stored value is always one the public schedule can read.
+  Widget _timeField(BuildContext context, TextEditingController controller, String label) {
+    return TextField(
+      controller: controller,
+      keyboardType: TextInputType.datetime,
+      decoration: InputDecoration(
+        labelText: label,
+        helperText: 'Format: 09:00 AM',
+        suffixIcon: IconButton(
+          tooltip: 'Pick $label time',
+          icon: const Icon(Icons.access_time),
+          onPressed: () async {
+            final minutes = clockMinutes(controller.text) ?? 9 * 60;
+            final picked = await showTimePicker(
+              context: context,
+              initialTime: TimeOfDay(hour: minutes ~/ 60, minute: minutes % 60),
+            );
+            if (picked == null) return;
+            String two(int v) => v.toString().padLeft(2, '0');
+            final hour12 = picked.hourOfPeriod == 0 ? 12 : picked.hourOfPeriod;
+            controller.text = '${two(hour12)}:${two(picked.minute)} ${picked.period == DayPeriod.am ? 'AM' : 'PM'}';
+          },
+        ),
+      ),
+    );
+  }
 
   void _showAddEditDialog(BuildContext context, WidgetRef ref, [ScheduleItem? item]) {
     final titleController = TextEditingController(text: item?.title ?? '');
@@ -22,6 +51,7 @@ class AdminSchedulePage extends ConsumerWidget {
     String visibility = item?.visibility ?? 'public';
     String status = item?.publicationStatus ?? 'published';
     bool saving = false;
+    String? error;
 
     // The event's configured days (plus this slot's own day, if it's
     // outside them) instead of a hardcoded 6/7 August.
@@ -55,18 +85,25 @@ class AdminSchedulePage extends ConsumerWidget {
                       isDesktop
                           ? Row(
                               children: [
-                                Expanded(child: TextField(controller: startAtController,                         decoration: const InputDecoration(labelText: 'Start (e.g. 09:00 AM)'))),
+                                Expanded(child: _timeField(context, startAtController, 'Start')),
                                 const SizedBox(width: DesignSystem.spaceMd),
-                                Expanded(child: TextField(controller: endAtController, decoration: const InputDecoration(labelText: 'End (e.g. 10:00 AM)'))),
+                                Expanded(child: _timeField(context, endAtController, 'End')),
                               ],
                             )
                           : Column(
                               children: [
-                                TextField(controller: startAtController,                         decoration: const InputDecoration(labelText: 'Start (e.g. 09:00 AM)')),
+                                _timeField(context, startAtController, 'Start'),
                                 const SizedBox(height: DesignSystem.spaceSm),
-                                TextField(controller: endAtController, decoration: const InputDecoration(labelText: 'End (e.g. 10:00 AM)')),
+                                _timeField(context, endAtController, 'End'),
                               ],
                             ),
+                      if (error != null) ...[
+                        const SizedBox(height: DesignSystem.spaceSm),
+                        Semantics(
+                          liveRegion: true,
+                          child: Text(error!, style: DesignSystem.bodySm.copyWith(color: DesignSystem.error)),
+                        ),
+                      ],
                       const SizedBox(height: DesignSystem.spaceSm),
                       TextField(
                         controller: venueController,
@@ -145,7 +182,21 @@ class AdminSchedulePage extends ConsumerWidget {
                 ),
                 ElevatedButton(
                   onPressed: saving ? null : () async {
-                    if (titleController.text.trim().isEmpty) return;
+                    if (titleController.text.trim().isEmpty) {
+                      setState(() => error = 'Enter a title.');
+                      return;
+                    }
+                    final startMinutes = clockMinutes(startAtController.text);
+                    final endMinutes = clockMinutes(endAtController.text);
+                    if (startMinutes == null || endMinutes == null) {
+                      setState(() => error = 'Enter times like 09:00 AM, or use the clock button.');
+                      return;
+                    }
+                    if (endMinutes <= startMinutes) {
+                      setState(() => error = 'The end time must be after the start time.');
+                      return;
+                    }
+                    setState(() => error = null);
 
                     final newItem = ScheduleItem(
                       id: item?.id ?? const Uuid().v4(),
