@@ -5,6 +5,8 @@ import '../../../../core/widgets/public_load_state.dart';
 import '../../../../core/domain/models/schedule_item.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/utils/schedule_format.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../core/utils/url_state.dart';
 
 class SchedulePage extends ConsumerStatefulWidget {
   const SchedulePage({super.key});
@@ -57,7 +59,8 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
             // Tab Bar — mobile: the two day tabs split the width evenly with
             // centered labels (matches the Junior Guide tab bar); desktop
             // keeps the centered scrollable style.
-            TabBar(
+_DayTabsUrl(
+              child:             TabBar(
               // More than two days won't fit side by side on a phone.
               isScrollable: isDesktop || days.length > 2,
               tabAlignment: isDesktop || days.length > 2 ? TabAlignment.center : null,
@@ -69,6 +72,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
               labelColor: DesignSystem.primary,
               indicatorColor: DesignSystem.secondary,
               indicatorSize: TabBarIndicatorSize.tab,
+            ),
             ),
             const SizedBox(height: DesignSystem.spaceLg),
 
@@ -284,4 +288,44 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
       },
     );
   }
+}
+
+/// Keeps the selected day in the address bar (`?day=2`) so a refresh or a
+/// shared link opens the same day. Must sit under a [DefaultTabController].
+class _DayTabsUrl extends StatefulWidget {
+  const _DayTabsUrl({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_DayTabsUrl> createState() => _DayTabsUrlState();
+}
+
+class _DayTabsUrlState extends State<_DayTabsUrl> with UrlStateSync<_DayTabsUrl> {
+  TabController? _controller;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final controller = DefaultTabController.of(context);
+    if (identical(controller, _controller)) return;
+    _controller?.removeListener(_sync);
+    _controller = controller..addListener(_sync);
+    // Open on the day in the link (1-based), if there is such a day.
+    final day = int.tryParse(GoRouterState.of(context).uri.queryParameters['day'] ?? '');
+    if (day != null && day >= 1 && day <= controller.length) {
+      controller.index = day - 1;
+    }
+  }
+
+  void _sync() => syncUrl({'day': _controller!.index == 0 ? null : '${_controller!.index + 1}'});
+
+  @override
+  void dispose() {
+    _controller?.removeListener(_sync);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
