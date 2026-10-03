@@ -124,14 +124,18 @@ class _ImportDetailPageState extends ConsumerState<ImportDetailPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            // Wrap, not Row: the title and the long button label would overflow on a phone.
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: DesignSystem.spaceMd,
+              runSpacing: DesignSystem.spaceSm,
               children: [
                 Text('Staged Import Candidates', style: DesignSystem.h2Mobile.copyWith(color: DesignSystem.primary)),
                 ElevatedButton.icon(
                   onPressed: _isPublishing ? null : _publish,
                   icon: _isPublishing
-                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white, semanticsLabel: 'Publishing'))
                       : const Icon(Icons.check_circle),
                   label: const Text('Approve & Publish Selected'),
                   style: ElevatedButton.styleFrom(

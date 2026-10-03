@@ -173,6 +173,18 @@ test/
       the student sees the decision; tapping opens the page (F1)
 - [ ] PU: Nominations → *Approved · letters* → download and print (F7)
 
+## Mobile Checklist
+
+Run at 360×800 and 375×812 (browser devtools or the app's Browser pane), then once at 1.3× browser zoom/text size. Nothing may scroll sideways, be cut off, or need pinch-zoom.
+
+- [ ] Public: home, projects, project detail, booths, schedule, awards — cards fill the width; Back from a project returns to the same list and filters
+- [ ] Sign-in: card fits the screen; Enter submits; show-password button works; password manager can fill
+- [ ] Two-step code screen: scrolls with the keyboard open; pasting `123 456` fills six digits
+- [ ] Lecturer: My Visits filter chips are tappable; Mark as Visited and Cancel Visit dialogs stay open on failure and keep the note
+- [ ] Admin: menu opens (Send Feedback is in it); no floating button covers Save; dialogs scroll and fit the width
+- [ ] FYPMS: app bar shows "FYPMS" and Sign Out is in the menu on phones narrower than 400px; Reports workload shows as a list
+- [ ] Automated: `flutter test test/features/mobile_layout_test.dart`
+
 ## CI Configuration
 
 Two GitHub Actions workflows run the same gates (Flutter pinned to 3.44.7):

@@ -140,7 +140,10 @@ class _MfaChallengeViewState extends ConsumerState<MfaChallengeView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
+      // Scrolls so the keyboard and a large font never push Verify off screen.
+      body: SafeArea(
+       child: SingleChildScrollView(
+        child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 380),
           child: Padding(
@@ -180,6 +183,8 @@ class _MfaChallengeViewState extends ConsumerState<MfaChallengeView> {
             ),
           ),
         ),
+        ),
+       ),
       ),
     );
   }
