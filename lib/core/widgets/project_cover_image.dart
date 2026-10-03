@@ -45,29 +45,37 @@ class ProjectCoverImage extends StatelessWidget {
   ];
 
   // ── Category → icon mapping ───────────────────────────────────────────────
+  /// Exposed for tests.
+  static IconData iconForCategory(String category) => _iconForCategory(category);
+
   static IconData _iconForCategory(String category) {
     final cat = category.toLowerCase();
-    if (cat.contains('network') || cat.contains('communication')) {
+    // Keywords match at the start of a word; the short acronyms must be a
+    // whole word, so "physics" is not CS and "retail" is not AI.
+    bool has(String keyword, {bool whole = false}) =>
+        RegExp(r'\b' + RegExp.escape(keyword) + (whole ? r'\b' : '')).hasMatch(cat);
+
+    if (has('network') || has('communication')) {
       return Icons.hub_rounded;
-    } else if (cat.contains('cyber') || cat.contains('security')) {
+    } else if (has('cyber') || has('security')) {
       return Icons.security_rounded;
-    } else if (cat.contains('software') || cat.contains('application')) {
+    } else if (has('software') || has('application')) {
       return Icons.code_rounded;
-    } else if (cat.contains('computer science') || cat.contains('cs')) {
+    } else if (has('computer science') || has('cs', whole: true)) {
       return Icons.computer_rounded;
-    } else if (cat.contains('data') || cat.contains('database')) {
+    } else if (has('data') || has('database')) {
       return Icons.storage_rounded;
-    } else if (cat.contains('ai') || cat.contains('machine') || cat.contains('learn')) {
+    } else if (has('ai', whole: true) || has('machine') || has('learn')) {
       return Icons.psychology_rounded;
-    } else if (cat.contains('mobile') || cat.contains('android') || cat.contains('ios')) {
+    } else if (has('mobile') || has('android') || has('ios', whole: true)) {
       return Icons.smartphone_rounded;
-    } else if (cat.contains('web') || cat.contains('internet')) {
+    } else if (has('web') || has('internet')) {
       return Icons.language_rounded;
-    } else if (cat.contains('cloud')) {
+    } else if (has('cloud')) {
       return Icons.cloud_rounded;
-    } else if (cat.contains('iot') || cat.contains('embedded')) {
+    } else if (has('iot', whole: true) || has('embedded')) {
       return Icons.developer_board_rounded;
-    } else if (cat.contains('health') || cat.contains('medical')) {
+    } else if (has('health') || has('medical')) {
       return Icons.health_and_safety_rounded;
     }
     return Icons.science_rounded;
@@ -87,7 +95,6 @@ class ProjectCoverImage extends StatelessWidget {
     // Common placeholder patterns used in this project
     if (url.contains('placeholder') ||
         url.contains('placehold.co') ||
-        url.contains('default') ||
         url.contains('via.placeholder') ||
         url.contains('picsum')) {
       return true;
@@ -95,7 +102,11 @@ class ProjectCoverImage extends StatelessWidget {
     // If the URL ends with a known generic name
     final uri = Uri.tryParse(url);
     final path = uri?.path.toLowerCase() ?? '';
-    if (path.endsWith('cover_placeholder.png') ||
+    // A file named default… / default_… is a stock cover; a folder or host that
+    // merely contains the word is not.
+    final fileName = path.split('/').last;
+    if (fileName.startsWith('default') ||
+        path.endsWith('cover_placeholder.png') ||
         path.endsWith('default_cover.jpg') ||
         path.endsWith('no_image.png') ||
         path.endsWith('project_placeholder.jpg')) {

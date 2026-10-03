@@ -409,6 +409,8 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
     return SizedBox(
       width: width,
       child: DropdownButtonFormField<String>(
+        // initialValue is only read once; re-key so a programmatic change shows.
+        key: ValueKey('day-$_selectedDay'),
         initialValue: _selectedDay,
         isDense: isDense,
         isExpanded: true,
@@ -444,6 +446,7 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
     return SizedBox(
       width: width,
       child: DropdownButtonFormField<String>(
+        key: ValueKey('venue-$_selectedVenue'),
         initialValue: _selectedVenue,
         isDense: isDense,
         decoration: InputDecoration(
@@ -467,6 +470,7 @@ class _BoothsPageState extends ConsumerState<BoothsPage> {
     return SizedBox(
       width: width,
       child: DropdownButtonFormField<String>(
+        key: ValueKey('program-$_selectedProgram'),
         initialValue: _selectedProgram,
         isDense: isDense,
         decoration: InputDecoration(
