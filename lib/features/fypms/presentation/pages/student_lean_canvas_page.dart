@@ -162,7 +162,8 @@ class _CanvasEditorState extends ConsumerState<_CanvasEditor> {
         Expanded(
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final columns = constraints.maxWidth >= 1100 ? 3 : 2;
+              // One column on phones: two tiny text boxes side by side are unusable.
+              final columns = constraints.maxWidth >= 1100 ? 3 : (constraints.maxWidth >= 600 ? 2 : 1);
               return GridView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: DesignSystem.gutter),
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -170,6 +171,7 @@ class _CanvasEditorState extends ConsumerState<_CanvasEditor> {
                   crossAxisSpacing: DesignSystem.spaceMd,
                   mainAxisSpacing: DesignSystem.spaceMd,
                   childAspectRatio: columns == 3 ? 1.1 : 0.9,
+                  mainAxisExtent: columns == 1 ? 240 * MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.3) : null,
                 ),
                 itemCount: fypmsLeanCanvasBlocks.length,
                 itemBuilder: (context, index) {

@@ -234,7 +234,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                         return GridView.builder(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
-                          gridDelegate: ProjectCard.gridDelegate(MediaQuery.sizeOf(context).width),
+                          gridDelegate: ProjectCard.gridDelegate(MediaQuery.sizeOf(context).width, textScale: MediaQuery.textScalerOf(context).scale(1)),
                           itemCount: display.length,
                           itemBuilder: (context, index) => ProjectCard(
                             project: display[index],

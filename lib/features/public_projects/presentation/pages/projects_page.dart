@@ -211,7 +211,7 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> {
                   horizontal: padding,
                 ).copyWith(bottom: DesignSystem.spaceXl),
                 sliver: SliverGrid(
-                  gridDelegate: ProjectCard.gridDelegate(MediaQuery.sizeOf(context).width),
+                  gridDelegate: ProjectCard.gridDelegate(MediaQuery.sizeOf(context).width, textScale: MediaQuery.textScalerOf(context).scale(1)),
                   delegate: SliverChildBuilderDelegate((context, index) {
                     final project = filteredProjects[index];
                     return StaggeredEntrance(

@@ -36,13 +36,17 @@ class DashboardPage extends ConsumerWidget {
             const SizedBox(height: DesignSystem.spaceXl),
 
             // Statistics Grid
-            GridView.count(
+            GridView(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: isDesktop ? 4 : 2,
-              crossAxisSpacing: DesignSystem.spaceMd,
-              mainAxisSpacing: DesignSystem.spaceMd,
-              childAspectRatio: isDesktop ? 1.5 : 1.2,
+              // A fixed row height that grows with the font size, not an
+              // aspect ratio that clips the number at large text scales.
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: isDesktop ? 4 : (MediaQuery.sizeOf(context).width < 340 ? 1 : 2),
+                crossAxisSpacing: DesignSystem.spaceMd,
+                mainAxisSpacing: DesignSystem.spaceMd,
+                mainAxisExtent: 112 * MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.3),
+              ),
               children: [
                 _buildStatCard('Total Projects', '${projects.length}', Icons.folder, Colors.blue),
                 _buildStatCard('Booths Available', '${booths.length}', Icons.map, Colors.green),

@@ -173,7 +173,7 @@ class _LecturerPageState extends ConsumerState<LecturerPage> {
             SliverPadding(
               padding: EdgeInsets.symmetric(horizontal: padding),
               sliver: SliverGrid(
-                gridDelegate: ProjectCard.gridDelegate(MediaQuery.sizeOf(context).width, extraBodyHeight: 40),
+                gridDelegate: ProjectCard.gridDelegate(MediaQuery.sizeOf(context).width, textScale: MediaQuery.textScalerOf(context).scale(1), extraBodyHeight: 40),
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
                     final project = filteredProjects[index];

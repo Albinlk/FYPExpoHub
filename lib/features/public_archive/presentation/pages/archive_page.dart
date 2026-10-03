@@ -143,7 +143,7 @@ class ArchivedEventPage extends ConsumerWidget {
             SliverPadding(
               padding: EdgeInsets.fromLTRB(pad, 0, pad, DesignSystem.spaceXl),
               sliver: SliverGrid(
-                gridDelegate: ProjectCard.gridDelegate(MediaQuery.sizeOf(context).width),
+                gridDelegate: ProjectCard.gridDelegate(MediaQuery.sizeOf(context).width, textScale: MediaQuery.textScalerOf(context).scale(1)),
                 delegate: SliverChildBuilderDelegate(
                   (context, i) => ProjectCard(project: projects[i], onTap: () => _showProject(context, projects[i])),
                   childCount: projects.length,

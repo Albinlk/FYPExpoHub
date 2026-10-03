@@ -28,12 +28,17 @@ class AdminSummaryCard extends StatelessWidget {
                 Icon(icon, size: 18, color: color),
                 const SizedBox(width: DesignSystem.spaceSm),
                 Expanded(
-                  child: Text(title, style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSurfaceVariant)),
+                  child: Text(title, maxLines: 2, overflow: TextOverflow.ellipsis, style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSurfaceVariant)),
                 ),
               ],
             ),
             const SizedBox(height: DesignSystem.spaceSm),
-            Text(value, style: DesignSystem.h2.copyWith(color: color, fontWeight: FontWeight.bold)),
+            // Scales down instead of overflowing ("12 / 340" at a large font size).
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(value, style: DesignSystem.h2.copyWith(color: color, fontWeight: FontWeight.bold)),
+            ),
           ],
         ),
       ),

@@ -6,6 +6,7 @@ import '../../../../core/supabase/supabase_client_provider.dart';
 import '../../../../core/utils/download_util.dart';
 import '../../../../core/utils/fypms_format.dart';
 import '../../../../core/widgets/async_state.dart';
+import '../../../../core/layout/responsive.dart';
 
 /// One lecturer's active assignments in the report.
 class WorkloadRow {
@@ -167,10 +168,28 @@ class CoordinatorReportsPage extends ConsumerWidget {
               trailing: TextButton.icon(
                 onPressed: r.workload.isEmpty ? null : () => downloadTextFileWeb('supervisor_workload.csv', r.workloadCsv()),
                 icon: const Icon(Icons.download),
-                label: const Text('CSV'),
+                label: const Text('Download CSV'),
               ),
               child: r.workload.isEmpty
                   ? const Text('No active assignments.')
+                  : Breakpoints.isCompact(context)
+                  // A five-column table scrolls sideways on a phone; a list reads better.
+                  ? Column(
+                      children: [
+                        for (final w in r.workload)
+                          ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            title: Text(w.name),
+                            subtitle: Text(
+                              'Supervisor ${w.supervisor} · Co-supervisor ${w.coSupervisor} · Examiner ${w.examiner}',
+                            ),
+                            trailing: Text(
+                              '${w.total}',
+                              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                            ),
+                          ),
+                      ],
+                    )
                   : SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: DataTable(

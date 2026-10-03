@@ -176,7 +176,7 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
               GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: ProjectCard.gridDelegate(MediaQuery.sizeOf(context).width, extraBodyHeight: 90),
+                gridDelegate: ProjectCard.gridDelegate(MediaQuery.sizeOf(context).width, textScale: MediaQuery.textScalerOf(context).scale(1), extraBodyHeight: 90),
                 itemCount: filteredAssignments.length,
                 itemBuilder: (context, index) {
                   return _buildVisitCard(

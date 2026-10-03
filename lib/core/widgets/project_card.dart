@@ -46,12 +46,22 @@ class ProjectCard extends StatelessWidget {
   /// cover keeps ~180px at every width instead of shrinking to a sliver
   /// when columns get narrow. [extraBodyHeight] covers staff lines or
   /// trailing chips.
-  static SliverGridDelegate gridDelegate(double width, {double extraBodyHeight = 0}) {
+  ///
+  /// Only the text body grows with the user's font size ([textScale]); the cover
+  /// stays ~180px, so a large system font no longer overflows the card.
+  static SliverGridDelegate gridDelegate(
+    double width, {
+    double extraBodyHeight = 0,
+    double textScale = 1.0,
+  }) {
+    const coverHeight = 180.0;
+    const baseBodyHeight = 110.0;
+    final scale = textScale < 1.0 ? 1.0 : textScale;
     return SliverGridDelegateWithFixedCrossAxisCount(
       crossAxisCount: width >= 1100 ? 3 : (width >= 768 ? 2 : 1),
       crossAxisSpacing: DesignSystem.spaceMd,
       mainAxisSpacing: DesignSystem.spaceMd,
-      mainAxisExtent: 290 + extraBodyHeight,
+      mainAxisExtent: coverHeight + (baseBodyHeight + extraBodyHeight) * scale,
     );
   }
 
