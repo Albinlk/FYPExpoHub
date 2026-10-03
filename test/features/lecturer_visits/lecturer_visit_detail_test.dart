@@ -303,9 +303,9 @@ void main() {
     );
     // The button enables once a reason is typed.
     await tester.pump();
-    // Dialog button is the ElevatedButton (the TextButton is "Close").
+    // Dialog button is the FilledButton (the TextButton is "Keep Visit").
     await tester.tap(find.descendant(
-      of: find.byType(ElevatedButton),
+      of: find.byType(FilledButton),
       matching: find.text('Cancel Visit'),
     ));
     await tester.pump();
@@ -331,11 +331,16 @@ void main() {
 
     await tester.tap(find.text('Mark as Visited').first);
     await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'Good progress');
     await tester.tap(find.text('Confirm Visit'));
     await tester.pump();
     await tester.pumpAndSettle();
 
     expect(find.text('You are not allowed to mark this visit.'), findsOneWidget);
+    // The dialog stays open with the typed note so a failure loses nothing.
+    expect(find.byType(AlertDialog), findsOneWidget);
+    expect(find.text('Good progress'), findsOneWidget);
+    expect(find.text('Confirm Visit'), findsOneWidget, reason: 'can retry');
   });
 
   testWidgets('R9 no F10 action for projects not published from FYPMS', (tester) async {

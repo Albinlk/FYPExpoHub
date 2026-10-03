@@ -25,8 +25,6 @@ class LecturerVisitDetailPage extends ConsumerStatefulWidget {
 }
 
 class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPage> {
-  bool _isMarking = false;
-  bool _isUndoing = false;
   bool _isOpeningScore = false;
 
   void _goBack() {
@@ -37,52 +35,44 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
     }
   }
 
+  /// Plain-language reason a mark-visited call failed, with the next step.
+  String _markErrorMessage(Object e) {
+    final text = e.toString();
+    // "failed-precondition: Visits closed on 08 Aug 2026 00:00." etc.
+    final window = RegExp(r'(Visits (?:open|closed) on [^.]+\.|Student project visits are currently disabled\.)')
+        .firstMatch(text)
+        ?.group(1);
+    if (text.contains('already-exists')) return 'Visit has already been recorded.';
+    if (window != null) return window;
+    if (text.contains('permission-denied')) return 'You are not allowed to mark this visit.';
+    return 'Could not save the visit: ${friendlyError(e)}';
+  }
+
   Future<void> _markVisited(Project project, String assignmentId, String role) async {
-    final result = await showMarkVisitedDialog(context, project, role);
+    final result = await showMarkVisitedDialog(
+      context,
+      project,
+      role,
+      describeError: _markErrorMessage,
+      onSubmit: (note) async {
+        final user = ref.read(currentAuthUserProvider);
+        if (user == null) throw Exception('Not authenticated');
+        await ref.read(supabaseRpcServiceProvider).markStudentProjectVisited(
+              assignmentId: assignmentId,
+              visitNote: note,
+            );
+      },
+    );
     if (result == null) return;
 
-    setState(() => _isMarking = true);
-    try {
-      final user = ref.read(currentAuthUserProvider);
-      if (user == null) throw Exception('Not authenticated');
-
-      final rpc = ref.read(supabaseRpcServiceProvider);
-      await rpc.markStudentProjectVisited(
-        assignmentId: assignmentId,
-        visitNote: result['note'],
-      );
-
-      ref.invalidate(allVisitsProvider);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Student has been marked as visited.'),
-            backgroundColor: DesignSystem.tertiary,
-          ),
-        );
-        setState(() => _isMarking = false);
-      }
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _isMarking = false);
-      final text = e.toString();
-      // "failed-precondition: Visits closed on 08 Aug 2026 00:00." etc.
-      final window = RegExp(r'(Visits (?:open|closed) on [^.]+\.|Student project visits are currently disabled\.)')
-          .firstMatch(text)
-          ?.group(1);
-      final msg = text.contains('already-exists')
-          ? 'Visit has already been recorded.'
-          : window ??
-              (text.contains('permission-denied')
-                  ? 'You are not allowed to mark this visit.'
-                  : 'Error: $text');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(msg), backgroundColor: DesignSystem.error),
-        );
-      }
-    }
+    ref.invalidate(allVisitsProvider);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Student has been marked as visited.'),
+        backgroundColor: DesignSystem.tertiary,
+      ),
+    );
   }
 
   /// R9: the supervisor / examiner scores F10 (or F15 for a student qualified
@@ -109,46 +99,38 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
     }
   }
 
+  String _undoErrorMessage(Object e) {
+    final text = e.toString();
+    if (text.contains('permission-denied')) return 'You are not allowed to cancel this visit.';
+    if (text.contains('expired') || text.contains('window')) {
+      return 'The undo window for this visit has expired.';
+    }
+    return 'Could not cancel the visit: ${friendlyError(e)}';
+  }
+
   Future<void> _undoVisit(StudentVisit visit) async {
-    final reason = await showUndoVisitDialog(context);
+    final reason = await showUndoVisitDialog(
+      context,
+      describeError: _undoErrorMessage,
+      onSubmit: (reason) async {
+        final user = ref.read(currentAuthUserProvider);
+        if (user == null) throw Exception('Not authenticated');
+        await ref.read(supabaseRpcServiceProvider).voidStudentProjectVisit(
+              visitId: visit.id,
+              reason: reason,
+            );
+      },
+    );
     if (reason == null) return;
 
-    setState(() => _isUndoing = true);
-    try {
-      final user = ref.read(currentAuthUserProvider);
-      if (user == null) throw Exception('Not authenticated');
-
-      final rpc = ref.read(supabaseRpcServiceProvider);
-      await rpc.voidStudentProjectVisit(
-        visitId: visit.id,
-        reason: reason,
-      );
-
-      ref.invalidate(allVisitsProvider);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Visit has been cancelled. Student can be revisited.'),
-            backgroundColor: DesignSystem.tertiary,
-          ),
-        );
-        setState(() => _isUndoing = false);
-      }
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _isUndoing = false);
-      final msg = e.toString().contains('permission-denied')
-          ? 'You are not allowed to cancel this visit.'
-          : e.toString().contains('expired') || e.toString().contains('window')
-              ? 'The undo window for this visit has expired.'
-              : 'Error: ${friendlyError(e)}';
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(msg), backgroundColor: DesignSystem.error),
-        );
-      }
-    }
+    ref.invalidate(allVisitsProvider);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Visit has been cancelled. Student can be revisited.'),
+        backgroundColor: DesignSystem.tertiary,
+      ),
+    );
   }
 
   @override
@@ -258,9 +240,9 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
               ),
             ),
             const SizedBox(height: DesignSystem.spaceMd),
-            _buildVisitSection('Supervisor (SV)', svAssignment, svVisit, project, _isMarking, _isUndoing, exhibition),
+            _buildVisitSection('Supervisor (SV)', svAssignment, svVisit, project, exhibition),
             const SizedBox(height: DesignSystem.spaceSm),
-            _buildVisitSection('Examiner (EX)', exAssignment, exVisit, project, _isMarking, _isUndoing, exhibition),
+            _buildVisitSection('Examiner (EX)', exAssignment, exVisit, project, exhibition),
           ],
         ),
       ),
@@ -272,8 +254,6 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
     ProjectLecturerAssignment? assignment,
     StudentVisit? visit,
     Project project,
-    bool isMarking,
-    bool isUndoing,
     ExhibitionEvaluation? exhibition,
   ) {
     final role = title.contains('SV') ? 'supervisor' : 'examiner';
@@ -358,19 +338,17 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
               const SizedBox(height: DesignSystem.spaceMd),
               Row(
                 children: [
-                  if (!isUndoing)
-                    OutlinedButton.icon(
-                      onPressed: () => _undoVisit(visit),
-                      icon: const Icon(Icons.undo, size: 16),
-                      label: Text('Cancel Visit', style: DesignSystem.bodySm.copyWith(color: DesignSystem.error)),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: DesignSystem.error,
-                        side: const BorderSide(color: DesignSystem.error),
-                        shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
-                      ),
-                    )
-                  else
-                    const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2)),
+                  OutlinedButton.icon(
+                    onPressed: () => _undoVisit(visit),
+                    icon: const Icon(Icons.undo, size: 16),
+                    label: const Text('Cancel Visit'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: DesignSystem.error,
+                      side: const BorderSide(color: DesignSystem.error),
+                      textStyle: DesignSystem.bodySm,
+                      shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
+                    ),
+                  ),
                 ],
               ),
             ] else if (hasAssignment && (!hasVisit || isVoided)) ...[
@@ -378,10 +356,8 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: isMarking ? null : () => _markVisited(project, assignment.id, role),
-                  icon: isMarking
-                      ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                      : const Icon(Icons.check_circle_outline, size: 18),
+                  onPressed: () => _markVisited(project, assignment.id, role),
+                  icon: const Icon(Icons.check_circle_outline, size: 18),
                   label: Text('Mark as Visited', style: DesignSystem.button),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: DesignSystem.primary,

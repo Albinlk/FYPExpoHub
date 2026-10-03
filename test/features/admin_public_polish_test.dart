@@ -229,9 +229,9 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
 
-    final cancel = find.widgetWithText(ElevatedButton, 'Cancel Visit');
-    expect(find.text('Cancellation reason *'), findsOneWidget);
-    expect(tester.widget<ElevatedButton>(cancel).onPressed, isNull);
+    final cancel = find.widgetWithText(FilledButton, 'Cancel Visit');
+    expect(find.text('Cancellation reason (required)'), findsOneWidget);
+    expect(tester.widget<FilledButton>(cancel).onPressed, isNull);
     await tester.enterText(find.byType(TextField), 'Student not at booth');
     await tester.pump();
     await tester.tap(cancel);
