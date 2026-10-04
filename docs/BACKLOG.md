@@ -52,6 +52,26 @@ Priority: **H** high · **M** medium · **L** low
 
 These need the project owner (dashboard access or real staff data); code cannot do them. Also recommended: turn on two-step verification (My Account) for every admin and coordinator account.
 
+## 5. UI audit and mobile (3 Oct 2026)
+
+From a Web Interface Guidelines audit of the Flutter web app, then a mobile pass. Shared helpers live in `lib/core/widgets` (`async_state`, `busy_button`, `app_dialog`) and `lib/core/layout/responsive.dart`.
+
+| Done | # | Item | Pri |
+|---|---|---|---|
+| [x] | A1 | Friendly error and loading states with Try Again instead of raw `$e`; a failed or pending load is never shown as empty data or "0"; Settings no longer saves defaults over real values after a failed load (#53) | H |
+| [x] | A2 | Confirm irreversible actions (nomination approve, Expo publish, semester status, user deactivate, role removal, account type, 2-step turn-off, slot removal); busy guards; visit dialogs keep the note on failure (#53) | H |
+| [x] | A3 | Bugs: milestone Save never enabled, booths venue dropdown stale after a day change, cover "default" URL and icon matching, project Back button, awards saved without a project, schedule time validation (#53) | H |
+| [x] | A4 | Accessibility and forms: labelled fields, keyboard-reachable rating stars and logo, sign-in autofill / Enter / show-password, pasted two-step codes, reduced motion, one-sentence countdown (#53) | M |
+| [x] | A5 | Contrast fixes, text no smaller than 11px, `…` and plurals (#53) | M |
+| [x] | A6 | Web shell: splash error and Reload, manifest portrait lock removed, admin-host framing guard, service-worker timeout, per-page titles, A4 print CSS for letters (#53) | M |
+| [x] | A7 | Mobile: text scale capped at 1.3×, 48px tap targets, 24 dialogs fit and scroll, app bar titles fit, feedback and Sign Out in the menu on phones, grids scale with text, phone smoke tests and checklist in `TESTING.md` (#53) | H |
+| [x] | A8 | Booths, projects, lecturer and schedule filters kept in the address bar (shareable, survive refresh) (#54) | M |
+| [ ] | A9 | Junior Guide filters in the address bar (same `UrlStateSync` mixin) | L |
+| [ ] | A10 | Heading semantics, unsaved-changes guard on long forms (rubrics, student forms), `autofillHints` beyond the sign-in screens | L |
+| [ ] | A11 | Undo snackbar after "Mark as Visited" (needs the RPC to return the visit id) | L |
+| [ ] | A12 | Remaining `.value ?? []` sites that hide load errors (about 28; the six that mattered were fixed in A1) | L |
+| [ ] | A13 | Home banner: the console shows `https://assets/images/banner.jpg` blocked by the content-security policy, so the image path looks wrong | L |
+
 ## Suggested order
 
 1. S1–S3, S6, S8 (multi-semester / multi-event foundation)
