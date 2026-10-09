@@ -66,4 +66,35 @@ void main() {
     expect(find.text('Slides link must be an http(s) link.'), findsOneWidget);
     expect(find.byType(StudentFormDialog), findsOneWidget, reason: 'nothing submitted');
   });
+
+  testWidgets('A10 Back with a half-written form asks before discarding', (tester) async {
+    tester.view.physicalSize = const Size(375, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(ProviderScope(
+      child: MaterialApp(
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => TextButton(
+              onPressed: () => showDialog<void>(
+                context: context,
+                builder: (_) => const StudentFormDialog(fypRecordId: 'rec-1', formCodes: ['F7']),
+              ),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      ),
+    ));
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('field-title')), 'Smart Campus');
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('Discard Changes?'), findsOneWidget);
+    await tester.tap(find.text('Keep Editing'));
+    await tester.pumpAndSettle();
+    expect(find.text('Smart Campus'), findsOneWidget, reason: 'answer kept');
+  });
 }

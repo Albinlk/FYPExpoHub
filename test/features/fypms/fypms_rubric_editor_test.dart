@@ -69,6 +69,30 @@ void main() {
     expect(find.byKey(const Key('criterion-label-2')), findsOneWidget);
   });
 
+  testWidgets('A10 leaving the rubric editor with edits asks first; unchanged it just closes', (tester) async {
+    await _open(tester, RubricEditorDialog(rubric: _rubric('F10', 2)));
+    // Unchanged: back closes straight away.
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('Depth of knowledge'), findsNothing);
+
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('criterion-weight-0')), '4');
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('Discard Changes?'), findsOneWidget);
+    await tester.tap(find.text('Keep Editing'));
+    await tester.pumpAndSettle();
+    expect(find.text('Depth of knowledge'), findsOneWidget, reason: 'edits kept');
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Discard'));
+    await tester.pumpAndSettle();
+    expect(find.text('Depth of knowledge'), findsNothing);
+  });
+
   testWidgets('U5 editing a session prefills it and saves instead of creating', (tester) async {
     await _open(
       tester,

@@ -129,6 +129,8 @@ class StudentFormsPage extends ConsumerWidget {
       BuildContext context, WidgetRef ref, String fypRecordId, List<String> formCodes) {
     showDialog<void>(
       context: context,
+      // A stray tap outside must not throw away a half-written form.
+      barrierDismissible: false,
       builder: (_) => StudentFormDialog(fypRecordId: fypRecordId, formCodes: formCodes),
     );
   }
