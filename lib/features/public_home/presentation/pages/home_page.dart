@@ -75,13 +75,16 @@ class _HomePageState extends ConsumerState<HomePage> {
                     ),
                   ),
                   const SizedBox(height: DesignSystem.spaceMd),
-                  Text(
+                  Semantics(
+                    header: true,
+                    child: Text(
                     'FYP Expo Hub',
                     style: (isDesktop ? DesignSystem.h1 : DesignSystem.h1Mobile).copyWith(
                       color: Colors.white,
                     ),
                     textAlign: TextAlign.center,
                     softWrap: true,
+                  ),
                   ),
                   const SizedBox(height: DesignSystem.spaceSm),
                   Text(

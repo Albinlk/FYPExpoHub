@@ -190,10 +190,13 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                       ],
                     ),
                     const SizedBox(height: DesignSystem.spaceMd),
-                    Text(
-                      project.title,
-                       style: (isDesktop ? DesignSystem.h2 : DesignSystem.h2Mobile).copyWith(color: DesignSystem.primary),
-                      softWrap: true,
+                    Semantics(
+                      header: true,
+                      child: Text(
+                        project.title,
+                        style: (isDesktop ? DesignSystem.h2 : DesignSystem.h2Mobile).copyWith(color: DesignSystem.primary),
+                        softWrap: true,
+                      ),
                     ),
                     const SizedBox(height: DesignSystem.spaceSm),
                     Text(

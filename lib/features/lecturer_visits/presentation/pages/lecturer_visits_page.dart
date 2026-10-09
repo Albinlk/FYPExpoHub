@@ -9,6 +9,7 @@ import '../../../../core/supabase/supabase_client_provider.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/widgets/project_card.dart';
 import '../../../../core/widgets/async_state.dart';
+import '../../../../core/widgets/page_heading.dart';
 
 class LecturerVisitsPage extends ConsumerStatefulWidget {
   const LecturerVisitsPage({super.key});
@@ -91,7 +92,7 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('My Visits', style: DesignSystem.pageTitle(context).copyWith(color: DesignSystem.primary)),
+                    PageHeading('My Visits'),
                     const SizedBox(height: DesignSystem.spaceXs),
                     Text(
                       'Welcome, $displayName',

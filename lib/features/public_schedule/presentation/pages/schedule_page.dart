@@ -7,6 +7,7 @@ import '../../../../core/state/state_providers.dart';
 import '../../../../core/utils/schedule_format.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/utils/url_state.dart';
+import '../../../../core/widgets/page_heading.dart';
 
 class SchedulePage extends ConsumerStatefulWidget {
   const SchedulePage({super.key});
@@ -47,7 +48,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Event Schedule', style: DesignSystem.pageTitle(context).copyWith(color: DesignSystem.primary)),
+            PageHeading('Event Schedule'),
             const SizedBox(height: DesignSystem.spaceSm),
             Text(
               'Full timeline schedule for all exhibition days.',

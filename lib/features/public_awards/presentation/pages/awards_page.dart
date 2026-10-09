@@ -6,6 +6,7 @@ import '../../../../core/widgets/public_load_state.dart';
 import '../../../../core/domain/models/award.dart';
 import '../../../../core/domain/models/award_category.dart';
 import '../../../../core/state/state_providers.dart';
+import '../../../../core/widgets/page_heading.dart';
 
 class AwardsPage extends ConsumerWidget {
   const AwardsPage({super.key});
@@ -51,7 +52,7 @@ class AwardsPage extends ConsumerWidget {
               children: [
                 const Icon(Icons.emoji_events, color: DesignSystem.secondary, size: 36),
                 const SizedBox(width: 12),
-                Text('Award Winners', style: DesignSystem.pageTitle(context).copyWith(color: DesignSystem.primary)),
+                PageHeading('Award Winners'),
               ],
             ),
             const SizedBox(height: DesignSystem.spaceSm),

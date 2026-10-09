@@ -8,6 +8,7 @@ import '../../../../core/domain/models/project.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/widgets/collapsible_filter_panel.dart';
 import '../../../../core/utils/url_state.dart';
+import '../../../../core/widgets/page_heading.dart';
 
 class BoothsPage extends ConsumerStatefulWidget {
   const BoothsPage({super.key});
@@ -275,7 +276,7 @@ class _BoothsPageState extends ConsumerState<BoothsPage> with UrlStateSync<Booth
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Find Exhibition Booths', style: DesignSystem.pageTitle(context).copyWith(color: DesignSystem.primary)),
+                  PageHeading('Find Exhibition Booths'),
                   const SizedBox(height: DesignSystem.spaceSm),
                   Text(
                     'Browse booths organized by presentation day and then venue.',

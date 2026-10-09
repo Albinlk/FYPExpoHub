@@ -4,6 +4,7 @@ import '../../../../app/theme/theme.dart';
 import '../../../../core/widgets/public_load_state.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/utils/schedule_format.dart' show longDate, mytDate;
+import '../../../../core/widgets/page_heading.dart';
 
 class AnnouncementsPage extends ConsumerWidget {
   const AnnouncementsPage({super.key});
@@ -29,7 +30,7 @@ class AnnouncementsPage extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Announcements', style: DesignSystem.pageTitle(context).copyWith(color: DesignSystem.primary)),
+            PageHeading('Announcements'),
             const SizedBox(height: DesignSystem.spaceSm),
             Text('Official updates and announcements from the FSKM organising committee.', style: (isDesktop ? DesignSystem.bodyLg : DesignSystem.bodyLgMobile).copyWith(color: DesignSystem.onSurfaceVariant), softWrap: true),
             const SizedBox(height: DesignSystem.spaceXl),
