@@ -41,8 +41,10 @@ class _CoordinatorSemestersPageState extends ConsumerState<CoordinatorSemestersP
   @override
   Widget build(BuildContext context) {
     final semesters = ref.watch(fypmsSemestersProvider);
-    final offerings = ref.watch(fypmsOfferingsProvider).value ?? const <FypCourseOffering>[];
-    final courses = ref.watch(fypmsCoursesProvider).value ?? const <AcademicCourse>[];
+    final offeringsAsync = ref.watch(fypmsOfferingsProvider);
+    final coursesAsync = ref.watch(fypmsCoursesProvider);
+    final offerings = offeringsAsync.value ?? const <FypCourseOffering>[];
+    final courses = coursesAsync.value ?? const <AcademicCourse>[];
     final staff = ref.watch(fypStaffProvider(const ['csp600_lecturer', 'csp650_lecturer'])).value ?? const [];
     final staffNames = {
       for (final s in staff)
@@ -64,6 +66,19 @@ class _CoordinatorSemestersPageState extends ConsumerState<CoordinatorSemestersP
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypmsSemestersProvider), what: 'this page'),
         data: (list) {
+          // Without offerings and courses every course would read "not offered".
+          if (!offeringsAsync.hasValue || !coursesAsync.hasValue) {
+            final failure = offeringsAsync.error ?? coursesAsync.error;
+            if (failure == null) return const AsyncLoadingView(what: 'courses');
+            return AsyncErrorView(
+              error: failure,
+              what: 'courses and offerings',
+              onRetry: () {
+                ref.invalidate(fypmsOfferingsProvider);
+                ref.invalidate(fypmsCoursesProvider);
+              },
+            );
+          }
           final sorted = [...list]..sort((a, b) => b.startDate.compareTo(a.startDate));
           return ListView(
             padding: const EdgeInsets.all(DesignSystem.gutter),

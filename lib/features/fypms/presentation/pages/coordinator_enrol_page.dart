@@ -8,6 +8,7 @@ import '../../../../core/domain/fypms_users.dart';
 import '../../../../core/domain/models/fypms/academic_semester.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import '../../../../core/widgets/admin_actions.dart';
+import '../../../../core/widgets/async_state.dart';
 
 /// Enrol Students (backlog U3, S4): paste or upload a class list
 /// (`email, name, matric, programme` per line) for a semester and course.
@@ -56,8 +57,9 @@ class _CoordinatorEnrolPageState extends ConsumerState<CoordinatorEnrolPage> {
 
   @override
   Widget build(BuildContext context) {
+    final semestersAsync = ref.watch(fypmsSemestersProvider);
     final semesters = [
-      for (final s in ref.watch(fypmsSemestersProvider).value ?? const <AcademicSemester>[])
+      for (final s in semestersAsync.value ?? const <AcademicSemester>[])
         if (s.status == 'planned' || s.status == 'active') s,
     ];
     _semesterId ??= activeSemesterOf(semesters)?.id ?? semesters.firstOrNull?.id;
@@ -69,7 +71,16 @@ class _CoordinatorEnrolPageState extends ConsumerState<CoordinatorEnrolPage> {
         backgroundColor: DesignSystem.primary,
         title: Text('Enrol Students', style: DesignSystem.h3.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
-      body: ListView(
+      // Enrolling needs a semester; an empty picker would leave no way forward.
+      body: !semestersAsync.hasValue
+          ? (semestersAsync.hasError
+              ? AsyncErrorView(
+                  error: semestersAsync.error!,
+                  what: 'semesters',
+                  onRetry: () => ref.invalidate(fypmsSemestersProvider),
+                )
+              : const AsyncLoadingView(what: 'semesters'))
+          : ListView(
         padding: const EdgeInsets.all(DesignSystem.gutter),
         children: [
           Wrap(

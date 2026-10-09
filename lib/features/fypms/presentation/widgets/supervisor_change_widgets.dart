@@ -59,7 +59,8 @@ class _RequestSupervisorChangeDialogState extends ConsumerState<RequestSuperviso
 
   @override
   Widget build(BuildContext context) {
-    final directory = ref.watch(supervisorsDirectoryProvider).value ?? const <Map<String, dynamic>>[];
+    final directoryAsync = ref.watch(supervisorsDirectoryProvider);
+    final directory = directoryAsync.value ?? const <Map<String, dynamic>>[];
     final options = [
       for (final e in _names(directory).entries)
         if (e.key != widget.record.mainSupervisorId && e.key != widget.record.examinerId) e,
@@ -89,6 +90,23 @@ class _RequestSupervisorChangeDialogState extends ConsumerState<RequestSuperviso
                   helperText: 'At least $kSupervisorChangeReasonMin characters',
                 ),
               ),
+              // The request can still go without a proposed name, but say why
+              // the list is empty instead of showing a picker with no one in it.
+              if (directoryAsync.hasError && !directoryAsync.hasValue)
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        "Couldn't load the supervisor list. You can still send the request.",
+                        style: DesignSystem.bodySm.copyWith(color: DesignSystem.error),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => ref.invalidate(supervisorsDirectoryProvider),
+                      child: const Text('Try Again'),
+                    ),
+                  ],
+                ),
               DropdownButtonFormField<String?>(
                 key: const Key('change-proposed'),
                 initialValue: _proposed,
@@ -214,7 +232,19 @@ class SupervisorChangeRequestsPanel extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final pending = ref.watch(pendingSupervisorChangesProvider).value ?? const <SupervisorChangeRequest>[];
+    final pendingAsync = ref.watch(pendingSupervisorChangesProvider);
+    // A failed load must not look like "no requests waiting".
+    if (pendingAsync.hasError && !pendingAsync.hasValue) {
+      return Card(
+        margin: const EdgeInsets.fromLTRB(DesignSystem.gutter, DesignSystem.gutter, DesignSystem.gutter, 0),
+        child: AsyncErrorView(
+          error: pendingAsync.error!,
+          what: 'supervisor change requests',
+          onRetry: () => ref.invalidate(pendingSupervisorChangesProvider),
+        ),
+      );
+    }
+    final pending = pendingAsync.value ?? const <SupervisorChangeRequest>[];
     if (pending.isEmpty) return const SizedBox.shrink();
     final names = _names(ref.watch(supervisorsDirectoryProvider).value ?? const []);
     return Card(
