@@ -45,7 +45,8 @@ import '../features/fypms/presentation/pages/notifications_page.dart';
 import '../features/admin_auth/mfa.dart';
 import '../features/fypms/presentation/pages/coordinator_reports_page.dart';
 import '../features/fypms/presentation/pages/coordinator_enrol_page.dart';
-import '../features/fypms/presentation/widgets/supervisor_change_widgets.dart' show PuNominationsPage;
+import '../features/fypms/presentation/widgets/supervisor_change_widgets.dart'
+    show CoordinatorLettersPage, PuNominationsPage;
 import '../features/fypms/presentation/pages/student_progress_page.dart';
 import '../features/fypms/presentation/pages/student_record_detail_page.dart';
 import '../features/fypms/presentation/pages/student_records_page.dart';
@@ -535,6 +536,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/fypms/coordinator/audit',
             builder: (context, state) => const CoordinatorAuditPage(),
+          ),
+          GoRoute(
+            path: '/fypms/coordinator/letters',
+            builder: (context, state) => const CoordinatorLettersPage(),
           ),
         ],
       ),

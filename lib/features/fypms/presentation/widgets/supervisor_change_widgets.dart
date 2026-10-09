@@ -488,6 +488,27 @@ class PuNominationsPage extends ConsumerWidget {
   }
 }
 
+/// Coordinator view of the approved appointment letters. The PU workspace
+/// (/fypms/pu) is closed to coordinators, so they get their own route.
+class CoordinatorLettersPage extends StatelessWidget {
+  const CoordinatorLettersPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: DesignSystem.background,
+      appBar: AppBar(
+        backgroundColor: DesignSystem.primary,
+        title: Text(
+          'Appointment Letters',
+          style: DesignSystem.h3.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+      ),
+      body: const ApprovedNominationsList(),
+    );
+  }
+}
+
 /// Approved appointments with printable letters (backlog F7).
 class ApprovedNominationsList extends ConsumerWidget {
   const ApprovedNominationsList({super.key});
