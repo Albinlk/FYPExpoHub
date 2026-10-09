@@ -13,6 +13,7 @@ import '../widgets/project_row_widget.dart';
 import '../widgets/redundancy_cluster_widget.dart';
 import '../widgets/title_similar_cluster_widget.dart';
 import '../providers/junior_guide_providers.dart';
+import '../../../../core/utils/url_state.dart';
 
 export '../providers/junior_guide_providers.dart' show csp600ProposalsProvider;
 
@@ -42,7 +43,7 @@ class JuniorProjectBrowserPage extends ConsumerStatefulWidget {
 
 class _JuniorProjectBrowserPageState
     extends ConsumerState<JuniorProjectBrowserPage>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, UrlStateSync<JuniorProjectBrowserPage> {
   final TextEditingController _searchController = TextEditingController();
   late final TabController _tabController;
   Timer? _searchDebounceTimer;
@@ -151,11 +152,10 @@ class _JuniorProjectBrowserPageState
     );
   }
 
-  /// Applies filters passed via deep-link query parameters (e.g. a link from
-  /// another page pre-scoped to a supervisor), mirroring the read-only
-  /// pattern ProjectsPage already uses for `?search=`. This only reads the
-  /// URL once on mount — filter changes made in this page are not written
-  /// back to the address bar.
+  /// Applies filters passed via query parameters (a shared or refreshed link,
+  /// or another page pre-scoped to a supervisor). Read once on mount; `build`
+  /// writes changes back to the address bar through [syncUrl]. Values a
+  /// dropdown no longer offers fall back to "All" (see [_buildDropdownFilter]).
   void _applyDeepLinkFilters() {
     if (_appliedDeepLinkFilters) return;
     _appliedDeepLinkFilters = true;
@@ -165,14 +165,15 @@ class _JuniorProjectBrowserPageState
     setState(() {
       final search = params['search'];
       if (search != null && search.isNotEmpty) _searchController.text = search;
-      _selectedSection = params['section'] ?? _selectedSection;
+      final section = params['section'];
+      if (section == 'CSP650' || section == 'CSP600') _selectedSection = section!;
       _selectedProgramme = params['programme'] ?? _selectedProgramme;
       _selectedCategory = params['category'] ?? _selectedCategory;
       _selectedTechStack = params['techStack'] ?? _selectedTechStack;
       _selectedSupervisor = params['supervisor'] ?? _selectedSupervisor;
       _selectedSession = params['session'] ?? _selectedSession;
       _selectedRedundancy = params['redundancy'] ?? _selectedRedundancy;
-      _industryOnly = params['industry'] == 'true' || _industryOnly;
+      _industryOnly = params['industry'] == 'true';
     });
   }
 
@@ -201,6 +202,17 @@ class _JuniorProjectBrowserPageState
 
   @override
   Widget build(BuildContext context) {
+    syncUrl({
+      'search': _searchController.text,
+      'section': _selectedSection == 'all' ? null : _selectedSection,
+      'programme': _selectedProgramme == 'All' ? null : _selectedProgramme,
+      'category': _selectedCategory == 'All' ? null : _selectedCategory,
+      'techStack': _selectedTechStack == 'All' ? null : _selectedTechStack,
+      'supervisor': _selectedSupervisor == 'All' ? null : _selectedSupervisor,
+      'session': _selectedSession == 'All' ? null : _selectedSession,
+      'redundancy': _selectedRedundancy == 'All' ? null : _selectedRedundancy,
+      'industry': _industryOnly ? 'true' : null,
+    });
     final isDesktop = MediaQuery.sizeOf(context).width >= 768;
 
     final csp650Async = ref.watch(publicProjectsProvider);
@@ -805,8 +817,12 @@ class _JuniorProjectBrowserPageState
             border: Border.all(color: DesignSystem.outlineVariant),
           ),
           child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: value,
+            // Named for screen readers (the label above is a separate Text).
+            child: Semantics(
+             label: label,
+             child: DropdownButton<String>(
+              // A value from an old link that is no longer offered shows the first option.
+              value: items.contains(value) ? value : (items.isEmpty ? null : items.first),
               isExpanded: true,
               onChanged: onChanged,
               items: items.map((item) {
@@ -819,6 +835,7 @@ class _JuniorProjectBrowserPageState
                   ),
                 );
               }).toList(),
+            ),
             ),
           ),
         ),
@@ -983,12 +1000,20 @@ class _JuniorProjectBrowserPageState
       children: [
         Icon(icon, size: 11, color: DesignSystem.onSurfaceVariant),
         const SizedBox(width: 4),
-        Text(
-          text,
-          style: DesignSystem.labelCaps.copyWith(
-            color: DesignSystem.onSurfaceVariant,
-            fontSize: 11,
-            letterSpacing: 0.6,
+        // Narrow fixed columns (PROGRAMME is 88px) shrink the label rather
+        // than overflow.
+        Flexible(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              text,
+              maxLines: 1,
+              style: DesignSystem.labelCaps.copyWith(
+                color: DesignSystem.onSurfaceVariant,
+                fontSize: 11,
+                letterSpacing: 0.6,
+              ),
+            ),
           ),
         ),
       ],

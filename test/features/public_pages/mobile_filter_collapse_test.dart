@@ -14,15 +14,15 @@ import 'package:fyp_expo_hub/features/public_projects/presentation/pages/project
 /// Mobile (<768px) collapsible-filter behaviour for the three public pages:
 /// collapsed by default, badge count, expand via toggle, Day stays visible on
 /// Booths. Pages read GoRouterState (deep-link ?search=), so they are mounted
-/// inside a real GoRouter. Pre-existing mobile row overflows in
-/// project_row_widget are filtered (same convention as the route-guard suites).
+/// inside a real GoRouter. Layout overflows are NOT filtered: a RenderFlex
+/// overflow at phone width fails the test. Only the "Supabase not
+/// initialised" noise from providers that try the network is ignored.
 void main() {
   final originalErrorHandler = FlutterError.onError;
   setUp(() {
     FlutterError.onError = (details) {
       final message = details.exception.toString();
-      final filtered = message.contains('RenderFlex overflowed') ||
-          message.contains('must initialize the supabase instance');
+      final filtered = message.contains('must initialize the supabase instance');
       if (!filtered) {
         FlutterError.dumpErrorToConsole(details);
       }
