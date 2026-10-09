@@ -180,7 +180,10 @@ class _ReportSubmissionDialogState extends ConsumerState<ReportSubmissionDialog>
   final _pages = TextEditingController();
   final _references = TextEditingController();
   final _academic = TextEditingController();
-  String _reportType = 'proposal';
+  // The course decides the report: CSP600 submits the proposal (F6a), CSP650
+  // the final report (F6b). Only a record without a known course may choose.
+  late String _reportType = widget.record.currentCourseCode == 'CSP650' ? 'final' : 'proposal';
+  bool get _courseFixesType => widget.record.currentCourseCode == 'CSP600' || widget.record.currentCourseCode == 'CSP650';
   PlatformFile? _report;
   PlatformFile? _plagiarism;
   PlatformFile? _ethics;
@@ -302,13 +305,18 @@ class _ReportSubmissionDialogState extends ConsumerState<ReportSubmissionDialog>
             children: [
               DropdownButtonFormField<String>(
                 initialValue: _reportType,
-                decoration: const InputDecoration(labelText: 'Report type'),
+                decoration: InputDecoration(
+                  labelText: 'Report type',
+                  helperText: _courseFixesType ? 'Set by your course (${widget.record.currentCourseCode}).' : null,
+                ),
                 isExpanded: true,
-                items: const [
-                  DropdownMenuItem(value: 'proposal', child: Text('Proposal (F6a)')),
-                  DropdownMenuItem(value: 'final', child: Text('Final report (F6b)')),
+                items: [
+                  if (!_courseFixesType || _reportType == 'proposal')
+                    const DropdownMenuItem(value: 'proposal', child: Text('Proposal (F6a)')),
+                  if (!_courseFixesType || _reportType == 'final')
+                    const DropdownMenuItem(value: 'final', child: Text('Final report (F6b)')),
                 ],
-                onChanged: _uploading ? null : (v) => setState(() => _reportType = v ?? _reportType),
+                onChanged: _uploading || _courseFixesType ? null : (v) => setState(() => _reportType = v ?? _reportType),
               ),
               const SizedBox(height: DesignSystem.spaceMd),
               _FileRow(

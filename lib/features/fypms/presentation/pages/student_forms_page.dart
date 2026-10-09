@@ -20,7 +20,11 @@ class StudentFormsPage extends ConsumerWidget {
       builder: (context, ref, record) {
         final submissions = ref.watch(fypFormSubmissionsProvider(record.id));
         final qualified = ref.watch(fypSpecialEvaluationProvider(record.id)).value?.eligible ?? false;
-        final formCodes = fypmsFormCodesFor(applicationsOpen: applicationsOpen, qualified: qualified);
+        final formCodes = fypmsFormCodesFor(
+          applicationsOpen: applicationsOpen,
+          qualified: qualified,
+          courseCode: record.currentCourseCode,
+        );
         return Column(
           children: [
             if (record.currentCourseCode == 'CSP650' || qualified)
