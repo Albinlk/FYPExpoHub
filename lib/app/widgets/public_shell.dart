@@ -136,13 +136,13 @@ class _DesktopNavBar extends StatelessWidget {
               const SizedBox(width: DesignSystem.spaceLg),
               _buildNavLink(context, 'Projects', '/projects'),
               const SizedBox(width: DesignSystem.spaceLg),
-              _buildNavLink(context, 'Project Guide', '/projects/junior-guide'),
+              _buildNavLink(context, 'Past Projects Guide', '/projects/junior-guide'),
               const SizedBox(width: DesignSystem.spaceLg),
               _buildNavLink(context, 'Announcements', '/announcements'),
               const SizedBox(width: DesignSystem.spaceLg),
               _buildNavLink(context, 'Awards', '/awards'),
               const SizedBox(width: DesignSystem.spaceLg),
-              _buildNavLink(context, 'Lecturer Portal', '/lecturer'),
+              _buildNavLink(context, 'Find by Lecturer', '/lecturer'),
               if (lecturerSignedIn) ...[
                 const SizedBox(width: DesignSystem.spaceLg),
                 _buildNavLink(context, 'My Visits', '/lecturer/visits'),
@@ -314,7 +314,7 @@ class _MobileBottomNavBar extends StatelessWidget {
                 ),
                 _buildMenuItem(
                   context,
-                  'Project Guide',
+                  'Past Projects Guide',
                   Icons.school,
                   '/projects/junior-guide',
                 ),
@@ -335,7 +335,7 @@ class _MobileBottomNavBar extends StatelessWidget {
                 if (lecturerSignedIn)
                   _buildMenuItem(
                     context,
-                    'Lecturer Portal',
+                    'Find by Lecturer',
                     Icons.person,
                     '/lecturer',
                   ),
@@ -434,7 +434,7 @@ class _MobileBottomNavBar extends StatelessWidget {
           Icons.location_on,
           color: DesignSystem.onSecondaryContainer,
         ),
-        label: 'Map',
+        label: 'Booths',
       ),
       const NavigationDestination(
         icon: Icon(Icons.school_outlined),

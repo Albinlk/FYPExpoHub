@@ -379,7 +379,7 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                         side: const BorderSide(color: DesignSystem.secondary),
                         shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
                       ),
-                      child: const Text('Map'),
+                      child: const Text('Booth Map'),
                     ),
                   ),
                 ],

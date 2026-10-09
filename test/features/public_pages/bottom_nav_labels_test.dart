@@ -51,8 +51,8 @@ void main() {
   /// its destination slot (same top/bottom as its siblings).
   void expectSingleLineCentered(WidgetTester tester, Size viewport) {
     final barRect = tester.getRect(find.byType(NavigationBar).first);
-    // Signed out: tab 4 is the public lecturer directory ("Staff").
-    final labels = ['Home', 'Map', 'Guide', 'Staff', 'Menu'];
+    // Signed out: tab 4 is the public lecturer directory ("Staff"; longer labels wrap at 390px).
+    final labels = ['Home', 'Booths', 'Guide', 'Staff', 'Menu'];
     final slotWidth = barRect.width / labels.length;
     double? commonTop;
     for (final label in labels) {

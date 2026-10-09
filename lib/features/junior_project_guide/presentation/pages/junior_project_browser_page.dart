@@ -223,7 +223,7 @@ class _JuniorProjectBrowserPageState
         backgroundColor: DesignSystem.primary,
         foregroundColor: Colors.white,
         title: Text(
-          'Past Sem Projects',
+          'Past Projects Guide',
           style: (isDesktop ? DesignSystem.h3 : DesignSystem.h3Mobile)
               .copyWith(
                 color: Colors.white,

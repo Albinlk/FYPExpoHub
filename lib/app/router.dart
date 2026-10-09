@@ -665,7 +665,7 @@ class RouteTitleObserver extends NavigatorObserver {
       return t('My Visits');
     }
     if (path == '/lecturer' || path.startsWith('/lecturer/')) {
-      return t('Lecturer Portal');
+      return t('Find by Lecturer');
     }
     if (path == '/faq') return t('FAQ');
     if (path == '/privacy') return t('Privacy Policy');
