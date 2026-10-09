@@ -259,6 +259,33 @@ void main() {
     expect(find.text('Student has been marked as visited.'), findsOneWidget);
   });
 
+  testWidgets('A11 Undo on the success message voids the visit just recorded',
+      (tester) async {
+    tester.view.physicalSize = const Size(1440, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final rpc = _RecordingRpcService();
+    await tester.pumpWidget(_app(
+      rpc: rpc,
+      assignments: [_svAssignment(), _exAssignment()],
+      user: _fakeUser(),
+    ));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Mark as Visited').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Confirm Visit'));
+    await tester.pumpAndSettle();
+    expect(rpc.voidCalls, isEmpty);
+
+    await tester.tap(find.text('Undo'));
+    await tester.pumpAndSettle();
+    expect(rpc.voidCalls, [
+      {'visitId': 'new-visit', 'reason': 'Marked by mistake (undone straight away)'},
+    ]);
+  });
+
   testWidgets('completed visit shows visit details and Cancel Visit action',
       (tester) async {
     final rpc = _RecordingRpcService();
