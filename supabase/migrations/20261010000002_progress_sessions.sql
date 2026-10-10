@@ -59,7 +59,7 @@ begin
   end if;
 
   if coalesce(p_session_type, 'defence') not in ('defence', 'expo', 'progress') then
-    raise exception 'invalid-argument: Session type must be defence or expo.'
+    raise exception 'invalid-argument: Session type must be defence, progress or expo.'
       using errcode = '22023';
   end if;
 
@@ -122,7 +122,7 @@ begin
     raise exception 'invalid-argument: The session must end after it starts.' using errcode = '22023';
   end if;
   if coalesce(p_session_type, 'defence') not in ('defence', 'expo', 'progress') then
-    raise exception 'invalid-argument: Session type must be defence or expo.' using errcode = '22023';
+    raise exception 'invalid-argument: Session type must be defence, progress or expo.' using errcode = '22023';
   end if;
 
   update public.fyp_presentation_sessions

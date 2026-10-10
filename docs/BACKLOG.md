@@ -81,7 +81,7 @@ From a cross-check against the FSKM handbook (*Essentials of Computing Sciences:
 | [x] | P1 | Portal landing at `/` with the Exhibition, CSP600 and CSP650; exhibition home at `/expo`; one sign-in at `/sign-in` (#57) | H |
 | [x] | P2 | Course-aware CSP600 / CSP650: forms list, report type, student menu and CSP lecturer pages follow the course; `submit_fyp_form` refuses another course's form (migration `20261010000001`, not yet applied to live) (#57) | H |
 | [x] | P3 | Coordinators can open Appointment Letters; light page headers inside FYPMS; consistent sign-out and cross-links (#57) | M |
-| [ ] | P4 | Apply migrations `20261010000001`–`20261010000004` (course-scoped forms, progress sessions, exhibition ↔ CSP650 link, supervisor final approval) to the live Supabase project | H |
+| [x] | P4 | Applied migrations `20261010000001`–`20261010000004` (course-scoped forms, progress sessions, exhibition ↔ CSP650 link, supervisor final approval) to the live Supabase project (10 Oct 2026) | H |
 | [x] | P5 | Each exhibition belongs to a CSP650 cohort (`events.academic_semester_id`, picker in the event form); Expo publishing lists and accepts only that semester's CSP650 records (migration `20261010000003`) | M |
 | [x] | P6 | Publishing creates booth-visit assignments from the FYPMS supervisor / examiner (no name matching) and carries the examiner into the project (migration `20261010000003`) | M |
 | [x] | P7 | Exhibition attendance on the FYPMS record: already present as `exhibition_visit_recorded` in the F14 dialog (criterion 3) | M |
