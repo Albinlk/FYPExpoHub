@@ -10,6 +10,7 @@ import '../../../../core/utils/fypms_format.dart';
 import '../../../../core/widgets/async_state.dart';
 import '../../../../core/widgets/admin_actions.dart';
 import '../../../../core/layout/responsive.dart';
+import 'nomination_documents.dart';
 
 /// Minimum reason length the server requires.
 const kSupervisorChangeReasonMin = 20;
@@ -463,6 +464,7 @@ class PuNominationsPage extends ConsumerWidget {
                                     '${n.programmeCode ?? ''} · ${n.courseCode ?? ''}',
                                     style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant),
                                   ),
+                                  NominationDocumentsLine(nomination: n),
                                   Wrap(
                                     spacing: DesignSystem.spaceSm,
                                     children: [
@@ -470,8 +472,9 @@ class PuNominationsPage extends ConsumerWidget {
                                         onPressed: () => _decide(context, ref, n, 'rejected'),
                                         child: const Text('Reject'),
                                       ),
+                                      // Appendix N: approve only with the CV and declaration.
                                       FilledButton(
-                                        onPressed: () => _decide(context, ref, n, 'approved'),
+                                        onPressed: n.hasDocuments ? () => _decide(context, ref, n, 'approved') : null,
                                         child: const Text('Approve'),
                                       ),
                                     ],

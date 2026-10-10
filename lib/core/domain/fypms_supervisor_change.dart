@@ -65,6 +65,8 @@ class PendingNomination {
     this.semesterLabel,
     this.decidedAt,
     this.decidedByName,
+    this.cvPath,
+    this.notRelatedDeclaredAt,
   });
 
   factory PendingNomination.fromJson(Map<String, dynamic> json) => PendingNomination(
@@ -81,6 +83,8 @@ class PendingNomination {
         semesterLabel: json['semester_label'] as String?,
         decidedAt: DateTime.tryParse(json['decided_at'] as String? ?? ''),
         decidedByName: json['decided_by_name'] as String?,
+        cvPath: json['cv_path'] as String?,
+        notRelatedDeclaredAt: DateTime.tryParse(json['not_related_declared_at'] as String? ?? ''),
       );
 
   final String assignmentId;
@@ -100,6 +104,15 @@ class PendingNomination {
   /// When the PU approved it (approved nominations only).
   final DateTime? decidedAt;
   final String? decidedByName;
+
+  /// The nominee's CV in the fyp-nomination-cvs bucket (FSKM handbook App. N).
+  final String? cvPath;
+
+  /// When the nominator declared the nominee is not a relative or close friend.
+  final DateTime? notRelatedDeclaredAt;
+
+  /// The CV and declaration are attached, so the PU can approve.
+  bool get hasDocuments => (cvPath?.isNotEmpty ?? false) && notRelatedDeclaredAt != null;
 
   String get roleLabel => switch (academicRole) {
         'co_supervisor' => 'Co-supervisor',

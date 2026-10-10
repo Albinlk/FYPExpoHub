@@ -114,6 +114,9 @@ void main() {
               'academic_role': 'supervisor',
               'lecturer_name': 'DR SITI',
               'project_title': 'AI Health Assistant',
+              // App. N: approval needs the CV and declaration (P13).
+              'cv_path': 'a1/cv.pdf',
+              'not_related_declared_at': '2026-10-10T08:00:00Z',
             }),
             PendingNomination.fromJson({
               'assignment_id': 'a2',

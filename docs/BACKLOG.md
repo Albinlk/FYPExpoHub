@@ -90,7 +90,7 @@ From a cross-check against the FSKM handbook (*Essentials of Computing Sciences:
 | [x] | P10 | CSP600 lecturer "Examiners & Handover" page: assign examiners (#19) and hand the cohort over to CSP650 (#29) | M |
 | [x] | P11 | Copy one student's milestones to every student in the same course (the handbook sets no week timeline, so dates stay lecturer-set) | L |
 | [x] | P12 | Supervisor approves the final report after F12 (`approve_final_report`, migration `20261010000004`); deliverables checklist already matched the handbook | L |
-| [ ] | P13 | Nominations: CV upload and "not a relative / close friend" declaration (App. N) | L |
+| [x] | P13 | Nominations: the nominating lecturer (CSP lecturer or coordinator) attaches the nominee's CV and the "not a relative / close friend" declaration; the PU approves only once both are there (App. N; migration `20261010000005`, bucket `fyp-nomination-cvs`) | L |
 
 ## Suggested order
 

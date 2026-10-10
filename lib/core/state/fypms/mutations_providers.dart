@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/fypms_exhibition_evaluation.dart';
 import '../../domain/fypms_users.dart';
@@ -309,6 +311,36 @@ final decideNominationProvider =
     };
   },
 );
+
+/// The nominator uploads the nominee's CV and declares they are not a
+/// relative or close friend (FSKM handbook App. N).
+final submitNominationDocumentsProvider = Provider<
+    Future<void> Function({
+      required String assignmentId,
+      required Uint8List cvBytes,
+      required bool notRelated,
+    })>(
+  (ref) {
+    return ({required assignmentId, required cvBytes, required notRelated}) async {
+      final path = await ref.read(supabaseStorageServiceProvider).uploadToPath(
+            bucket: kNominationCvBucket,
+            path: '$assignmentId/cv-${DateTime.now().millisecondsSinceEpoch}.pdf',
+            bytes: cvBytes,
+            contentType: 'application/pdf',
+          );
+      await ref.read(supabaseRpcServiceProvider).submitNominationDocuments(
+            assignmentId: assignmentId,
+            cvPath: path,
+            notRelated: notRelated,
+          );
+      ref.invalidate(myPendingNominationsProvider);
+      ref.invalidate(pendingNominationsProvider);
+    };
+  },
+);
+
+/// Private bucket holding nomination CVs, one folder per nomination.
+const kNominationCvBucket = 'fyp-nomination-cvs';
 
 /// Student requests a milestone extension.
 final requestMilestoneExtensionProvider = Provider<

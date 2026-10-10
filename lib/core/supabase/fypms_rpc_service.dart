@@ -597,6 +597,32 @@ extension FypmsRpcService on SupabaseRpcService {
     }
   }
 
+  /// Nominations awaiting the PU on records the caller (CSP lecturer or
+  /// coordinator) may nominate for.
+  Future<List<Map<String, dynamic>>> listMyPendingNominations() async {
+    try {
+      final response = await Supabase.instance.client.rpc<dynamic>('list_my_pending_nominations');
+      return [for (final m in (response as List? ?? const [])) Map<String, dynamic>.from(m as Map)];
+    } catch (e) {
+      logDebug('Supabase FYPMS RPC list_my_pending_nominations error: $e');
+      rethrow;
+    }
+  }
+
+  /// The nominator attaches the uploaded CV and the "not a relative or close
+  /// friend" declaration (FSKM handbook App. N).
+  Future<Map<String, dynamic>> submitNominationDocuments({
+    required String assignmentId,
+    required String cvPath,
+    required bool notRelated,
+  }) async {
+    return _rpc('submit_nomination_documents', {
+      'p_assignment_id': assignmentId,
+      'p_cv_path': cvPath,
+      'p_not_related': notRelated,
+    });
+  }
+
   /// The PU approves or rejects (with a reason) a nomination.
   Future<Map<String, dynamic>> decideNomination({
     required String assignmentId,
