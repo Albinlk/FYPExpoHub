@@ -254,6 +254,8 @@ List<({String title, IconData icon, String route})> _navItems({
       (title: 'Offerings', icon: Icons.school, route: '/fypms/csp/offerings'),
       // Handbook Table 2.1 #19 and #29: CSP600 lecturers assign examiners and hand over to CSP650.
       if (teachesCsp600) (title: 'Examiners & Handover', icon: Icons.swap_horiz, route: '/fypms/csp/cohort'),
+      // Appendix N: the nominator attaches the nominee's CV and declaration for the PU.
+      (title: 'Nomination CVs', icon: Icons.badge_outlined, route: '/fypms/csp/nominations'),
       (title: 'Milestones', icon: Icons.flag, route: '/fypms/csp/milestones'),
       (title: 'Evaluations', icon: Icons.description, route: '/fypms/csp/evaluations'),
       (title: 'Presentations', icon: Icons.event, route: '/fypms/csp/presentations'),
@@ -270,6 +272,7 @@ List<({String title, IconData icon, String route})> _navItems({
       (title: 'Coordinator Dashboard', icon: Icons.dashboard, route: '/fypms/coordinator'),
       (title: 'All Records', icon: Icons.folder_open, route: '/fypms/coordinator/records'),
       (title: 'Assignments', icon: Icons.assignment_ind, route: '/fypms/coordinator/assignments'),
+      (title: 'Nomination CVs', icon: Icons.badge_outlined, route: '/fypms/coordinator/nominations'),
       (title: 'Semesters & Courses', icon: Icons.date_range, route: '/fypms/coordinator/semesters'),
       (title: 'Users & Roles', icon: Icons.manage_accounts, route: '/fypms/coordinator/users'),
       (title: 'Enrol Students', icon: Icons.group_add, route: '/fypms/coordinator/enrol'),

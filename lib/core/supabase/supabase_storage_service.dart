@@ -38,6 +38,27 @@ class SupabaseStorageService {
     }
   }
 
+  /// Uploads a file to an exact path (buckets whose policies key on the
+  /// path, e.g. fyp-nomination-cvs/{assignment_id}/...).
+  Future<String> uploadToPath({
+    required String bucket,
+    required String path,
+    required Uint8List bytes,
+    String? contentType,
+  }) async {
+    try {
+      await _client.storage.from(bucket).uploadBinary(
+            path,
+            bytes,
+            fileOptions: FileOptions(contentType: contentType, upsert: true),
+          );
+      return path;
+    } catch (e) {
+      logDebug('Supabase storage uploadToPath error: $e');
+      rethrow;
+    }
+  }
+
   /// Creates a signed URL for private FYPMS resources.
   Future<String?> createSignedUrl({
     required String bucket,

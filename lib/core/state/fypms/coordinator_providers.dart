@@ -127,6 +127,14 @@ final pendingNominationsProvider = FutureProvider<List<PendingNomination>>((ref)
   return (await rpc.listPendingNominations()).map(PendingNomination.fromJson).toList();
 });
 
+/// Nominations awaiting the PU that the signed-in CSP lecturer or
+/// coordinator can attach the CV and declaration to (portal plan P13).
+final myPendingNominationsProvider = FutureProvider<List<PendingNomination>>((ref) async {
+  ref.watch(fypmsUserScopeProvider);
+  final rpc = ref.watch(supabaseRpcServiceProvider);
+  return (await rpc.listMyPendingNominations()).map(PendingNomination.fromJson).toList();
+});
+
 /// Appointments the PU approved, for appointment letters (backlog F7).
 final approvedNominationsProvider = FutureProvider<List<PendingNomination>>((ref) async {
   ref.watch(fypmsUserScopeProvider);

@@ -109,6 +109,22 @@ void main() {
       );
     });
 
+    testWidgets('coordinator opens Nomination CVs (P13)', (tester) async {
+      expect(
+        await _resolve(tester,
+            target: '/fypms/coordinator/nominations', user: _user('c@fypms.test'), roles: const ['fyp_coordinator']),
+        '/fypms/coordinator/nominations',
+      );
+    });
+
+    testWidgets('CSP lecturer opens Nomination CVs (P13)', (tester) async {
+      expect(
+        await _resolve(tester,
+            target: '/fypms/csp/nominations', user: _user('l@fypms.test'), roles: const ['csp600_lecturer']),
+        '/fypms/csp/nominations',
+      );
+    });
+
     testWidgets('coordinator lands on /fypms/coordinator', (tester) async {
       expect(
         await _resolve(
