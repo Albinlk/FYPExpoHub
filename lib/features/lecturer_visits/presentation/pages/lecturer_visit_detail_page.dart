@@ -49,6 +49,7 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
   }
 
   Future<void> _markVisited(Project project, String assignmentId, String role) async {
+    String? visitId;
     final result = await showMarkVisitedDialog(
       context,
       project,
@@ -57,21 +58,44 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
       onSubmit: (note) async {
         final user = ref.read(currentAuthUserProvider);
         if (user == null) throw Exception('Not authenticated');
-        await ref.read(supabaseRpcServiceProvider).markStudentProjectVisited(
+        // The RPC returns the new visit row, so a mis-tap can be undone in one tap.
+        final row = await ref.read(supabaseRpcServiceProvider).markStudentProjectVisited(
               assignmentId: assignmentId,
               visitNote: note,
             );
+        visitId = row['id'] as String?;
       },
     );
     if (result == null) return;
 
     ref.invalidate(allVisitsProvider);
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Student has been marked as visited.'),
-        backgroundColor: DesignSystem.tertiary,
-      ),
+    final id = visitId;
+    if (id == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Student has been marked as visited.'),
+          backgroundColor: DesignSystem.tertiary,
+        ),
+      );
+      return;
+    }
+    final rpc = ref.read(supabaseRpcServiceProvider);
+    showUndoSnackBar(
+      context,
+      message: 'Student has been marked as visited.',
+      onUndo: () async {
+        try {
+          await rpc.voidStudentProjectVisit(
+            visitId: id,
+            reason: 'Marked by mistake (undone straight away)',
+          );
+        } catch (e) {
+          // Same wording as Cancel Visit, e.g. an expired undo window.
+          throw Exception(_undoErrorMessage(e));
+        }
+        ref.invalidate(allVisitsProvider);
+      },
     );
   }
 

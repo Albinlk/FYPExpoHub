@@ -82,7 +82,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                       const Text('Your password has been updated.', textAlign: TextAlign.center),
                       const SizedBox(height: DesignSystem.spaceMd),
                       FilledButton(
-                        onPressed: () => context.go('/admin/sign-in'),
+                        onPressed: () => context.go('/sign-in'),
                         child: const Text('Continue'),
                       ),
                     ] else if (user == null) ...[
@@ -93,7 +93,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                       ),
                       const SizedBox(height: DesignSystem.spaceMd),
                       FilledButton(
-                        onPressed: () => context.go('/admin/sign-in'),
+                        onPressed: () => context.go('/sign-in'),
                         child: const Text('Back to sign in'),
                       ),
                     ] else ...[

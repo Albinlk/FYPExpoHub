@@ -35,8 +35,8 @@ class EventNotifier extends Notifier<Event> {
         'Recognize outstanding achievements through best project award categories.',
       ],
       status: 'active',
-      heroImageUrl: 'assets/images/banner.jpg',
-      posterUrl: 'assets/images/poster.jpg',
+      heroImageUrl: '',
+      posterUrl: '',
       publicContactEmail: 'fskmfypexpo@uitm.edu.my',
       faqItems: [
         const FaqItem(

@@ -6,6 +6,7 @@ import '../../../../core/domain/models/project.dart';
 import '../../../../core/widgets/project_card.dart';
 import '../../archive_data.dart';
 import '../../../../core/widgets/async_state.dart';
+import '../../../../core/widgets/page_heading.dart';
 
 /// Public list of past exhibitions (backlog S7). The current one is the rest
 /// of the site; earlier ones keep their projects and award winners here.
@@ -24,7 +25,7 @@ class ArchivePage extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Past Exhibitions', style: DesignSystem.pageTitle(context).copyWith(color: DesignSystem.primary)),
+          PageHeading('Past Exhibitions'),
           const SizedBox(height: DesignSystem.spaceSm),
           Text(
             'Projects and award winners from earlier FSKM FYP exhibitions.',
@@ -120,7 +121,7 @@ class ArchivedEventPage extends ConsumerWidget {
                       icon: const Icon(Icons.arrow_back),
                       label: const Text('Past exhibitions'),
                     ),
-                    Text(event.title, style: DesignSystem.pageTitle(context).copyWith(color: DesignSystem.primary)),
+                    PageHeading(event.title),
                     Text('${event.year}${event.venue == null ? '' : ' · ${event.venue}'} · ${projects.length} ${projects.length == 1 ? 'project' : 'projects'}',
                         style: DesignSystem.bodyMd.copyWith(color: DesignSystem.onSurfaceVariant)),
                     if (winners.isNotEmpty) ...[

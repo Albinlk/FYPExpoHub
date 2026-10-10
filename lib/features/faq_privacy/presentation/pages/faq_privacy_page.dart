@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/state/state_providers.dart';
+import '../../../../core/widgets/page_heading.dart';
 
 class FaqPrivacyPage extends ConsumerWidget {
   final bool showPrivacyOnly;
@@ -24,7 +25,7 @@ class FaqPrivacyPage extends ConsumerWidget {
             if (showPrivacyOnly) ...[
               _buildPrivacyContent(context, contactEmail),
             ] else ...[
-              Text('Frequently Asked Questions (FAQ)', style: DesignSystem.pageTitle(context).copyWith(color: DesignSystem.primary)),
+              PageHeading('Frequently Asked Questions (FAQ)'),
               const SizedBox(height: DesignSystem.spaceSm),
               Text('Get quick answers to common questions about the exhibition.', style: DesignSystem.bodyLg.copyWith(color: DesignSystem.onSurfaceVariant), softWrap: true),
               const SizedBox(height: DesignSystem.spaceXl),
@@ -86,7 +87,7 @@ class FaqPrivacyPage extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Privacy Policy', style: DesignSystem.pageTitle(context).copyWith(color: DesignSystem.primary)),
+        PageHeading('Privacy Policy'),
         const SizedBox(height: DesignSystem.spaceSm),
         Text('Last updated: August 2026', style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant)),
         const SizedBox(height: DesignSystem.spaceXl),

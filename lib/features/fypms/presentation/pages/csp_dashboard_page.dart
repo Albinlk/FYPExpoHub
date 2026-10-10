@@ -19,10 +19,13 @@ class CspDashboardPage extends ConsumerWidget {
     return Scaffold(
       backgroundColor: DesignSystem.background,
       appBar: AppBar(
-        backgroundColor: DesignSystem.primary,
+        backgroundColor: DesignSystem.surfaceContainerLowest,
+        foregroundColor: DesignSystem.primary,
+        surfaceTintColor: Colors.transparent,
+        shape: const Border(bottom: BorderSide(color: DesignSystem.outlineVariant)),
         title: Text(
-          'CSP Lecturer Dashboard',
-          style: DesignSystem.h3.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+          cspWorkspaceTitle(ref.watch(cspTaughtCoursesProvider)),
+          style: DesignSystem.h3.copyWith(color: DesignSystem.primary, fontWeight: FontWeight.bold),
         ),
       ),
       body: offerings.when(
@@ -88,7 +91,7 @@ class _OfferingCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final records = ref.watch(fypRecordsProvider);
+    final records = ref.watch(cspRecordsProvider);
 
     return Card(
       elevation: 1,

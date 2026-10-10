@@ -17,10 +17,13 @@ class CoordinatorAssignmentsPage extends ConsumerWidget {
     return Scaffold(
       backgroundColor: DesignSystem.background,
       appBar: AppBar(
-        backgroundColor: DesignSystem.primary,
+        backgroundColor: DesignSystem.surfaceContainerLowest,
+        foregroundColor: DesignSystem.primary,
+        surfaceTintColor: Colors.transparent,
+        shape: const Border(bottom: BorderSide(color: DesignSystem.outlineVariant)),
         title: Text(
           'Assignments',
-          style: DesignSystem.h3.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+          style: DesignSystem.h3.copyWith(color: DesignSystem.primary, fontWeight: FontWeight.bold),
         ),
       ),
       body: records.when(

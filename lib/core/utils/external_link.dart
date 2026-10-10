@@ -1,6 +1,7 @@
 /// A project link typed by an admin, as a safe web address: `https://` is
 /// assumed when the scheme is missing, and anything that isn't http(s) (e.g.
-/// `javascript:`) is refused. Null when there is nothing to open.
+/// `javascript:`) is refused, as is a bare path with no host. Null when there
+/// is nothing to open.
 Uri? safeExternalUri(String? raw) {
   final text = raw?.trim() ?? '';
   if (text.isEmpty) return null;
@@ -9,5 +10,9 @@ Uri? safeExternalUri(String? raw) {
   if (uri == null || !(uri.isScheme('http') || uri.isScheme('https')) || uri.host.isEmpty) {
     return null;
   }
+  // Without a scheme the first segment must look like a host ("github.com/x").
+  // A site-relative path such as the seed's "assets/images/banner.jpg" would
+  // otherwise become https://assets/... and fail (or show a dead link).
+  if (!hasScheme && !uri.host.contains('.')) return null;
   return uri;
 }

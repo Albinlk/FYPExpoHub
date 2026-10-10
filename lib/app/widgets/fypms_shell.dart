@@ -37,8 +37,9 @@ class FypmsShell extends ConsumerWidget {
     await ref.read(supabaseClientProvider).auth.signOut();
     ref.invalidate(currentAuthUserProvider);
     ref.invalidate(fypmsCurrentRolesProvider);
+    // Same place as signing out of the admin CMS: the portal home.
     if (context.mounted) {
-      context.go('/admin/sign-in');
+      context.go('/');
     }
   }
 
@@ -182,7 +183,19 @@ class FypmsShell extends ConsumerWidget {
   }
 }
 
+/// Whether a student has a CSP650 record, so the CSP650-only pages (Lean
+/// Canvas, Deliverables, Corrections) belong in their menu. Defaults to true
+/// while records load, so nothing disappears and reappears.
+bool _studentHasProjectCourse(WidgetRef ref, bool isStudent) {
+  if (!isStudent) return false;
+  final records = ref.watch(myFypRecordsProvider).value;
+  if (records == null) return true;
+  return records.any((r) => r.currentCourseCode == 'CSP650');
+}
+
 List<({String title, IconData icon, String route})> _navItems({
+  bool showProjectPages = true,
+  String cspTitle = 'CSP Dashboard',
   required bool isAdmin,
   required bool isCoordinator,
   required bool isStudent,
@@ -200,11 +213,12 @@ List<({String title, IconData icon, String route})> _navItems({
       (title: 'Supervision', icon: Icons.supervisor_account, route: '/fypms/student/supervision'),
       (title: 'Progress Logs', icon: Icons.timeline, route: '/fypms/student/progress'),
       (title: 'Forms', icon: Icons.description, route: '/fypms/student/forms'),
-      (title: 'Lean Canvas', icon: Icons.grid_view, route: '/fypms/student/lean-canvas'),
+      // CSP650 only (FSKM handbook): Lean Canvas (F13), Deliverables, Corrections (F12).
+      if (showProjectPages) (title: 'Lean Canvas', icon: Icons.grid_view, route: '/fypms/student/lean-canvas'),
       (title: 'Reports', icon: Icons.upload_file, route: '/fypms/student/reports'),
-      (title: 'Deliverables', icon: Icons.checklist, route: '/fypms/student/deliverables'),
+      if (showProjectPages) (title: 'Deliverables', icon: Icons.checklist, route: '/fypms/student/deliverables'),
       (title: 'Milestones', icon: Icons.flag, route: '/fypms/student/milestones'),
-      (title: 'Corrections', icon: Icons.fact_check, route: '/fypms/student/corrections'),
+      if (showProjectPages) (title: 'Corrections', icon: Icons.fact_check, route: '/fypms/student/corrections'),
       (title: 'Presentations', icon: Icons.event, route: '/fypms/student/presentations'),
       (title: 'Marks', icon: Icons.scoreboard, route: '/fypms/student/marks'),
     ]);
@@ -234,7 +248,7 @@ List<({String title, IconData icon, String route})> _navItems({
 
   if (isCsp) {
     items.addAll([
-      (title: 'CSP Dashboard', icon: Icons.dashboard, route: '/fypms/csp'),
+      (title: cspTitle, icon: Icons.dashboard, route: '/fypms/csp'),
       (title: 'Supervision Requests', icon: Icons.mail, route: '/fypms/csp/requests'),
       (title: 'Offerings', icon: Icons.school, route: '/fypms/csp/offerings'),
       (title: 'Milestones', icon: Icons.flag, route: '/fypms/csp/milestones'),
@@ -262,15 +276,17 @@ List<({String title, IconData icon, String route})> _navItems({
       (title: 'Mark Allocation', icon: Icons.pie_chart_outline, route: '/fypms/coordinator/mark-allocation'),
       (title: 'Rubrics', icon: Icons.rule, route: '/fypms/coordinator/rubrics'),
       (title: 'Reports', icon: Icons.insights, route: '/fypms/coordinator/reports'),
-      if (!isPu) (title: 'Appointment Letters', icon: Icons.description_outlined, route: '/fypms/pu'),
+      if (!isPu) (title: 'Appointment Letters', icon: Icons.description_outlined, route: '/fypms/coordinator/letters'),
       (title: 'Audit Logs', icon: Icons.history, route: '/fypms/coordinator/audit'),
+      // Admins run the exhibition too; the CMS links back here via "FYP Management".
+      if (isAdmin) (title: 'Exhibition Admin', icon: Icons.storefront_outlined, route: '/admin'),
     ]);
   }
 
   return items;
 }
 
-class _FypmsSidebar extends StatelessWidget {
+class _FypmsSidebar extends ConsumerWidget {
   final String currentPath;
   final bool isAdmin;
   final bool isCoordinator;
@@ -292,8 +308,10 @@ class _FypmsSidebar extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final items = _navItems(
+      showProjectPages: _studentHasProjectCourse(ref, isStudent),
+      cspTitle: cspWorkspaceTitle(ref.watch(cspTaughtCoursesProvider)),
       isAdmin: isAdmin,
       isCoordinator: isCoordinator,
       isStudent: isStudent,
@@ -328,7 +346,7 @@ class _FypmsSidebar extends StatelessWidget {
             child: ListTile(
               leading: const Icon(Icons.arrow_back, color: Colors.white70, size: 20),
               title: Text(
-                'Back to Public Portal',
+                'Back to Portal',
                 style: DesignSystem.bodySm.copyWith(color: Colors.white70),
               ),
               onTap: () => context.go('/'),
@@ -370,7 +388,7 @@ class _FypmsSidebar extends StatelessWidget {
   }
 }
 
-class _FypmsDrawer extends StatelessWidget {
+class _FypmsDrawer extends ConsumerWidget {
   final String currentPath;
   final bool isAdmin;
   final bool isCoordinator;
@@ -394,8 +412,10 @@ class _FypmsDrawer extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final items = _navItems(
+      showProjectPages: _studentHasProjectCourse(ref, isStudent),
+      cspTitle: cspWorkspaceTitle(ref.watch(cspTaughtCoursesProvider)),
       isAdmin: isAdmin,
       isCoordinator: isCoordinator,
       isStudent: isStudent,
@@ -447,7 +467,7 @@ class _FypmsDrawer extends StatelessWidget {
               child: ListTile(
                 leading: const Icon(Icons.arrow_back, color: Colors.white70, size: 20),
                 title: Text(
-                  'Back to Public Portal',
+                  'Back to Portal',
                   style: DesignSystem.bodySm.copyWith(color: Colors.white70),
                 ),
                 onTap: () {

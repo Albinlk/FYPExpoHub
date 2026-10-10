@@ -5,6 +5,7 @@ import '../../../../core/domain/models/event.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/utils/external_link.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../../core/widgets/page_heading.dart';
 
 class InfoPage extends ConsumerWidget {
   const InfoPage({super.key});
@@ -22,7 +23,7 @@ class InfoPage extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Exhibition Information', style: DesignSystem.pageTitle(context).copyWith(color: DesignSystem.primary)),
+            PageHeading('Exhibition Information'),
             const SizedBox(height: DesignSystem.spaceSm),
             Text(
               'Discover more details about the FSKM Final Year Project Exhibition.',

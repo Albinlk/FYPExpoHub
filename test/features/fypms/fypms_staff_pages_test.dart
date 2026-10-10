@@ -231,6 +231,7 @@ void main() {
         assignedFypRecordsProvider.overrideWith((ref, role) async => [_record()]),
         fypStaffProvider.overrideWith((ref, roles) async => _staff),
         supervisorsDirectoryProvider.overrideWith((ref) async => _directory),
+        pendingSupervisorChangesProvider.overrideWith((ref) async => []),
         mySupervisionRequestsProvider.overrideWith((ref) async => mine ?? [
               MySupervisionRequest(request: _f1Request(), myRole: 'supervisor', studentName: 'ALI BIN ABU', courseCode: 'CSP600'),
             ]),

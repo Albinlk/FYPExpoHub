@@ -7,6 +7,7 @@ import 'package:fyp_expo_hub/core/domain/models/project.dart';
 import 'package:fyp_expo_hub/core/state/state_providers.dart';
 import 'package:fyp_expo_hub/core/supabase/supabase_database_service.dart';
 import 'package:fyp_expo_hub/core/utils/url_state.dart';
+import 'package:fyp_expo_hub/features/junior_project_guide/presentation/pages/junior_project_browser_page.dart';
 import 'package:fyp_expo_hub/features/public_booths/presentation/pages/booths_page.dart';
 import 'package:fyp_expo_hub/features/public_lecturer/presentation/pages/lecturer_page.dart';
 import 'package:fyp_expo_hub/features/public_projects/presentation/pages/projects_page.dart';
@@ -80,6 +81,16 @@ void main() {
       expect(tester.takeException(), isNull);
       expect(tester.widget<TextField>(find.byType(TextField).first).controller!.text, 'Dr. A');
       expect(find.text('Found 0 projects:'), findsNothing);
+    });
+
+    testWidgets('junior guide: filters from the link; stale values do not break dropdowns', (tester) async {
+      await pump(
+        tester,
+        '/page?search=one&section=CSP650&programme=ZZ999&supervisor=Nobody&industry=true',
+        const JuniorProjectBrowserPage(),
+      );
+      expect(tester.takeException(), isNull);
+      expect(tester.widget<TextField>(find.byType(TextField).first).controller!.text, 'one');
     });
 
     testWidgets('lecturer: unknown role and day are ignored', (tester) async {

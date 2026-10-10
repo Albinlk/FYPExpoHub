@@ -88,6 +88,22 @@ final isCspLecturerProvider = Provider<bool>((ref) {
       roles.value?.contains('csp650_lecturer') == true;
 });
 
+/// The courses the current user teaches as a CSP lecturer: `csp600_lecturer`
+/// teaches CSP600 Project Formulation, `csp650_lecturer` CSP650 Project.
+final cspTaughtCoursesProvider = Provider<Set<String>>((ref) {
+  final roles = ref.watch(fypmsCurrentRolesProvider).value ?? const <String>[];
+  return {
+    if (roles.contains('csp600_lecturer')) 'CSP600',
+    if (roles.contains('csp650_lecturer')) 'CSP650',
+  };
+});
+
+/// Menu title for the CSP lecturer workspace, named after the course taught.
+String cspWorkspaceTitle(Set<String> courses) {
+  final sorted = courses.toList()..sort();
+  return sorted.isEmpty ? 'CSP Dashboard' : '${sorted.join(' & ')} Dashboard';
+}
+
 // ==============================================================================
 // FYPMS FEATURE FLAGS (from settings.fypms_features)
 // ==============================================================================
@@ -146,14 +162,39 @@ bool fypmsCanEvaluate(String formCode, String role) =>
 /// CSP650 lecturer qualified on F14).
 const List<String> fypmsSpecialEvaluationFormCodes = ['F14', 'F15', 'F16'];
 
-/// Form codes a student can submit, given whether F14 applications are open
-/// and whether their record qualified for special evaluation. The server
-/// enforces the same rules in `submit_fyp_form`.
-List<String> fypmsFormCodesFor({required bool applicationsOpen, required bool qualified}) => [
+/// Which course each form belongs to (FSKM handbook, 4th ed.): CSP600 Project
+/// Formulation uses F1–F8, CSP650 Project uses F6b and F9–F16. F5 (the
+/// consultation log) is used in both, so it is in neither set. Mirrors
+/// `public.fyp_form_course` (migration 20261010000001), which the server
+/// enforces in `submit_fyp_form`.
+const Map<String, Set<String>> fypmsCourseForms = {
+  'CSP600': {'F1', 'F2', 'F3', 'F4', 'F6a', 'F7', 'F8'},
+  'CSP650': {'F6b', 'F9', 'F10', 'F11', 'F12', 'F13', 'F14', 'F15', 'F16'},
+};
+
+/// Whether [formCode] may be used on a record in [courseCode]. A form tied to
+/// the other course is refused; F5 and unknown courses are allowed.
+bool fypmsFormFitsCourse(String formCode, String? courseCode) {
+  if (courseCode == null) return true;
+  for (final entry in fypmsCourseForms.entries) {
+    if (entry.value.contains(formCode)) return entry.key == courseCode;
+  }
+  return true;
+}
+
+/// Form codes a student can submit on a record of [courseCode], given whether
+/// F14 applications are open and whether the record qualified for special
+/// evaluation. The server enforces the same rules in `submit_fyp_form`.
+List<String> fypmsFormCodesFor({
+  required bool applicationsOpen,
+  required bool qualified,
+  String? courseCode,
+}) =>
+    [
       ...fypmsAlwaysEnabledFormCodes,
       if (applicationsOpen) 'F14',
       if (qualified) ...['F15', 'F16'],
-    ];
+    ].where((code) => fypmsFormFitsCourse(code, courseCode)).toList();
 
 /// Form codes open to every student: the regular forms, plus F14 while
 /// `fypms_features.special_evaluation_enabled` is on. F15 / F16 depend on the

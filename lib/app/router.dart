@@ -45,7 +45,8 @@ import '../features/fypms/presentation/pages/notifications_page.dart';
 import '../features/admin_auth/mfa.dart';
 import '../features/fypms/presentation/pages/coordinator_reports_page.dart';
 import '../features/fypms/presentation/pages/coordinator_enrol_page.dart';
-import '../features/fypms/presentation/widgets/supervisor_change_widgets.dart' show PuNominationsPage;
+import '../features/fypms/presentation/widgets/supervisor_change_widgets.dart'
+    show CoordinatorLettersPage, PuNominationsPage;
 import '../features/fypms/presentation/pages/student_progress_page.dart';
 import '../features/fypms/presentation/pages/student_record_detail_page.dart';
 import '../features/fypms/presentation/pages/student_records_page.dart';
@@ -88,6 +89,7 @@ import '../features/junior_project_guide/presentation/pages/similar_projects_pag
 import 'widgets/admin_shell.dart';
 import 'widgets/fypms_shell.dart';
 import 'widgets/public_shell.dart';
+import '../features/portal/presentation/pages/portal_home_page.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
   // Re-run the redirect guards whenever the signed-in user changes —
@@ -119,8 +121,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ShellRoute(
         builder: (context, state, child) => PublicShell(child: child),
         routes: [
+          // The portal: Exhibition, CSP600 and CSP650 side by side.
           GoRoute(
             path: '/',
+            builder: (context, state) => const PortalHomePage(),
+          ),
+          // The exhibition's own home (was "/").
+          GoRoute(
+            path: '/expo',
             builder: (context, state) => const HomePage(),
           ),
           GoRoute(
@@ -217,7 +225,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       // STANDALONE ADMIN ROUTE (No Shell NavBar)
       // -------------------------------------------------------------
       GoRoute(
-        path: '/admin/sign-in',
+        path: kSignInPath,
+        builder: (context, state) => const SignInPage(),
+      ),
+      // Old address; resolveRouterRedirect forwards it to /sign-in.
+      GoRoute(
+        path: kLegacySignInPath,
         builder: (context, state) => const SignInPage(),
       ),
       // Password-recovery email landing (G-32). Outside /admin so the admin
@@ -536,6 +549,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             path: '/fypms/coordinator/audit',
             builder: (context, state) => const CoordinatorAuditPage(),
           ),
+          GoRoute(
+            path: '/fypms/coordinator/letters',
+            builder: (context, state) => const CoordinatorLettersPage(),
+          ),
         ],
       ),
     ],
@@ -647,7 +664,8 @@ class RouteTitleObserver extends NavigatorObserver {
 
   static String _titleForPath(String path) {
     String t(String s) => '$s · FYP Expo Hub';
-    if (path == '/') return 'FYP Expo Hub — FSKM FYP Exhibition';
+    if (path == '/') return 'FYP Expo Hub — FSKM Final Year Project Portal';
+    if (path == '/expo') return t('FYP Exhibition');
     if (path == '/info') return t('Exhibition Info');
     if (path == '/schedule') return t('Schedule');
     if (path == '/booths') return t('Booths');
@@ -660,14 +678,14 @@ class RouteTitleObserver extends NavigatorObserver {
       return t('My Visits');
     }
     if (path == '/lecturer' || path.startsWith('/lecturer/')) {
-      return t('Lecturer Portal');
+      return t('Find by Lecturer');
     }
     if (path == '/faq') return t('FAQ');
     if (path == '/privacy') return t('Privacy Policy');
     if (path == '/archive' || path.startsWith('/archive/')) return t('Past Exhibitions');
     if (path == '/reset-password') return t('Reset Password');
     if (path == '/admin') return t('Admin Dashboard');
-    if (path == '/admin/sign-in') return t('Sign In');
+    if (path == '/sign-in' || path == '/admin/sign-in') return t('Sign In');
     if (path.startsWith('/admin/')) return t('Admin · ${_segmentLabel(path)}');
     if (path == '/fypms') return t('FYPMS');
     if (path.startsWith('/fypms')) return t('FYPMS · ${_segmentLabel(path)}');

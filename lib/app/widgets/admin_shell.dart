@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher_string.dart';
 import '../../core/supabase/supabase_client_provider.dart';
 import '../theme/theme.dart';
 import 'feedback_form_widget.dart';
 import '../../features/admin_auth/presentation/widgets/my_account_dialog.dart';
 
-void _goToPublicPortal() {
-  launchUrlString('https://fskmjasinfypexhibition.site/');
-}
+/// Back to the portal home in the same tab (it used to open the public site
+/// as an external link).
+void _goToPublicPortal(BuildContext context) => GoRouter.of(context).go('/');
 
 class AdminShell extends ConsumerWidget {
   final Widget child;
@@ -144,7 +143,7 @@ class _AdminSidebar extends StatelessWidget {
                 _buildSidebarItem(context, 'Lecturer Assignments', Icons.assignment_ind, '/admin/assignments'),
                 _buildSidebarItem(context, 'Announcements', Icons.campaign, '/admin/announcements'),
                 _buildSidebarItem(context, 'Feedback', Icons.feedback_outlined, '/admin/feedback'),
-                _buildSidebarItem(context, 'Student Visits', Icons.visibility, '/admin/visits'),
+                _buildSidebarItem(context, 'Booth Visits', Icons.visibility, '/admin/visits'),
                 _buildSidebarItem(context, 'My Visits (Lecturer)', Icons.person_pin, '/lecturer/visits'),
                 _buildSidebarItem(context, 'Award Winners', Icons.emoji_events, '/admin/awards'),
                 _buildSidebarItem(context, 'Import Master File', Icons.file_upload, '/admin/imports'),
@@ -164,10 +163,10 @@ class _AdminSidebar extends StatelessWidget {
             child: ListTile(
               leading: const Icon(Icons.arrow_back, color: Colors.white70, size: 20),
               title: Text(
-                'Back to Public Portal',
+                'Back to Portal',
                 style: DesignSystem.bodySm.copyWith(color: Colors.white70),
               ),
-              onTap: _goToPublicPortal,
+              onTap: () => _goToPublicPortal(context),
               shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
               dense: true,
             ),
@@ -243,7 +242,7 @@ class _AdminDrawer extends StatelessWidget {
                   _buildDrawerItem(context, 'Lecturer Assignments', Icons.assignment_ind, '/admin/assignments'),
                   _buildDrawerItem(context, 'Announcements', Icons.campaign, '/admin/announcements'),
                   _buildDrawerItem(context, 'Feedback', Icons.feedback_outlined, '/admin/feedback'),
-                  _buildDrawerItem(context, 'Student Visits', Icons.visibility, '/admin/visits'),
+                  _buildDrawerItem(context, 'Booth Visits', Icons.visibility, '/admin/visits'),
                   _buildDrawerItem(context, 'My Visits (Lecturer)', Icons.person_pin, '/lecturer/visits'),
                   _buildDrawerItem(context, 'Award Winners', Icons.emoji_events, '/admin/awards'),
                   _buildDrawerItem(context, 'Import Master File', Icons.file_upload, '/admin/imports'),
@@ -276,12 +275,13 @@ class _AdminDrawer extends StatelessWidget {
               child: ListTile(
                 leading: const Icon(Icons.arrow_back, color: Colors.white70, size: 20),
                 title: Text(
-                  'Back to Public Portal',
+                  'Back to Portal',
                   style: DesignSystem.bodySm.copyWith(color: Colors.white70),
                 ),
                 onTap: () {
+                  final router = GoRouter.of(context);
                   Navigator.pop(context);
-                  _goToPublicPortal();
+                  router.go('/');
                 },
                 shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
                 dense: true,

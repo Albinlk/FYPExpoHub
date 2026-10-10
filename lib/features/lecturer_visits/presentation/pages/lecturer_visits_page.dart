@@ -8,6 +8,8 @@ import '../../../../core/domain/models/student_visit.dart';
 import '../../../../core/supabase/supabase_client_provider.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/widgets/project_card.dart';
+import '../../../../core/widgets/async_state.dart';
+import '../../../../core/widgets/page_heading.dart';
 
 class LecturerVisitsPage extends ConsumerStatefulWidget {
   const LecturerVisitsPage({super.key});
@@ -90,7 +92,7 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('My Visits', style: DesignSystem.pageTitle(context).copyWith(color: DesignSystem.primary)),
+                    PageHeading('My Visits'),
                     const SizedBox(height: DesignSystem.spaceXs),
                     Text(
                       'Welcome, $displayName',
@@ -165,8 +167,12 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
               ),
             ),
             const SizedBox(height: DesignSystem.spaceLg),
-            if (filteredAssignments.isEmpty)
-              _buildEmptyState(_searchController.text.isNotEmpty || _roleFilter != 'All' || _statusFilter != 'All')
+            // The lists above are derived from these; until both have loaded an
+            // empty list means "not known yet", not "nothing to visit".
+            if (!ref.watch(allAssignmentsProvider).hasValue || !ref.watch(allVisitsProvider).hasValue)
+              _buildLoadState()
+            else if (filteredAssignments.isEmpty)
+              _buildEmptyState(_hasFilters)
             else ...[
               Text(
                 '${filteredAssignments.length} ${filteredAssignments.length == 1 ? 'project' : 'projects'} found',
@@ -218,7 +224,7 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
               ),
               const SizedBox(height: DesignSystem.spaceLg),
               ElevatedButton(
-                onPressed: () => context.push('/admin/sign-in'),
+                onPressed: () => context.push('/sign-in'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: DesignSystem.primary,
                   foregroundColor: DesignSystem.onPrimary,
@@ -234,6 +240,22 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
     );
   }
 
+  bool get _hasFilters =>
+      _searchController.text.isNotEmpty || _roleFilter != 'All' || _statusFilter != 'All' || _dayFilter != 'All';
+
+  Widget _buildLoadState() {
+    final failure = ref.watch(allAssignmentsProvider).error ?? ref.watch(allVisitsProvider).error;
+    if (failure == null) return const AsyncLoadingView(what: 'your visits');
+    return AsyncErrorView(
+      error: failure,
+      what: 'your visits',
+      onRetry: () {
+        ref.invalidate(allAssignmentsProvider);
+        ref.invalidate(allVisitsProvider);
+      },
+    );
+  }
+
   Widget _buildEmptyState(bool hasFilters) {
     return Center(
       child: Padding(
@@ -241,15 +263,36 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
         child: Column(
           children: [
             Icon(
-              hasFilters ? Icons.search_off : Icons.check_circle_outline,
+              hasFilters ? Icons.search_off : Icons.assignment_outlined,
               size: 64,
-              color: DesignSystem.outlineVariant,
+              color: DesignSystem.onSurfaceVariant,
             ),
             const SizedBox(height: DesignSystem.spaceMd),
             Text(
-              hasFilters ? 'No projects found.' : 'All projects have been visited!',
+              // No filters and no rows means no assignments at all, not "all visited".
+              hasFilters ? 'No projects match these filters.' : 'You have no projects assigned yet.',
+              textAlign: TextAlign.center,
               style: DesignSystem.bodyMd.copyWith(color: DesignSystem.onSurfaceVariant),
             ),
+            if (hasFilters) ...[
+              const SizedBox(height: DesignSystem.spaceSm),
+              OutlinedButton(
+                onPressed: () => setState(() {
+                  _searchController.clear();
+                  _roleFilter = 'All';
+                  _statusFilter = 'All';
+                  _dayFilter = 'All';
+                }),
+                child: const Text('Clear Filters'),
+              ),
+            ] else ...[
+              const SizedBox(height: DesignSystem.spaceXs),
+              Text(
+                'Ask the exhibition coordinator if you expected to see projects here.',
+                textAlign: TextAlign.center,
+                style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant),
+              ),
+            ],
           ],
         ),
       ),

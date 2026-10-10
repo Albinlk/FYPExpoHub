@@ -9,6 +9,7 @@ import '../../../../core/state/state_providers.dart';
 import '../../../../core/widgets/collapsible_filter_panel.dart';
 import '../../../../core/widgets/project_card.dart';
 import '../../../../core/utils/url_state.dart';
+import '../../../../core/widgets/page_heading.dart';
 
 class ProjectsPage extends ConsumerStatefulWidget {
   const ProjectsPage({super.key});
@@ -163,14 +164,7 @@ class _ProjectsPageState extends ConsumerState<ProjectsPage> with UrlStateSync<P
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: Text(
-                            'Project Catalogue',
-                            style: DesignSystem.pageTitle(context).copyWith(
-                              color: DesignSystem.primary,
-                            ),
-                          ),
-                        ),
+                        const Expanded(child: PageHeading('Project Catalogue')),
                         IconButton(
                           tooltip: 'Refresh projects',
                           onPressed: () =>

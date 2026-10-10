@@ -8,6 +8,7 @@ import '../../../../core/supabase/fypms_rpc_service.dart';
 import '../../../../core/widgets/async_state.dart';
 import '../../../../core/widgets/admin_actions.dart';
 import '../../../../core/layout/responsive.dart';
+import '../../../../core/widgets/app_dialog.dart';
 
 /// Coordinator rubric editor (backlog U4). Saving creates a new version;
 /// past evaluations keep the version they were scored with.
@@ -32,8 +33,11 @@ class CoordinatorRubricsPage extends ConsumerWidget {
     return Scaffold(
       backgroundColor: DesignSystem.background,
       appBar: AppBar(
-        backgroundColor: DesignSystem.primary,
-        title: Text('Rubrics', style: DesignSystem.h3.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+        backgroundColor: DesignSystem.surfaceContainerLowest,
+        foregroundColor: DesignSystem.primary,
+        surfaceTintColor: Colors.transparent,
+        shape: const Border(bottom: BorderSide(color: DesignSystem.outlineVariant)),
+        title: Text('Rubrics', style: DesignSystem.h3.copyWith(color: DesignSystem.primary, fontWeight: FontWeight.bold)),
       ),
       body: rubrics.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -57,7 +61,12 @@ class CoordinatorRubricsPage extends ConsumerWidget {
                       key: Key('edit-rubric-${r.formCode}'),
                       tooltip: 'Edit rubric',
                       icon: const Icon(Icons.edit_outlined),
-                      onPressed: () => showDialog<void>(context: context, builder: (_) => RubricEditorDialog(rubric: r)),
+                      // Not dismissed by a stray tap outside: edits would be lost.
+                      onPressed: () => showDialog<void>(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (_) => RubricEditorDialog(rubric: r),
+                      ),
                     ),
                   ),
                 ),
@@ -124,6 +133,21 @@ class _RubricEditorDialogState extends ConsumerState<RubricEditorDialog> {
   late final bool _hasClo = widget.rubric.criteria.any((c) => (c['clo'] as String?)?.isNotEmpty == true);
   bool _busy = false;
   String? _error;
+
+  /// Everything the user can edit, so leaving can ask "Discard changes?" only
+  /// when something actually changed.
+  String _snapshot() => [
+        _name.text,
+        for (final r in _rows) '${r.label.text}|${r.weight.text}|${r.clo.text}|${r.supervisorOnly}',
+        for (final e in _shares.entries) '${e.key}=${e.value.text}',
+      ].join(' ;; ');
+  late final String _initialSnapshot;
+
+  @override
+  void initState() {
+    super.initState();
+    _initialSnapshot = _snapshot(); // before any edit
+  }
 
   @override
   void dispose() {
@@ -218,6 +242,13 @@ class _RubricEditorDialogState extends ConsumerState<RubricEditorDialog> {
 
   @override
   Widget build(BuildContext context) {
+    return DirtyGuard(
+      isDirty: () => !_busy && _snapshot() != _initialSnapshot,
+      child: _buildDialog(context),
+    );
+  }
+
+  Widget _buildDialog(BuildContext context) {
     return AlertDialog(
       title: Text('Edit ${widget.rubric.formCode} rubric'),
       content: SizedBox(

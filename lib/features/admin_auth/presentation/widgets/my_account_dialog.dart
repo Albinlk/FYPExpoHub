@@ -171,12 +171,17 @@ class _MyAccountDialogState extends ConsumerState<MyAccountDialog> {
             children: [
               Text(email, style: DesignSystem.bodySm),
               const SizedBox(height: DesignSystem.spaceMd),
-              Text('Display name', style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.w600)),
-              const SizedBox(height: DesignSystem.spaceSm),
               TextField(
                 key: const Key('account-name'),
                 controller: _name,
-                decoration: const InputDecoration(border: OutlineInputBorder(), isDense: true),
+                autofillHints: const [AutofillHints.name],
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => _busy ? null : _saveName(),
+                decoration: const InputDecoration(
+                  labelText: 'Display name',
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                ),
               ),
               if (_nameMessage != null) Padding(padding: const EdgeInsets.only(top: 4), child: Text(_nameMessage!)),
               Align(
@@ -186,10 +191,10 @@ class _MyAccountDialogState extends ConsumerState<MyAccountDialog> {
               const Divider(),
               Text('Change password', style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.w600)),
               const SizedBox(height: DesignSystem.spaceSm),
-              for (final (key, label, c) in [
-                ('account-current', 'Current password', _current),
-                ('account-new', 'New password', _next),
-                ('account-confirm', 'Confirm new password', _confirm),
+              for (final (key, label, c, hint) in [
+                ('account-current', 'Current password', _current, AutofillHints.password),
+                ('account-new', 'New password', _next, AutofillHints.newPassword),
+                ('account-confirm', 'Confirm new password', _confirm, AutofillHints.newPassword),
               ]) ...[
                 TextField(
                   key: Key(key),
@@ -197,6 +202,8 @@ class _MyAccountDialogState extends ConsumerState<MyAccountDialog> {
                   obscureText: true,
                   autocorrect: false,
                   enableSuggestions: false,
+                  // Lets a password manager fill the current one and offer to save the new one.
+                  autofillHints: [hint],
                   decoration: InputDecoration(labelText: label, border: const OutlineInputBorder(), isDense: true),
                 ),
                 const SizedBox(height: DesignSystem.spaceSm),

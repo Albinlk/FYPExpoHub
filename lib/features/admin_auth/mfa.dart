@@ -134,7 +134,7 @@ class _MfaChallengeViewState extends ConsumerState<MfaChallengeView> {
   Future<void> _signOut() async {
     await ref.read(supabaseClientProvider).auth.signOut();
     ref.invalidate(currentAuthUserProvider);
-    if (mounted) context.go('/admin/sign-in');
+    if (mounted) context.go('/sign-in');
   }
 
   @override

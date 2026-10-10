@@ -4,6 +4,13 @@ import '../core/state/fypms_state_providers.dart';
 import '../core/state/state_providers.dart';
 import '../core/supabase/supabase_client_provider.dart';
 
+/// The one sign-in page for everyone (students, lecturers, coordinators and
+/// admins). It used to live at [kLegacySignInPath], which now redirects here.
+const kSignInPath = '/sign-in';
+
+/// Old sign-in address, kept so bookmarks and emailed links still work.
+const kLegacySignInPath = '/admin/sign-in';
+
 /// Resolves the redirect target for [goRouterProvider], if any. Each
 /// authorization concern (FYPMS auth/workspace gating, the admin-domain
 /// root redirect, the admin path gate, and the post-login redirect) is its
@@ -12,7 +19,11 @@ Future<String?> resolveRouterRedirect(Ref ref, String location) async {
   final uri = Uri.parse(location);
   final path = uri.path;
   final user = ref.read(currentAuthUserProvider);
-  final isLoggingIn = path == '/admin/sign-in';
+  if (path == kLegacySignInPath) {
+    return Uri(path: kSignInPath, queryParameters: uri.queryParameters.isEmpty ? null : uri.queryParameters)
+        .toString();
+  }
+  final isLoggingIn = path == kSignInPath;
   final isAdminPath = path.startsWith('/admin');
   final isFypmsPath = path.startsWith('/fypms');
   final isAdminDomain = Uri.base.host == 'admin.fskmjasinfypexhibition.site';
@@ -47,7 +58,7 @@ Future<String?> resolveRouterRedirect(Ref ref, String location) async {
 /// The sign-in page, remembering where the user was headed so they land
 /// back there afterwards instead of on a generic dashboard.
 String signInRedirect(String location) =>
-    Uri(path: '/admin/sign-in', queryParameters: {'from': location}).toString();
+    Uri(path: kSignInPath, queryParameters: {'from': location}).toString();
 
 /// [from] if it's a same-origin app path, else null. Rejects
 /// protocol-relative (`//evil.example`) and absolute URLs so the `from`
@@ -55,7 +66,8 @@ String signInRedirect(String location) =>
 String? safeReturnPath(String? from) {
   if (from == null || !from.startsWith('/') || from.startsWith('//')) return null;
   if (from.contains('://') || from.contains(r'\')) return null;
-  if (Uri.tryParse(from)?.path == '/admin/sign-in') return null;
+  final fromPath = Uri.tryParse(from)?.path;
+  if (fromPath == kSignInPath || fromPath == kLegacySignInPath) return null;
   return from;
 }
 
@@ -104,7 +116,7 @@ String? _adminDomainRootGuard({
   required User? user,
 }) {
   if (!isAdminDomain || path != '/') return null;
-  return user == null ? '/admin/sign-in' : '/admin';
+  return user == null ? kSignInPath : '/admin';
 }
 
 /// Any other `/admin/*` path requires a signed-in user with the admin role.
@@ -118,7 +130,7 @@ Future<String?> _adminPathGuard(
   }
   final isAdmin = await ref.read(isAdminProvider.future);
   if (!isAdmin) {
-    return '/admin/sign-in';
+    return kSignInPath;
   }
   return null;
 }

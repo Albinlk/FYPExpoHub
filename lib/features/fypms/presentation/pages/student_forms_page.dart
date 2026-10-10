@@ -20,7 +20,11 @@ class StudentFormsPage extends ConsumerWidget {
       builder: (context, ref, record) {
         final submissions = ref.watch(fypFormSubmissionsProvider(record.id));
         final qualified = ref.watch(fypSpecialEvaluationProvider(record.id)).value?.eligible ?? false;
-        final formCodes = fypmsFormCodesFor(applicationsOpen: applicationsOpen, qualified: qualified);
+        final formCodes = fypmsFormCodesFor(
+          applicationsOpen: applicationsOpen,
+          qualified: qualified,
+          courseCode: record.currentCourseCode,
+        );
         return Column(
           children: [
             if (record.currentCourseCode == 'CSP650' || qualified)
@@ -129,6 +133,8 @@ class StudentFormsPage extends ConsumerWidget {
       BuildContext context, WidgetRef ref, String fypRecordId, List<String> formCodes) {
     showDialog<void>(
       context: context,
+      // A stray tap outside must not throw away a half-written form.
+      barrierDismissible: false,
       builder: (_) => StudentFormDialog(fypRecordId: fypRecordId, formCodes: formCodes),
     );
   }

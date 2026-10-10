@@ -6,6 +6,7 @@ import '../../../../app/theme/theme.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/widgets/project_card.dart';
 import '../../../../core/utils/url_state.dart';
+import '../../../../core/widgets/page_heading.dart';
 
 class LecturerPage extends ConsumerStatefulWidget {
   const LecturerPage({super.key});
@@ -91,7 +92,7 @@ class _LecturerPageState extends ConsumerState<LecturerPage> with UrlStateSync<L
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Lecturer Portal', style: DesignSystem.pageTitle(context).copyWith(color: DesignSystem.primary)),
+                  PageHeading('Find Projects by Lecturer'),
                   const SizedBox(height: DesignSystem.spaceSm),
                   Text(
                     'Search for projects assigned to you as a supervisor or examiner.',

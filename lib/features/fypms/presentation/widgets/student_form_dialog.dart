@@ -7,6 +7,7 @@ import '../../../../core/state/state_providers.dart';
 import '../../../../core/supabase/fypms_rpc_service.dart';
 import '../../../../core/widgets/admin_actions.dart';
 import '../../../../core/layout/responsive.dart';
+import '../../../../core/widgets/app_dialog.dart';
 
 /// Student: choose a form and answer its questions (backlog U1; replaces
 /// the raw-JSON payload box). Answers are checked before submitting.
@@ -66,8 +67,15 @@ class _StudentFormDialogState extends ConsumerState<StudentFormDialog> {
     }
   }
 
+  /// Any typed answer counts as work that Back / Esc should not silently drop.
+  bool get _dirty => !_busy && _controllers.values.any((c) => c.text.trim().isNotEmpty);
+
   @override
   Widget build(BuildContext context) {
+    return DirtyGuard(isDirty: () => _dirty, child: _buildDialog(context));
+  }
+
+  Widget _buildDialog(BuildContext context) {
     final def = _def;
     final ownPage = [for (final c in widget.formCodes) if (kFormsWithOwnPage.containsKey(c)) c];
     return AlertDialog(

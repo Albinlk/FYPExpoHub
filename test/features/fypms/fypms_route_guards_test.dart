@@ -91,16 +91,24 @@ void main() {
         (tester) async {
       expect(
         await _resolve(tester, target: '/fypms/student', user: null),
-        '/admin/sign-in',
+        '/sign-in',
       );
       expect(
         await _resolve(tester, target: '/fypms/coordinator/assignments', user: null),
-        '/admin/sign-in',
+        '/sign-in',
       );
     });
   });
 
   group('FYPMS role homes', () {
+    testWidgets('coordinator can open Appointment Letters (not bounced from the PU area)', (tester) async {
+      expect(
+        await _resolve(tester,
+            target: '/fypms/coordinator/letters', user: _user('c@fypms.test'), roles: const ['fyp_coordinator']),
+        '/fypms/coordinator/letters',
+      );
+    });
+
     testWidgets('coordinator lands on /fypms/coordinator', (tester) async {
       expect(
         await _resolve(

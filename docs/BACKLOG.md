@@ -66,11 +66,31 @@ From a Web Interface Guidelines audit of the Flutter web app, then a mobile pass
 | [x] | A6 | Web shell: splash error and Reload, manifest portrait lock removed, admin-host framing guard, service-worker timeout, per-page titles, A4 print CSS for letters (#53) | M |
 | [x] | A7 | Mobile: text scale capped at 1.3×, 48px tap targets, 24 dialogs fit and scroll, app bar titles fit, feedback and Sign Out in the menu on phones, grids scale with text, phone smoke tests and checklist in `TESTING.md` (#53) | H |
 | [x] | A8 | Booths, projects, lecturer and schedule filters kept in the address bar (shareable, survive refresh) (#54) | M |
-| [ ] | A9 | Junior Guide filters in the address bar (same `UrlStateSync` mixin) | L |
-| [ ] | A10 | Heading semantics, unsaved-changes guard on long forms (rubrics, student forms), `autofillHints` beyond the sign-in screens | L |
-| [ ] | A11 | Undo snackbar after "Mark as Visited" (needs the RPC to return the visit id) | L |
-| [ ] | A12 | Remaining `.value ?? []` sites that hide load errors (about 28; the six that mattered were fixed in A1) | L |
-| [ ] | A13 | Home banner: the console shows `https://assets/images/banner.jpg` blocked by the content-security policy, so the image path looks wrong | L |
+| [x] | A9 | Junior Guide filters in the address bar (same `UrlStateSync` mixin) (#57) | L |
+| [x] | A10 | Heading semantics, unsaved-changes guard on long forms (rubrics, student forms), `autofillHints` beyond the sign-in screens (#57) | L |
+| [x] | A11 | Undo snackbar after "Mark as Visited" (needs the RPC to return the visit id) (#57) | L |
+| [x] | A12 | Remaining `.value ?? []` sites that hide load errors (about 28; the six that mattered were fixed in A1) (#57) | L |
+| [x] | A13 | Home banner: the console shows `https://assets/images/banner.jpg` blocked by the content-security policy, so the image path looks wrong (#57) | L |
+
+## 6. Portal: Exhibition, CSP600 and CSP650 (10 Oct 2026)
+
+From a cross-check against the FSKM handbook (*Essentials of Computing Sciences: Project Administration*, 4th ed., 2022; ethics/REC section not in scope). The workflow engine already matches the handbook (forms F1–F16, marks splits, F14 gate, F12, similarity ≤ 30%); the gaps were the site's shape and a few handbook duties.
+
+| Done | # | Item | Pri |
+|---|---|---|---|
+| [x] | P1 | Portal landing at `/` with the Exhibition, CSP600 and CSP650; exhibition home at `/expo`; one sign-in at `/sign-in` (#57) | H |
+| [x] | P2 | Course-aware CSP600 / CSP650: forms list, report type, student menu and CSP lecturer pages follow the course; `submit_fyp_form` refuses another course's form (migration `20261010000001`, not yet applied to live) (#57) | H |
+| [x] | P3 | Coordinators can open Appointment Letters; light page headers inside FYPMS; consistent sign-out and cross-links (#57) | M |
+| [ ] | P4 | Apply migration `20261010000001_course_scoped_forms.sql` to the live Supabase project | H |
+| [ ] | P5 | Link each exhibition to its semester (`events.academic_semester_id`); Expo publishing lists only that semester's CSP650 records | M |
+| [ ] | P6 | On publish, create booth-visit assignments from the FYPMS supervisor / examiner (no name matching); carry examiner and booth into the project | M |
+| [ ] | P7 | Record exhibition attendance on the FYPMS record (feeds F14 criterion 3; handbook: no presentation = F) | M |
+| [ ] | P8 | CSP650 student "My exhibition page" (published project, booth, day, F10 status) | L |
+| [ ] | P9 | F9 progress presentation session type (handbook Table 2.1 #39) | M |
+| [ ] | P10 | CSP600 lecturer: examiner assignment UI (#19) and "hand over cohort" to CSP650 (#29) | M |
+| [ ] | P11 | Milestone templates per offering (the handbook sets no week timeline, so dates stay admin-set) | L |
+| [ ] | P12 | Supervisor approval step after F12; deliverables checklist matching the handbook (report .pdf/.doc, slides, poster, raw data, system, setup, .apk/.exe) | L |
+| [ ] | P13 | Nominations: CV upload and "not a relative / close friend" declaration (App. N) | L |
 
 ## Suggested order
 

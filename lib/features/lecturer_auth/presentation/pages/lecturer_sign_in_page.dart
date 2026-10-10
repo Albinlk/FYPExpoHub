@@ -16,7 +16,7 @@ class _LecturerSignInPageState extends ConsumerState<LecturerSignInPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) context.go('/admin/sign-in');
+      if (mounted) context.go('/sign-in');
     });
   }
 
