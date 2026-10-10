@@ -7,6 +7,7 @@ import '../../../../core/supabase/supabase_client_provider.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import '../../../../core/utils/fypms_format.dart';
 import '../../../../core/widgets/async_state.dart';
+import '../widgets/my_exhibition_card.dart';
 
 class StudentDashboardPage extends ConsumerWidget {
   const StudentDashboardPage({super.key});
@@ -50,6 +51,7 @@ class StudentDashboardPage extends ConsumerWidget {
                   _EmptyState(onCreate: () => context.go('/fypms/student/records'))
                 else
                   ...list.map((record) => _RecordCard(record: record)),
+                for (final record in list) MyExhibitionCard(record: record),
               ],
             );
           },
