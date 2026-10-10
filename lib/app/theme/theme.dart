@@ -56,7 +56,7 @@ class DesignSystem {
     fontSize: 40.0,
     fontWeight: FontWeight.bold,
     height: 1.2,
-    letterSpacing: -0.02,
+    letterSpacing: -0.02 * 40.0, // -0.02em; Flutter letterSpacing is in logical pixels
   );
 
   static const TextStyle h1Mobile = TextStyle(
@@ -64,6 +64,7 @@ class DesignSystem {
     fontSize: 32.0,
     fontWeight: FontWeight.bold,
     height: 1.2,
+    letterSpacing: -0.02 * 32.0,
   );
 
   /// Page heading: desktop h1, a 28px heading on phones so titles like

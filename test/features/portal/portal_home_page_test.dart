@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:fyp_expo_hub/core/state/state_providers.dart';
 import 'package:fyp_expo_hub/core/supabase/supabase_client_provider.dart';
 import 'package:fyp_expo_hub/features/portal/presentation/pages/portal_home_page.dart';
 
@@ -30,6 +31,7 @@ void main() {
         GoRoute(path: '/', builder: (_, _) => const Scaffold(body: PortalHomePage())),
         GoRoute(path: '/expo', builder: (_, _) => page('expo')),
         GoRoute(path: '/projects', builder: (_, _) => page('projects')),
+        GoRoute(path: '/awards', builder: (_, _) => page('awards')),
         GoRoute(path: '/projects/junior-guide', builder: (_, _) => page('guide')),
         GoRoute(path: '/sign-in', builder: (_, _) => page('sign-in')),
         GoRoute(path: '/fypms', builder: (_, _) => page('fypms')),
@@ -57,9 +59,21 @@ void main() {
       expect(find.text('FYP Exhibition'), findsOneWidget);
       expect(find.text('CSP600 · Project Formulation'), findsOneWidget);
       expect(find.text('CSP650 · Final Year Project'), findsOneWidget);
-      expect(find.byKey(const Key('portal-sign-in')), findsOneWidget);
+      expect(find.byKey(const Key('portal-sign-in-note')), findsOneWidget);
     });
   }
+
+  testWidgets('after the exhibition, its card leads to the winners', (tester) async {
+    final router = await pump(tester, const Size(1280, 900));
+    final event = ProviderScope.containerOf(tester.element(find.byType(PortalHomePage))).read(eventProvider);
+    if (!DateTime.now().isAfter(event.endAt)) return; // only meaningful once held
+    final winners = find.text('See ${event.startAt.year} Winners');
+    await tester.ensureVisible(winners);
+    await tester.pumpAndSettle();
+    await tester.tap(winners);
+    await tester.pumpAndSettle();
+    expect(router.routerDelegate.currentConfiguration.uri.path, '/awards');
+  });
 
   testWidgets('the exhibition card opens /expo', (tester) async {
     final router = await pump(tester, const Size(1280, 900));
@@ -83,7 +97,7 @@ void main() {
 
   testWidgets('signed in, a course card goes straight to the workspace', (tester) async {
     final router = await pump(tester, const Size(1280, 900), signedIn: user());
-    expect(find.byKey(const Key('portal-sign-in')), findsNothing);
+    expect(find.byKey(const Key('portal-sign-in-note')), findsNothing);
     await tester.ensureVisible(find.text('Go to CSP650'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Go to CSP650'));
