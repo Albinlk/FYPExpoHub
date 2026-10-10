@@ -81,15 +81,15 @@ From a cross-check against the FSKM handbook (*Essentials of Computing Sciences:
 | [x] | P1 | Portal landing at `/` with the Exhibition, CSP600 and CSP650; exhibition home at `/expo`; one sign-in at `/sign-in` (#57) | H |
 | [x] | P2 | Course-aware CSP600 / CSP650: forms list, report type, student menu and CSP lecturer pages follow the course; `submit_fyp_form` refuses another course's form (migration `20261010000001`, not yet applied to live) (#57) | H |
 | [x] | P3 | Coordinators can open Appointment Letters; light page headers inside FYPMS; consistent sign-out and cross-links (#57) | M |
-| [ ] | P4 | Apply migration `20261010000001_course_scoped_forms.sql` to the live Supabase project | H |
-| [ ] | P5 | Link each exhibition to its semester (`events.academic_semester_id`); Expo publishing lists only that semester's CSP650 records | M |
-| [ ] | P6 | On publish, create booth-visit assignments from the FYPMS supervisor / examiner (no name matching); carry examiner and booth into the project | M |
-| [ ] | P7 | Record exhibition attendance on the FYPMS record (feeds F14 criterion 3; handbook: no presentation = F) | M |
-| [ ] | P8 | CSP650 student "My exhibition page" (published project, booth, day, F10 status) | L |
-| [ ] | P9 | F9 progress presentation session type (handbook Table 2.1 #39) | M |
-| [ ] | P10 | CSP600 lecturer: examiner assignment UI (#19) and "hand over cohort" to CSP650 (#29) | M |
-| [ ] | P11 | Milestone templates per offering (the handbook sets no week timeline, so dates stay admin-set) | L |
-| [ ] | P12 | Supervisor approval step after F12; deliverables checklist matching the handbook (report .pdf/.doc, slides, poster, raw data, system, setup, .apk/.exe) | L |
+| [x] | P4 | Applied migrations `20261010000001`–`20261010000004` (course-scoped forms, progress sessions, exhibition ↔ CSP650 link, supervisor final approval) to the live Supabase project (10 Oct 2026) | H |
+| [x] | P5 | Each exhibition belongs to a CSP650 cohort (`events.academic_semester_id`, picker in the event form); Expo publishing lists and accepts only that semester's CSP650 records (migration `20261010000003`) | M |
+| [x] | P6 | Publishing creates booth-visit assignments from the FYPMS supervisor / examiner (no name matching) and carries the examiner into the project (migration `20261010000003`) | M |
+| [x] | P7 | Exhibition attendance on the FYPMS record: already present as `exhibition_visit_recorded` in the F14 dialog (criterion 3) | M |
+| [x] | P8 | CSP650 student "My Exhibition" card on the dashboard: publication status, booth, day and a link to the project page | L |
+| [x] | P9 | F9 progress presentation session type (handbook Table 2.1 #39) (migration `20261010000002`) | M |
+| [x] | P10 | CSP600 lecturer "Examiners & Handover" page: assign examiners (#19) and hand the cohort over to CSP650 (#29) | M |
+| [x] | P11 | Copy one student's milestones to every student in the same course (the handbook sets no week timeline, so dates stay lecturer-set) | L |
+| [x] | P12 | Supervisor approves the final report after F12 (`approve_final_report`, migration `20261010000004`); deliverables checklist already matched the handbook | L |
 | [ ] | P13 | Nominations: CV upload and "not a relative / close friend" declaration (App. N) | L |
 
 ## Suggested order

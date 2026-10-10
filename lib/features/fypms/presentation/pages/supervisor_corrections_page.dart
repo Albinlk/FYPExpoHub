@@ -9,6 +9,9 @@ import '../widgets/fypms_file_link.dart';
 import '../widgets/fypms_loading_widget.dart';
 import '../../../../core/widgets/async_state.dart';
 import '../../../../core/widgets/admin_actions.dart';
+import '../../../../core/widgets/busy_button.dart';
+import '../../../../core/state/state_providers.dart';
+import '../../../../core/supabase/fypms_rpc_service.dart';
 
 class SupervisorCorrectionsPage extends ConsumerWidget {
   const SupervisorCorrectionsPage({super.key});
@@ -125,6 +128,7 @@ class _RecordCorrectionsSection extends ConsumerWidget {
             );
           },
         ),
+        if (record.currentCourseCode == 'CSP650') _FinalApproval(record: record, items: corrections.value),
         const SizedBox(height: DesignSystem.spaceLg),
       ],
     );
@@ -330,6 +334,103 @@ class _RecordCorrectionsSection extends ConsumerWidget {
           },
         );
       },
+    );
+  }
+}
+
+/// FSKM handbook (Table 2.1 #50): once every correction is confirmed (F12), the
+/// main supervisor signs the Supervisor Approval page for the final report.
+class _FinalApproval extends ConsumerStatefulWidget {
+  const _FinalApproval({required this.record, required this.items});
+
+  final FypRecord record;
+  final List<dynamic>? items;
+
+  @override
+  ConsumerState<_FinalApproval> createState() => _FinalApprovalState();
+}
+
+class _FinalApprovalState extends ConsumerState<_FinalApproval> {
+  bool _busy = false;
+  String? _error;
+
+  Future<void> _approve() async {
+    final ok = await confirmAction(
+      context,
+      title: 'Approve the Final Report?',
+      message: 'This records your signature on the Supervisor Approval page: the corrections are done '
+          'and the final report can be bound and submitted.',
+      confirmLabel: 'Approve Final Report',
+    );
+    if (!ok || !mounted) return;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      await ref.read(supabaseRpcServiceProvider).approveFinalReport(fypRecordId: widget.record.id);
+      ref.invalidate(assignedFypRecordsProvider(null));
+      ref.invalidate(fypRecordsProvider);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Final report approved.')));
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _error = 'Could not approve: ${friendlyError(e)}');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final approvedAt = widget.record.supervisorApprovedAt;
+    final items = widget.items;
+    final open = items?.where((i) => i.status != 'confirmed' && i.status != 'closed').length;
+    return Card(
+      margin: const EdgeInsets.only(top: DesignSystem.spaceXs),
+      color: DesignSystem.surfaceContainerLow,
+      child: Padding(
+        padding: const EdgeInsets.all(DesignSystem.spaceSm),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  approvedAt != null ? Icons.verified : Icons.draw_outlined,
+                  color: approvedAt != null ? DesignSystem.tertiary : DesignSystem.primary,
+                ),
+                const SizedBox(width: DesignSystem.spaceSm),
+                Expanded(
+                  child: Text(
+                    approvedAt != null
+                        ? 'Final report approved on ${formatFypDate(approvedAt)}'
+                        : open == null
+                            ? 'Supervisor approval of the final report'
+                            : open == 0
+                                ? 'Corrections confirmed (F12). Ready for your approval.'
+                                : 'Approval opens once all $open open correction ${open == 1 ? 'item is' : 'items are'} confirmed (F12).',
+                    key: Key('final-approval-${widget.record.id}'),
+                    style: DesignSystem.bodySm.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                ),
+                if (approvedAt == null)
+                  BusyButton(
+                    label: 'Approve Final Report',
+                    busyLabel: 'Approving…',
+                    busy: _busy,
+                    onPressed: open == 0 ? _approve : null,
+                  ),
+              ],
+            ),
+            if (_error != null)
+              Semantics(
+                liveRegion: true,
+                child: Text(_error!, style: DesignSystem.bodySm.copyWith(color: DesignSystem.error)),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }

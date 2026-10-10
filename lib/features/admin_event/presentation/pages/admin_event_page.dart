@@ -7,6 +7,8 @@ import '../../../../core/utils/external_link.dart';
 import '../../../../core/utils/schedule_format.dart';
 import '../../../../core/widgets/admin_actions.dart';
 import '../widgets/exhibitions_section.dart';
+import '../../../../core/state/fypms_state_providers.dart';
+import '../../../../core/domain/models/fypms/academic_semester.dart';
 
 class AdminEventPage extends ConsumerStatefulWidget {
   const AdminEventPage({super.key});
@@ -29,6 +31,7 @@ class _AdminEventPageState extends ConsumerState<AdminEventPage> {
   final _heroController = TextEditingController();
   final _posterController = TextEditingController();
   String _status = 'active';
+  String? _semesterId;
   // FAQ rows being edited (question, answer controllers).
   final List<(TextEditingController, TextEditingController)> _faq = [];
   // Calendar days (Malaysia time) picked for the event; the saved instants
@@ -113,6 +116,7 @@ class _AdminEventPageState extends ConsumerState<AdminEventPage> {
     _heroController.text = event.heroImageUrl;
     _posterController.text = event.posterUrl;
     _status = _statuses.containsKey(event.status) ? event.status : 'active';
+    _semesterId = event.academicSemesterId;
     _clearFaq();
     for (final f in event.faqItems) {
       _addFaq(f);
@@ -192,6 +196,7 @@ class _AdminEventPageState extends ConsumerState<AdminEventPage> {
       heroImageUrl: _heroController.text.trim(),
       posterUrl: _posterController.text.trim(),
       status: _status,
+      academicSemesterId: _semesterId,
       faqItems: [
         for (final (q, a) in _faq)
           if (q.text.trim().isNotEmpty) FaqItem(question: q.text.trim(), answer: a.text.trim()),
@@ -437,6 +442,31 @@ class _AdminEventPageState extends ConsumerState<AdminEventPage> {
                         _dirty = true;
                       }),
                     ),
+                    _label('CSP650 Cohort'),
+                    // Ties the exhibition to the semester whose CSP650 students
+                    // exhibit, so Expo publishing offers only that cohort.
+                    Builder(builder: (context) {
+                      final semesters = ref.watch(fypmsSemestersProvider).value ?? const <AcademicSemester>[];
+                      final known = _semesterId == null || semesters.any((x) => x.id == _semesterId);
+                      return DropdownButtonFormField<String?>(
+                        key: ValueKey('event-semester-${_semesterId ?? 'none'}-${semesters.length}'),
+                        initialValue: known ? _semesterId : null,
+                        isExpanded: true,
+                        decoration: const InputDecoration(
+                          labelText: 'Semester',
+                          helperText: 'Whose CSP650 students exhibit at this event',
+                        ),
+                        items: [
+                          const DropdownMenuItem<String?>(value: null, child: Text('Not linked')),
+                          for (final x in semesters)
+                            DropdownMenuItem<String?>(value: x.id, child: Text('${x.code} — ${x.label}')),
+                        ],
+                        onChanged: (v) => setState(() {
+                          _semesterId = v;
+                          _dirty = true;
+                        }),
+                      );
+                    }),
                     const Divider(height: 40),
                     _faqEditor(),
                     const SizedBox(height: 24),

@@ -171,7 +171,7 @@ void main() {
           overrides: [
             fypExpoPublicationsProvider.overrideWith(
                 (ref) async => [_draftPublication()]),
-            fypRecordsProvider.overrideWith((ref) async => [_ownRecord()]),
+            fypRecordsProvider.overrideWith((ref) async => [_ownRecord().copyWith(currentCourseCode: 'CSP650')]),
             fypPublishedEventsProvider.overrideWith((ref) async => [
               {'id': 'event-1', 'title': 'Expo 2026'}
             ]),

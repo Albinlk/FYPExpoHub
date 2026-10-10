@@ -20,6 +20,9 @@ abstract class FypRecord with _$FypRecord {
     String? coSupervisorId,
     String? examinerId,
     String? previousRecordId,
+    /// When the main supervisor signed off the corrected final report (CSP650,
+    /// after F12). Null until approved, or before migration 20261010000004.
+    DateTime? supervisorApprovedAt,
     required String workflowStatus,
     required DateTime createdAt,
     required DateTime updatedAt,

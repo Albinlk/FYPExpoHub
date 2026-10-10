@@ -281,7 +281,8 @@ as String,
 /// @nodoc
 mixin _$Event {
 
- String get id; String get title; String get sessionLabel; DateTime get startAt; DateTime get endAt; String get dailyHours; String get venue; String get locationDetails; String? get mapUrl; String get description; List<String> get objectives; String get status; String get heroImageUrl; String get posterUrl; String get publicContactEmail; List<FaqItem> get faqItems; String get publicationStatus; DateTime get updatedAt; DateTime? get publishedAt;
+ String get id; String get title; String get sessionLabel; DateTime get startAt; DateTime get endAt; String get dailyHours; String get venue; String get locationDetails; String? get mapUrl; String get description; List<String> get objectives; String get status; String get heroImageUrl; String get posterUrl; String get publicContactEmail; List<FaqItem> get faqItems; String get publicationStatus; DateTime get updatedAt; DateTime? get publishedAt;/// The semester whose CSP650 cohort exhibits at this event (optional).
+ String? get academicSemesterId;
 /// Create a copy of Event
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -294,16 +295,16 @@ $EventCopyWith<Event> get copyWith => _$EventCopyWithImpl<Event>(this as Event, 
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Event&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.sessionLabel, sessionLabel) || other.sessionLabel == sessionLabel)&&(identical(other.startAt, startAt) || other.startAt == startAt)&&(identical(other.endAt, endAt) || other.endAt == endAt)&&(identical(other.dailyHours, dailyHours) || other.dailyHours == dailyHours)&&(identical(other.venue, venue) || other.venue == venue)&&(identical(other.locationDetails, locationDetails) || other.locationDetails == locationDetails)&&(identical(other.mapUrl, mapUrl) || other.mapUrl == mapUrl)&&(identical(other.description, description) || other.description == description)&&const DeepCollectionEquality().equals(other.objectives, objectives)&&(identical(other.status, status) || other.status == status)&&(identical(other.heroImageUrl, heroImageUrl) || other.heroImageUrl == heroImageUrl)&&(identical(other.posterUrl, posterUrl) || other.posterUrl == posterUrl)&&(identical(other.publicContactEmail, publicContactEmail) || other.publicContactEmail == publicContactEmail)&&const DeepCollectionEquality().equals(other.faqItems, faqItems)&&(identical(other.publicationStatus, publicationStatus) || other.publicationStatus == publicationStatus)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Event&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.sessionLabel, sessionLabel) || other.sessionLabel == sessionLabel)&&(identical(other.startAt, startAt) || other.startAt == startAt)&&(identical(other.endAt, endAt) || other.endAt == endAt)&&(identical(other.dailyHours, dailyHours) || other.dailyHours == dailyHours)&&(identical(other.venue, venue) || other.venue == venue)&&(identical(other.locationDetails, locationDetails) || other.locationDetails == locationDetails)&&(identical(other.mapUrl, mapUrl) || other.mapUrl == mapUrl)&&(identical(other.description, description) || other.description == description)&&const DeepCollectionEquality().equals(other.objectives, objectives)&&(identical(other.status, status) || other.status == status)&&(identical(other.heroImageUrl, heroImageUrl) || other.heroImageUrl == heroImageUrl)&&(identical(other.posterUrl, posterUrl) || other.posterUrl == posterUrl)&&(identical(other.publicContactEmail, publicContactEmail) || other.publicContactEmail == publicContactEmail)&&const DeepCollectionEquality().equals(other.faqItems, faqItems)&&(identical(other.publicationStatus, publicationStatus) || other.publicationStatus == publicationStatus)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt)&&(identical(other.academicSemesterId, academicSemesterId) || other.academicSemesterId == academicSemesterId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,id,title,sessionLabel,startAt,endAt,dailyHours,venue,locationDetails,mapUrl,description,const DeepCollectionEquality().hash(objectives),status,heroImageUrl,posterUrl,publicContactEmail,const DeepCollectionEquality().hash(faqItems),publicationStatus,updatedAt,publishedAt]);
+int get hashCode => Object.hashAll([runtimeType,id,title,sessionLabel,startAt,endAt,dailyHours,venue,locationDetails,mapUrl,description,const DeepCollectionEquality().hash(objectives),status,heroImageUrl,posterUrl,publicContactEmail,const DeepCollectionEquality().hash(faqItems),publicationStatus,updatedAt,publishedAt,academicSemesterId]);
 
 @override
 String toString() {
-  return 'Event(id: $id, title: $title, sessionLabel: $sessionLabel, startAt: $startAt, endAt: $endAt, dailyHours: $dailyHours, venue: $venue, locationDetails: $locationDetails, mapUrl: $mapUrl, description: $description, objectives: $objectives, status: $status, heroImageUrl: $heroImageUrl, posterUrl: $posterUrl, publicContactEmail: $publicContactEmail, faqItems: $faqItems, publicationStatus: $publicationStatus, updatedAt: $updatedAt, publishedAt: $publishedAt)';
+  return 'Event(id: $id, title: $title, sessionLabel: $sessionLabel, startAt: $startAt, endAt: $endAt, dailyHours: $dailyHours, venue: $venue, locationDetails: $locationDetails, mapUrl: $mapUrl, description: $description, objectives: $objectives, status: $status, heroImageUrl: $heroImageUrl, posterUrl: $posterUrl, publicContactEmail: $publicContactEmail, faqItems: $faqItems, publicationStatus: $publicationStatus, updatedAt: $updatedAt, publishedAt: $publishedAt, academicSemesterId: $academicSemesterId)';
 }
 
 
@@ -314,7 +315,7 @@ abstract mixin class $EventCopyWith<$Res>  {
   factory $EventCopyWith(Event value, $Res Function(Event) _then) = _$EventCopyWithImpl;
 @useResult
 $Res call({
- String id, String title, String sessionLabel, DateTime startAt, DateTime endAt, String dailyHours, String venue, String locationDetails, String? mapUrl, String description, List<String> objectives, String status, String heroImageUrl, String posterUrl, String publicContactEmail, List<FaqItem> faqItems, String publicationStatus, DateTime updatedAt, DateTime? publishedAt
+ String id, String title, String sessionLabel, DateTime startAt, DateTime endAt, String dailyHours, String venue, String locationDetails, String? mapUrl, String description, List<String> objectives, String status, String heroImageUrl, String posterUrl, String publicContactEmail, List<FaqItem> faqItems, String publicationStatus, DateTime updatedAt, DateTime? publishedAt, String? academicSemesterId
 });
 
 
@@ -331,7 +332,7 @@ class _$EventCopyWithImpl<$Res>
 
 /// Create a copy of Event
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? title = null,Object? sessionLabel = null,Object? startAt = null,Object? endAt = null,Object? dailyHours = null,Object? venue = null,Object? locationDetails = null,Object? mapUrl = freezed,Object? description = null,Object? objectives = null,Object? status = null,Object? heroImageUrl = null,Object? posterUrl = null,Object? publicContactEmail = null,Object? faqItems = null,Object? publicationStatus = null,Object? updatedAt = null,Object? publishedAt = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? title = null,Object? sessionLabel = null,Object? startAt = null,Object? endAt = null,Object? dailyHours = null,Object? venue = null,Object? locationDetails = null,Object? mapUrl = freezed,Object? description = null,Object? objectives = null,Object? status = null,Object? heroImageUrl = null,Object? posterUrl = null,Object? publicContactEmail = null,Object? faqItems = null,Object? publicationStatus = null,Object? updatedAt = null,Object? publishedAt = freezed,Object? academicSemesterId = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
@@ -352,7 +353,8 @@ as String,faqItems: null == faqItems ? _self.faqItems : faqItems // ignore: cast
 as List<FaqItem>,publicationStatus: null == publicationStatus ? _self.publicationStatus : publicationStatus // ignore: cast_nullable_to_non_nullable
 as String,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,publishedAt: freezed == publishedAt ? _self.publishedAt : publishedAt // ignore: cast_nullable_to_non_nullable
-as DateTime?,
+as DateTime?,academicSemesterId: freezed == academicSemesterId ? _self.academicSemesterId : academicSemesterId // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -437,10 +439,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String title,  String sessionLabel,  DateTime startAt,  DateTime endAt,  String dailyHours,  String venue,  String locationDetails,  String? mapUrl,  String description,  List<String> objectives,  String status,  String heroImageUrl,  String posterUrl,  String publicContactEmail,  List<FaqItem> faqItems,  String publicationStatus,  DateTime updatedAt,  DateTime? publishedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String title,  String sessionLabel,  DateTime startAt,  DateTime endAt,  String dailyHours,  String venue,  String locationDetails,  String? mapUrl,  String description,  List<String> objectives,  String status,  String heroImageUrl,  String posterUrl,  String publicContactEmail,  List<FaqItem> faqItems,  String publicationStatus,  DateTime updatedAt,  DateTime? publishedAt,  String? academicSemesterId)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Event() when $default != null:
-return $default(_that.id,_that.title,_that.sessionLabel,_that.startAt,_that.endAt,_that.dailyHours,_that.venue,_that.locationDetails,_that.mapUrl,_that.description,_that.objectives,_that.status,_that.heroImageUrl,_that.posterUrl,_that.publicContactEmail,_that.faqItems,_that.publicationStatus,_that.updatedAt,_that.publishedAt);case _:
+return $default(_that.id,_that.title,_that.sessionLabel,_that.startAt,_that.endAt,_that.dailyHours,_that.venue,_that.locationDetails,_that.mapUrl,_that.description,_that.objectives,_that.status,_that.heroImageUrl,_that.posterUrl,_that.publicContactEmail,_that.faqItems,_that.publicationStatus,_that.updatedAt,_that.publishedAt,_that.academicSemesterId);case _:
   return orElse();
 
 }
@@ -458,10 +460,10 @@ return $default(_that.id,_that.title,_that.sessionLabel,_that.startAt,_that.endA
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String title,  String sessionLabel,  DateTime startAt,  DateTime endAt,  String dailyHours,  String venue,  String locationDetails,  String? mapUrl,  String description,  List<String> objectives,  String status,  String heroImageUrl,  String posterUrl,  String publicContactEmail,  List<FaqItem> faqItems,  String publicationStatus,  DateTime updatedAt,  DateTime? publishedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String title,  String sessionLabel,  DateTime startAt,  DateTime endAt,  String dailyHours,  String venue,  String locationDetails,  String? mapUrl,  String description,  List<String> objectives,  String status,  String heroImageUrl,  String posterUrl,  String publicContactEmail,  List<FaqItem> faqItems,  String publicationStatus,  DateTime updatedAt,  DateTime? publishedAt,  String? academicSemesterId)  $default,) {final _that = this;
 switch (_that) {
 case _Event():
-return $default(_that.id,_that.title,_that.sessionLabel,_that.startAt,_that.endAt,_that.dailyHours,_that.venue,_that.locationDetails,_that.mapUrl,_that.description,_that.objectives,_that.status,_that.heroImageUrl,_that.posterUrl,_that.publicContactEmail,_that.faqItems,_that.publicationStatus,_that.updatedAt,_that.publishedAt);case _:
+return $default(_that.id,_that.title,_that.sessionLabel,_that.startAt,_that.endAt,_that.dailyHours,_that.venue,_that.locationDetails,_that.mapUrl,_that.description,_that.objectives,_that.status,_that.heroImageUrl,_that.posterUrl,_that.publicContactEmail,_that.faqItems,_that.publicationStatus,_that.updatedAt,_that.publishedAt,_that.academicSemesterId);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -478,10 +480,10 @@ return $default(_that.id,_that.title,_that.sessionLabel,_that.startAt,_that.endA
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String title,  String sessionLabel,  DateTime startAt,  DateTime endAt,  String dailyHours,  String venue,  String locationDetails,  String? mapUrl,  String description,  List<String> objectives,  String status,  String heroImageUrl,  String posterUrl,  String publicContactEmail,  List<FaqItem> faqItems,  String publicationStatus,  DateTime updatedAt,  DateTime? publishedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String title,  String sessionLabel,  DateTime startAt,  DateTime endAt,  String dailyHours,  String venue,  String locationDetails,  String? mapUrl,  String description,  List<String> objectives,  String status,  String heroImageUrl,  String posterUrl,  String publicContactEmail,  List<FaqItem> faqItems,  String publicationStatus,  DateTime updatedAt,  DateTime? publishedAt,  String? academicSemesterId)?  $default,) {final _that = this;
 switch (_that) {
 case _Event() when $default != null:
-return $default(_that.id,_that.title,_that.sessionLabel,_that.startAt,_that.endAt,_that.dailyHours,_that.venue,_that.locationDetails,_that.mapUrl,_that.description,_that.objectives,_that.status,_that.heroImageUrl,_that.posterUrl,_that.publicContactEmail,_that.faqItems,_that.publicationStatus,_that.updatedAt,_that.publishedAt);case _:
+return $default(_that.id,_that.title,_that.sessionLabel,_that.startAt,_that.endAt,_that.dailyHours,_that.venue,_that.locationDetails,_that.mapUrl,_that.description,_that.objectives,_that.status,_that.heroImageUrl,_that.posterUrl,_that.publicContactEmail,_that.faqItems,_that.publicationStatus,_that.updatedAt,_that.publishedAt,_that.academicSemesterId);case _:
   return null;
 
 }
@@ -493,7 +495,7 @@ return $default(_that.id,_that.title,_that.sessionLabel,_that.startAt,_that.endA
 @JsonSerializable()
 
 class _Event implements Event {
-  const _Event({required this.id, required this.title, required this.sessionLabel, required this.startAt, required this.endAt, required this.dailyHours, required this.venue, required this.locationDetails, this.mapUrl, required this.description, required final  List<String> objectives, required this.status, required this.heroImageUrl, required this.posterUrl, required this.publicContactEmail, required final  List<FaqItem> faqItems, required this.publicationStatus, required this.updatedAt, this.publishedAt}): _objectives = objectives,_faqItems = faqItems;
+  const _Event({required this.id, required this.title, required this.sessionLabel, required this.startAt, required this.endAt, required this.dailyHours, required this.venue, required this.locationDetails, this.mapUrl, required this.description, required final  List<String> objectives, required this.status, required this.heroImageUrl, required this.posterUrl, required this.publicContactEmail, required final  List<FaqItem> faqItems, required this.publicationStatus, required this.updatedAt, this.publishedAt, this.academicSemesterId}): _objectives = objectives,_faqItems = faqItems;
   factory _Event.fromJson(Map<String, dynamic> json) => _$EventFromJson(json);
 
 @override final  String id;
@@ -527,6 +529,8 @@ class _Event implements Event {
 @override final  String publicationStatus;
 @override final  DateTime updatedAt;
 @override final  DateTime? publishedAt;
+/// The semester whose CSP650 cohort exhibits at this event (optional).
+@override final  String? academicSemesterId;
 
 /// Create a copy of Event
 /// with the given fields replaced by the non-null parameter values.
@@ -541,16 +545,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Event&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.sessionLabel, sessionLabel) || other.sessionLabel == sessionLabel)&&(identical(other.startAt, startAt) || other.startAt == startAt)&&(identical(other.endAt, endAt) || other.endAt == endAt)&&(identical(other.dailyHours, dailyHours) || other.dailyHours == dailyHours)&&(identical(other.venue, venue) || other.venue == venue)&&(identical(other.locationDetails, locationDetails) || other.locationDetails == locationDetails)&&(identical(other.mapUrl, mapUrl) || other.mapUrl == mapUrl)&&(identical(other.description, description) || other.description == description)&&const DeepCollectionEquality().equals(other._objectives, _objectives)&&(identical(other.status, status) || other.status == status)&&(identical(other.heroImageUrl, heroImageUrl) || other.heroImageUrl == heroImageUrl)&&(identical(other.posterUrl, posterUrl) || other.posterUrl == posterUrl)&&(identical(other.publicContactEmail, publicContactEmail) || other.publicContactEmail == publicContactEmail)&&const DeepCollectionEquality().equals(other._faqItems, _faqItems)&&(identical(other.publicationStatus, publicationStatus) || other.publicationStatus == publicationStatus)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Event&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.sessionLabel, sessionLabel) || other.sessionLabel == sessionLabel)&&(identical(other.startAt, startAt) || other.startAt == startAt)&&(identical(other.endAt, endAt) || other.endAt == endAt)&&(identical(other.dailyHours, dailyHours) || other.dailyHours == dailyHours)&&(identical(other.venue, venue) || other.venue == venue)&&(identical(other.locationDetails, locationDetails) || other.locationDetails == locationDetails)&&(identical(other.mapUrl, mapUrl) || other.mapUrl == mapUrl)&&(identical(other.description, description) || other.description == description)&&const DeepCollectionEquality().equals(other._objectives, _objectives)&&(identical(other.status, status) || other.status == status)&&(identical(other.heroImageUrl, heroImageUrl) || other.heroImageUrl == heroImageUrl)&&(identical(other.posterUrl, posterUrl) || other.posterUrl == posterUrl)&&(identical(other.publicContactEmail, publicContactEmail) || other.publicContactEmail == publicContactEmail)&&const DeepCollectionEquality().equals(other._faqItems, _faqItems)&&(identical(other.publicationStatus, publicationStatus) || other.publicationStatus == publicationStatus)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt)&&(identical(other.academicSemesterId, academicSemesterId) || other.academicSemesterId == academicSemesterId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,id,title,sessionLabel,startAt,endAt,dailyHours,venue,locationDetails,mapUrl,description,const DeepCollectionEquality().hash(_objectives),status,heroImageUrl,posterUrl,publicContactEmail,const DeepCollectionEquality().hash(_faqItems),publicationStatus,updatedAt,publishedAt]);
+int get hashCode => Object.hashAll([runtimeType,id,title,sessionLabel,startAt,endAt,dailyHours,venue,locationDetails,mapUrl,description,const DeepCollectionEquality().hash(_objectives),status,heroImageUrl,posterUrl,publicContactEmail,const DeepCollectionEquality().hash(_faqItems),publicationStatus,updatedAt,publishedAt,academicSemesterId]);
 
 @override
 String toString() {
-  return 'Event(id: $id, title: $title, sessionLabel: $sessionLabel, startAt: $startAt, endAt: $endAt, dailyHours: $dailyHours, venue: $venue, locationDetails: $locationDetails, mapUrl: $mapUrl, description: $description, objectives: $objectives, status: $status, heroImageUrl: $heroImageUrl, posterUrl: $posterUrl, publicContactEmail: $publicContactEmail, faqItems: $faqItems, publicationStatus: $publicationStatus, updatedAt: $updatedAt, publishedAt: $publishedAt)';
+  return 'Event(id: $id, title: $title, sessionLabel: $sessionLabel, startAt: $startAt, endAt: $endAt, dailyHours: $dailyHours, venue: $venue, locationDetails: $locationDetails, mapUrl: $mapUrl, description: $description, objectives: $objectives, status: $status, heroImageUrl: $heroImageUrl, posterUrl: $posterUrl, publicContactEmail: $publicContactEmail, faqItems: $faqItems, publicationStatus: $publicationStatus, updatedAt: $updatedAt, publishedAt: $publishedAt, academicSemesterId: $academicSemesterId)';
 }
 
 
@@ -561,7 +565,7 @@ abstract mixin class _$EventCopyWith<$Res> implements $EventCopyWith<$Res> {
   factory _$EventCopyWith(_Event value, $Res Function(_Event) _then) = __$EventCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String title, String sessionLabel, DateTime startAt, DateTime endAt, String dailyHours, String venue, String locationDetails, String? mapUrl, String description, List<String> objectives, String status, String heroImageUrl, String posterUrl, String publicContactEmail, List<FaqItem> faqItems, String publicationStatus, DateTime updatedAt, DateTime? publishedAt
+ String id, String title, String sessionLabel, DateTime startAt, DateTime endAt, String dailyHours, String venue, String locationDetails, String? mapUrl, String description, List<String> objectives, String status, String heroImageUrl, String posterUrl, String publicContactEmail, List<FaqItem> faqItems, String publicationStatus, DateTime updatedAt, DateTime? publishedAt, String? academicSemesterId
 });
 
 
@@ -578,7 +582,7 @@ class __$EventCopyWithImpl<$Res>
 
 /// Create a copy of Event
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? title = null,Object? sessionLabel = null,Object? startAt = null,Object? endAt = null,Object? dailyHours = null,Object? venue = null,Object? locationDetails = null,Object? mapUrl = freezed,Object? description = null,Object? objectives = null,Object? status = null,Object? heroImageUrl = null,Object? posterUrl = null,Object? publicContactEmail = null,Object? faqItems = null,Object? publicationStatus = null,Object? updatedAt = null,Object? publishedAt = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? title = null,Object? sessionLabel = null,Object? startAt = null,Object? endAt = null,Object? dailyHours = null,Object? venue = null,Object? locationDetails = null,Object? mapUrl = freezed,Object? description = null,Object? objectives = null,Object? status = null,Object? heroImageUrl = null,Object? posterUrl = null,Object? publicContactEmail = null,Object? faqItems = null,Object? publicationStatus = null,Object? updatedAt = null,Object? publishedAt = freezed,Object? academicSemesterId = freezed,}) {
   return _then(_Event(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
@@ -599,7 +603,8 @@ as String,faqItems: null == faqItems ? _self._faqItems : faqItems // ignore: cas
 as List<FaqItem>,publicationStatus: null == publicationStatus ? _self.publicationStatus : publicationStatus // ignore: cast_nullable_to_non_nullable
 as String,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,publishedAt: freezed == publishedAt ? _self.publishedAt : publishedAt // ignore: cast_nullable_to_non_nullable
-as DateTime?,
+as DateTime?,academicSemesterId: freezed == academicSemesterId ? _self.academicSemesterId : academicSemesterId // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

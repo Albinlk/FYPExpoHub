@@ -161,5 +161,5 @@ Source of truth: `DesignSystem` in `lib/app/theme/theme.dart` — change colours
 
 ## 6. Documented UI Extensions (Responsive & Missing States)
 - **Awards Page (`/awards`):** Recreates the standard Project Card grid with a modified "Winner" Apricot badge in `#F6B48A` (secondary-container) showing the category name and a trophy icon.
-- **Sign-in Page (`/admin/sign-in`):** Uses a centered, card-based login modal matching the typography and color scheme (Aubergine Ink primary button, Montserrat title, 8px rounded container).
+- **Sign-in Page (`/sign-in`):** Uses a centered, card-based login modal matching the typography and color scheme (Aubergine Ink primary button, Montserrat title, 8px rounded container).
 - **Error/Empty States:** Illustrated using thin-line icons (stroke 2px) in muted `#4E4652`, labelled in English using `body-md` and `body-sm`.

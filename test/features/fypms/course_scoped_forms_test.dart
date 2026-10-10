@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fyp_expo_hub/core/domain/models/fypms/fyp_record.dart';
 import 'package:fyp_expo_hub/core/state/fypms/records_providers.dart';
 import 'package:fyp_expo_hub/core/state/fypms/roles_providers.dart';
+import 'package:fyp_expo_hub/core/utils/fypms_format.dart';
 
 /// Portal plan P1: CSP600 and CSP650 each see only their own forms (FSKM
 /// handbook, 4th ed.), and the client list matches the server's.
@@ -85,5 +86,12 @@ void main() {
       expect(cspWorkspaceTitle({'CSP650', 'CSP600'}), 'CSP600 & CSP650 Dashboard');
       expect(cspWorkspaceTitle({}), 'CSP Dashboard');
     });
+  });
+
+  test('P9 progress presentation (F9) is a session type the database accepts', () {
+    expect(sessionTypeLabel('progress'), 'Progress Presentation (F9)');
+    final sql = File('supabase/migrations/20261010000002_progress_sessions.sql').readAsStringSync();
+    expect("('defence', 'expo', 'progress')".allMatches(sql).length, 3,
+        reason: 'table check, create and update all allow progress');
   });
 }

@@ -131,3 +131,11 @@ class FypStatusBadge extends StatelessWidget {
     );
   }
 }
+
+/// Plain name for a presentation session type.
+String sessionTypeLabel(String type) => switch (type) {
+      'defence' => 'Presentation / Defence',
+      'progress' => 'Progress Presentation (F9)',
+      'expo' => 'Exhibition',
+      _ => type,
+    };

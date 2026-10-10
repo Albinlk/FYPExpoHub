@@ -163,6 +163,7 @@ class _CreateSessionDialogState extends ConsumerState<CreateSessionDialog> {
                 decoration: const InputDecoration(labelText: 'Type'),
                 items: const [
                   DropdownMenuItem(value: 'defence', child: Text('Presentation / defence')),
+                  DropdownMenuItem(value: 'progress', child: Text('Progress presentation (F9)')),
                   DropdownMenuItem(value: 'expo', child: Text('Exhibition')),
                 ],
                 onChanged: (v) => setState(() => _type = v ?? 'defence'),

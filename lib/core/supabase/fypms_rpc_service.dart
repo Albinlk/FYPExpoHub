@@ -538,6 +538,11 @@ extension FypmsRpcService on SupabaseRpcService {
   }
 
   /// Coordinator / CSP600 lecturer: CSP600 record -> linked CSP650 record.
+  /// The supervisor signs off the corrected final report (CSP650, after F12).
+  Future<Map<String, dynamic>> approveFinalReport({required String fypRecordId}) async {
+    return _rpc('approve_final_report', {'p_fyp_record_id': fypRecordId});
+  }
+
   Future<Map<String, dynamic>> promoteFypRecord({required String fypRecordId, required String targetSemesterId}) async {
     return _rpc('promote_fyp_record', {'p_fyp_record_id': fypRecordId, 'p_target_semester_id': targetSemesterId});
   }

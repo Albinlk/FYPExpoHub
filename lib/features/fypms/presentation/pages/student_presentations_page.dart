@@ -54,7 +54,11 @@ class StudentPresentationsPage extends ConsumerWidget {
                   child: ListTile(
                     contentPadding: const EdgeInsets.all(DesignSystem.spaceMd),
                     leading: Icon(
-                      p.sessionType == 'expo' ? Icons.storefront : Icons.co_present,
+                      switch (p.sessionType) {
+                        'expo' => Icons.storefront,
+                        'progress' => Icons.trending_up,
+                        _ => Icons.co_present,
+                      },
                       size: 36,
                       color: DesignSystem.primary,
                     ),

@@ -21,6 +21,9 @@ _FypRecord _$FypRecordFromJson(Map<String, dynamic> json) => _FypRecord(
   coSupervisorId: json['coSupervisorId'] as String?,
   examinerId: json['examinerId'] as String?,
   previousRecordId: json['previousRecordId'] as String?,
+  supervisorApprovedAt: json['supervisorApprovedAt'] == null
+      ? null
+      : DateTime.parse(json['supervisorApprovedAt'] as String),
   workflowStatus: json['workflowStatus'] as String,
   createdAt: DateTime.parse(json['createdAt'] as String),
   updatedAt: DateTime.parse(json['updatedAt'] as String),
@@ -42,6 +45,7 @@ Map<String, dynamic> _$FypRecordToJson(_FypRecord instance) =>
       'coSupervisorId': instance.coSupervisorId,
       'examinerId': instance.examinerId,
       'previousRecordId': instance.previousRecordId,
+      'supervisorApprovedAt': instance.supervisorApprovedAt?.toIso8601String(),
       'workflowStatus': instance.workflowStatus,
       'createdAt': instance.createdAt.toIso8601String(),
       'updatedAt': instance.updatedAt.toIso8601String(),

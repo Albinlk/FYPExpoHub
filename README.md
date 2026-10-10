@@ -79,7 +79,7 @@ The Expo site reads live from **Supabase Postgres** and ships with a bundled off
 | **FYPMS users** | `profile_academic_roles` rows (`student`, `supervisor`, `co_supervisor`, `examiner`, `csp600_lecturer`, `csp650_lecturer`, `fyp_coordinator`) | Role-scoped workspaces under `/fypms/**`. |
 
 Route guarding lives in the router:
-- `/admin/**` redirects unauthenticated or non-admin users to `/admin/sign-in`.
+- `/admin/**` redirects unauthenticated or non-admin users to `/sign-in` (the old `/admin/sign-in` forwards there).
 - `/lecturer/**` requires sign-in; signed-in lecturers coming from the sign-in page land on `/lecturer/visits`.
 - `/fypms/**` requires authentication; users are redirected to their home workspace by role priority (student > supervisor > examiner > CSP > coordinator) and blocked from workspaces they hold no role in.
 

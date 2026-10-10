@@ -5,6 +5,7 @@ import '../../../../core/state/fypms_state_providers.dart';
 import '../widgets/fypms_loading_widget.dart';
 import '../../../../core/widgets/async_state.dart';
 import '../../../../core/widgets/admin_actions.dart';
+import '../../domain/expo_eligibility.dart';
 
 class CoordinatorExpoPage extends ConsumerWidget {
   const CoordinatorExpoPage({super.key});
@@ -111,12 +112,27 @@ class CoordinatorExpoPage extends ConsumerWidget {
                   Consumer(
                     builder: (context, ref, _) {
                       final records = ref.watch(fypRecordsProvider);
+                      final events = ref.watch(fypPublishedEventsProvider).value ?? const <Map<String, dynamic>>[];
+                      final eventSemesterId = events
+                          .where((e) => e['id'] == eventId)
+                          .map((e) => e['academic_semester_id'] as String?)
+                          .firstOrNull;
                       return records.when(
                         loading: () => const LinearProgressIndicator(),
                         error: (e, _) => AsyncErrorView(error: e, onRetry: () => ref.invalidate(fypRecordsProvider), what: 'this section'),
-                        data: (items) => DropdownButtonFormField<String>(
+                        data: (all) {
+                          // Only CSP650 projects are exhibited (and only the
+                          // event's cohort when it is linked to a semester).
+                          final items = exhibitableRecords(all, eventSemesterId: eventSemesterId);
+                          if (recordId != null && !items.any((r) => r.id == recordId)) recordId = null;
+                          return DropdownButtonFormField<String>(
+                          key: ValueKey('expo-record-$eventSemesterId'),
                           initialValue: recordId,
-                          decoration: const InputDecoration(labelText: 'FYP Record'),
+                          isExpanded: true,
+                          decoration: InputDecoration(
+                            labelText: 'CSP650 Record',
+                            helperText: items.isEmpty ? 'No CSP650 records for the semester of this event.' : null,
+                          ),
                           items: [
                             for (final r in items)
                               DropdownMenuItem(
@@ -130,7 +146,8 @@ class CoordinatorExpoPage extends ConsumerWidget {
                               ),
                           ],
                           onChanged: (v) => setState(() => recordId = v),
-                        ),
+                        );
+                        },
                       );
                     },
                   ),

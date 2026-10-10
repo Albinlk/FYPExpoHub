@@ -47,7 +47,7 @@ Cross-workspace navigation is guarded in `lib/app/router.dart`
 ## 3. Auth and route-guard checks
 
 1. Open `http://localhost:8080` unauthenticated.
-2. Navigate to `/fypms/student` → expect redirect to `/admin/sign-in` (auth guard).
+2. Navigate to `/fypms/student` → expect redirect to `/sign-in` (auth guard).
 3. Sign in as each role and confirm the landing workspace in the table above.
 4. As **Student 1**, force `/fypms/supervisor` → expect redirect to `/fypms/student`.
 5. As **Examiner**, force `/fypms/csp` → expect redirect to `/fypms/examiner`.

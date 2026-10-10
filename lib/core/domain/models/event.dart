@@ -35,6 +35,8 @@ abstract class Event with _$Event {
     required String publicationStatus,
     required DateTime updatedAt,
     DateTime? publishedAt,
+    /// The semester whose CSP650 cohort exhibits at this event (optional).
+    String? academicSemesterId,
   }) = _Event;
 
   factory Event.fromJson(Map<String, dynamic> json) => _$EventFromJson(json);
