@@ -414,15 +414,18 @@ class PuNominationsPage extends ConsumerWidget {
       child: Scaffold(
         backgroundColor: DesignSystem.background,
         appBar: AppBar(
-          backgroundColor: DesignSystem.primary,
+          backgroundColor: DesignSystem.surfaceContainerLowest,
+        foregroundColor: DesignSystem.primary,
+        surfaceTintColor: Colors.transparent,
+        shape: const Border(bottom: BorderSide(color: DesignSystem.outlineVariant)),
           title: Text(
             'Nominations',
-            style: DesignSystem.h3.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+            style: DesignSystem.h3.copyWith(color: DesignSystem.primary, fontWeight: FontWeight.bold),
           ),
           bottom: const TabBar(
-            labelColor: Colors.white,
-            unselectedLabelColor: Colors.white70,
-            indicatorColor: Colors.white,
+            labelColor: DesignSystem.primary,
+            unselectedLabelColor: DesignSystem.onSurfaceVariant,
+            indicatorColor: DesignSystem.primary,
             tabs: [
               Tab(text: 'Awaiting approval'),
               Tab(text: 'Approved · letters'),
@@ -498,10 +501,13 @@ class CoordinatorLettersPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: DesignSystem.background,
       appBar: AppBar(
-        backgroundColor: DesignSystem.primary,
+        backgroundColor: DesignSystem.surfaceContainerLowest,
+        foregroundColor: DesignSystem.primary,
+        surfaceTintColor: Colors.transparent,
+        shape: const Border(bottom: BorderSide(color: DesignSystem.outlineVariant)),
         title: Text(
           'Appointment Letters',
-          style: DesignSystem.h3.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+          style: DesignSystem.h3.copyWith(color: DesignSystem.primary, fontWeight: FontWeight.bold),
         ),
       ),
       body: const ApprovedNominationsList(),

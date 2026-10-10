@@ -68,8 +68,11 @@ class _CoordinatorEnrolPageState extends ConsumerState<CoordinatorEnrolPage> {
     return Scaffold(
       backgroundColor: DesignSystem.background,
       appBar: AppBar(
-        backgroundColor: DesignSystem.primary,
-        title: Text('Enrol Students', style: DesignSystem.h3.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+        backgroundColor: DesignSystem.surfaceContainerLowest,
+        foregroundColor: DesignSystem.primary,
+        surfaceTintColor: Colors.transparent,
+        shape: const Border(bottom: BorderSide(color: DesignSystem.outlineVariant)),
+        title: Text('Enrol Students', style: DesignSystem.h3.copyWith(color: DesignSystem.primary, fontWeight: FontWeight.bold)),
       ),
       // Enrolling needs a semester; an empty picker would leave no way forward.
       body: !semestersAsync.hasValue

@@ -44,16 +44,19 @@ class CspMarksPage extends ConsumerWidget {
     return Scaffold(
       backgroundColor: DesignSystem.background,
       appBar: AppBar(
-        backgroundColor: DesignSystem.primary,
+        backgroundColor: DesignSystem.surfaceContainerLowest,
+        foregroundColor: DesignSystem.primary,
+        surfaceTintColor: Colors.transparent,
+        shape: const Border(bottom: BorderSide(color: DesignSystem.outlineVariant)),
         title: Text(
           'Finalize Marks',
-          style: DesignSystem.h3.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+          style: DesignSystem.h3.copyWith(color: DesignSystem.primary, fontWeight: FontWeight.bold),
         ),
         actions: [
           IconButton(
             key: const Key('res-export'),
             tooltip: 'Export finalized marks for RES (CSV)',
-            icon: const Icon(Icons.download, color: Colors.white),
+            icon: const Icon(Icons.download, color: DesignSystem.primary),
             onPressed: records.value == null ? null : () => _exportRes(context, ref, records.value!),
           ),
         ],

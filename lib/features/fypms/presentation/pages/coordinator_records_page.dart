@@ -21,10 +21,13 @@ class CoordinatorRecordsPage extends ConsumerWidget {
     return Scaffold(
       backgroundColor: DesignSystem.background,
       appBar: AppBar(
-        backgroundColor: DesignSystem.primary,
+        backgroundColor: DesignSystem.surfaceContainerLowest,
+        foregroundColor: DesignSystem.primary,
+        surfaceTintColor: Colors.transparent,
+        shape: const Border(bottom: BorderSide(color: DesignSystem.outlineVariant)),
         title: Text(
           'All FYP Records',
-          style: DesignSystem.h3.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+          style: DesignSystem.h3.copyWith(color: DesignSystem.primary, fontWeight: FontWeight.bold),
         ),
         actions: [
           Padding(
@@ -33,7 +36,7 @@ class CoordinatorRecordsPage extends ConsumerWidget {
               onPressed: () => _showCreateRecordDialog(context, ref),
               style: FilledButton.styleFrom(
                 backgroundColor: DesignSystem.secondary,
-                foregroundColor: Colors.white,
+                foregroundColor: DesignSystem.primary,
               ),
               icon: const Icon(Icons.add),
               label: const Text('New Record'),

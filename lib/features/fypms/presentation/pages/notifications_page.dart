@@ -103,18 +103,21 @@ class NotificationsPage extends ConsumerWidget {
     return Scaffold(
       backgroundColor: DesignSystem.background,
       appBar: AppBar(
-        backgroundColor: DesignSystem.primary,
-        title: Text('Notifications', style: DesignSystem.h3.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+        backgroundColor: DesignSystem.surfaceContainerLowest,
+        foregroundColor: DesignSystem.primary,
+        surfaceTintColor: Colors.transparent,
+        shape: const Border(bottom: BorderSide(color: DesignSystem.outlineVariant)),
+        title: Text('Notifications', style: DesignSystem.h3.copyWith(color: DesignSystem.primary, fontWeight: FontWeight.bold)),
         actions: [
           IconButton(
             tooltip: 'Refresh',
-            icon: const Icon(Icons.refresh, color: Colors.white),
+            icon: const Icon(Icons.refresh, color: DesignSystem.primary),
             onPressed: () => ref.invalidate(fypNotificationsProvider),
           ),
           if (unread > 0)
             TextButton(
               onPressed: () => ref.read(markNotificationsReadProvider)(),
-              child: const Text('Mark all read', style: TextStyle(color: Colors.white)),
+              child: const Text('Mark all read', style: TextStyle(color: DesignSystem.primary)),
             ),
         ],
       ),
