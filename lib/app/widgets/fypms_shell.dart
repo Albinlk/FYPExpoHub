@@ -182,7 +182,18 @@ class FypmsShell extends ConsumerWidget {
   }
 }
 
+/// Whether a student has a CSP650 record, so the CSP650-only pages (Lean
+/// Canvas, Deliverables, Corrections) belong in their menu. Defaults to true
+/// while records load, so nothing disappears and reappears.
+bool _studentHasProjectCourse(WidgetRef ref, bool isStudent) {
+  if (!isStudent) return false;
+  final records = ref.watch(myFypRecordsProvider).value;
+  if (records == null) return true;
+  return records.any((r) => r.currentCourseCode == 'CSP650');
+}
+
 List<({String title, IconData icon, String route})> _navItems({
+  bool showProjectPages = true,
   required bool isAdmin,
   required bool isCoordinator,
   required bool isStudent,
@@ -200,11 +211,12 @@ List<({String title, IconData icon, String route})> _navItems({
       (title: 'Supervision', icon: Icons.supervisor_account, route: '/fypms/student/supervision'),
       (title: 'Progress Logs', icon: Icons.timeline, route: '/fypms/student/progress'),
       (title: 'Forms', icon: Icons.description, route: '/fypms/student/forms'),
-      (title: 'Lean Canvas', icon: Icons.grid_view, route: '/fypms/student/lean-canvas'),
+      // CSP650 only (FSKM handbook): Lean Canvas (F13), Deliverables, Corrections (F12).
+      if (showProjectPages) (title: 'Lean Canvas', icon: Icons.grid_view, route: '/fypms/student/lean-canvas'),
       (title: 'Reports', icon: Icons.upload_file, route: '/fypms/student/reports'),
-      (title: 'Deliverables', icon: Icons.checklist, route: '/fypms/student/deliverables'),
+      if (showProjectPages) (title: 'Deliverables', icon: Icons.checklist, route: '/fypms/student/deliverables'),
       (title: 'Milestones', icon: Icons.flag, route: '/fypms/student/milestones'),
-      (title: 'Corrections', icon: Icons.fact_check, route: '/fypms/student/corrections'),
+      if (showProjectPages) (title: 'Corrections', icon: Icons.fact_check, route: '/fypms/student/corrections'),
       (title: 'Presentations', icon: Icons.event, route: '/fypms/student/presentations'),
       (title: 'Marks', icon: Icons.scoreboard, route: '/fypms/student/marks'),
     ]);
@@ -270,7 +282,7 @@ List<({String title, IconData icon, String route})> _navItems({
   return items;
 }
 
-class _FypmsSidebar extends StatelessWidget {
+class _FypmsSidebar extends ConsumerWidget {
   final String currentPath;
   final bool isAdmin;
   final bool isCoordinator;
@@ -292,8 +304,9 @@ class _FypmsSidebar extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final items = _navItems(
+      showProjectPages: _studentHasProjectCourse(ref, isStudent),
       isAdmin: isAdmin,
       isCoordinator: isCoordinator,
       isStudent: isStudent,
@@ -370,7 +383,7 @@ class _FypmsSidebar extends StatelessWidget {
   }
 }
 
-class _FypmsDrawer extends StatelessWidget {
+class _FypmsDrawer extends ConsumerWidget {
   final String currentPath;
   final bool isAdmin;
   final bool isCoordinator;
@@ -394,8 +407,9 @@ class _FypmsDrawer extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final items = _navItems(
+      showProjectPages: _studentHasProjectCourse(ref, isStudent),
       isAdmin: isAdmin,
       isCoordinator: isCoordinator,
       isStudent: isStudent,
