@@ -38,7 +38,7 @@ class FypmsShell extends ConsumerWidget {
     ref.invalidate(currentAuthUserProvider);
     ref.invalidate(fypmsCurrentRolesProvider);
     if (context.mounted) {
-      context.go('/admin/sign-in');
+      context.go('/sign-in');
     }
   }
 

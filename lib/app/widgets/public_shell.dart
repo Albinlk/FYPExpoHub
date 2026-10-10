@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher_string.dart';
 import '../../core/state/state_providers.dart';
 import '../theme/theme.dart';
 import 'feedback_form_widget.dart';
 
-void _openAdminPortal() {
-  launchUrlString('https://admin.fskmjasinfypexhibition.site/admin/sign-in');
-}
+/// One sign-in page on this site for students, lecturers and admins (it used
+/// to open the admin subdomain in a new tab).
+void _openSignIn(BuildContext context) => context.go('/sign-in');
 
 class PublicShell extends ConsumerWidget {
   final Widget child;
@@ -181,7 +180,7 @@ class _DesktopNavBar extends StatelessWidget {
           // Right: Login Button
           if (!lecturerSignedIn)
             ElevatedButton(
-              onPressed: _openAdminPortal,
+              onPressed: () => _openSignIn(context),
               style: ElevatedButton.styleFrom(
                 backgroundColor: DesignSystem.primary,
                 foregroundColor: DesignSystem.onPrimary,
@@ -407,8 +406,10 @@ class _MobileBottomNavBar extends StatelessWidget {
         leading: Icon(icon, color: DesignSystem.primary),
         title: Text(title, style: DesignSystem.bodyMd),
         onTap: () {
+          // Read the router before closing the sheet; its context goes away.
+          final router = GoRouter.of(context);
           Navigator.pop(context);
-          _openAdminPortal();
+          router.go('/sign-in');
         },
       ),
     );

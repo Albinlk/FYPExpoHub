@@ -91,11 +91,11 @@ void main() {
         (tester) async {
       expect(
         await _resolve(tester, target: '/fypms/student', user: null),
-        '/admin/sign-in',
+        '/sign-in',
       );
       expect(
         await _resolve(tester, target: '/fypms/coordinator/assignments', user: null),
-        '/admin/sign-in',
+        '/sign-in',
       );
     });
   });

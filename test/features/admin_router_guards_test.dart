@@ -12,10 +12,10 @@ import 'package:fyp_expo_hub/core/domain/models/event.dart';
 import 'package:fyp_expo_hub/core/state/fypms_state_providers.dart';
 
 /// Admin + lecturer route-guard tests for the non-FYPMS halves of the router:
-///   - unauthenticated `/admin/**` -> `/admin/sign-in`
-///   - authenticated non-admin `/admin/**` -> `/admin/sign-in`
-///   - signed-in admin on `/admin/sign-in` -> `/admin`
-///   - signed-in lecturer on `/admin/sign-in` -> `/lecturer/visits`
+///   - unauthenticated `/admin/**` -> `/sign-in`
+///   - authenticated non-admin `/admin/**` -> `/sign-in`
+///   - signed-in admin on `/sign-in` -> `/admin`
+///   - signed-in lecturer on `/sign-in` -> `/lecturer/visits`
 /// Assertions are on the resolved route path only; page render-time errors
 /// (uninitialized Supabase, overflows) are filtered like the FYPMS suite.
 User _user(String email) => User.fromJson({
@@ -135,6 +135,7 @@ void main() {
       expect(safeReturnPath(null), isNull);
       // and never loops back to the sign-in page itself
       expect(safeReturnPath('/admin/sign-in?from=/x'), isNull);
+      expect(safeReturnPath('/sign-in?from=/x'), isNull);
     });
   });
 
@@ -143,15 +144,15 @@ void main() {
         (tester) async {
       expect(
         await _resolve(tester, target: '/admin', user: null),
-        '/admin/sign-in',
+        '/sign-in',
       );
       expect(
         await _resolve(tester, target: '/admin/projects', user: null),
-        '/admin/sign-in',
+        '/sign-in',
       );
       expect(
         await _resolve(tester, target: '/admin/visits', user: null),
-        '/admin/sign-in',
+        '/sign-in',
       );
     });
 
@@ -164,7 +165,7 @@ void main() {
           user: _user('lecturer@uitm.edu.my'),
           isAdmin: false,
         ),
-        '/admin/sign-in',
+        '/sign-in',
       );
     });
 
@@ -185,7 +186,7 @@ void main() {
       expect(
         await _resolve(
           tester,
-          target: '/admin/sign-in',
+          target: '/sign-in',
           user: _user('admin@uitm.edu.my'),
           isAdmin: true,
         ),
@@ -200,7 +201,7 @@ void main() {
       expect(
         await _resolve(
           tester,
-          target: '/admin/sign-in',
+          target: '/sign-in',
           user: _user('aminah@uitm.edu.my'),
           isAdmin: false,
           lecturer: _lecturer(),
@@ -214,7 +215,7 @@ void main() {
       expect(
         await _resolve(
           tester,
-          target: '/admin/sign-in',
+          target: '/sign-in',
           user: _user('aminah@uitm.edu.my'),
           lecturer: _lecturer(),
           extra: [fypmsCurrentRolesProvider.overrideWith((ref) async => ['supervisor'])],
@@ -227,7 +228,7 @@ void main() {
       expect(
         await _resolve(
           tester,
-          target: '/admin/sign-in',
+          target: '/sign-in',
           user: _user('aminah@uitm.edu.my'),
           lecturer: _lecturer(),
           extra: [
@@ -268,8 +269,15 @@ void main() {
     testWidgets('signed-out My Visits goes to sign-in, keeping the deep link',
         (tester) async {
       final uri = await _resolveUri(tester, target: '/lecturer/visits/p1');
-      expect(uri.path, '/admin/sign-in');
+      expect(uri.path, '/sign-in');
       expect(uri.queryParameters['from'], '/lecturer/visits/p1');
+    });
+
+    testWidgets('the old /admin/sign-in address forwards to /sign-in, keeping ?from',
+        (tester) async {
+      final uri = await _resolveUri(tester, target: '/admin/sign-in?from=%2Fprojects');
+      expect(uri.path, '/sign-in');
+      expect(uri.queryParameters['from'], '/projects');
     });
 
     testWidgets('after sign-in the user lands back on the page they wanted',
@@ -277,7 +285,7 @@ void main() {
       expect(
         await _resolve(
           tester,
-          target: '/admin/sign-in?from=%2Fprojects%3Fsearch%3Dai',
+          target: '/sign-in?from=%2Fprojects%3Fsearch%3Dai',
           user: _user('someone@uitm.edu.my'),
         ),
         '/projects',

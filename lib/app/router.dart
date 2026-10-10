@@ -218,7 +218,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       // STANDALONE ADMIN ROUTE (No Shell NavBar)
       // -------------------------------------------------------------
       GoRoute(
-        path: '/admin/sign-in',
+        path: kSignInPath,
+        builder: (context, state) => const SignInPage(),
+      ),
+      // Old address; resolveRouterRedirect forwards it to /sign-in.
+      GoRoute(
+        path: kLegacySignInPath,
         builder: (context, state) => const SignInPage(),
       ),
       // Password-recovery email landing (G-32). Outside /admin so the admin
@@ -672,7 +677,7 @@ class RouteTitleObserver extends NavigatorObserver {
     if (path == '/archive' || path.startsWith('/archive/')) return t('Past Exhibitions');
     if (path == '/reset-password') return t('Reset Password');
     if (path == '/admin') return t('Admin Dashboard');
-    if (path == '/admin/sign-in') return t('Sign In');
+    if (path == '/sign-in' || path == '/admin/sign-in') return t('Sign In');
     if (path.startsWith('/admin/')) return t('Admin · ${_segmentLabel(path)}');
     if (path == '/fypms') return t('FYPMS');
     if (path.startsWith('/fypms')) return t('FYPMS · ${_segmentLabel(path)}');

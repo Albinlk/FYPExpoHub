@@ -95,6 +95,7 @@ void routeTitleTests() {
       expect(t('/archive'), 'Past Exhibitions · FYP Expo Hub');
       expect(t('/archive/2026'), 'Past Exhibitions · FYP Expo Hub');
       expect(t('/reset-password'), 'Reset Password · FYP Expo Hub');
+      expect(t('/sign-in'), 'Sign In · FYP Expo Hub');
       expect(t('/admin/sign-in'), 'Sign In · FYP Expo Hub');
     });
 

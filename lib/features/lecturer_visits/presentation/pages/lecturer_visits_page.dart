@@ -224,7 +224,7 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
               ),
               const SizedBox(height: DesignSystem.spaceLg),
               ElevatedButton(
-                onPressed: () => context.push('/admin/sign-in'),
+                onPressed: () => context.push('/sign-in'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: DesignSystem.primary,
                   foregroundColor: DesignSystem.onPrimary,
