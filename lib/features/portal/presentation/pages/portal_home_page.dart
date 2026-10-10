@@ -12,43 +12,54 @@ import '../../../../core/utils/schedule_format.dart';
 /// (FSKM handbook, *Essentials of Computing Sciences: Project
 /// Administration*, 4th ed.) side by side — the FYP Exhibition, CSP600 Project
 /// Formulation and CSP650 Project — each with what it involves and a way in.
+/// Widest the portal content grows; wider screens get margins instead.
+const kPortalMaxWidth = 1200.0;
+
 class PortalHomePage extends ConsumerWidget {
   const PortalHomePage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDesktop = Breakpoints.isDesktop(context);
-    final padding = isDesktop ? DesignSystem.marginDesktop : DesignSystem.marginMobile;
+    final padding = isDesktop
+        ? DesignSystem.marginDesktop
+        : DesignSystem.marginMobile;
     final signedIn = ref.watch(currentAuthUserProvider) != null;
     final event = ref.watch(eventProvider);
 
     // Course pages need a sign-in; afterwards the router sends each person to
     // their own workspace.
-    void openCourses() => context.go(signedIn ? '/fypms' : '/sign-in?from=%2Ffypms');
+    void openCourses() =>
+        context.go(signedIn ? '/fypms' : '/sign-in?from=%2Ffypms');
 
     final now = DateTime.now();
-    final status = now.isAfter(event.endAt)
+    final held = now.isAfter(event.endAt);
+    final status = held
         ? 'Held ${longDate(mytDate(event.startAt))}'
         : now.isAfter(event.startAt)
-            ? 'Happening now'
-            : '${longDate(mytDate(event.startAt))} – ${longDate(mytDate(event.endAt))}';
+        ? 'Happening now'
+        : '${longDate(mytDate(event.startAt))} – ${longDate(mytDate(event.endAt))}';
 
     final cards = [
       _PartCard(
         key: const Key('portal-exhibition'),
         icon: Icons.storefront_outlined,
-        eyebrow: 'Open to everyone',
+        eyebrow: 'No sign-in needed',
         title: 'FYP Exhibition',
+        highlighted: true,
         subtitle: '${event.title} · $status',
         points: const [
           'Browse this year\'s final year projects and award winners',
           'Find booths and the exhibition schedule',
           'Lecturers record booth visits and score F10 on the day',
         ],
-        primaryLabel: 'Explore the Exhibition',
-        onPrimary: () => context.go('/expo'),
-        secondaryLabel: 'Browse Projects',
-        onSecondary: () => context.go('/projects'),
+        // Once the exhibition is over, the winners are what people come for.
+        primaryLabel: held
+            ? 'See ${event.startAt.year} Winners'
+            : 'Explore the Exhibition',
+        onPrimary: () => context.go(held ? '/awards' : '/expo'),
+        secondaryLabel: held ? 'Explore the Exhibition' : 'Browse Projects',
+        onSecondary: () => context.go(held ? '/expo' : '/projects'),
       ),
       _PartCard(
         key: const Key('portal-csp600'),
@@ -70,10 +81,11 @@ class PortalHomePage extends ConsumerWidget {
       ),
       _PartCard(
         key: const Key('portal-csp650'),
-        icon: Icons.rocket_launch_outlined,
+        icon: Icons.workspace_premium_outlined,
         eyebrow: 'Semester 6',
         title: 'CSP650 · Final Year Project',
-        subtitle: 'Build the project, report it and present it at the exhibition.',
+        subtitle:
+            'Build the project, report it and present it at the exhibition.',
         points: const [
           'F9 progress presentation and F13 Lean Canvas',
           'F6(b) final report submission (similarity ≤ 30%)',
@@ -93,75 +105,99 @@ class PortalHomePage extends ConsumerWidget {
         children: [
           Container(
             decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [DesignSystem.primary, DesignSystem.primaryContainer],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+              gradient: RadialGradient(
+                center: Alignment(-0.6, -1.2),
+                radius: 1.8,
+                colors: [DesignSystem.primaryContainer, DesignSystem.primary],
               ),
             ),
-            padding: EdgeInsets.symmetric(horizontal: padding, vertical: isDesktop ? 64 : 32),
-            child: Column(
-              children: [
-                Semantics(
-                  header: true,
-                  child: Text(
-                    'FSKM Final Year Project Portal',
-                    textAlign: TextAlign.center,
-                    style: (isDesktop ? DesignSystem.h1 : DesignSystem.h1Mobile).copyWith(color: Colors.white),
-                  ),
-                ),
-                const SizedBox(height: DesignSystem.spaceSm),
-                Text(
-                  'The exhibition, Project Formulation (CSP600) and the Final Year Project (CSP650) in one place.',
-                  textAlign: TextAlign.center,
-                  style: (isDesktop ? DesignSystem.bodyLg : DesignSystem.bodyLgMobile)
-                      .copyWith(color: Colors.white.withValues(alpha: 0.9)),
-                ),
-                if (!signedIn) ...[
-                  const SizedBox(height: DesignSystem.spaceLg),
-                  FilledButton.icon(
-                    key: const Key('portal-sign-in'),
-                    onPressed: () => context.go('/sign-in'),
-                    icon: const Icon(Icons.login),
-                    label: const Text('Sign In'),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: DesignSystem.secondary,
-                      foregroundColor: Colors.white,
+            padding: EdgeInsets.symmetric(
+              horizontal: padding,
+              vertical: isDesktop ? 64 : 32,
+            ),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 760),
+                child: Column(
+                  children: [
+                    Semantics(
+                      header: true,
+                      child: Text(
+                        'FSKM Final Year Project Portal',
+                        textAlign: TextAlign.center,
+                        style:
+                            (isDesktop
+                                    ? DesignSystem.h1
+                                    : DesignSystem.h1Mobile)
+                                .copyWith(color: Colors.white),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: DesignSystem.spaceXs),
-                  Text(
-                    'Students, lecturers and coordinators use the same sign-in.',
-                    textAlign: TextAlign.center,
-                    style: DesignSystem.bodySm.copyWith(color: Colors.white.withValues(alpha: 0.85)),
-                  ),
-                ],
-              ],
+                    const SizedBox(height: DesignSystem.spaceSm),
+                    Text(
+                      'The exhibition, Project Formulation (CSP600) and the Final Year Project (CSP650) in one place.',
+                      textAlign: TextAlign.center,
+                      style:
+                          (isDesktop
+                                  ? DesignSystem.bodyLg
+                                  : DesignSystem.bodyLgMobile)
+                              .copyWith(
+                                color: Colors.white.withValues(alpha: 0.9),
+                              ),
+                    ),
+                    if (!signedIn) ...[
+                      const SizedBox(height: DesignSystem.spaceMd),
+                      // The page already offers Sign In (top bar or Menu, and on
+                      // each course card); a fourth button here was noise.
+                      Text(
+                        'Students, lecturers and coordinators use one sign-in for every part.',
+                        key: const Key('portal-sign-in-note'),
+                        textAlign: TextAlign.center,
+                        style: DesignSystem.bodySm.copyWith(
+                          color: Colors.white.withValues(alpha: 0.85),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
             ),
           ),
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: padding, vertical: DesignSystem.spaceXl),
-            child: isDesktop
-                ? IntrinsicHeight(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        for (var i = 0; i < cards.length; i++) ...[
-                          if (i > 0) const SizedBox(width: DesignSystem.spaceMd),
-                          Expanded(child: cards[i].withFillHeight()),
+            padding: EdgeInsets.fromLTRB(
+              padding,
+              DesignSystem.spaceXl,
+              padding,
+              // Desktop: clear the floating Feedback button at the end of the page.
+              isDesktop ? DesignSystem.spaceXl + 64 : DesignSystem.spaceXl,
+            ),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: kPortalMaxWidth),
+                child: isDesktop
+                    ? IntrinsicHeight(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            for (var i = 0; i < cards.length; i++) ...[
+                              if (i > 0)
+                                const SizedBox(width: DesignSystem.spaceMd),
+                              Expanded(child: cards[i].withFillHeight()),
+                            ],
+                          ],
+                        ),
+                      )
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          for (var i = 0; i < cards.length; i++) ...[
+                            if (i > 0)
+                              const SizedBox(height: DesignSystem.spaceMd),
+                            cards[i],
+                          ],
                         ],
-                      ],
-                    ),
-                  )
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      for (var i = 0; i < cards.length; i++) ...[
-                        if (i > 0) const SizedBox(height: DesignSystem.spaceMd),
-                        cards[i],
-                      ],
-                    ],
-                  ),
+                      ),
+              ),
+            ),
           ),
         ],
       ),
@@ -171,18 +207,19 @@ class PortalHomePage extends ConsumerWidget {
 
 class _PartCard extends StatelessWidget {
   _PartCard withFillHeight() => _PartCard(
-        key: key,
-        icon: icon,
-        eyebrow: eyebrow,
-        title: title,
-        subtitle: subtitle,
-        points: points,
-        primaryLabel: primaryLabel,
-        onPrimary: onPrimary,
-        secondaryLabel: secondaryLabel,
-        onSecondary: onSecondary,
-        fillHeight: true,
-      );
+    key: key,
+    icon: icon,
+    eyebrow: eyebrow,
+    title: title,
+    subtitle: subtitle,
+    points: points,
+    primaryLabel: primaryLabel,
+    onPrimary: onPrimary,
+    secondaryLabel: secondaryLabel,
+    onSecondary: onSecondary,
+    highlighted: highlighted,
+    fillHeight: true,
+  );
 
   const _PartCard({
     super.key,
@@ -196,9 +233,13 @@ class _PartCard extends StatelessWidget {
     required this.secondaryLabel,
     required this.onSecondary,
     this.fillHeight = false,
+    this.highlighted = false,
   });
 
   final bool fillHeight;
+
+  /// Tinted: the part anyone can use without signing in.
+  final bool highlighted;
   final IconData icon;
   final String eyebrow;
   final String title;
@@ -212,6 +253,7 @@ class _PartCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: highlighted ? DesignSystem.surfaceContainerLow : null,
       child: Padding(
         padding: const EdgeInsets.all(DesignSystem.spaceLg),
         child: Column(
@@ -224,7 +266,9 @@ class _PartCard extends StatelessWidget {
                 Flexible(
                   child: Text(
                     eyebrow.toUpperCase(),
-                    style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSurfaceVariant),
+                    style: DesignSystem.labelCaps.copyWith(
+                      color: DesignSystem.onSurfaceVariant,
+                    ),
                   ),
                 ),
               ],
@@ -232,10 +276,20 @@ class _PartCard extends StatelessWidget {
             const SizedBox(height: DesignSystem.spaceSm),
             Semantics(
               header: true,
-              child: Text(title, style: DesignSystem.h3Mobile.copyWith(color: DesignSystem.primary)),
+              child: Text(
+                title,
+                style: DesignSystem.h3Mobile.copyWith(
+                  color: DesignSystem.primary,
+                ),
+              ),
             ),
             const SizedBox(height: DesignSystem.spaceXs),
-            Text(subtitle, style: DesignSystem.bodyMd.copyWith(color: DesignSystem.onSurfaceVariant)),
+            Text(
+              subtitle,
+              style: DesignSystem.bodyMd.copyWith(
+                color: DesignSystem.onSurfaceVariant,
+              ),
+            ),
             const SizedBox(height: DesignSystem.spaceMd),
             for (final point in points)
               Padding(
@@ -245,7 +299,11 @@ class _PartCard extends StatelessWidget {
                   children: [
                     const Padding(
                       padding: EdgeInsets.only(top: 3),
-                      child: Icon(Icons.check, size: 16, color: DesignSystem.tertiary),
+                      child: Icon(
+                        Icons.check,
+                        size: 16,
+                        color: DesignSystem.tertiary,
+                      ),
                     ),
                     const SizedBox(width: DesignSystem.spaceSm),
                     Expanded(child: Text(point, style: DesignSystem.bodySm)),
@@ -262,7 +320,10 @@ class _PartCard extends StatelessWidget {
               runSpacing: DesignSystem.spaceSm,
               children: [
                 FilledButton(onPressed: onPrimary, child: Text(primaryLabel)),
-                OutlinedButton(onPressed: onSecondary, child: Text(secondaryLabel)),
+                OutlinedButton(
+                  onPressed: onSecondary,
+                  child: Text(secondaryLabel),
+                ),
               ],
             ),
           ],

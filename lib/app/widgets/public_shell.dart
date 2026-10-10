@@ -9,6 +9,11 @@ import 'feedback_form_widget.dart';
 /// to open the admin subdomain in a new tab).
 void _openSignIn(BuildContext context) => context.go('/sign-in');
 
+/// Desktop widths where every nav link fits, and where five do (with the
+/// labelled Feedback button).
+const kNavAllLinksWidth = 1280.0;
+const kNavFiveLinksWidth = 1024.0;
+
 class PublicShell extends ConsumerWidget {
   final Widget child;
 
@@ -16,7 +21,8 @@ class PublicShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final location = GoRouterState.of(context).uri.toString();
+    // Path only: a query (?utm_source=..., filters) must not unselect the tab.
+    final location = GoRouterState.of(context).uri.path;
     final isDesktop = MediaQuery.sizeOf(context).width >= 768;
     // Only rebuild the shell when the sign-in *state* flips, not on every
     // lecturer/auth/Firestore emit (avoids rebuilding the whole nav).
@@ -39,17 +45,28 @@ class PublicShell extends ConsumerWidget {
           child,
           // Desktop only: on mobile the FAB covered buttons and card text,
           // so Feedback lives in the bottom-nav Menu sheet instead.
+          // Below 1024 px the labelled button covered card text, so it
+          // shrinks to an icon with a tooltip.
           if (isDesktop)
             Positioned(
               right: 24,
               bottom: 24,
-              child: FloatingActionButton.extended(
-                onPressed: () => FeedbackFormWidget.show(context, ref),
-                icon: const Icon(Icons.feedback_outlined, size: 20),
-                label: const Text('Feedback'),
-                backgroundColor: DesignSystem.secondary,
-                foregroundColor: Colors.white,
-              ),
+              child: MediaQuery.sizeOf(context).width >= kNavFiveLinksWidth
+                  ? FloatingActionButton.extended(
+                      onPressed: () => FeedbackFormWidget.show(context, ref),
+                      icon: const Icon(Icons.feedback_outlined, size: 20),
+                      label: const Text('Feedback'),
+                      backgroundColor: DesignSystem.secondary,
+                      foregroundColor: Colors.white,
+                    )
+                  : FloatingActionButton.small(
+                      key: const Key('feedback-fab-compact'),
+                      onPressed: () => FeedbackFormWidget.show(context, ref),
+                      tooltip: 'Feedback',
+                      backgroundColor: DesignSystem.secondary,
+                      foregroundColor: Colors.white,
+                      child: const Icon(Icons.feedback_outlined, size: 20),
+                    ),
             ),
         ],
       ),
@@ -119,63 +136,75 @@ class _DesktopNavBar extends StatelessWidget {
           ),
           ),
 
-          // Center: Links. Flexible + horizontal scroll so the row never runs
-          // into the logo on narrow desktop widths (~800 px).
+          // Center: Links. Below 1280 px the full row does not fit beside the
+          // logo and Sign In (at 800 px "Announcements" ran under the button),
+          // so the lower-priority links move into More. The scroll view stays
+          // as a last resort for very long translations.
           Flexible(
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: DesignSystem.spaceMd),
-              child: Row(
-            children: [
-              _buildNavLink(context, 'Home', '/'),
-              const SizedBox(width: DesignSystem.spaceLg),
-              _buildNavLink(context, 'Exhibition', '/expo'),
-              const SizedBox(width: DesignSystem.spaceLg),
-              _buildNavLink(context, 'Schedule', '/schedule'),
-              const SizedBox(width: DesignSystem.spaceLg),
-              _buildNavLink(context, 'Booths', '/booths'),
-              const SizedBox(width: DesignSystem.spaceLg),
-              _buildNavLink(context, 'Projects', '/projects'),
-              const SizedBox(width: DesignSystem.spaceLg),
-              _buildNavLink(context, 'Past Projects Guide', '/projects/junior-guide'),
-              const SizedBox(width: DesignSystem.spaceLg),
-              _buildNavLink(context, 'Announcements', '/announcements'),
-              const SizedBox(width: DesignSystem.spaceLg),
-              _buildNavLink(context, 'Awards', '/awards'),
-              const SizedBox(width: DesignSystem.spaceLg),
-              _buildNavLink(context, 'Find by Lecturer', '/lecturer'),
-              if (lecturerSignedIn) ...[
-                const SizedBox(width: DesignSystem.spaceLg),
-                _buildNavLink(context, 'My Visits', '/lecturer/visits'),
-              ],
-              const SizedBox(width: DesignSystem.spaceMd),
-              // Info, FAQ and Privacy were only reachable from the mobile menu.
-              PopupMenuButton<String>(
-                tooltip: 'More',
-                onSelected: (route) => _navigateTo(context, route),
-                itemBuilder: (_) => const [
-                  PopupMenuItem(value: '/info', child: Text('Exhibition Info')),
-                  PopupMenuItem(value: '/faq', child: Text('FAQ')),
-                  PopupMenuItem(value: '/archive', child: Text('Past Exhibitions')),
-                  PopupMenuItem(value: '/privacy', child: Text('Privacy Policy')),
-                ],
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+              child: Builder(builder: (context) {
+                final width = MediaQuery.sizeOf(context).width;
+                final links = <(String, String)>[
+                  ('Home', '/'),
+                  ('Exhibition', '/expo'),
+                  ('Projects', '/projects'),
+                  ('Booths', '/booths'),
+                  ('Schedule', '/schedule'),
+                  ('Past Projects Guide', '/projects/junior-guide'),
+                  ('Announcements', '/announcements'),
+                  ('Awards', '/awards'),
+                  ('Find by Lecturer', '/lecturer'),
+                  if (lecturerSignedIn) ('My Visits', '/lecturer/visits'),
+                ];
+                final inline = width >= kNavAllLinksWidth
+                    ? links.length
+                    : width >= kNavFiveLinksWidth
+                        ? 5
+                        : 3;
+                final shown = links.take(inline).toList();
+                final overflow = links.skip(inline).toList();
+                final gap = width >= kNavAllLinksWidth ? DesignSystem.spaceLg : DesignSystem.spaceMd;
+                const moreRoutes = [
+                  ('Exhibition Info', '/info'),
+                  ('FAQ', '/faq'),
+                  ('Past Exhibitions', '/archive'),
+                  ('Privacy Policy', '/privacy'),
+                ];
+                final menu = [...overflow, ...moreRoutes];
+                final moreActive = menu.any((l) => _isActive(l.$2));
+                return Row(
                   children: [
-                    Text(
-                      'More',
-                      style: DesignSystem.bodyMd.copyWith(
-                        color: _isActive('/info') || _isActive('/faq') || _isActive('/privacy') || _isActive('/archive')
-                            ? DesignSystem.primary
-                            : DesignSystem.onSurfaceVariant,
+                    for (final (title, route) in shown) ...[
+                      _buildNavLink(context, title, route),
+                      SizedBox(width: gap),
+                    ],
+                    PopupMenuButton<String>(
+                      key: const Key('nav-more'),
+                      tooltip: 'More',
+                      onSelected: (route) => _navigateTo(context, route),
+                      itemBuilder: (_) => [
+                        for (final (title, route) in menu)
+                          PopupMenuItem(value: route, child: Text(title)),
+                      ],
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'More',
+                            style: DesignSystem.bodyMd.copyWith(
+                              color: moreActive ? DesignSystem.primary : DesignSystem.onSurfaceVariant,
+                              fontWeight: moreActive ? FontWeight.bold : null,
+                            ),
+                          ),
+                          const Icon(Icons.arrow_drop_down, color: DesignSystem.onSurfaceVariant),
+                        ],
                       ),
                     ),
-                    const Icon(Icons.arrow_drop_down, color: DesignSystem.onSurfaceVariant),
                   ],
-                ),
-              ),
-            ],
-          ),
+                );
+              }),
             ),
           ),
 
