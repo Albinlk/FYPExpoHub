@@ -90,6 +90,7 @@ import 'widgets/admin_shell.dart';
 import 'widgets/fypms_shell.dart';
 import 'widgets/public_shell.dart';
 import '../features/portal/presentation/pages/portal_home_page.dart';
+import '../features/fypms/presentation/pages/csp_cohort_page.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
   // Re-run the redirect guards whenever the signed-in user changes —
@@ -462,6 +463,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/fypms/csp/offerings',
             builder: (context, state) => const CspOfferingsPage(),
+          ),
+          GoRoute(
+            path: '/fypms/csp/cohort',
+            builder: (context, state) => const CspCohortPage(),
           ),
           GoRoute(
             path: '/fypms/csp/milestones',

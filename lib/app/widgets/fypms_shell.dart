@@ -196,6 +196,7 @@ bool _studentHasProjectCourse(WidgetRef ref, bool isStudent) {
 List<({String title, IconData icon, String route})> _navItems({
   bool showProjectPages = true,
   String cspTitle = 'CSP Dashboard',
+  bool teachesCsp600 = false,
   required bool isAdmin,
   required bool isCoordinator,
   required bool isStudent,
@@ -251,6 +252,8 @@ List<({String title, IconData icon, String route})> _navItems({
       (title: cspTitle, icon: Icons.dashboard, route: '/fypms/csp'),
       (title: 'Supervision Requests', icon: Icons.mail, route: '/fypms/csp/requests'),
       (title: 'Offerings', icon: Icons.school, route: '/fypms/csp/offerings'),
+      // Handbook Table 2.1 #19 and #29: CSP600 lecturers assign examiners and hand over to CSP650.
+      if (teachesCsp600) (title: 'Examiners & Handover', icon: Icons.swap_horiz, route: '/fypms/csp/cohort'),
       (title: 'Milestones', icon: Icons.flag, route: '/fypms/csp/milestones'),
       (title: 'Evaluations', icon: Icons.description, route: '/fypms/csp/evaluations'),
       (title: 'Presentations', icon: Icons.event, route: '/fypms/csp/presentations'),
@@ -312,6 +315,7 @@ class _FypmsSidebar extends ConsumerWidget {
     final items = _navItems(
       showProjectPages: _studentHasProjectCourse(ref, isStudent),
       cspTitle: cspWorkspaceTitle(ref.watch(cspTaughtCoursesProvider)),
+      teachesCsp600: ref.watch(cspTaughtCoursesProvider).contains('CSP600'),
       isAdmin: isAdmin,
       isCoordinator: isCoordinator,
       isStudent: isStudent,
@@ -416,6 +420,7 @@ class _FypmsDrawer extends ConsumerWidget {
     final items = _navItems(
       showProjectPages: _studentHasProjectCourse(ref, isStudent),
       cspTitle: cspWorkspaceTitle(ref.watch(cspTaughtCoursesProvider)),
+      teachesCsp600: ref.watch(cspTaughtCoursesProvider).contains('CSP600'),
       isAdmin: isAdmin,
       isCoordinator: isCoordinator,
       isStudent: isStudent,
