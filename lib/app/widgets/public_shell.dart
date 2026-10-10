@@ -11,7 +11,7 @@ void _openSignIn(BuildContext context) => context.go('/sign-in');
 
 /// Desktop widths where every nav link fits, and where five do (with the
 /// labelled Feedback button).
-const kNavAllLinksWidth = 1280.0;
+const kNavAllLinksWidth = 1440.0;
 const kNavFiveLinksWidth = 1024.0;
 
 class PublicShell extends ConsumerWidget {
@@ -136,7 +136,7 @@ class _DesktopNavBar extends StatelessWidget {
           ),
           ),
 
-          // Center: Links. Below 1280 px the full row does not fit beside the
+          // Center: Links. Below 1440 px the full row does not fit beside the
           // logo and Sign In (at 800 px "Announcements" ran under the button),
           // so the lower-priority links move into More. The scroll view stays
           // as a last resort for very long translations.
