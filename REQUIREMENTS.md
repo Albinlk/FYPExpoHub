@@ -156,7 +156,7 @@ Client-side role checks only shape the UI; every write is re-authorised by RLS o
 | M10 | Exhibition info, FAQ, Privacy | `/info`, `/faq`, `/privacy` | Visitor | `lib/features/exhibition_info/`, `faq_privacy/` |
 | M11 | Past Sem Projects guide & redundancy report | `/projects/junior-guide`, `/projects/junior-guide/similar/:id` | Visitor (junior students) | `lib/features/junior_project_guide/` |
 | M12 | Feedback | dialog / sheet | All | `lib/app/widgets/feedback_form_widget.dart` |
-| M13 | Authentication | `/admin/sign-in`, `/lecturer/sign-in`, `/reset-password` | Staff, students | `lib/features/admin_auth/`, `lecturer_auth/` |
+| M13 | Authentication | `/sign-in` (old `/admin/sign-in` forwards), `/lecturer/sign-in`, `/reset-password` | Staff, students | `lib/features/admin_auth/`, `lecturer_auth/` |
 | M14 | Lecturer visits | `/lecturer/visits`, `/lecturer/visits/:projectId` | Lecturer, Admin | `lib/features/lecturer_visits/` |
 | M15 | Admin dashboard | `/admin` | Admin | `lib/features/admin_dashboard/` |
 | M16 | Event information | `/admin/event` | Admin | `lib/features/admin_event/` |
@@ -191,12 +191,13 @@ Requirement IDs use the pattern `FR-<area>-<nn>`. "Shall" statements describe im
 
 | ID | Requirement |
 |---|---|
+| FR-NAV-00 | The landing page `/` shall be a portal with three parts: the **FYP Exhibition** (→ `/expo`, the exhibition home), **CSP600 Project Formulation** (forms F1–F8) and **CSP650 Final Year Project** (F9–F16 and the exhibition), plus one Sign In. Existing exhibition URLs (`/projects`, `/booths`, `/schedule`, `/awards`, …) keep working. |
 | FR-NAV-01 | The system shall treat viewports ≥ 768 px as desktop and < 768 px as mobile. |
-| FR-NAV-02 | On desktop the system shall show a 64 px top bar with the "FYP Expo Hub" logo (→ `/`) and links: Home, Schedule, Booths, Projects, Project Guide, Announcements, Awards, Lecturer Portal; "My Visits" is added when a lecturer is signed in. |
+| FR-NAV-02 | On desktop the system shall show a 64 px top bar with the "FYP Expo Hub" logo (→ `/`) and links: Home (the portal), Exhibition (`/expo`), Schedule, Booths, Projects, Past Projects Guide, Announcements, Awards, Find by Lecturer; "My Visits" is added when a lecturer is signed in. |
 | FR-NAV-03 | The active desktop link shall be bold with a 24 × 2 px underline (exact match for `/`, prefix match otherwise). |
-| FR-NAV-04 | When no lecturer is signed in, the desktop bar shall show a "Sign In" button that opens the admin sign-in URL. |
-| FR-NAV-05 | On mobile the system shall show a five-tab bottom bar: Home, Map (`/booths`), Guide (`/projects/junior-guide`), **Staff** (`/lecturer`) for visitors or **Visits** (`/lecturer/visits`) for signed-in lecturers, and Menu. Below 360 px labels are hidden. |
-| FR-NAV-06 | The mobile Menu sheet shall list: Sign In (signed out only), Project Catalogue, Booths, Schedule, Project Guide, Announcements, Award Winners, Lecturer Portal (signed-in lecturers only), Exhibition Info, FAQ, Privacy Policy, and Send Feedback. |
+| FR-NAV-04 | When no lecturer is signed in, the desktop bar shall show a "Sign In" button that opens `/sign-in` in the same app. |
+| FR-NAV-05 | On mobile the system shall show a five-tab bottom bar: Home, Booths (`/booths`), Guide (`/projects/junior-guide`), **Staff** (`/lecturer`) for visitors or **Visits** (`/lecturer/visits`) for signed-in lecturers, and Menu. Below 360 px labels are hidden. |
+| FR-NAV-06 | The mobile Menu sheet shall list: Sign In (signed out only), Exhibition, Project Catalogue, Booths, Schedule, Project Guide, Announcements, Award Winners, Lecturer Portal (signed-in lecturers only), Exhibition Info, FAQ, Privacy Policy, and Send Feedback. |
 | FR-NAV-07 | Feedback shall be reachable from a floating "Feedback" button on desktop and from the Menu sheet on mobile (no floating button on phones, so content is never covered). |
 | FR-NAV-08 | The system shall use path-based URLs (no `#`) and set a per-route browser tab title (e.g. "Schedule · FYP Expo Hub"). |
 
@@ -325,14 +326,14 @@ Purpose: help junior students check whether a proposed topic has already been do
 
 | ID | Requirement |
 |---|---|
-| FR-AUTH-01 | One sign-in page (`/admin/sign-in`) shall serve admins, lecturers and FYPMS users with "Official Email" (required, contains `@`) and "Password" (required, ≥ 6 characters). |
+| FR-AUTH-01 | One sign-in page (`/sign-in`; `/admin/sign-in` forwards to it keeping `?from`) shall serve admins, lecturers and FYPMS users with "Official Email" (required, contains `@`) and "Password" (required, ≥ 6 characters). |
 | FR-AUTH-02 | The email shall be trimmed and lower-cased; the password shall be sent unmodified. |
 | FR-AUTH-03 | Sign-in errors shall be mapped to "Invalid email or password. Please try again." and "Please confirm your email address before signing in."; other errors show the server message. |
 | FR-AUTH-04 | Authentication shall use Supabase email/password with the PKCE flow; sessions are refreshed automatically. |
 | FR-AUTH-05 | After sign-in the user shall be sent to a safe `?from=` path if given (non-admins may not return to `/admin/**`), otherwise: admin → `/admin`, lecturer → `/lecturer/visits`, FYPMS user → their home workspace. |
 | FR-AUTH-06 | `?from=` values shall be rejected unless they start with `/`, and rejected if they start with `//` or contain `://` or `\`. |
-| FR-AUTH-07 | Protected routes shall redirect signed-out users to `/admin/sign-in?from=<path>`; the router shall re-evaluate guards whenever the signed-in user changes. |
-| FR-AUTH-08 | On the host `admin.fskmjasinfypexhibition.site`, `/` shall redirect to `/admin/sign-in` (signed out) or `/admin` (signed in). |
+| FR-AUTH-07 | Protected routes shall redirect signed-out users to `/sign-in?from=<path>`; the router shall re-evaluate guards whenever the signed-in user changes. |
+| FR-AUTH-08 | On the host `admin.fskmjasinfypexhibition.site`, `/` shall redirect to `/sign-in` (signed out) or `/admin` (signed in). |
 | FR-AUTH-09 | `/lecturer/sign-in` shall forward to the shared sign-in page. |
 | FR-AUTH-10 | Sign-out shall end the Supabase session, clear cached profile/role state and return to the public site (admin, lecturer) or sign-in (FYPMS). |
 | FR-AUTH-11 | "Forgot password?" on the sign-in page shall send the Supabase recovery email with a neutral confirmation (an unknown account also reads as sent; a rate limit is reported). The link lands on `/reset-password`, where the recovery session lets the user set a new password (8+ characters, letters and digits, typed twice); an expired or reused link says so. There is no per-account lockout; brute-force protection is Supabase Auth's sign-in rate limit (G-32). |

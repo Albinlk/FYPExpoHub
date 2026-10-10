@@ -91,7 +91,7 @@ Redirect URLs** add:
 
 | Redirect URL | Used by |
 |---|---|
-| `https://fskmjasinfypexhibition.site/reset-password` | "Forgot password?" on `/admin/sign-in` (the shared sign-in page) |
+| `https://fskmjasinfypexhibition.site/reset-password` | "Forgot password?" on `/sign-in` (the shared sign-in page) |
 | `https://admin.fskmjasinfypexhibition.site/reset-password` | Admin domain (kept in case the link is built from that origin) |
 
 Without these entries the reset email falls back to the Site URL and the
@@ -211,7 +211,7 @@ npx supabase gen types typescript --project-id siedglubjcedkbrpdzgi
 
 ### Post-Deployment
 - [ ] Public site loads: https://fskmjasinfypexhibition.site
-- [ ] Admin sign-in works: https://fskmjasinfypexhibition.site/admin/sign-in (and https://admin.fskmjasinfypexhibition.site redirects there)
+- [ ] Sign-in works: https://fskmjasinfypexhibition.site/sign-in (and `/admin/sign-in` forwards to it) (and https://admin.fskmjasinfypexhibition.site redirects there)
 - [ ] Supabase Realtime is connected (check browser dev tools → Network → WebSocket)
 - [ ] Project data renders on the public site
 - [ ] Schedule data renders

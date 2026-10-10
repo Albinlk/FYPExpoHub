@@ -2,7 +2,7 @@
 
 ## Accessing the Admin CMS
 
-1. Navigate to https://fskmjasinfypexhibition.site/admin/sign-in
+1. Navigate to https://fskmjasinfypexhibition.site/sign-in (the old `/admin/sign-in` address still works and forwards there)
 2. Sign in with your Supabase Auth credentials
 3. If you don't have access, contact an existing admin to create a `profiles` row for you
 
