@@ -12,6 +12,7 @@ import '../../../../core/widgets/async_state.dart';
 import 'package:flutter/services.dart';
 import '../../../../core/widgets/busy_button.dart';
 import '../../../../core/layout/responsive.dart';
+import '../../../../core/utils/fypms_format.dart';
 
 /// Presentation sessions and slots, for the coordinator (all courses) and
 /// the CSP lecturers (their own course offerings, per RLS).
@@ -73,7 +74,7 @@ class CoordinatorPresentationsPage extends ConsumerWidget {
                       style: DesignSystem.bodyLg.copyWith(fontWeight: FontWeight.bold),
                     ),
                     subtitle: Text(
-                      '${session.sessionType.toUpperCase()} | ${_formatDate(session.eventDate)} | '
+                      '${sessionTypeLabel(session.sessionType)} | ${_formatDate(session.eventDate)} | '
                       '${session.venue ?? 'TBC'}',
                       style: DesignSystem.bodySm,
                     ),

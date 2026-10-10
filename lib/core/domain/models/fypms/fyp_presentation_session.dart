@@ -14,7 +14,7 @@ abstract class FypPresentationSession with _$FypPresentationSession {
     required DateTime startAt,
     required DateTime endAt,
     String? venue,
-    required String sessionType, // 'defence', 'expo'
+    required String sessionType, // 'defence', 'expo', 'progress' (F9)
     required DateTime createdAt,
     required DateTime updatedAt,
   }) = _FypPresentationSession;
