@@ -39,7 +39,7 @@ class CspMarksPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final records = ref.watch(fypRecordsProvider);
+    final records = ref.watch(cspRecordsProvider);
 
     return Scaffold(
       backgroundColor: DesignSystem.background,

@@ -13,7 +13,7 @@ class CspEvaluationsPage extends ConsumerWidget {
     return FormEvaluationsView(
       title: 'Course Evaluations',
       role: 'lecturer',
-      records: ref.watch(fypRecordsProvider),
+      records: ref.watch(cspRecordsProvider),
       emptyText: 'No records in your course yet.',
     );
   }

@@ -15,7 +15,7 @@ class CspRequestsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final requests = ref.watch(fypPendingSupervisionRequestsProvider);
-    final records = ref.watch(fypRecordsProvider).value ?? const [];
+    final records = ref.watch(cspRecordsProvider).value ?? const [];
 
     return Scaffold(
       backgroundColor: DesignSystem.background,

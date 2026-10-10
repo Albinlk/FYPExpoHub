@@ -194,6 +194,7 @@ bool _studentHasProjectCourse(WidgetRef ref, bool isStudent) {
 
 List<({String title, IconData icon, String route})> _navItems({
   bool showProjectPages = true,
+  String cspTitle = 'CSP Dashboard',
   required bool isAdmin,
   required bool isCoordinator,
   required bool isStudent,
@@ -246,7 +247,7 @@ List<({String title, IconData icon, String route})> _navItems({
 
   if (isCsp) {
     items.addAll([
-      (title: 'CSP Dashboard', icon: Icons.dashboard, route: '/fypms/csp'),
+      (title: cspTitle, icon: Icons.dashboard, route: '/fypms/csp'),
       (title: 'Supervision Requests', icon: Icons.mail, route: '/fypms/csp/requests'),
       (title: 'Offerings', icon: Icons.school, route: '/fypms/csp/offerings'),
       (title: 'Milestones', icon: Icons.flag, route: '/fypms/csp/milestones'),
@@ -307,6 +308,7 @@ class _FypmsSidebar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final items = _navItems(
       showProjectPages: _studentHasProjectCourse(ref, isStudent),
+      cspTitle: cspWorkspaceTitle(ref.watch(cspTaughtCoursesProvider)),
       isAdmin: isAdmin,
       isCoordinator: isCoordinator,
       isStudent: isStudent,
@@ -410,6 +412,7 @@ class _FypmsDrawer extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final items = _navItems(
       showProjectPages: _studentHasProjectCourse(ref, isStudent),
+      cspTitle: cspWorkspaceTitle(ref.watch(cspTaughtCoursesProvider)),
       isAdmin: isAdmin,
       isCoordinator: isCoordinator,
       isStudent: isStudent,

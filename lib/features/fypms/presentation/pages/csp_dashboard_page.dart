@@ -21,7 +21,7 @@ class CspDashboardPage extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: DesignSystem.primary,
         title: Text(
-          'CSP Lecturer Dashboard',
+          cspWorkspaceTitle(ref.watch(cspTaughtCoursesProvider)),
           style: DesignSystem.h3.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
         ),
       ),
@@ -88,7 +88,7 @@ class _OfferingCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final records = ref.watch(fypRecordsProvider);
+    final records = ref.watch(cspRecordsProvider);
 
     return Card(
       elevation: 1,

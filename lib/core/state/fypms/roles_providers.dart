@@ -88,6 +88,22 @@ final isCspLecturerProvider = Provider<bool>((ref) {
       roles.value?.contains('csp650_lecturer') == true;
 });
 
+/// The courses the current user teaches as a CSP lecturer: `csp600_lecturer`
+/// teaches CSP600 Project Formulation, `csp650_lecturer` CSP650 Project.
+final cspTaughtCoursesProvider = Provider<Set<String>>((ref) {
+  final roles = ref.watch(fypmsCurrentRolesProvider).value ?? const <String>[];
+  return {
+    if (roles.contains('csp600_lecturer')) 'CSP600',
+    if (roles.contains('csp650_lecturer')) 'CSP650',
+  };
+});
+
+/// Menu title for the CSP lecturer workspace, named after the course taught.
+String cspWorkspaceTitle(Set<String> courses) {
+  final sorted = courses.toList()..sort();
+  return sorted.isEmpty ? 'CSP Dashboard' : '${sorted.join(' & ')} Dashboard';
+}
+
 // ==============================================================================
 // FYPMS FEATURE FLAGS (from settings.fypms_features)
 // ==============================================================================

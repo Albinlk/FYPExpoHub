@@ -6,6 +6,7 @@ import '../../supabase/fypms_database_service.dart';
 import '../../supabase/supabase_client_provider.dart';
 import '../../utils/fypms_key_normalizer.dart';
 import '../expo/service_providers.dart';
+import 'roles_providers.dart';
 
 // ==============================================================================
 // FYP RECORDS (per current user)
@@ -54,4 +55,15 @@ final assignedFypRecordsProvider =
     rows.map((m) => FypRecord.fromJson(normalizeFypmsKeys(m))).toList(),
     ref.watch(fypmsEffectiveSemesterIdProvider),
   );
+});
+
+
+/// Records for the CSP lecturer pages: only the courses this lecturer teaches
+/// (a CSP600 lecturer does not see CSP650 records and vice versa). Loading and
+/// errors pass through from [fypRecordsProvider].
+final cspRecordsProvider = Provider<AsyncValue<List<FypRecord>>>((ref) {
+  final courses = ref.watch(cspTaughtCoursesProvider);
+  return ref.watch(fypRecordsProvider).whenData(
+        (list) => courses.isEmpty ? list : [for (final r in list) if (courses.contains(r.currentCourseCode)) r],
+      );
 });

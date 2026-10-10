@@ -26,7 +26,7 @@ class _CspMilestonesPageState extends ConsumerState<CspMilestonesPage> {
   Widget build(BuildContext context) {
     // CSP lecturers manage milestones per FYP record; a selector lets them
     // pick which record's milestone set they are editing.
-    final records = ref.watch(fypRecordsProvider);
+    final records = ref.watch(cspRecordsProvider);
 
     return Scaffold(
       backgroundColor: DesignSystem.background,

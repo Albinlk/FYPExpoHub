@@ -1,6 +1,9 @@
 import 'dart:io';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fyp_expo_hub/core/domain/models/fypms/fyp_record.dart';
+import 'package:fyp_expo_hub/core/state/fypms/records_providers.dart';
 import 'package:fyp_expo_hub/core/state/fypms/roles_providers.dart';
 
 /// Portal plan P1: CSP600 and CSP650 each see only their own forms (FSKM
@@ -40,5 +43,47 @@ void main() {
 
     expect(sqlCodes('CSP600'), fypmsCourseForms['CSP600']);
     expect(sqlCodes('CSP650'), fypmsCourseForms['CSP650']);
+  });
+
+  group('CSP lecturer workspace', () {
+    FypRecord rec(String id, String course) => FypRecord(
+          id: id,
+          academicSemesterId: 'sem-1',
+          studentId: 's-$id',
+          currentCourseCode: course,
+          programmeCode: 'CS266',
+          workflowStatus: 'project_registered',
+          createdAt: DateTime(2026, 8, 1),
+          updatedAt: DateTime(2026, 8, 1),
+        );
+
+    Future<List<String>> idsFor(List<String> roles) async {
+      final container = ProviderContainer(overrides: [
+        fypmsCurrentRolesProvider.overrideWith((ref) async => roles),
+        fypRecordsProvider.overrideWith((ref) async => [rec('a', 'CSP600'), rec('b', 'CSP650')]),
+      ]);
+      addTearDown(container.dispose);
+      await container.read(fypmsCurrentRolesProvider.future);
+      await container.read(fypRecordsProvider.future);
+      return [for (final r in container.read(cspRecordsProvider).requireValue) r.id];
+    }
+
+    test('a CSP600 lecturer sees only CSP600 records', () async {
+      expect(await idsFor(['csp600_lecturer']), ['a']);
+    });
+
+    test('a CSP650 lecturer sees only CSP650 records', () async {
+      expect(await idsFor(['csp650_lecturer']), ['b']);
+    });
+
+    test('teaching both shows both', () async {
+      expect(await idsFor(['csp600_lecturer', 'csp650_lecturer']), ['a', 'b']);
+    });
+
+    test('menu title names the course', () {
+      expect(cspWorkspaceTitle({'CSP650'}), 'CSP650 Dashboard');
+      expect(cspWorkspaceTitle({'CSP650', 'CSP600'}), 'CSP600 & CSP650 Dashboard');
+      expect(cspWorkspaceTitle({}), 'CSP Dashboard');
+    });
   });
 }
