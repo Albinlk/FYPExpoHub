@@ -42,6 +42,7 @@ _Event _$EventFromJson(Map<String, dynamic> json) => _Event(
   publishedAt: json['publishedAt'] == null
       ? null
       : DateTime.parse(json['publishedAt'] as String),
+  academicSemesterId: json['academicSemesterId'] as String?,
 );
 
 Map<String, dynamic> _$EventToJson(_Event instance) => <String, dynamic>{
@@ -64,4 +65,5 @@ Map<String, dynamic> _$EventToJson(_Event instance) => <String, dynamic>{
   'publicationStatus': instance.publicationStatus,
   'updatedAt': instance.updatedAt.toIso8601String(),
   'publishedAt': instance.publishedAt?.toIso8601String(),
+  'academicSemesterId': instance.academicSemesterId,
 };

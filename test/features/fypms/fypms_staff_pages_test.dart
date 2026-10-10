@@ -225,8 +225,8 @@ Finder _dialogButton(String label) =>
     find.descendant(of: find.byType(AlertDialog), matching: find.text(label));
 
 void main() {
-  baseOverrides({List<FypFormSubmission>? submissions, List<FypMarksSummary>? marks, CourseMarks? courseMarks, List<MySupervisionRequest>? mine}) => [
-        fypRecordsProvider.overrideWith((ref) async => [_record()]),
+  baseOverrides({List<FypRecord>? records, List<FypFormSubmission>? submissions, List<FypMarksSummary>? marks, CourseMarks? courseMarks, List<MySupervisionRequest>? mine}) => [
+        fypRecordsProvider.overrideWith((ref) async => records ?? [_record()]),
         fypPendingSupervisionRequestsProvider.overrideWith((ref) async => [_request()]),
         assignedFypRecordsProvider.overrideWith((ref, role) async => [_record()]),
         fypStaffProvider.overrideWith((ref, roles) async => _staff),
@@ -818,7 +818,8 @@ void main() {
         tester,
         ProviderScope(
           overrides: [
-            ...baseOverrides(),
+            // The exhibition is CSP650's: only CSP650 records can be prepared.
+            ...baseOverrides(records: [_record().copyWith(currentCourseCode: 'CSP650')]),
             prepareExpoPublicationProvider.overrideWithValue(
                 (recordId, eventId, payload) async {
               called.addAll([recordId, eventId]);
@@ -832,7 +833,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Prepare Publication'), findsWidgets);
-      expect(find.text('FYP Record'), findsOneWidget);
+      expect(find.text('CSP650 Record'), findsOneWidget);
       expect(find.text('Event'), findsOneWidget);
 
       await tester.tap(find.byType(DropdownButtonFormField<String>).first);

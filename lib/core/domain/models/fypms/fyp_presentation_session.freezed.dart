@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$FypPresentationSession {
 
- String get id; String? get offeringId; String get sessionCode; String get sessionTitle; DateTime get eventDate; DateTime get startAt; DateTime get endAt; String? get venue; String get sessionType;// 'defence', 'expo'
+ String get id; String? get offeringId; String get sessionCode; String get sessionTitle; DateTime get eventDate; DateTime get startAt; DateTime get endAt; String? get venue; String get sessionType;// 'defence', 'expo', 'progress' (F9)
  DateTime get createdAt; DateTime get updatedAt;
 /// Create a copy of FypPresentationSession
 /// with the given fields replaced by the non-null parameter values.
@@ -232,7 +232,7 @@ class _FypPresentationSession implements FypPresentationSession {
 @override final  DateTime endAt;
 @override final  String? venue;
 @override final  String sessionType;
-// 'defence', 'expo'
+// 'defence', 'expo', 'progress' (F9)
 @override final  DateTime createdAt;
 @override final  DateTime updatedAt;
 

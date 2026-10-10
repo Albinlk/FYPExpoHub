@@ -384,6 +384,9 @@ Map<String, dynamic> eventToRow(Event e) => {
       'faq_items': [
         for (final f in e.faqItems) {'question': f.question, 'answer': f.answer},
       ],
+      // Only sent once set, so saving still works on a database without the
+      // column (migration 20261010000003 not yet applied).
+      if (e.academicSemesterId != null) 'academic_semester_id': e.academicSemesterId,
     };
 
 Event eventFromRow(Map<String, dynamic> row) {
