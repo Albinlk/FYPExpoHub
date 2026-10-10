@@ -343,7 +343,7 @@ class _FypmsSidebar extends ConsumerWidget {
             child: ListTile(
               leading: const Icon(Icons.arrow_back, color: Colors.white70, size: 20),
               title: Text(
-                'Back to Public Portal',
+                'Back to Portal',
                 style: DesignSystem.bodySm.copyWith(color: Colors.white70),
               ),
               onTap: () => context.go('/'),
@@ -464,7 +464,7 @@ class _FypmsDrawer extends ConsumerWidget {
               child: ListTile(
                 leading: const Icon(Icons.arrow_back, color: Colors.white70, size: 20),
                 title: Text(
-                  'Back to Public Portal',
+                  'Back to Portal',
                   style: DesignSystem.bodySm.copyWith(color: Colors.white70),
                 ),
                 onTap: () {

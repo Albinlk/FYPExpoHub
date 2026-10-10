@@ -89,6 +89,7 @@ import '../features/junior_project_guide/presentation/pages/similar_projects_pag
 import 'widgets/admin_shell.dart';
 import 'widgets/fypms_shell.dart';
 import 'widgets/public_shell.dart';
+import '../features/portal/presentation/pages/portal_home_page.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
   // Re-run the redirect guards whenever the signed-in user changes —
@@ -120,8 +121,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ShellRoute(
         builder: (context, state, child) => PublicShell(child: child),
         routes: [
+          // The portal: Exhibition, CSP600 and CSP650 side by side.
           GoRoute(
             path: '/',
+            builder: (context, state) => const PortalHomePage(),
+          ),
+          // The exhibition's own home (was "/").
+          GoRoute(
+            path: '/expo',
             builder: (context, state) => const HomePage(),
           ),
           GoRoute(
@@ -657,7 +664,8 @@ class RouteTitleObserver extends NavigatorObserver {
 
   static String _titleForPath(String path) {
     String t(String s) => '$s · FYP Expo Hub';
-    if (path == '/') return 'FYP Expo Hub — FSKM FYP Exhibition';
+    if (path == '/') return 'FYP Expo Hub — FSKM Final Year Project Portal';
+    if (path == '/expo') return t('FYP Exhibition');
     if (path == '/info') return t('Exhibition Info');
     if (path == '/schedule') return t('Schedule');
     if (path == '/booths') return t('Booths');

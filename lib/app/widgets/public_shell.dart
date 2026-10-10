@@ -129,6 +129,8 @@ class _DesktopNavBar extends StatelessWidget {
             children: [
               _buildNavLink(context, 'Home', '/'),
               const SizedBox(width: DesignSystem.spaceLg),
+              _buildNavLink(context, 'Exhibition', '/expo'),
+              const SizedBox(width: DesignSystem.spaceLg),
               _buildNavLink(context, 'Schedule', '/schedule'),
               const SizedBox(width: DesignSystem.spaceLg),
               _buildNavLink(context, 'Booths', '/booths'),
@@ -293,6 +295,12 @@ class _MobileBottomNavBar extends StatelessWidget {
                 if (!lecturerSignedIn)
                   _buildMenuItemExternal(context, 'Sign In', Icons.login),
                 if (!lecturerSignedIn) const Divider(),
+                _buildMenuItem(
+                  context,
+                  'Exhibition',
+                  Icons.storefront_outlined,
+                  '/expo',
+                ),
                 _buildMenuItem(
                   context,
                   'Project Catalogue',
