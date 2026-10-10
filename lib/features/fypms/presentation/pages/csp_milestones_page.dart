@@ -11,6 +11,8 @@ import '../widgets/milestone_extension_widgets.dart';
 import '../../../../core/widgets/async_state.dart';
 import '../../../../core/widgets/admin_actions.dart';
 import '../../../../core/widgets/busy_button.dart';
+import '../../../../core/domain/models/fypms/fyp_record.dart';
+import '../../../../core/layout/responsive.dart';
 
 class CspMilestonesPage extends ConsumerStatefulWidget {
   const CspMilestonesPage({super.key});
@@ -88,7 +90,13 @@ class _CspMilestonesPageState extends ConsumerState<CspMilestonesPage> {
                 ),
               ),
               ExtensionRequestsPanel(fypRecordId: selected.id),
-              Expanded(child: _MilestonesList(recordId: selected.id)),
+              Expanded(
+                child: _MilestonesList(
+                  recordId: selected.id,
+                  // Same course only: CSP600 and CSP650 have different milestones.
+                  others: [for (final r in list) if (r.id != selected.id && r.currentCourseCode == selected.currentCourseCode) r],
+                ),
+              ),
             ],
           );
         },
@@ -99,8 +107,9 @@ class _CspMilestonesPageState extends ConsumerState<CspMilestonesPage> {
 
 class _MilestonesList extends ConsumerWidget {
   final String recordId;
+  final List<FypRecord> others;
 
-  const _MilestonesList({required this.recordId});
+  const _MilestonesList({required this.recordId, this.others = const []});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -114,11 +123,33 @@ class _MilestonesList extends ConsumerWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Course Milestones', style: DesignSystem.h2),
-              FilledButton.icon(
-                onPressed: () => _showMilestoneDialog(context, ref),
-                icon: const Icon(Icons.add, size: 18),
-                label: const Text('Add'),
+              Flexible(child: Text('Course Milestones', style: DesignSystem.h2)),
+              Wrap(
+                spacing: DesignSystem.spaceSm,
+                children: [
+                  // The handbook sets no week-by-week timeline, so a lecturer
+                  // sets one student's milestones and copies them to the rest.
+                  OutlinedButton.icon(
+                    key: const Key('copy-milestones'),
+                    onPressed: others.isEmpty || (milestones.value?.isEmpty ?? true)
+                        ? null
+                        : () => showDialog<void>(
+                              context: context,
+                              barrierDismissible: false,
+                              builder: (_) => CopyMilestonesDialog(
+                                milestones: milestones.requireValue,
+                                targets: others,
+                              ),
+                            ),
+                    icon: const Icon(Icons.copy_all, size: 18),
+                    label: const Text('Copy to All Students'),
+                  ),
+                  FilledButton.icon(
+                    onPressed: () => _showMilestoneDialog(context, ref),
+                    icon: const Icon(Icons.add, size: 18),
+                    label: const Text('Add'),
+                  ),
+                ],
               ),
             ],
           ),
@@ -360,6 +391,115 @@ class _MilestonesList extends ConsumerWidget {
           },
         );
       },
+    );
+  }
+}
+
+/// Copies one student's milestones (code, title, description, target date) to
+/// other records of the same course, as "pending". Existing milestones with the
+/// same code are updated, so running it again is safe.
+class CopyMilestonesDialog extends ConsumerStatefulWidget {
+  const CopyMilestonesDialog({super.key, required this.milestones, required this.targets});
+
+  final List<FypMilestone> milestones;
+  final List<FypRecord> targets;
+
+  @override
+  ConsumerState<CopyMilestonesDialog> createState() => _CopyMilestonesDialogState();
+}
+
+class _CopyMilestonesDialogState extends ConsumerState<CopyMilestonesDialog> {
+  bool _busy = false;
+  int _done = 0;
+  bool _finished = false;
+  final List<String> _problems = [];
+
+  Future<void> _copy() async {
+    setState(() {
+      _busy = true;
+      _done = 0;
+      _problems.clear();
+    });
+    final rpc = ref.read(supabaseRpcServiceProvider);
+    for (final record in widget.targets) {
+      try {
+        for (final m in widget.milestones) {
+          await rpc.createOrUpdateMilestone(
+            fypRecordId: record.id,
+            milestoneCode: m.milestoneCode,
+            milestoneTitle: m.milestoneTitle,
+            description: m.description,
+            targetDate: m.targetDate,
+            status: 'pending',
+          );
+        }
+      } catch (e) {
+        _problems.add('${record.projectTitle ?? record.matricId ?? 'A record'}: ${friendlyError(e)}');
+      }
+      if (!mounted) return;
+      setState(() => _done++);
+      ref.invalidate(fypMilestonesProvider(record.id));
+    }
+    if (mounted) {
+      setState(() {
+        _busy = false;
+        _finished = true;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final n = widget.targets.length;
+    return AlertDialog(
+      title: const Text('Copy Milestones to All Students'),
+      content: SizedBox(
+        width: dialogWidth(context, 460),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Copies these ${widget.milestones.length} milestones to the other $n '
+                '${n == 1 ? 'student' : 'students'} in this course. A milestone with the same code is '
+                'updated rather than duplicated.',
+                style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant),
+              ),
+              const SizedBox(height: DesignSystem.spaceSm),
+              for (final m in widget.milestones)
+                Text(
+                  '• ${m.milestoneCode} — ${m.milestoneTitle}'
+                  '${m.targetDate == null ? '' : ' (${formatFypDate(m.targetDate!)})'}',
+                  style: DesignSystem.bodySm,
+                ),
+              if (_busy || _finished) ...[
+                const SizedBox(height: DesignSystem.spaceMd),
+                Semantics(
+                  liveRegion: true,
+                  child: Text(
+                    _finished
+                        ? '${n - _problems.length} of $n students updated.'
+                        : 'Copying to student $_done of $n…',
+                    key: const Key('copy-milestones-progress'),
+                    style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+              for (final p in _problems)
+                Text('• $p', style: DesignSystem.bodySm.copyWith(color: DesignSystem.error)),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _busy ? null : () => Navigator.pop(context),
+          child: Text(_finished ? 'Close' : 'Cancel'),
+        ),
+        if (!_finished)
+          BusyButton(label: 'Copy Milestones', busyLabel: 'Copying…', busy: _busy, onPressed: _copy),
+      ],
     );
   }
 }

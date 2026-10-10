@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:fyp_expo_hub/core/domain/models/fypms/fyp_milestone.dart';
 import 'package:fyp_expo_hub/core/domain/models/fypms/fyp_progress_log.dart';
 import 'package:fyp_expo_hub/core/domain/models/fypms/fyp_record.dart';
 import 'package:fyp_expo_hub/core/state/fypms_state_providers.dart';
@@ -79,6 +80,36 @@ void main() {
       await tester.tapAt(const Offset(2, 2));
       await tester.pumpAndSettle();
       expect(find.text('New Milestone'), findsOneWidget);
+    });
+  });
+
+  group('P11 copy milestones', () {
+    FypRecord rec(String id, String course) => _record().copyWith(id: id, currentCourseCode: course);
+    FypMilestone ms(String code) => FypMilestone(
+          id: 'm-$code',
+          fypRecordId: 'r1',
+          milestoneCode: code,
+          milestoneTitle: 'Milestone $code',
+          targetDate: DateTime(2026, 5, 1),
+          status: 'pending',
+          createdAt: DateTime(2026, 3, 1),
+          updatedAt: DateTime(2026, 3, 1),
+        );
+
+    testWidgets('copies to other students of the same course and reports failures', (tester) async {
+      await _pump(tester, const CspMilestonesPage(), [
+        fypRecordsProvider.overrideWith((ref) async => [rec('r1', 'CSP650'), rec('r2', 'CSP650'), rec('r3', 'CSP600')]),
+        fypMilestonesProvider.overrideWith((ref, id) async => id == 'r1' ? [ms('M1'), ms('M2')] : []),
+        fypMilestoneExtensionsProvider.overrideWith((ref, id) async => []),
+        supabaseRpcServiceProvider.overrideWithValue(_failingRpc()),
+      ]);
+      await tester.tap(find.byKey(const Key('copy-milestones')));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('to the other 1 student in this course'), findsOneWidget,
+          reason: 'the CSP600 record is not a target');
+      await tester.tap(find.widgetWithText(FilledButton, 'Copy Milestones'));
+      await tester.pumpAndSettle();
+      expect(find.text('0 of 1 students updated.'), findsOneWidget, reason: 'the placeholder server refuses');
     });
   });
 
