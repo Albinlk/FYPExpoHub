@@ -37,8 +37,9 @@ class FypmsShell extends ConsumerWidget {
     await ref.read(supabaseClientProvider).auth.signOut();
     ref.invalidate(currentAuthUserProvider);
     ref.invalidate(fypmsCurrentRolesProvider);
+    // Same place as signing out of the admin CMS: the portal home.
     if (context.mounted) {
-      context.go('/sign-in');
+      context.go('/');
     }
   }
 
@@ -277,6 +278,8 @@ List<({String title, IconData icon, String route})> _navItems({
       (title: 'Reports', icon: Icons.insights, route: '/fypms/coordinator/reports'),
       if (!isPu) (title: 'Appointment Letters', icon: Icons.description_outlined, route: '/fypms/coordinator/letters'),
       (title: 'Audit Logs', icon: Icons.history, route: '/fypms/coordinator/audit'),
+      // Admins run the exhibition too; the CMS links back here via "FYP Management".
+      if (isAdmin) (title: 'Exhibition Admin', icon: Icons.storefront_outlined, route: '/admin'),
     ]);
   }
 
