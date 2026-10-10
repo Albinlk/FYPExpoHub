@@ -19,6 +19,7 @@ const _snakeToCamel = <String, String>{
   'co_supervisor_id': 'coSupervisorId',
   'examiner_id': 'examinerId',
   'previous_record_id': 'previousRecordId',
+  'supervisor_approved_at': 'supervisorApprovedAt',
   'workflow_status': 'workflowStatus',
   'fyp_record_id': 'fypRecordId',
   'academic_role': 'academicRole',

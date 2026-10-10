@@ -15,6 +15,7 @@ import '../widgets/fypms_loading_widget.dart';
 import '../widgets/student_record_workspace.dart';
 import '../../../../core/widgets/async_state.dart';
 import '../../../../core/widgets/admin_actions.dart';
+import '../../../../core/utils/fypms_format.dart';
 
 const _bucket = 'fyp-deliverables';
 
@@ -80,6 +81,28 @@ class _Body extends StatelessWidget {
                       ? 'All required items are in. Add the "if relevant" project files that apply.'
                       : 'The report (PDF and Word), slides and poster are required.',
                   style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant),
+                ),
+                const SizedBox(height: DesignSystem.spaceSm),
+                // Handbook: after F12 corrections the supervisor signs the
+                // Supervisor Approval page before the report is bound.
+                Row(
+                  children: [
+                    Icon(
+                      record.supervisorApprovedAt != null ? Icons.verified : Icons.hourglass_empty,
+                      size: 18,
+                      color: record.supervisorApprovedAt != null ? DesignSystem.tertiary : DesignSystem.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: DesignSystem.spaceXs),
+                    Expanded(
+                      child: Text(
+                        record.supervisorApprovedAt != null
+                            ? 'Supervisor approved your final report on ${formatFypDate(record.supervisorApprovedAt!)}.'
+                            : 'Supervisor approval: after your corrections are confirmed (F12).',
+                        key: const Key('supervisor-approval-status'),
+                        style: DesignSystem.bodySm,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
