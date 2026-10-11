@@ -59,7 +59,15 @@ class SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
+    final width = MediaQuery.sizeOf(context).width;
+    final isDesktop = width >= 768;
+    final titleText = Text(
+      title,
+      style: (isDesktop ? DesignSystem.h2 : DesignSystem.h2Mobile).copyWith(color: DesignSystem.primary),
+    );
+    // Wide: the title keeps its natural width and the rule fills the rest.
+    // Phones: no rule, so the title gets the whole line instead of half.
+    final wide = width >= 600;
     return Semantics(
       header: true,
       child: Row(
@@ -67,14 +75,12 @@ class SectionHeader extends StatelessWidget {
         children: [
           Text(number, style: DesignSystem.kicker.copyWith(color: DesignSystem.secondary, fontSize: 14)),
           const SizedBox(width: DesignSystem.spaceMd),
-          Flexible(
-            child: Text(
-              title,
-              style: (isDesktop ? DesignSystem.h2 : DesignSystem.h2Mobile).copyWith(color: DesignSystem.primary),
-            ),
-          ),
-          const SizedBox(width: DesignSystem.spaceMd),
-          const Expanded(child: Divider(color: DesignSystem.rule, thickness: 1, height: 1)),
+          if (wide) ...[
+            titleText,
+            const SizedBox(width: DesignSystem.spaceMd),
+            const Expanded(child: Divider(color: DesignSystem.rule, thickness: 1, height: 1)),
+          ] else
+            Expanded(child: titleText),
           if (action != null) ...[
             const SizedBox(width: DesignSystem.spaceMd),
             action!,
@@ -148,9 +154,12 @@ class CodeTag extends StatelessWidget {
 /// The wordmark: serif "FYP" with a small mono "EXPO·HUB" (and an optional
 /// subtitle, e.g. "Workspace · CSP600 · CSP650").
 class BrandMark extends StatelessWidget {
-  const BrandMark({super.key, this.color = DesignSystem.primary, this.subtitle});
+  const BrandMark({super.key, this.color = DesignSystem.primary, this.accent = DesignSystem.secondary, this.subtitle});
 
   final Color color;
+
+  /// "EXPO·HUB" colour: terracotta on paper, apricot on ink (contrast).
+  final Color accent;
   final String? subtitle;
 
   @override
@@ -168,7 +177,7 @@ class BrandMark extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('EXPO·HUB', style: DesignSystem.kicker.copyWith(color: DesignSystem.secondary, fontSize: 11)),
+              Text('EXPO·HUB', style: DesignSystem.kicker.copyWith(color: accent, fontSize: 11)),
               if (subtitle != null)
                 Text(subtitle!, style: DesignSystem.kicker.copyWith(color: color.withValues(alpha: 0.75), fontSize: 9)),
             ],

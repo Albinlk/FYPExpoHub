@@ -27,9 +27,10 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('section header fits a phone', (tester) async {
+  testWidgets('section header fits a phone: no rule, the title gets the line', (tester) async {
     await pump(tester, const SectionHeader(number: '03', title: 'Past Projects Guide'), width: 360);
     expect(tester.takeException(), isNull);
+    expect(find.byType(Divider), findsNothing);
   });
 
   testWidgets('code tag renders a booth code in mono; winner variant is apricot', (tester) async {

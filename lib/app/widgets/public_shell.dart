@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/state/state_providers.dart';
+import '../../core/widgets/scholar_lab.dart';
 import '../theme/theme.dart';
 import 'feedback_form_widget.dart';
 
@@ -125,13 +126,7 @@ class _DesktopNavBar extends StatelessWidget {
             onTap: () => _navigateTo(context, '/'),
             child: MouseRegion(
               cursor: SystemMouseCursors.click,
-              child: Text(
-                'FYP Expo Hub',
-                style: DesignSystem.h3.copyWith(
-                  color: DesignSystem.primary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              child: const BrandMark(),
             ),
           ),
           ),

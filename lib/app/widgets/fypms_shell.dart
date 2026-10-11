@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../site_hosts.dart';
 import '../../core/supabase/supabase_client_provider.dart';
 import '../../core/state/fypms_state_providers.dart';
+import '../../core/widgets/scholar_lab.dart';
 import '../theme/theme.dart';
 import '../../features/fypms/presentation/widgets/semester_selector.dart';
 import '../../features/fypms/presentation/pages/notifications_page.dart';
@@ -118,12 +119,17 @@ class FypmsShell extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Flexible(
-              child: Text(
-                // Phones need the room for the action icons.
-                Breakpoints.isNarrow(context) ? 'FYPMS' : 'FYP Management System',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: DesignSystem.h3.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: BrandMark(
+                    color: Colors.white,
+                    accent: DesignSystem.secondaryContainer,
+                    // Phones need the room for the action icons.
+                    subtitle: Breakpoints.isNarrow(context) ? null : 'WORKSPACE · CSP600 · CSP650',
+                  ),
+                ),
               ),
             ),
             if (isDesktop)
@@ -443,10 +449,7 @@ class _FypmsDrawer extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(DesignSystem.spaceMd),
               alignment: Alignment.centerLeft,
-              child: Text(
-                'FYP Management System',
-                style: DesignSystem.h3.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
-              ),
+              child: const BrandMark(color: Colors.white, accent: DesignSystem.secondaryContainer, subtitle: 'WORKSPACE · CSP600 · CSP650'),
             ),
             const Divider(color: Colors.white10),
             Expanded(

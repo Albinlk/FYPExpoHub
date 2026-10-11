@@ -3,6 +3,19 @@ import '../../app/theme/theme.dart';
 import '../../core/domain/models/project.dart';
 import '../widgets/project_cover_image.dart';
 
+/// A palette colour per category (terracotta, verdigris, plum, ink), stable
+/// for a given category name. Used for the card's category stripe.
+Color categoryAccent(String category) {
+  const accents = [
+    DesignSystem.secondary,
+    DesignSystem.tertiaryContainer,
+    DesignSystem.primaryContainer,
+    DesignSystem.primary,
+  ];
+  final hash = category.toLowerCase().codeUnits.fold<int>(0, (h, c) => (h * 31 + c) & 0x7fffffff);
+  return accents[hash % accents.length];
+}
+
 /// Standardized project card used across all pages (projects, home, lecturer,
 /// lecturer-visits). Cover image on top carrying category and booth, then the
 /// title, one meta line and the student names.
@@ -91,6 +104,8 @@ class ProjectCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildImageArea(),
+            // Category stripe along the top of the body, from the palette.
+            Container(height: 3, color: categoryAccent(project.category)),
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
               child: Column(
@@ -204,12 +219,12 @@ class ProjectCard extends StatelessWidget {
               color: DesignSystem.secondaryContainer,
               icon: Icons.room,
               iconColor: DesignSystem.onSecondaryContainer,
+              // Booth codes are mono everywhere ("Scholar + Lab").
               label: Text(
                 project.boothNumber!,
-                style: DesignSystem.bodySm.copyWith(
+                style: DesignSystem.code.copyWith(
                   color: DesignSystem.onSecondaryContainer,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 11,
+                  fontSize: 12,
                 ),
               ),
             ),

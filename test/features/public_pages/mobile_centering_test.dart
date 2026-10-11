@@ -63,57 +63,47 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('home hero details are one compact centered line on mobile',
-      (tester) async {
+  testWidgets('home hero details are one wrapped mono line on mobile', (tester) async {
     await pumpMobile(tester, const HomePage());
 
-    // No DATE/TIME/VENUE labels or boxed rows on phones: icon + value only.
+    // Date, hours and venue: icon + value, no DATE/TIME/VENUE labels.
     expect(find.text('DATE'), findsNothing);
-    final venue = find.text('Blok Kuliah, FSKM').first;
-    expect(tester.widget<Text>(venue).textAlign, TextAlign.center);
-    final wrap = tester.widget<Wrap>(
-      find.ancestor(of: venue, matching: find.byType(Wrap)).first,
-    );
-    expect(wrap.alignment, WrapAlignment.center);
-    // Date, time and venue are all children of that one wrapped line.
-    expect(
-      find.descendant(of: find.byWidget(wrap), matching: find.byType(Icon)),
-      findsNWidgets(3),
-    );
+    final meta = find.byKey(const Key('home-event-meta'));
+    expect(tester.widget<Wrap>(meta), isA<Wrap>());
+    expect(find.descendant(of: meta, matching: find.byType(Icon)), findsNWidgets(3));
+    final venue = tester.widget<Text>(find.descendant(of: meta, matching: find.text('BLOK KULIAH, FSKM')));
+    expect(venue.style?.fontFamily, DesignSystem.mono);
   });
 
-  testWidgets('concluded state is a small centered pill on mobile', (tester) async {
+  testWidgets('concluded state is one mono status line', (tester) async {
     await pumpMobile(tester, const HomePage(), concludedEvent: true);
 
-    final text = find.text('Exhibition concluded — thank you!');
-    final badge = tester.widget<Text>(text.first);
-    expect(badge.textAlign, TextAlign.center);
-    expect(badge.softWrap, isTrue);
-    expect(find.byIcon(Icons.emoji_events), findsOneWidget);
-    // Pill, not the desktop box: tight padding and fully rounded ends.
-    final pill = tester.widget<Container>(
-      find.ancestor(of: text, matching: find.byType(Container)).first,
-    );
-    expect(pill.padding, const EdgeInsets.symmetric(horizontal: 12, vertical: 6));
-    expect((pill.decoration! as BoxDecoration).borderRadius, DesignSystem.radiusFull);
+    expect(find.text('CONCLUDED · THANK YOU FOR VISITING'), findsOneWidget);
+    expect(find.byKey(const Key('home-event-status')), findsOneWidget);
   });
 
-  testWidgets('home hero keeps one primary and one secondary action',
-      (tester) async {
+  testWidgets('home hero keeps one primary and one secondary action', (tester) async {
     await pumpMobile(tester, const HomePage());
 
-    expect(find.widgetWithText(ElevatedButton, 'Explore Projects'), findsOneWidget);
+    expect(find.byKey(const Key('home-explore')), findsOneWidget);
+    expect(find.text('Explore Projects'), findsOneWidget);
     expect(find.widgetWithText(OutlinedButton, 'View Schedule'), findsOneWidget);
     expect(find.text('Past Sem Projects'), findsNothing);
     expect(find.text('Lecturer Portal'), findsNothing);
   });
 
-  testWidgets('Featured Projects header is centered on mobile, left on desktop title',
-      (tester) async {
+  testWidgets('home sections are numbered, with live stats and the Workspace band', (tester) async {
     await pumpMobile(tester, const HomePage());
 
-    final title = tester.widget<Text>(find.text('Featured Projects').first);
-    expect(title.textAlign, TextAlign.center);
+    expect(find.text('Featured projects'), findsOneWidget);
+    expect(find.text('01'), findsOneWidget);
+    // No winners published in this fixture, so the guide is section 02.
+    expect(find.text('Award winners'), findsNothing);
+    expect(find.text('02'), findsOneWidget);
+    expect(find.text('Past Projects Guide'), findsOneWidget);
+    expect(find.bySemanticsLabel('1 Projects'), findsOneWidget);
+    expect(find.byKey(const Key('workspace-band')), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('schedule day tabs are not scrollable on mobile (even split)',

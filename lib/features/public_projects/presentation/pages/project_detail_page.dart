@@ -182,8 +182,8 @@ class _ProjectDetailPageState extends ConsumerState<ProjectDetailPage> {
                               borderRadius: DesignSystem.radiusSm,
                             ),
                             child: Text(
-                              'Booth ${project.boothNumber}',
-                              style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onTertiaryContainer),
+                              'BOOTH ${project.boothNumber}',
+                              style: DesignSystem.code.copyWith(color: DesignSystem.onTertiaryContainer),
                               softWrap: true,
                             ),
                           ),
