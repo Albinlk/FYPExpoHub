@@ -625,7 +625,7 @@ The bundled `assets/data/offline_fallback.json` (≈ 640 KB) holds 387 projects,
 | NFR-USE-03 | The mobile home hero shall fit within one screen. |
 | NFR-USE-04 | Animations shall be disabled when the OS requests reduced motion. |
 | NFR-USE-05 | Icon-only controls shall carry tooltips; the filter toggle exposes a semantic label with the active-filter count. |
-| NFR-USE-06 | The UI shall follow the "Ink & Terracotta" design system (primary `#2A1838`, secondary `#9A3A12`, tertiary `#0B2A26`, surface `#FAF7F2`; Montserrat headings, Inter body; 4/8/12 px radii; 4–32 px spacing scale). |
+| NFR-USE-06 | The UI shall follow the "Ink & Terracotta" design system (primary `#2A1838`, secondary `#9A3A12`, tertiary `#0B2A26`, surface `#FAF7F2`; "Scholar + Lab" type: Fraunces headlines, Inter body, JetBrains Mono for codes and numbers; 4/8/12 px radii; 4–32 px spacing scale; see DESIGN.md). |
 | NFR-USE-07 | The app shall be installable as a PWA (standalone, maskable icons). |
 
 ### 10.6 Maintainability and quality
