@@ -72,7 +72,7 @@ Rules:
 
 ## 4. Component styles
 
-- **Navigation (exhibition)**: 64px Warm Paper bar with a hairline bottom rule. Left: wordmark, serif "FYP" plus small mono "EXPO·HUB". Centre: text links in Inter; the active link is ink and bold with a 2px underline. Right: "Sign In" ink pill button. Narrow desktops move extra links into a "More" menu (all links from 1440px, five from 1024px, three below). Mobile: bottom tab bar (Home, Booths, Guide, Staff, Menu), white with 12px top corners.
+- **Navigation (exhibition)**: 64px Warm Paper bar with a hairline bottom rule. Left: wordmark, serif "FYP" plus small mono "EXPO·HUB". Centre: text links in Inter; the active link is ink and bold with a 2px underline. Right: "Sign In" ink pill button. Narrow desktops move extra links into a "More" menu (all links from 1312px, five from 1024px, three below). Mobile: bottom tab bar (Home, Booths, Guide, Staff, Menu), white with 12px top corners.
 - **Navigation (Workspace)**: left sidebar 260px in Aubergine Ink with Lilac text. Wordmark with the subtitle "Workspace · CSP600 · CSP650". Main canvas on Warm Paper with white cards.
 - **Hero (public home)**: light Warm Paper hero over a 24px graph-paper grid (grid-line colour), left-aligned, never centred.
   - Order: mono kicker "FSKM · UiTM JASIN", then the display headline "Final Year Project Exhibition 2026", then a mono meta line "6 AUG 2026 · DEWAN · 9:00".
@@ -122,8 +122,8 @@ Subtle, purposeful, respects reduced motion.
 |---|---|
 | < 768 | Bottom tab bar; hero stacks (headline, then stats as a 3-column strip); cards in 1 column |
 | 768–1023 | Top bar with 3 links plus More; cards in 2 columns |
-| 1024–1439 | 5 links plus More; cards in 3 columns |
-| ≥ 1440 | All links; cards in 3–4 columns within the 1200px container |
+| 1024–1311 | 5 links plus More; cards in 3 columns |
+| ≥ 1312 | All links; cards in 3–4 columns within the 1200px container |
 
 ## 9. Do's and don'ts
 

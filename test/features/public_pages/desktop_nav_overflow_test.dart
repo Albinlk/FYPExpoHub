@@ -7,7 +7,7 @@ import 'package:fyp_expo_hub/app/widgets/public_shell.dart';
 import 'package:fyp_expo_hub/core/supabase/supabase_client_provider.dart';
 
 /// Redesign audit: at 800 px the desktop nav ran "Announcements" under the
-/// Sign In button. Below 1440 px the lower-priority links move into More.
+/// Sign In button. Below 1312 px the lower-priority links move into More.
 void main() {
   Future<void> pumpShell(WidgetTester tester, Size size) async {
     tester.view.physicalSize = size;

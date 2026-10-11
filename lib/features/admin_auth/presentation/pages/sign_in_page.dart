@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher_string.dart';
+import '../../../../core/widgets/scholar_lab.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/supabase/supabase_client_provider.dart';
 import '../../password_reset.dart';
@@ -92,15 +93,19 @@ class _SignInPageState extends ConsumerState<SignInPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: DesignSystem.primary,
-      body: Center(
+      backgroundColor: DesignSystem.background,
+      // Warm Paper with the graph-paper grid, like the exhibition hero.
+      body: GraphPaper(child: Center(
         child: SingleChildScrollView(
           child: Container(
             width: dialogWidth(context, 420, gutter: 0),
             padding: const EdgeInsets.all(DesignSystem.spaceXl),
             child: Card(
-              shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusXl),
-              elevation: 4,
+              shape: RoundedRectangleBorder(
+                borderRadius: DesignSystem.radiusXl,
+                side: const BorderSide(color: DesignSystem.rule),
+              ),
+              elevation: 0,
               child: Padding(
                 padding: const EdgeInsets.all(DesignSystem.spaceLg),
                 child: AutofillGroup(child: Form(
@@ -109,16 +114,19 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Center(
-                        child: Text(
-                          'FYP Expo Hub',
-                          style: DesignSystem.h3.copyWith(color: DesignSystem.primary, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
+                      const Center(child: BrandMark()),
+                      const SizedBox(height: DesignSystem.spaceMd),
                       Center(
                         child: Text(
                           'Sign In',
+                          style: DesignSystem.h2Mobile.copyWith(color: DesignSystem.primary),
+                        ),
+                      ),
+                      const SizedBox(height: DesignSystem.spaceXs),
+                      Center(
+                        child: Text(
+                          'Students and lecturers use one account.',
+                          textAlign: TextAlign.center,
                           style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant),
                         ),
                       ),
@@ -232,7 +240,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
             ),
           ),
         ),
-      ),
+      )),
     );
   }
 }

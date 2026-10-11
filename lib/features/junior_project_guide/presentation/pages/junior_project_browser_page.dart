@@ -222,13 +222,25 @@ class _JuniorProjectBrowserPageState
       appBar: AppBar(
         backgroundColor: DesignSystem.primary,
         foregroundColor: Colors.white,
-        title: Text(
-          'Past Projects Guide',
-          style: (isDesktop ? DesignSystem.h3 : DesignSystem.h3Mobile)
-              .copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Past Projects Guide',
+              style: (isDesktop ? DesignSystem.h2Mobile : DesignSystem.h3Mobile.copyWith(fontFamily: DesignSystem.serif))
+                  .copyWith(color: Colors.white),
+            ),
+            // How much there is to browse, in mono ("Scholar + Lab").
+            Text(
+              [
+                '${csp650Async.length} CSP650',
+                if (csp600Async.value != null) '${csp600Async.value!.length} CSP600',
+              ].join(' · '),
+              key: const Key('guide-counts'),
+              style: DesignSystem.kicker.copyWith(color: DesignSystem.onPrimaryContainer),
+            ),
+          ],
         ),
         bottom: TabBar(
           controller: _tabController,
