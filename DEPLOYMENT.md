@@ -186,19 +186,23 @@ npx supabase gen types typescript --project-id siedglubjcedkbrpdzgi
 - **Public**: `fskmjasinfypexhibition.site` (managed via GitHub Pages, CNAME)
 - **Admin**: `admin.fskmjasinfypexhibition.site` — Cloudflare **Redirect Rule** (Hostname equals `admin.fskmjasinfypexhibition.site` → 302 to `https://fskmjasinfypexhibition.site/admin`). It is **not** a GitHub Pages site: a repo's Pages site serves one custom domain, and this repo's is the apex. (Until 2026-09 it pointed at a separate, stale 6 Aug build that never received deploys.)
 
-### Moving the FYP Workspace to `fyp.` (planned)
+### Moving the FYP Workspace to `fyp.`
 
-The exhibition stays on `fskmjasinfypexhibition.site`; CSP600 / CSP650 (`/fypms`) moves to `fyp.fskmjasinfypexhibition.site`. The app already handles both hosts (`lib/app/site_hosts.dart`, `_siteHostGuard` in `lib/app/router_guards.dart`); it switches on when built with `CSP_HOST`.
+The exhibition stays on `fskmjasinfypexhibition.site` (GitHub Pages); CSP600 / CSP650 (`/fypms`) moves to `fyp.fskmjasinfypexhibition.site` (Cloudflare Pages). Both serve the **same build**: `deploy.yml` builds once and, when the Cloudflare secrets exist, also uploads a copy (no `404.html`, so Cloudflare serves it as a single-page app; `X-Robots-Tag: noindex`) to the Cloudflare Pages project `fyp-workspace`. The app tells the hosts apart at runtime (`lib/app/site_hosts.dart`, `_siteHostGuard` in `lib/app/router_guards.dart`), switched on by the repo variable `CSP_HOST`.
 
-| Step | Action | Gate before proceeding |
-|---|---|---|
-| 1 | Create a second static site for the same repo (Cloudflare Pages, or a second GitHub Pages repo) that runs the same build with `--dart-define=CSP_HOST=fyp.fskmjasinfypexhibition.site` | Preview URL loads `/sign-in` |
-| 2 | Add the same `--dart-define=CSP_HOST=…` to the main site's build in `.github/workflows/deploy.yml` | Main site still serves the exhibition |
-| 3 | DNS: CNAME `fyp` → the new site | `https://fyp.fskmjasinfypexhibition.site/` redirects to sign-in |
-| 4 | Supabase Auth → URL Configuration: add `https://fyp.fskmjasinfypexhibition.site/reset-password` to Redirect URLs | Password reset email from `fyp.` lands on `fyp.` |
-| 5 | Smoke test: `/fypms` on the main site moves to `fyp.`; `/booths` on `fyp.` moves back; a student signs in on `fyp.` and lands on `/fypms/student` | All three pass |
+| Step | Who | Action | Gate before proceeding |
+|---|---|---|---|
+| 1 | You | Cloudflare → Workers & Pages → Create → Pages → **Direct Upload**: project name `fyp-workspace` (upload any placeholder file once) | Project exists |
+| 2 | You | Cloudflare → My Profile → API Tokens → Create token with **Account → Cloudflare Pages → Edit**. Note the Account ID (Workers & Pages overview) | Token and Account ID in hand |
+| 3 | You | GitHub repo → Settings → Secrets and variables → Actions → **Secrets**: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | Next deploy run shows "Deploy FYP Workspace to Cloudflare Pages" succeeded (re-run the latest Deploy workflow, or merge any PR) |
+| 4 | You | Cloudflare → `fyp-workspace` → Custom domains → add `fyp.fskmjasinfypexhibition.site` (the zone is on Cloudflare, so the DNS record is created for you) | `https://fyp.fskmjasinfypexhibition.site/sign-in` loads |
+| 5 | You | Supabase → Authentication → URL Configuration → Redirect URLs: add `https://fyp.fskmjasinfypexhibition.site/reset-password` | Saved |
+| 6 | You | GitHub → Settings → Secrets and variables → Actions → **Variables**: `CSP_HOST` = `fyp.fskmjasinfypexhibition.site`, then re-run the latest Deploy workflow | Run succeeds |
+| 7 | Both | Smoke test: `/fypms` on the main site moves to `fyp.`; `/booths` on `fyp.` moves back; `/` on `fyp.` opens sign-in; a student signs in on `fyp.` and lands on `/fypms/student`; "Forgot password?" on `fyp.` lands on `fyp./reset-password` | All pass |
 
-Sign-in is stored per site, so a lecturer signs in once on the main site (booth visits, admin) and once on `fyp.` (CSP). Sharing one session across both needs cookie-based auth storage on `.fskmjasinfypexhibition.site` (not built).
+Until step 6 both hosts behave like the main site, so nothing breaks while the new site is being set up. To roll back, clear `CSP_HOST` and re-run the deploy: the main site serves `/fypms` again.
+
+Sign-in is stored per site, so a lecturer signs in once on the main site (booth visits, admin) and once on `fyp.` (CSP). Sharing one session across both needs cookie-based auth storage on `.fskmjasinfypexhibition.site` (backlog W4).
 
 ### SPA Handling
 - `404.html` is copied from `index.html` to handle client-side routing
