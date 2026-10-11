@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/supabase/supabase_client_provider.dart';
+import '../../core/widgets/scholar_lab.dart';
 import '../theme/theme.dart';
 import 'feedback_form_widget.dart';
 import '../../features/admin_auth/presentation/widgets/my_account_dialog.dart';
@@ -9,6 +10,49 @@ import '../../features/admin_auth/presentation/widgets/my_account_dialog.dart';
 /// Back to the portal home in the same tab (it used to open the public site
 /// as an external link).
 void _goToPublicPortal(BuildContext context) => GoRouter.of(context).go('/');
+
+
+typedef _AdminNavItem = ({String title, IconData icon, String route});
+
+/// The exhibition admin menu, grouped so the 17 links read as a few short
+/// lists instead of one long one.
+const List<({String? label, List<_AdminNavItem> items})> _adminNavGroups = [
+  (label: null, items: [
+    (title: 'Overview Dashboard', icon: Icons.dashboard, route: '/admin'),
+  ]),
+  (label: 'Exhibition', items: [
+    (title: 'Event Information', icon: Icons.info_outline, route: '/admin/event'),
+    (title: 'Schedule Management', icon: Icons.schedule, route: '/admin/schedule'),
+    (title: 'Announcements', icon: Icons.campaign, route: '/admin/announcements'),
+    (title: 'Award Winners', icon: Icons.emoji_events, route: '/admin/awards'),
+  ]),
+  (label: 'Projects & booths', items: [
+    (title: 'Project Catalogue', icon: Icons.folder_open, route: '/admin/projects'),
+    (title: 'Booth Management', icon: Icons.map, route: '/admin/booths'),
+    (title: 'Import Master File', icon: Icons.file_upload, route: '/admin/imports'),
+  ]),
+  (label: 'Lecturers & visits', items: [
+    (title: 'Lecturer Management', icon: Icons.school, route: '/admin/lecturers'),
+    (title: 'Lecturer Assignments', icon: Icons.assignment_ind, route: '/admin/assignments'),
+    (title: 'Booth Visits', icon: Icons.visibility, route: '/admin/visits'),
+    (title: 'My Visits (Lecturer)', icon: Icons.person_pin, route: '/lecturer/visits'),
+  ]),
+  (label: 'System', items: [
+    (title: 'Users & Roles', icon: Icons.manage_accounts, route: '/fypms/coordinator/users'),
+    (title: 'Feedback', icon: Icons.feedback_outlined, route: '/admin/feedback'),
+    (title: 'Audit Log', icon: Icons.history, route: '/admin/audit'),
+    (title: 'Settings', icon: Icons.settings, route: '/admin/settings'),
+    (title: 'FYP Management', icon: Icons.school, route: '/fypms/coordinator'),
+  ]),
+];
+
+Widget _adminGroupLabel(String label) => Padding(
+      padding: const EdgeInsets.fromLTRB(28, 12, 16, 4),
+      child: Text(
+        label.toUpperCase(),
+        style: DesignSystem.kicker.copyWith(color: DesignSystem.onPrimaryContainer, fontSize: 10.5),
+      ),
+    );
 
 class AdminShell extends ConsumerWidget {
   final Widget child;
@@ -38,11 +82,12 @@ class AdminShell extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Flexible(
-              child: Text(
-                'FYP Expo Hub CMS',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: DesignSystem.h3.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: BrandMark(color: Colors.white, accent: DesignSystem.secondaryContainer, subtitle: 'EXHIBITION ADMIN'),
+                ),
               ),
             ),
             if (isDesktop)
@@ -133,27 +178,10 @@ class _AdminSidebar extends StatelessWidget {
             child: ListView(
               padding: const EdgeInsets.symmetric(vertical: DesignSystem.spaceMd),
               children: [
-                _buildSidebarItem(context, 'Overview Dashboard', Icons.dashboard, '/admin'),
-                _buildSidebarItem(context, 'Event Information', Icons.info_outline, '/admin/event'),
-                _buildSidebarItem(context, 'Schedule Management', Icons.schedule, '/admin/schedule'),
-                _buildSidebarItem(context, 'Project Catalogue', Icons.folder_open, '/admin/projects'),
-                _buildSidebarItem(context, 'Booth Management', Icons.map, '/admin/booths'),
-                _buildSidebarItem(context, 'Lecturer Management', Icons.school, '/admin/lecturers'),
-                _buildSidebarItem(context, 'Users & Roles', Icons.manage_accounts, '/fypms/coordinator/users'),
-                _buildSidebarItem(context, 'Lecturer Assignments', Icons.assignment_ind, '/admin/assignments'),
-                _buildSidebarItem(context, 'Announcements', Icons.campaign, '/admin/announcements'),
-                _buildSidebarItem(context, 'Feedback', Icons.feedback_outlined, '/admin/feedback'),
-                _buildSidebarItem(context, 'Booth Visits', Icons.visibility, '/admin/visits'),
-                _buildSidebarItem(context, 'My Visits (Lecturer)', Icons.person_pin, '/lecturer/visits'),
-                _buildSidebarItem(context, 'Award Winners', Icons.emoji_events, '/admin/awards'),
-                _buildSidebarItem(context, 'Import Master File', Icons.file_upload, '/admin/imports'),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                  child: Divider(color: Colors.white24),
-                ),
-                _buildSidebarItem(context, 'FYP Management', Icons.school, '/fypms/coordinator'),
-                _buildSidebarItem(context, 'Audit Log', Icons.history, '/admin/audit'),
-                _buildSidebarItem(context, 'Settings', Icons.settings, '/admin/settings'),
+                for (final g in _adminNavGroups) ...[
+                  if (g.label != null) _adminGroupLabel(g.label!),
+                  for (final i in g.items) _buildSidebarItem(context, i.title, i.icon, i.route),
+                ],
               ],
             ),
           ),
@@ -163,7 +191,7 @@ class _AdminSidebar extends StatelessWidget {
             child: ListTile(
               leading: const Icon(Icons.arrow_back, color: Colors.white70, size: 20),
               title: Text(
-                'Back to Portal',
+                'Exhibition Site',
                 style: DesignSystem.bodySm.copyWith(color: Colors.white70),
               ),
               onTap: () => _goToPublicPortal(context),
@@ -222,37 +250,17 @@ class _AdminDrawer extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(DesignSystem.spaceMd),
               alignment: Alignment.centerLeft,
-              child: Text(
-                'FYP Expo Hub CMS',
-                style: DesignSystem.h3.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
-              ),
+              child: const BrandMark(color: Colors.white, accent: DesignSystem.secondaryContainer, subtitle: 'EXHIBITION ADMIN'),
             ),
             const Divider(color: Colors.white10),
             Expanded(
               child: ListView(
                 padding: EdgeInsets.zero,
                 children: [
-                  _buildDrawerItem(context, 'Overview Dashboard', Icons.dashboard, '/admin'),
-                  _buildDrawerItem(context, 'Event Information', Icons.info_outline, '/admin/event'),
-                  _buildDrawerItem(context, 'Schedule Management', Icons.schedule, '/admin/schedule'),
-                  _buildDrawerItem(context, 'Project Catalogue', Icons.folder_open, '/admin/projects'),
-                  _buildDrawerItem(context, 'Booth Management', Icons.map, '/admin/booths'),
-                  _buildDrawerItem(context, 'Lecturer Management', Icons.school, '/admin/lecturers'),
-                  _buildDrawerItem(context, 'Users & Roles', Icons.manage_accounts, '/fypms/coordinator/users'),
-                  _buildDrawerItem(context, 'Lecturer Assignments', Icons.assignment_ind, '/admin/assignments'),
-                  _buildDrawerItem(context, 'Announcements', Icons.campaign, '/admin/announcements'),
-                  _buildDrawerItem(context, 'Feedback', Icons.feedback_outlined, '/admin/feedback'),
-                  _buildDrawerItem(context, 'Booth Visits', Icons.visibility, '/admin/visits'),
-                  _buildDrawerItem(context, 'My Visits (Lecturer)', Icons.person_pin, '/lecturer/visits'),
-                  _buildDrawerItem(context, 'Award Winners', Icons.emoji_events, '/admin/awards'),
-                  _buildDrawerItem(context, 'Import Master File', Icons.file_upload, '/admin/imports'),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                    child: Divider(color: Colors.white24),
-                  ),
-                  _buildDrawerItem(context, 'FYP Management', Icons.school, '/fypms/coordinator'),
-                  _buildDrawerItem(context, 'Audit Log', Icons.history, '/admin/audit'),
-                  _buildDrawerItem(context, 'Settings', Icons.settings, '/admin/settings'),
+                  for (final g in _adminNavGroups) ...[
+                    if (g.label != null) _adminGroupLabel(g.label!),
+                    for (final i in g.items) _buildDrawerItem(context, i.title, i.icon, i.route),
+                  ],
                 ],
               ),
             ),
@@ -275,7 +283,7 @@ class _AdminDrawer extends StatelessWidget {
               child: ListTile(
                 leading: const Icon(Icons.arrow_back, color: Colors.white70, size: 20),
                 title: Text(
-                  'Back to Portal',
+                  'Exhibition Site',
                   style: DesignSystem.bodySm.copyWith(color: Colors.white70),
                 ),
                 onTap: () {
