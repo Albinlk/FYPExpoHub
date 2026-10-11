@@ -191,13 +191,13 @@ Requirement IDs use the pattern `FR-<area>-<nn>`. "Shall" statements describe im
 
 | ID | Requirement |
 |---|---|
-| FR-NAV-00 | The landing page `/` shall be a portal with three parts: the **FYP Exhibition** (→ `/expo`, the exhibition home), **CSP600 Project Formulation** (forms F1–F8) and **CSP650 Final Year Project** (F9–F16 and the exhibition), plus one Sign In. Existing exhibition URLs (`/projects`, `/booths`, `/schedule`, `/awards`, …) keep working. |
+| FR-NAV-00 | The exhibition home shall be the landing page `/` (the old `/expo` address redirects there). The exhibition and the Past Projects Guide are public. CSP600 / CSP650 (the FYP Workspace, `/fypms`) is reached only by signing in: from Sign In, or from the "FYP Workspace" band at the foot of the home page. When built with `CSP_HOST` (planned: `fyp.fskmjasinfypexhibition.site`), `/fypms…` on the main site moves to that host, `/` on that host opens the Workspace, and exhibition pages on that host go back to the main site. |
 | FR-NAV-01 | The system shall treat viewports ≥ 768 px as desktop and < 768 px as mobile. |
-| FR-NAV-02 | On desktop the system shall show a 64 px top bar with the "FYP Expo Hub" logo (→ `/`) and links: Home (the portal), Exhibition (`/expo`), Schedule, Booths, Projects, Past Projects Guide, Announcements, Awards, Find by Lecturer; "My Visits" is added when a lecturer is signed in. |
+| FR-NAV-02 | On desktop the system shall show a 64 px top bar with the "FYP Expo Hub" logo (→ `/`) and links: Home (the exhibition), Projects, Booths, Schedule, Past Projects Guide, Announcements, Awards, Find by Lecturer (lower-priority links move into a More menu on narrower desktops); "My Visits" is added when a lecturer is signed in. |
 | FR-NAV-03 | The active desktop link shall be bold with a 24 × 2 px underline (exact match for `/`, prefix match otherwise). |
 | FR-NAV-04 | When no lecturer is signed in, the desktop bar shall show a "Sign In" button that opens `/sign-in` in the same app. |
 | FR-NAV-05 | On mobile the system shall show a five-tab bottom bar: Home, Booths (`/booths`), Guide (`/projects/junior-guide`), **Staff** (`/lecturer`) for visitors or **Visits** (`/lecturer/visits`) for signed-in lecturers, and Menu. Below 360 px labels are hidden. |
-| FR-NAV-06 | The mobile Menu sheet shall list: Sign In (signed out only), Exhibition, Project Catalogue, Booths, Schedule, Project Guide, Announcements, Award Winners, Lecturer Portal (signed-in lecturers only), Exhibition Info, FAQ, Privacy Policy, and Send Feedback. |
+| FR-NAV-06 | The mobile Menu sheet shall list: Sign In (signed out only), Project Catalogue, Booths, Schedule, Project Guide, Announcements, Award Winners, Lecturer Portal (signed-in lecturers only), Exhibition Info, FAQ, Privacy Policy, and Send Feedback. |
 | FR-NAV-07 | Feedback shall be reachable from a floating "Feedback" button on desktop and from the Menu sheet on mobile (no floating button on phones, so content is never covered). |
 | FR-NAV-08 | The system shall use path-based URLs (no `#`) and set a per-route browser tab title (e.g. "Schedule · FYP Expo Hub"). |
 

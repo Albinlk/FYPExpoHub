@@ -37,10 +37,12 @@ void main() {
     await pumpShell(tester, const Size(800, 700));
     expect(find.text('Home'), findsOneWidget);
     expect(find.text('Projects'), findsOneWidget);
+    expect(find.text('Exhibition'), findsNothing); // the exhibition is Home now
     expect(find.text('Announcements'), findsNothing);
 
     // Geometry is checked in the browser: the test font is wider than Inter.
-    expect(find.text('Booths'), findsNothing);
+    expect(find.text('Booths'), findsOneWidget);
+    expect(find.text('Schedule'), findsNothing);
 
     await tester.ensureVisible(find.byKey(const Key('nav-more')));
     await tester.pumpAndSettle();

@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' show User;
 import '../core/state/fypms_state_providers.dart';
 import '../core/state/state_providers.dart';
 import '../core/supabase/supabase_client_provider.dart';
+import 'site_hosts.dart';
 
 /// The one sign-in page for everyone (students, lecturers, coordinators and
 /// admins). It used to live at [kLegacySignInPath], which now redirects here.
@@ -23,6 +24,12 @@ Future<String?> resolveRouterRedirect(Ref ref, String location) async {
     return Uri(path: kSignInPath, queryParameters: uri.queryParameters.isEmpty ? null : uri.queryParameters)
         .toString();
   }
+  // The exhibition is the homepage; its old address still works.
+  if (path == '/expo') return '/';
+
+  final siteRedirect = _siteHostGuard(ref, path: path, location: location);
+  if (siteRedirect != null) return siteRedirect;
+
   final isLoggingIn = path == kSignInPath;
   final isAdminPath = path.startsWith('/admin');
   final isFypmsPath = path.startsWith('/fypms');
@@ -52,6 +59,23 @@ Future<String?> resolveRouterRedirect(Ref ref, String location) async {
     return _postLoginRedirect(ref, from: uri.queryParameters['from']);
   }
 
+  return null;
+}
+
+/// Once the FYP Workspace has its own host ([cspHostProvider] set): on that
+/// host `/` opens the Workspace and exhibition pages go back to the main
+/// site; on the main site `/fypms…` goes to the Workspace host. With no
+/// Workspace host configured (today) nothing changes.
+String? _siteHostGuard(Ref ref, {required String path, required String location}) {
+  final cspHost = ref.read(cspHostProvider);
+  if (cspHost.isEmpty || path == kExternalRedirectPath) return null;
+  final onCspHost = ref.read(currentHostProvider) == cspHost;
+  if (onCspHost) {
+    if (path == '/') return '/fypms';
+    if (!isWorkspacePath(path)) return externalRedirect(mainSiteUrl(location));
+    return null;
+  }
+  if (path.startsWith('/fypms')) return externalRedirect(cspUrl(cspHost, location));
   return null;
 }
 
@@ -157,8 +181,13 @@ Future<String?> _lecturerVisitsGuard(
 /// every non-admin was treated as a lecturer, so FYPMS students were sent
 /// to /lecturer/visits and lost their original deep link.
 Future<String?> _postLoginRedirect(Ref ref, {String? from}) async {
-  final isAdmin = await ref.read(isAdminProvider.future);
   final back = safeReturnPath(from);
+  // The Workspace host only serves CSP600 / CSP650.
+  final cspHost = ref.read(cspHostProvider);
+  if (cspHost.isNotEmpty && ref.read(currentHostProvider) == cspHost) {
+    return back != null && back.startsWith('/fypms') ? back : '/fypms';
+  }
+  final isAdmin = await ref.read(isAdminProvider.future);
   if (back != null && (isAdmin || !back.startsWith('/admin'))) {
     return back;
   }

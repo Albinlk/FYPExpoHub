@@ -107,6 +107,19 @@ From a `redesign-existing-projects` audit of the portal page, checked in the pro
 | [x] | R7 | `h1` letter-spacing fixed to -0.02em (it was -0.02 px) (#60) | L |
 | [x] | R8 | Nav highlighting compares the path only, so a `?query` no longer unselects the tab (#60) | L |
 
+## 8. Exhibition home, FYP Workspace and "Scholar + Lab" design (11 Oct 2026)
+
+The exhibition is the homepage; CSP600 / CSP650 sit behind sign-in and will move to `fyp.fskmjasinfypexhibition.site`. Visual direction "Scholar + Lab": serif headlines, mono for codes and numbers, graph paper, numbered sections.
+
+| Done | # | Item | Pri |
+|---|---|---|---|
+| [x] | W1 | `/` is the exhibition home (`/expo` redirects); portal page removed; "Exhibition" nav link dropped; FYP Workspace band on the home page | H |
+| [x] | W2 | Host-ready routing: `CSP_HOST` build define, `_siteHostGuard`, `/go` hop limited to our hosts | H |
+| [ ] | W3 | Move the Workspace to `fyp.` (DEPLOYMENT.md runbook: second site, DNS, Supabase redirect URL) | M |
+| [ ] | W4 | Shared sign-in across the two sites (cookie storage on `.fskmjasinfypexhibition.site`) | L |
+| [ ] | D1 | Design system: Fraunces + JetBrains Mono, type and colour tokens, `GraphPaper`, `SectionHeader`, `StatBlock`, `CodeTag`, `BrandMark`; DESIGN.md for Google Stitch | H |
+| [ ] | D2 | Apply to the public site: new exhibition home, project cards, section headers, code tags | H |
+
 ## Suggested order
 
 1. S1–S3, S6, S8 (multi-semester / multi-event foundation)

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../site_hosts.dart';
 import '../../core/supabase/supabase_client_provider.dart';
 import '../../core/state/fypms_state_providers.dart';
 import '../theme/theme.dart';
@@ -37,7 +38,8 @@ class FypmsShell extends ConsumerWidget {
     await ref.read(supabaseClientProvider).auth.signOut();
     ref.invalidate(currentAuthUserProvider);
     ref.invalidate(fypmsCurrentRolesProvider);
-    // Same place as signing out of the admin CMS: the portal home.
+    // Same place as signing out of the admin CMS: the exhibition home (on the
+    // Workspace host this is the Workspace sign-in).
     if (context.mounted) {
       context.go('/');
     }
@@ -353,10 +355,10 @@ class _FypmsSidebar extends ConsumerWidget {
             child: ListTile(
               leading: const Icon(Icons.arrow_back, color: Colors.white70, size: 20),
               title: Text(
-                'Back to Portal',
+                'Exhibition Site',
                 style: DesignSystem.bodySm.copyWith(color: Colors.white70),
               ),
-              onTap: () => context.go('/'),
+              onTap: () => openExhibitionSite(context, ref),
               shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
               dense: true,
             ),
@@ -475,12 +477,12 @@ class _FypmsDrawer extends ConsumerWidget {
               child: ListTile(
                 leading: const Icon(Icons.arrow_back, color: Colors.white70, size: 20),
                 title: Text(
-                  'Back to Portal',
+                  'Exhibition Site',
                   style: DesignSystem.bodySm.copyWith(color: Colors.white70),
                 ),
                 onTap: () {
                   Navigator.pop(context);
-                  context.go('/');
+                  openExhibitionSite(context, ref);
                 },
                 shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
                 dense: true,

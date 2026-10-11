@@ -7,6 +7,7 @@ import '../../../../core/utils/external_link.dart';
 import '../../../../core/domain/models/event.dart';
 import '../../../../core/state/state_providers.dart';
 import '../../../../core/widgets/project_card.dart';
+import '../widgets/workspace_band.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -296,6 +297,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 ],
               ),
             ),
+            WorkspaceBand(padding: padding),
           ],
         ),
       ),

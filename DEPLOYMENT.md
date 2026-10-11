@@ -186,6 +186,20 @@ npx supabase gen types typescript --project-id siedglubjcedkbrpdzgi
 - **Public**: `fskmjasinfypexhibition.site` (managed via GitHub Pages, CNAME)
 - **Admin**: `admin.fskmjasinfypexhibition.site` — Cloudflare **Redirect Rule** (Hostname equals `admin.fskmjasinfypexhibition.site` → 302 to `https://fskmjasinfypexhibition.site/admin`). It is **not** a GitHub Pages site: a repo's Pages site serves one custom domain, and this repo's is the apex. (Until 2026-09 it pointed at a separate, stale 6 Aug build that never received deploys.)
 
+### Moving the FYP Workspace to `fyp.` (planned)
+
+The exhibition stays on `fskmjasinfypexhibition.site`; CSP600 / CSP650 (`/fypms`) moves to `fyp.fskmjasinfypexhibition.site`. The app already handles both hosts (`lib/app/site_hosts.dart`, `_siteHostGuard` in `lib/app/router_guards.dart`); it switches on when built with `CSP_HOST`.
+
+| Step | Action | Gate before proceeding |
+|---|---|---|
+| 1 | Create a second static site for the same repo (Cloudflare Pages, or a second GitHub Pages repo) that runs the same build with `--dart-define=CSP_HOST=fyp.fskmjasinfypexhibition.site` | Preview URL loads `/sign-in` |
+| 2 | Add the same `--dart-define=CSP_HOST=…` to the main site's build in `.github/workflows/deploy.yml` | Main site still serves the exhibition |
+| 3 | DNS: CNAME `fyp` → the new site | `https://fyp.fskmjasinfypexhibition.site/` redirects to sign-in |
+| 4 | Supabase Auth → URL Configuration: add `https://fyp.fskmjasinfypexhibition.site/reset-password` to Redirect URLs | Password reset email from `fyp.` lands on `fyp.` |
+| 5 | Smoke test: `/fypms` on the main site moves to `fyp.`; `/booths` on `fyp.` moves back; a student signs in on `fyp.` and lands on `/fypms/student` | All three pass |
+
+Sign-in is stored per site, so a lecturer signs in once on the main site (booth visits, admin) and once on `fyp.` (CSP). Sharing one session across both needs cookie-based auth storage on `.fskmjasinfypexhibition.site` (not built).
+
 ### SPA Handling
 - `404.html` is copied from `index.html` to handle client-side routing
 - `go_router` handles all route matching client-side

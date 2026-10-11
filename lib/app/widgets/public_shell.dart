@@ -148,7 +148,6 @@ class _DesktopNavBar extends StatelessWidget {
                 final width = MediaQuery.sizeOf(context).width;
                 final links = <(String, String)>[
                   ('Home', '/'),
-                  ('Exhibition', '/expo'),
                   ('Projects', '/projects'),
                   ('Booths', '/booths'),
                   ('Schedule', '/schedule'),
@@ -210,7 +209,9 @@ class _DesktopNavBar extends StatelessWidget {
 
           // Right: Login Button
           if (!lecturerSignedIn)
-            ElevatedButton(
+            Tooltip(
+              message: 'Students and lecturers: CSP600, CSP650 and booth visits',
+              child: ElevatedButton(
               onPressed: () => _openSignIn(context),
               style: ElevatedButton.styleFrom(
                 backgroundColor: DesignSystem.primary,
@@ -228,6 +229,7 @@ class _DesktopNavBar extends StatelessWidget {
                 'Sign In',
                 style: DesignSystem.button.copyWith(fontSize: 14),
               ),
+            ),
             ),
         ],
       ),
@@ -324,12 +326,6 @@ class _MobileBottomNavBar extends StatelessWidget {
                 if (!lecturerSignedIn)
                   _buildMenuItemExternal(context, 'Sign In', Icons.login),
                 if (!lecturerSignedIn) const Divider(),
-                _buildMenuItem(
-                  context,
-                  'Exhibition',
-                  Icons.storefront_outlined,
-                  '/expo',
-                ),
                 _buildMenuItem(
                   context,
                   'Project Catalogue',
