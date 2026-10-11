@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:fyp_expo_hub/app/theme/theme.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:fyp_expo_hub/core/domain/models/project.dart';
@@ -164,6 +165,14 @@ void main() {
     // Dropdowns hidden until expanded.
     expect(find.text('Academic Program'), findsNothing);
     expect(find.text('Tech Stack'), findsNothing);
+  });
+
+  testWidgets('JuniorProjectBrowserPage header counts what there is to browse, in mono', (tester) async {
+    await pumpMobile(tester, const JuniorProjectBrowserPage());
+
+    final counts = tester.widget<Text>(find.byKey(const Key('guide-counts')));
+    expect(counts.data, contains('CSP650'));
+    expect(counts.style?.fontFamily, DesignSystem.mono);
   });
 
   testWidgets('JuniorProjectBrowserPage mobile: toggle expands and shows filters',
