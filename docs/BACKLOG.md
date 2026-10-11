@@ -115,7 +115,7 @@ The exhibition is the homepage; CSP600 / CSP650 sit behind sign-in and will move
 |---|---|---|---|
 | [x] | W1 | `/` is the exhibition home (`/expo` redirects); portal page removed; "Exhibition" nav link dropped; FYP Workspace band on the home page (#62) | H |
 | [x] | W2 | Host-ready routing: `CSP_HOST` build define, `_siteHostGuard`, `/go` hop limited to our hosts (#62) | H |
-| [ ] | W3 | Move the Workspace to `fyp.`: deploy pipeline ready (Cloudflare Pages `fyp-workspace`, `CSP_HOST` repo variable); remaining steps are Cloudflare / GitHub / Supabase settings in DEPLOYMENT.md | M |
+| [x] | W3 | Workspace moved to `fyp.fskmjasinfypexhibition.site`: Cloudflare Pages project `fyp-workspace` deployed from the same build, `CSP_HOST` repo variable set (11 Oct 2026); main-site `/fypms` → `fyp.`, exhibition pages on `fyp.` → main site (#65) | M |
 | [ ] | W4 | Shared sign-in across the two sites (cookie storage on `.fskmjasinfypexhibition.site`) | L |
 | [x] | D1 | Design system: Fraunces + JetBrains Mono, type and colour tokens, `GraphPaper`, `SectionHeader`, `StatBlock`, `CodeTag`, `BrandMark`; DESIGN.md for Google Stitch (#62) | H |
 | [x] | D2 | Apply to the public site: new exhibition home, project cards, section headers, code tags (#62) | H |
