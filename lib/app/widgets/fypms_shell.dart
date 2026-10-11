@@ -201,7 +201,17 @@ bool _studentHasProjectCourse(WidgetRef ref, bool isStudent) {
   return records.any((r) => r.currentCourseCode == 'CSP650');
 }
 
-List<({String title, IconData icon, String route})> _navItems({
+typedef _NavItem = ({String title, IconData icon, String route});
+
+/// A labelled cluster of links inside a section ("Review", "People"…).
+typedef _NavGroup = ({String? label, List<_NavItem> items});
+
+/// One role's part of the menu ("Supervisor", "Coordinator"…). People with
+/// several roles see one collapsible section per role instead of one long
+/// list with repeated "Milestones" / "Evaluations" entries.
+typedef _NavSection = ({String title, IconData icon, List<_NavGroup> groups});
+
+List<_NavSection> _navSections({
   bool showProjectPages = true,
   String cspTitle = 'CSP Dashboard',
   bool teachesCsp600 = false,
@@ -213,91 +223,271 @@ List<({String title, IconData icon, String route})> _navItems({
   required bool isCsp,
   bool isPu = false,
 }) {
-  final items = <({String title, IconData icon, String route})>[];
+  final sections = <_NavSection>[];
 
   if (isStudent) {
-    items.addAll([
-      (title: 'Student Dashboard', icon: Icons.dashboard, route: '/fypms/student'),
-      (title: 'My Records', icon: Icons.folder_open, route: '/fypms/student/records'),
-      (title: 'Supervision', icon: Icons.supervisor_account, route: '/fypms/student/supervision'),
-      (title: 'Progress Logs', icon: Icons.timeline, route: '/fypms/student/progress'),
-      (title: 'Forms', icon: Icons.description, route: '/fypms/student/forms'),
-      // CSP650 only (FSKM handbook): Lean Canvas (F13), Deliverables, Corrections (F12).
-      if (showProjectPages) (title: 'Lean Canvas', icon: Icons.grid_view, route: '/fypms/student/lean-canvas'),
-      (title: 'Reports', icon: Icons.upload_file, route: '/fypms/student/reports'),
-      if (showProjectPages) (title: 'Deliverables', icon: Icons.checklist, route: '/fypms/student/deliverables'),
-      (title: 'Milestones', icon: Icons.flag, route: '/fypms/student/milestones'),
-      if (showProjectPages) (title: 'Corrections', icon: Icons.fact_check, route: '/fypms/student/corrections'),
-      (title: 'Presentations', icon: Icons.event, route: '/fypms/student/presentations'),
-      (title: 'Marks', icon: Icons.scoreboard, route: '/fypms/student/marks'),
-    ]);
+    sections.add((
+      title: 'Student',
+      icon: Icons.school_outlined,
+      groups: [
+        (label: null, items: [
+          (title: 'Student Dashboard', icon: Icons.dashboard, route: '/fypms/student'),
+          (title: 'My Records', icon: Icons.folder_open, route: '/fypms/student/records'),
+          (title: 'Supervision', icon: Icons.supervisor_account, route: '/fypms/student/supervision'),
+        ]),
+        (label: 'My work', items: [
+          (title: 'Progress Logs', icon: Icons.timeline, route: '/fypms/student/progress'),
+          (title: 'Forms', icon: Icons.description, route: '/fypms/student/forms'),
+          (title: 'Reports', icon: Icons.upload_file, route: '/fypms/student/reports'),
+          // CSP650 only (FSKM handbook): Lean Canvas (F13), Corrections (F12), Deliverables.
+          if (showProjectPages) (title: 'Lean Canvas', icon: Icons.grid_view, route: '/fypms/student/lean-canvas'),
+          if (showProjectPages) (title: 'Corrections', icon: Icons.fact_check, route: '/fypms/student/corrections'),
+          if (showProjectPages) (title: 'Deliverables', icon: Icons.checklist, route: '/fypms/student/deliverables'),
+        ]),
+        (label: 'Dates & results', items: [
+          (title: 'Milestones', icon: Icons.flag, route: '/fypms/student/milestones'),
+          (title: 'Presentations', icon: Icons.event, route: '/fypms/student/presentations'),
+          (title: 'Marks', icon: Icons.scoreboard, route: '/fypms/student/marks'),
+        ]),
+      ],
+    ));
   }
 
   if (isSupervisor) {
-    items.addAll([
-      (title: 'Supervisor Dashboard', icon: Icons.dashboard, route: '/fypms/supervisor'),
-      (title: 'Assigned Records', icon: Icons.folder_open, route: '/fypms/supervisor/records'),
-      (title: 'Supervision Requests', icon: Icons.mail, route: '/fypms/supervisor/requests'),
-      (title: 'Progress Reviews', icon: Icons.timeline, route: '/fypms/supervisor/progress'),
-      (title: 'Report Endorsement', icon: Icons.fact_check, route: '/fypms/supervisor/reports'),
-      (title: 'Evaluations', icon: Icons.description, route: '/fypms/supervisor/evaluations'),
-      (title: 'Corrections', icon: Icons.fact_check, route: '/fypms/supervisor/corrections'),
-      (title: 'Milestones', icon: Icons.flag, route: '/fypms/supervisor/milestones'),
-    ]);
+    sections.add((
+      title: 'Supervisor',
+      icon: Icons.supervisor_account,
+      groups: [
+        (label: null, items: [
+          (title: 'Supervisor Dashboard', icon: Icons.dashboard, route: '/fypms/supervisor'),
+          (title: 'Assigned Records', icon: Icons.folder_open, route: '/fypms/supervisor/records'),
+          (title: 'Supervision Requests', icon: Icons.mail, route: '/fypms/supervisor/requests'),
+        ]),
+        (label: 'Review', items: [
+          (title: 'Progress Reviews', icon: Icons.timeline, route: '/fypms/supervisor/progress'),
+          (title: 'Report Endorsement', icon: Icons.fact_check, route: '/fypms/supervisor/reports'),
+          (title: 'Evaluations', icon: Icons.description, route: '/fypms/supervisor/evaluations'),
+          (title: 'Corrections', icon: Icons.fact_check, route: '/fypms/supervisor/corrections'),
+          (title: 'Milestones', icon: Icons.flag, route: '/fypms/supervisor/milestones'),
+        ]),
+      ],
+    ));
   }
 
   if (isExaminer) {
-    items.addAll([
-      (title: 'Examiner Dashboard', icon: Icons.dashboard, route: '/fypms/examiner'),
-      (title: 'Assigned Records', icon: Icons.folder_open, route: '/fypms/examiner/records'),
-      (title: 'Evaluations', icon: Icons.description, route: '/fypms/examiner/evaluations'),
-      (title: 'Corrections', icon: Icons.fact_check, route: '/fypms/examiner/corrections'),
-    ]);
+    sections.add((
+      title: 'Examiner',
+      icon: Icons.rate_review_outlined,
+      groups: [
+        (label: null, items: [
+          (title: 'Examiner Dashboard', icon: Icons.dashboard, route: '/fypms/examiner'),
+          (title: 'Assigned Records', icon: Icons.folder_open, route: '/fypms/examiner/records'),
+          (title: 'Evaluations', icon: Icons.description, route: '/fypms/examiner/evaluations'),
+          (title: 'Corrections', icon: Icons.fact_check, route: '/fypms/examiner/corrections'),
+        ]),
+      ],
+    ));
   }
 
   if (isCsp) {
-    items.addAll([
-      (title: cspTitle, icon: Icons.dashboard, route: '/fypms/csp'),
-      (title: 'Supervision Requests', icon: Icons.mail, route: '/fypms/csp/requests'),
-      (title: 'Offerings', icon: Icons.school, route: '/fypms/csp/offerings'),
-      // Handbook Table 2.1 #19 and #29: CSP600 lecturers assign examiners and hand over to CSP650.
-      if (teachesCsp600) (title: 'Examiners & Handover', icon: Icons.swap_horiz, route: '/fypms/csp/cohort'),
-      // Appendix N: the nominator attaches the nominee's CV and declaration for the PU.
-      (title: 'Nomination CVs', icon: Icons.badge_outlined, route: '/fypms/csp/nominations'),
-      (title: 'Milestones', icon: Icons.flag, route: '/fypms/csp/milestones'),
-      (title: 'Evaluations', icon: Icons.description, route: '/fypms/csp/evaluations'),
-      (title: 'Presentations', icon: Icons.event, route: '/fypms/csp/presentations'),
-      (title: 'Marks', icon: Icons.scoreboard, route: '/fypms/csp/marks'),
-    ]);
+    sections.add((
+      title: '${cspTitle.replaceAll(' Dashboard', '')} Lecturer',
+      icon: Icons.menu_book_outlined,
+      groups: [
+        (label: null, items: [
+          (title: cspTitle, icon: Icons.dashboard, route: '/fypms/csp'),
+          (title: 'Offerings', icon: Icons.school, route: '/fypms/csp/offerings'),
+          (title: 'Supervision Requests', icon: Icons.mail, route: '/fypms/csp/requests'),
+        ]),
+        (label: 'Cohort', items: [
+          // Handbook Table 2.1 #19 and #29: CSP600 lecturers assign examiners and hand over to CSP650.
+          if (teachesCsp600) (title: 'Examiners & Handover', icon: Icons.swap_horiz, route: '/fypms/csp/cohort'),
+          // Appendix N: the nominator attaches the nominee's CV and declaration for the PU.
+          (title: 'Nomination CVs', icon: Icons.badge_outlined, route: '/fypms/csp/nominations'),
+          (title: 'Milestones', icon: Icons.flag, route: '/fypms/csp/milestones'),
+        ]),
+        (label: 'Assessment', items: [
+          (title: 'Presentations', icon: Icons.event, route: '/fypms/csp/presentations'),
+          (title: 'Evaluations', icon: Icons.description, route: '/fypms/csp/evaluations'),
+          (title: 'Marks', icon: Icons.scoreboard, route: '/fypms/csp/marks'),
+        ]),
+      ],
+    ));
   }
 
   if (isPu) {
-    items.add((title: 'Nominations', icon: Icons.how_to_reg, route: '/fypms/pu'));
+    sections.add((
+      title: 'Programme Unit',
+      icon: Icons.how_to_reg,
+      groups: [
+        (label: null, items: [(title: 'Nominations', icon: Icons.how_to_reg, route: '/fypms/pu')]),
+      ],
+    ));
   }
 
   if (isCoordinator || isAdmin) {
-    items.addAll([
-      (title: 'Coordinator Dashboard', icon: Icons.dashboard, route: '/fypms/coordinator'),
-      (title: 'All Records', icon: Icons.folder_open, route: '/fypms/coordinator/records'),
-      (title: 'Assignments', icon: Icons.assignment_ind, route: '/fypms/coordinator/assignments'),
-      (title: 'Nomination CVs', icon: Icons.badge_outlined, route: '/fypms/coordinator/nominations'),
-      (title: 'Semesters & Courses', icon: Icons.date_range, route: '/fypms/coordinator/semesters'),
-      (title: 'Users & Roles', icon: Icons.manage_accounts, route: '/fypms/coordinator/users'),
-      (title: 'Enrol Students', icon: Icons.group_add, route: '/fypms/coordinator/enrol'),
-      (title: 'Supervision Requests', icon: Icons.mail, route: '/fypms/coordinator/requests'),
-      (title: 'Presentations', icon: Icons.event, route: '/fypms/coordinator/presentations'),
-      (title: 'Expo Publications', icon: Icons.public, route: '/fypms/coordinator/expo'),
-      (title: 'Mark Allocation', icon: Icons.pie_chart_outline, route: '/fypms/coordinator/mark-allocation'),
-      (title: 'Rubrics', icon: Icons.rule, route: '/fypms/coordinator/rubrics'),
-      (title: 'Reports', icon: Icons.insights, route: '/fypms/coordinator/reports'),
-      if (!isPu) (title: 'Appointment Letters', icon: Icons.description_outlined, route: '/fypms/coordinator/letters'),
-      (title: 'Audit Logs', icon: Icons.history, route: '/fypms/coordinator/audit'),
-      // Admins run the exhibition too; the CMS links back here via "FYP Management".
-      if (isAdmin) (title: 'Exhibition Admin', icon: Icons.storefront_outlined, route: '/admin'),
-    ]);
+    sections.add((
+      title: 'Coordinator',
+      icon: Icons.admin_panel_settings_outlined,
+      groups: [
+        (label: null, items: [
+          (title: 'Coordinator Dashboard', icon: Icons.dashboard, route: '/fypms/coordinator'),
+          (title: 'All Records', icon: Icons.folder_open, route: '/fypms/coordinator/records'),
+          (title: 'Reports', icon: Icons.insights, route: '/fypms/coordinator/reports'),
+        ]),
+        (label: 'People', items: [
+          (title: 'Users & Roles', icon: Icons.manage_accounts, route: '/fypms/coordinator/users'),
+          (title: 'Enrol Students', icon: Icons.group_add, route: '/fypms/coordinator/enrol'),
+          (title: 'Assignments', icon: Icons.assignment_ind, route: '/fypms/coordinator/assignments'),
+          (title: 'Supervision Requests', icon: Icons.mail, route: '/fypms/coordinator/requests'),
+          (title: 'Nomination CVs', icon: Icons.badge_outlined, route: '/fypms/coordinator/nominations'),
+          if (!isPu) (title: 'Appointment Letters', icon: Icons.description_outlined, route: '/fypms/coordinator/letters'),
+        ]),
+        (label: 'Assessment', items: [
+          (title: 'Presentations', icon: Icons.event, route: '/fypms/coordinator/presentations'),
+          (title: 'Mark Allocation', icon: Icons.pie_chart_outline, route: '/fypms/coordinator/mark-allocation'),
+          (title: 'Rubrics', icon: Icons.rule, route: '/fypms/coordinator/rubrics'),
+        ]),
+        (label: 'Setup', items: [
+          (title: 'Semesters & Courses', icon: Icons.date_range, route: '/fypms/coordinator/semesters'),
+          (title: 'Expo Publications', icon: Icons.public, route: '/fypms/coordinator/expo'),
+          (title: 'Audit Logs', icon: Icons.history, route: '/fypms/coordinator/audit'),
+          // Admins run the exhibition too; the CMS links back here via "FYP Management".
+          if (isAdmin) (title: 'Exhibition Admin', icon: Icons.storefront_outlined, route: '/admin'),
+        ]),
+      ],
+    ));
   }
 
-  return items;
+  // Drop sub-groups emptied by the role checks above.
+  return [
+    for (final s in sections)
+      (title: s.title, icon: s.icon, groups: [for (final g in s.groups) if (g.items.isNotEmpty) g]),
+  ];
+}
+
+/// The menu body shared by the desktop sidebar and the mobile drawer. With
+/// one role it is a plain list with small group labels; with several, each
+/// role is a collapsible section and the one holding the current page starts
+/// open.
+class _NavMenu extends StatefulWidget {
+  const _NavMenu({required this.sections, required this.currentPath, required this.onOpen});
+
+  final List<_NavSection> sections;
+  final String currentPath;
+  final void Function(String route) onOpen;
+
+  @override
+  State<_NavMenu> createState() => _NavMenuState();
+}
+
+class _NavMenuState extends State<_NavMenu> {
+  late final Set<String> _open = {_activeSection() ?? widget.sections.firstOrNull?.title ?? ''};
+
+  String? _activeSection() {
+    for (final s in widget.sections) {
+      for (final g in s.groups) {
+        if (g.items.any((i) => _navRouteIsActive(i.route, widget.currentPath))) return s.title;
+      }
+    }
+    return null;
+  }
+
+  @override
+  void didUpdateWidget(_NavMenu old) {
+    super.didUpdateWidget(old);
+    // Navigating into a collapsed section (e.g. from a dashboard link) opens it.
+    final active = _activeSection();
+    if (active != null) _open.add(active);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final sections = widget.sections;
+    return ListView(
+      padding: const EdgeInsets.symmetric(vertical: DesignSystem.spaceSm),
+      children: sections.length == 1
+          ? _groups(sections.single)
+          : [
+              for (final s in sections) ...[
+                _sectionHeader(s),
+                if (_open.contains(s.title)) ..._groups(s),
+              ],
+            ],
+    );
+  }
+
+  Widget _sectionHeader(_NavSection s) {
+    final open = _open.contains(s.title);
+    final count = s.groups.fold<int>(0, (n, g) => n + g.items.length);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 6, 12, 2),
+      child: Material(
+        type: MaterialType.transparency,
+        child: ListTile(
+          key: Key('nav-section-${s.title}'),
+          dense: true,
+          shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
+          leading: Icon(s.icon, color: DesignSystem.secondaryContainer, size: 20),
+          title: Text(
+            s.title.toUpperCase(),
+            style: DesignSystem.kicker.copyWith(color: Colors.white, fontSize: 12),
+          ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (!open) Text('$count', style: DesignSystem.kicker.copyWith(color: Colors.white54, fontSize: 11)),
+              Icon(open ? Icons.expand_less : Icons.expand_more, color: Colors.white70, size: 20),
+            ],
+          ),
+          onTap: () => setState(() => open ? _open.remove(s.title) : _open.add(s.title)),
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _groups(_NavSection s) => [
+        for (final g in s.groups) ...[
+          if (g.label != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(28, 12, 16, 4),
+              child: Text(
+                g.label!.toUpperCase(),
+                style: DesignSystem.kicker.copyWith(color: DesignSystem.onPrimaryContainer, fontSize: 10.5),
+              ),
+            ),
+          for (final i in g.items) _item(i),
+        ],
+      ];
+
+  Widget _item(_NavItem i) {
+    final active = _navRouteIsActive(i.route, widget.currentPath);
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 1),
+      decoration: BoxDecoration(
+        color: active ? DesignSystem.secondary.withValues(alpha: 0.15) : Colors.transparent,
+        borderRadius: DesignSystem.radiusLg,
+      ),
+      child: Material(
+        type: MaterialType.transparency,
+        child: ListTile(
+          leading: Icon(i.icon, color: active ? DesignSystem.secondaryContainer : Colors.white70, size: 20),
+          title: Text(
+            i.title,
+            style: DesignSystem.bodySm.copyWith(
+              color: active ? Colors.white : Colors.white70,
+              fontWeight: active ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+          selected: active,
+          onTap: () => widget.onOpen(i.route),
+          shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
+          dense: true,
+          visualDensity: const VisualDensity(vertical: -2),
+        ),
+      ),
+    );
+  }
 }
 
 class _FypmsSidebar extends ConsumerWidget {
@@ -323,7 +513,7 @@ class _FypmsSidebar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final items = _navItems(
+    final sections = _navSections(
       showProjectPages: _studentHasProjectCourse(ref, isStudent),
       cspTitle: cspWorkspaceTitle(ref.watch(cspTaughtCoursesProvider)),
       teachesCsp600: ref.watch(cspTaughtCoursesProvider).contains('CSP600'),
@@ -347,12 +537,10 @@ class _FypmsSidebar extends ConsumerWidget {
       child: Column(
         children: [
           Expanded(
-            child: ListView(
-              padding: const EdgeInsets.symmetric(vertical: DesignSystem.spaceMd),
-              children: [
-                for (final item in items)
-                  _buildSidebarItem(context, item.title, item.icon, item.route),
-              ],
+            child: _NavMenu(
+              sections: sections,
+              currentPath: currentPath,
+              onOpen: (route) => context.go(route),
             ),
           ),
           const Divider(color: Colors.white10),
@@ -371,33 +559,6 @@ class _FypmsSidebar extends ConsumerWidget {
           ),
           const SizedBox(height: DesignSystem.spaceMd),
         ],
-      ),
-    );
-  }
-
-  Widget _buildSidebarItem(BuildContext context, String title, IconData icon, String route) {
-    final active = _navRouteIsActive(route, currentPath);
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      decoration: BoxDecoration(
-        color: active ? DesignSystem.secondary.withValues(alpha: 0.15) : Colors.transparent,
-        borderRadius: DesignSystem.radiusLg,
-      ),
-      child: Material(
-        type: MaterialType.transparency,
-        child: ListTile(
-          leading: Icon(icon, color: active ? DesignSystem.secondaryContainer : Colors.white70, size: 20),
-          title: Text(
-            title,
-            style: DesignSystem.bodySm.copyWith(
-              color: active ? Colors.white : Colors.white70,
-              fontWeight: active ? FontWeight.bold : FontWeight.normal,
-            ),
-          ),
-          onTap: () => context.go(route),
-          shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
-          dense: true,
-        ),
       ),
     );
   }
@@ -428,7 +589,7 @@ class _FypmsDrawer extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final items = _navItems(
+    final sections = _navSections(
       showProjectPages: _studentHasProjectCourse(ref, isStudent),
       cspTitle: cspWorkspaceTitle(ref.watch(cspTaughtCoursesProvider)),
       teachesCsp600: ref.watch(cspTaughtCoursesProvider).contains('CSP600'),
@@ -453,12 +614,13 @@ class _FypmsDrawer extends ConsumerWidget {
             ),
             const Divider(color: Colors.white10),
             Expanded(
-              child: ListView(
-                padding: EdgeInsets.zero,
-                children: [
-                  for (final item in items)
-                    _buildDrawerItem(context, item.title, item.icon, item.route),
-                ],
+              child: _NavMenu(
+                sections: sections,
+                currentPath: currentPath,
+                onOpen: (route) {
+                  Navigator.pop(context);
+                  context.go(route);
+                },
               ),
             ),
             const Divider(color: Colors.white10),
@@ -493,37 +655,6 @@ class _FypmsDrawer extends ConsumerWidget {
             ),
             const SizedBox(height: DesignSystem.spaceMd),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDrawerItem(BuildContext context, String title, IconData icon, String route) {
-    final active = _navRouteIsActive(route, currentPath);
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      decoration: BoxDecoration(
-        color: active ? DesignSystem.secondary.withValues(alpha: 0.15) : Colors.transparent,
-        borderRadius: DesignSystem.radiusLg,
-      ),
-      child: Material(
-        type: MaterialType.transparency,
-        child: ListTile(
-          leading: Icon(icon, color: active ? DesignSystem.secondaryContainer : Colors.white70, size: 20),
-          title: Text(
-            title,
-            style: DesignSystem.bodySm.copyWith(
-              color: active ? Colors.white : Colors.white70,
-              fontWeight: active ? FontWeight.bold : FontWeight.normal,
-            ),
-          ),
-          selected: active,
-          onTap: () {
-            Navigator.pop(context);
-            context.go(route);
-          },
-          shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
-          dense: true,
         ),
       ),
     );
