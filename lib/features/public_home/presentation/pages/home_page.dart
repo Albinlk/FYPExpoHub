@@ -2,12 +2,24 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../app/theme/theme.dart';
-import '../../../../core/utils/external_link.dart';
+import '../../../../core/domain/models/award.dart';
 import '../../../../core/domain/models/event.dart';
+import '../../../../core/domain/models/project.dart';
 import '../../../../core/state/state_providers.dart';
+import '../../../../core/utils/external_link.dart';
+import '../../../../core/widgets/entrance_animation.dart';
 import '../../../../core/widgets/project_card.dart';
+import '../../../../core/widgets/scholar_lab.dart';
+import '../widgets/workspace_band.dart';
 
+/// Widest the home content grows; wider screens get margins instead.
+const kHomeMaxWidth = 1200.0;
+
+/// The exhibition home, and the site's homepage ("Scholar + Lab", DESIGN.md):
+/// a left-aligned hero on graph paper with live numbers, then numbered
+/// sections, then the FYP Workspace band for students and lecturers.
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
@@ -24,502 +36,331 @@ class _HomePageState extends ConsumerState<HomePage> {
     super.dispose();
   }
 
+  void _search() {
+    final query = _searchController.text.trim();
+    context.go(query.isEmpty ? '/projects' : Uri(path: '/projects', queryParameters: {'search': query}).toString());
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDesktop = MediaQuery.sizeOf(context).width >= 768;
     final padding = isDesktop ? DesignSystem.marginDesktop : DesignSystem.marginMobile;
     final event = ref.watch(eventProvider);
+    final projects = ref.watch(publicProjectsProvider);
+    final winners = ref.watch(publicAwardsProvider);
+
+    // Sections are numbered in order of appearance; winners only once there are some.
+    var n = 0;
+    String next() => (++n).toString().padLeft(2, '0');
+
+    final sections = <Widget>[
+      _Section(
+        padding: padding,
+        child: _FeaturedProjects(number: next(), isDesktop: isDesktop),
+      ),
+      if (winners.isNotEmpty)
+        _Section(
+          padding: padding,
+          child: _AwardWinners(number: next(), winners: winners.take(3).toList(), isDesktop: isDesktop),
+        ),
+      _Section(
+        padding: padding,
+        background: DesignSystem.surfaceContainerLow,
+        child: _GuideTeaser(number: next(), isDesktop: isDesktop),
+      ),
+      _Section(
+        padding: padding,
+        child: _PlanYourVisit(number: next(), event: event, isDesktop: isDesktop),
+      ),
+    ];
 
     return Scaffold(
       body: SingleChildScrollView(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // 1. HERO BANNER SECTION
-            Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [DesignSystem.primary, DesignSystem.primaryContainer],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                // Admin-set hero photo (Event → Hero Image URL), tinted with
-                // the brand ink so the white hero text keeps its contrast.
-                image: safeExternalUri(event.heroImageUrl) == null
-                    ? null
-                    : DecorationImage(
-                        image: NetworkImage(safeExternalUri(event.heroImageUrl)!.toString()),
-                        fit: BoxFit.cover,
-                        colorFilter: ColorFilter.mode(
-                          DesignSystem.primary.withValues(alpha: 0.8),
-                          BlendMode.srcOver,
-                        ),
-                        onError: (_, _) {},
-                      ),
-              ),
-              padding: EdgeInsets.symmetric(horizontal: padding, vertical: isDesktop ? 80.0 : 28.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: DesignSystem.secondary,
-                      borderRadius: DesignSystem.radiusFull,
-                    ),
-                    child: Text(
-                      'FSKM FINAL YEAR PROJECT EXHIBITION',
-                      style: DesignSystem.labelCaps.copyWith(color: Colors.white),
-                      softWrap: true,
-                    ),
-                  ),
-                  const SizedBox(height: DesignSystem.spaceMd),
-                  Semantics(
-                    header: true,
-                    child: Text(
-                    'FYP Expo Hub',
-                    style: (isDesktop ? DesignSystem.h1 : DesignSystem.h1Mobile).copyWith(
-                      color: Colors.white,
-                    ),
-                    textAlign: TextAlign.center,
-                    softWrap: true,
-                  ),
-                  ),
-                  const SizedBox(height: DesignSystem.spaceSm),
-                  Text(
-                    'Exploring Innovation, Empowering Academic Futures',
-                    style: (isDesktop ? DesignSystem.bodyLg : DesignSystem.bodyLgMobile).copyWith(color: Colors.white70),
-                    textAlign: TextAlign.center,
-                    softWrap: true,
-                  ),
-                  SizedBox(height: isDesktop ? DesignSystem.spaceLg : DesignSystem.spaceMd),
-
-                  // EXHIBITION DETAILS ABOVE TIMER
-                  _buildExhibitionDetails(isDesktop, event),
-
-                  SizedBox(height: isDesktop ? DesignSystem.spaceLg : DesignSystem.spaceMd),
-
-                  // COUNTDOWN TIMER / EVENT STATUS
-                  _CountdownTimer(eventStart: event.startAt, eventEnd: event.endAt, compact: !isDesktop),
-
-                  SizedBox(height: isDesktop ? DesignSystem.spaceXl : DesignSystem.spaceLg),
-
-                  // Hero CTA Buttons & Search
-                  SizedBox(
-                    width: isDesktop ? 600 : double.infinity,
-                    child: Column(
-                      children: [
-                        TextField(
-                          controller: _searchController,
-                          onSubmitted: (value) {
-                            if (value.isNotEmpty) {
-                              context.go(Uri(path: '/projects', queryParameters: {'search': value}).toString());
-                            }
-                          },
-                          decoration: InputDecoration(
-                            hintText: isDesktop
-                                ? 'Search projects, supervisors, or keywords…'
-                                : 'Search projects…',
-                            prefixIcon: const Icon(Icons.search, color: DesignSystem.primary),
-                            suffixIcon: ElevatedButton(
-                              onPressed: () {
-                                final query = _searchController.text;
-                                if (query.isNotEmpty) {
-                                  context.go(Uri(path: '/projects', queryParameters: {'search': query}).toString());
-                                } else {
-                                  context.go('/projects');
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: DesignSystem.secondaryContainer,
-                                foregroundColor: DesignSystem.onSecondaryContainer,
-                                shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
-                              ),
-                              child: const Text('Search'),
-                            ),
-                            filled: true,
-                            fillColor: Colors.white,
-                            border: OutlineInputBorder(
-                              borderRadius: DesignSystem.radiusXl,
-                              borderSide: BorderSide.none,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: DesignSystem.spaceMd),
-                        Wrap(
-                          spacing: DesignSystem.spaceMd,
-                          runSpacing: DesignSystem.spaceSm,
-                          alignment: WrapAlignment.center,
-                          children: [
-                            ElevatedButton(
-                              onPressed: () => context.go('/projects'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: DesignSystem.secondaryContainer,
-                                foregroundColor: DesignSystem.onSecondaryContainer,
-                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                                shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusFull),
-                              ),
-                              child: Text('Explore Projects', style: DesignSystem.button),
-                            ),
-                            // Past Sem Projects and Lecturer Portal live in the
-                            // navigation; the hero keeps one primary action.
-                            OutlinedButton(
-                              onPressed: () => context.go('/schedule'),
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: Colors.white,
-                                side: const BorderSide(color: Colors.white30, width: 1.5),
-                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                                shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusFull),
-                              ),
-                              child: Text('View Schedule', style: DesignSystem.button),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+            _Hero(
+              event: event,
+              projects: projects,
+              isDesktop: isDesktop,
+              padding: padding,
+              search: _searchController,
+              onSearch: _search,
             ),
-
-            // 2. FEATURED PROJECTS SECTION
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: padding, vertical: DesignSystem.spaceXl),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          'Featured Projects',
-                          // Centered on mobile to match the Exhibition
-                          // Overview section; left on desktop.
-                          textAlign:
-                              isDesktop ? TextAlign.start : TextAlign.center,
-                          style: (isDesktop ? DesignSystem.h2 : DesignSystem.h2Mobile).copyWith(color: DesignSystem.primary),
-                        ),
-                      ),
-                      if (isDesktop)
-                        TextButton(
-                          onPressed: () => context.go('/projects'),
-                          child: Row(
-                            children: const [
-                              Text('View All', style: TextStyle(fontWeight: FontWeight.bold, color: DesignSystem.secondary)),
-                              Icon(Icons.arrow_forward_ios, size: 14, color: DesignSystem.secondary),
-                            ],
-                          ),
-                        ),
-                    ],
-                  ),
-                  if (!isDesktop)
-                    Center(
-                      child: TextButton(
-                        onPressed: () => context.go('/projects'),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: const [
-                            Text('View All', style: TextStyle(fontWeight: FontWeight.bold, color: DesignSystem.secondary)),
-                            Icon(Icons.arrow_forward_ios, size: 14, color: DesignSystem.secondary),
-                          ],
-                        ),
-                      ),
-                    ),
-                  const SizedBox(height: DesignSystem.spaceMd),
-                  Consumer(
-                    builder: (context, ref, child) {
-                      final sorted = ref.watch(mostVisitedProjectsProvider);
-                      // A short, curated row: the catalogue is for browsing everything.
-                      final display = featuredForHome(sorted);
-                      if (display.isEmpty) return const SizedBox.shrink();
-                      if (isDesktop) {
-                        return GridView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          gridDelegate: ProjectCard.gridDelegate(MediaQuery.sizeOf(context).width, textScale: MediaQuery.textScalerOf(context).scale(1)),
-                          itemCount: display.length,
-                          itemBuilder: (context, index) => ProjectCard(
-                            project: display[index],
-                            onTap: () => context.push('/projects/${display[index].slug}'),
-                          ),
-                        );
-                      }
-                      return ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: display.length,
-                        itemBuilder: (context, index) => Padding(
-                          padding: EdgeInsets.only(
-                            bottom: index == display.length - 1 ? 0 : DesignSystem.spaceMd,
-                          ),
-                          child: ProjectCard(
-                            project: display[index],
-                            imageHeight: 160,
-                            onTap: () => context.push('/projects/${display[index].slug}'),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-
-            // 3. ESSENTIAL INFORMATION SUMMARY
-            Container(
-              width: double.infinity,
-              color: DesignSystem.surfaceContainerLow,
-              padding: EdgeInsets.symmetric(horizontal: padding, vertical: DesignSystem.spaceXl),
-              child: Column(
-                children: [
-                  Text('Exhibition Overview', style: (isDesktop ? DesignSystem.h2 : DesignSystem.h2Mobile).copyWith(color: DesignSystem.primary)),
-                  const SizedBox(height: DesignSystem.spaceLg),
-                  isDesktop
-                      ? Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            _buildInfoTile(Icons.calendar_month, 'Exhibition Dates', _eventDates(event)),
-                            _buildInfoTile(Icons.location_on, 'Main Venue', event.venue),
-                            _buildInfoTile(Icons.hourglass_top, 'Visiting Hours', event.dailyHours),
-                          ],
-                        )
-                      : Column(
-                          children: [
-                            _buildInfoTile(Icons.calendar_month, 'Exhibition Dates', _eventDates(event)),
-                            const SizedBox(height: DesignSystem.spaceMd),
-                            _buildInfoTile(Icons.location_on, 'Main Venue', event.venue),
-                            const SizedBox(height: DesignSystem.spaceMd),
-                            _buildInfoTile(Icons.hourglass_top, 'Visiting Hours', event.dailyHours),
-                          ],
-                        ),
-                ],
-              ),
-            ),
+            for (var i = 0; i < sections.length; i++) StaggeredEntrance(index: i, child: sections[i]),
+            WorkspaceBand(padding: padding),
           ],
         ),
       ),
     );
   }
+}
 
-  /// "06 - 07 August 2026" derived from the live event record.
-  String _eventDates(Event event) {
-    final s = event.startAt.toLocal();
-    final e = event.endAt.toLocal();
-    const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December',
-    ];
-    if (s.month == e.month && s.year == e.year) {
-      return '${s.day.toString().padLeft(2, '0')} - '
-          '${e.day.toString().padLeft(2, '0')} ${months[e.month - 1]} ${e.year}';
-    }
-    return '${s.day}/${s.month}/${s.year} - ${e.day}/${e.month}/${e.year}';
-  }
+/// Full-width band whose content is centred and capped at [kHomeMaxWidth].
+class _Section extends StatelessWidget {
+  const _Section({required this.padding, required this.child, this.background});
 
-  Widget _buildExhibitionDetails(bool isDesktop, Event event) {
-    // Mobile: one compact wrapped line (icon + value, no labels) instead of
-    // a three-row boxed block, so the whole hero fits on one screen.
-    if (!isDesktop) {
-      return Wrap(
-        alignment: WrapAlignment.center,
-        spacing: DesignSystem.spaceMd,
-        runSpacing: DesignSystem.spaceXs,
-        children: [
-          _buildCompactDetail(Icons.calendar_month_rounded, _eventDates(event)),
-          _buildCompactDetail(Icons.access_time_rounded, event.dailyHours),
-          _buildCompactDetail(Icons.location_on_rounded, event.venue),
-        ],
-      );
-    }
+  final double padding;
+  final Widget child;
+  final Color? background;
 
-    final items = [
-      _buildExhibitionDetailItem(
-        Icons.calendar_month_rounded,
-        'Date',
-        _eventDates(event),
-      ),
-      _buildExhibitionDetailItem(
-        Icons.access_time_rounded,
-        'Time',
-        event.dailyHours,
-      ),
-      _buildExhibitionDetailItem(
-        Icons.location_on_rounded,
-        'Venue',
-        event.venue,
-      ),
-    ];
-
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: isDesktop ? DesignSystem.spaceLg : DesignSystem.spaceLg,
-        vertical: DesignSystem.spaceMd,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.08),
-        borderRadius: DesignSystem.radiusXl,
-        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
-      ),
-      child: IntrinsicHeight(
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            items[0],
-            _buildVerticalDivider(),
-            items[1],
-            _buildVerticalDivider(),
-            items[2],
-          ],
+  @override
+  Widget build(BuildContext context) {
+    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
+    return ColoredBox(
+      color: background ?? Colors.transparent,
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: padding, vertical: isDesktop ? 56 : 36),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: kHomeMaxWidth),
+            child: child,
+          ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildCompactDetail(IconData icon, String value) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
+/// "06–07 AUG 2026" from the live event record.
+String exhibitionDates(Event event) {
+  const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+  final s = event.startAt.toLocal();
+  final e = event.endAt.toLocal();
+  String d(int v) => v.toString().padLeft(2, '0');
+  if (s.year == e.year && s.month == e.month) {
+    return s.day == e.day
+        ? '${d(s.day)} ${months[s.month - 1]} ${s.year}'
+        : '${d(s.day)}–${d(e.day)} ${months[e.month - 1]} ${e.year}';
+  }
+  return '${d(s.day)} ${months[s.month - 1]} – ${d(e.day)} ${months[e.month - 1]} ${e.year}';
+}
+
+class _Hero extends StatelessWidget {
+  const _Hero({
+    required this.event,
+    required this.projects,
+    required this.isDesktop,
+    required this.padding,
+    required this.search,
+    required this.onSearch,
+  });
+
+  final Event event;
+  final List<Project> projects;
+  final bool isDesktop;
+  final double padding;
+  final TextEditingController search;
+  final VoidCallback onSearch;
+
+  @override
+  Widget build(BuildContext context) {
+    final heroImage = safeExternalUri(event.heroImageUrl);
+    final headline = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, color: DesignSystem.secondaryContainer, size: 16),
-        const SizedBox(width: 4),
-        Flexible(
+        Text('FSKM · UiTM JASIN', style: DesignSystem.kicker.copyWith(color: DesignSystem.secondary)),
+        const SizedBox(height: DesignSystem.spaceMd),
+        Semantics(
+          header: true,
           child: Text(
-            value,
-            textAlign: TextAlign.center,
-            softWrap: true,
-            style: DesignSystem.bodySm.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
+            'Final Year Project Exhibition ${event.startAt.toLocal().year}',
+            style: (isDesktop ? DesignSystem.display : DesignSystem.displayMobile).copyWith(color: DesignSystem.primary),
+          ),
+        ),
+        const SizedBox(height: DesignSystem.spaceMd),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 560),
+          child: Text(
+            'This year\'s final year projects from the Faculty of Computer and Mathematical Sciences: '
+            'browse them, find their booths and see the winners.',
+            style: (isDesktop ? DesignSystem.bodyLg : DesignSystem.bodyLgMobile)
+                .copyWith(color: DesignSystem.onSurfaceVariant),
+          ),
+        ),
+        const SizedBox(height: DesignSystem.spaceLg),
+        _EventMeta(event: event),
+        const SizedBox(height: DesignSystem.spaceSm),
+        _EventStatus(eventStart: event.startAt, eventEnd: event.endAt),
+        const SizedBox(height: DesignSystem.spaceLg),
+        Wrap(
+          spacing: DesignSystem.spaceSm,
+          runSpacing: DesignSystem.spaceSm,
+          children: [
+            FilledButton.icon(
+              key: const Key('home-explore'),
+              onPressed: () => context.go('/projects'),
+              iconAlignment: IconAlignment.end,
+              icon: const Icon(Icons.arrow_forward, size: 18),
+              label: const Text('Explore Projects'),
+            ),
+            OutlinedButton(
+              key: const Key('home-schedule'),
+              onPressed: () => context.go('/schedule'),
+              child: const Text('View Schedule'),
+            ),
+          ],
+        ),
+        const SizedBox(height: DesignSystem.spaceMd),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 520),
+          child: TextField(
+            controller: search,
+            onSubmitted: (_) => onSearch(),
+            textInputAction: TextInputAction.search,
+            decoration: InputDecoration(
+              hintText: isDesktop ? 'Search projects, supervisors or keywords' : 'Search projects',
+              prefixIcon: const Icon(Icons.search, color: DesignSystem.primary),
+              suffixIcon: IconButton(
+                tooltip: 'Search',
+                onPressed: onSearch,
+                icon: const Icon(Icons.arrow_forward, color: DesignSystem.secondary),
+              ),
             ),
           ),
         ),
       ],
     );
-  }
 
-  Widget _buildVerticalDivider() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: DesignSystem.spaceLg),
-      width: 1,
-      color: Colors.white.withValues(alpha: 0.15),
-    );
-  }
-
-  Widget _buildExhibitionDetailItem(IconData icon, String label, String value) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
+    final side = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: DesignSystem.secondaryContainer.withValues(alpha: 0.2),
-            shape: BoxShape.circle,
+        if (heroImage != null && isDesktop) ...[
+          ClipRRect(
+            borderRadius: DesignSystem.radiusLg,
+            child: AspectRatio(
+              aspectRatio: 16 / 10,
+              child: Image.network(
+                heroImage.toString(),
+                fit: BoxFit.cover,
+                semanticLabel: 'Exhibition photo',
+                errorBuilder: (_, _, _) => const ColoredBox(color: DesignSystem.surfaceContainerLow),
+              ),
+            ),
           ),
-          child: Icon(
-            icon,
-            color: DesignSystem.secondaryContainer,
-            size: 20,
+          const SizedBox(height: DesignSystem.spaceMd),
+        ],
+        _StatCard(projects: projects),
+      ],
+    );
+
+    return GraphPaper(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(padding, isDesktop ? 72 : 36, padding, isDesktop ? 72 : 40),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: kHomeMaxWidth),
+            child: isDesktop
+                ? Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(flex: 7, child: headline),
+                      const SizedBox(width: 48),
+                      Expanded(flex: 5, child: side),
+                    ],
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [headline, const SizedBox(height: DesignSystem.spaceLg), side],
+                  ),
           ),
         ),
-        const SizedBox(width: DesignSystem.spaceSm),
-        // Flexible so long values (e.g. multi-line venue names) wrap within
-        // the hero width instead of overflowing the row on narrow screens.
-        Flexible(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
+      ),
+    );
+  }
+}
+
+/// "06–07 AUG 2026 · 9:00 AM - 5:00 PM · Blok Kuliah, FSKM" in mono.
+class _EventMeta extends StatelessWidget {
+  const _EventMeta({required this.event});
+
+  final Event event;
+
+  @override
+  Widget build(BuildContext context) {
+    final parts = [
+      (Icons.calendar_today_outlined, exhibitionDates(event)),
+      if (event.dailyHours.isNotEmpty) (Icons.schedule, event.dailyHours.toUpperCase()),
+      if (event.venue.isNotEmpty) (Icons.place_outlined, event.venue.toUpperCase()),
+    ];
+    return Wrap(
+      key: const Key('home-event-meta'),
+      spacing: DesignSystem.spaceMd,
+      runSpacing: DesignSystem.spaceXs,
+      children: [
+        for (final (icon, text) in parts)
+          Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                label.toUpperCase(),
-                textAlign: TextAlign.center,
-                style: DesignSystem.labelCaps.copyWith(
-                  color: Colors.white60,
-                  fontSize: 11,
-                  letterSpacing: 0.5,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                value,
-                textAlign: TextAlign.center,
-                style: DesignSystem.bodyMd.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-                softWrap: true,
-              ),
+              Icon(icon, size: 14, color: DesignSystem.secondary),
+              const SizedBox(width: 6),
+              Flexible(child: Text(text, style: DesignSystem.kicker.copyWith(color: DesignSystem.primary))),
             ],
           ),
-        ),
       ],
     );
   }
+}
 
-  // ignore: unused_element
-  Widget _buildCountdownDivider() {
-    return const Padding(
-      padding: EdgeInsets.symmetric(horizontal: 8.0),
-      child: Text(
-        ':',
-        style: TextStyle(color: Colors.white30, fontSize: 24, fontWeight: FontWeight.bold),
-      ),
-    );
-  }
+/// Projects / programmes / booths, counted from the published projects.
+class _StatCard extends StatelessWidget {
+  const _StatCard({required this.projects});
 
+  final List<Project> projects;
 
-  Widget _buildInfoTile(IconData icon, String label, String value) {
+  @override
+  Widget build(BuildContext context) {
+    final programmes = projects.map((p) => p.programmeCode).where((c) => c.isNotEmpty).toSet().length;
+    final booths = projects.map((p) => p.boothNumber ?? '').where((b) => b.isNotEmpty).toSet().length;
+    final stats = [
+      StatBlock(label: 'Projects', value: '${projects.length}'),
+      StatBlock(label: 'Programmes', value: '$programmes'),
+      StatBlock(label: 'Booths', value: '$booths'),
+    ];
     return Container(
-      width: double.infinity,
-      constraints: const BoxConstraints(maxWidth: 300),
-      padding: const EdgeInsets.all(DesignSystem.spaceMd),
+      key: const Key('home-stats'),
+      padding: const EdgeInsets.all(DesignSystem.spaceLg),
       decoration: BoxDecoration(
         color: DesignSystem.surfaceContainerLowest,
         borderRadius: DesignSystem.radiusLg,
-        border: Border.all(color: DesignSystem.surfaceContainer),
+        border: Border.all(color: DesignSystem.rule),
       ),
-      child: Column(
-        children: [
-          Icon(icon, color: DesignSystem.secondary, size: 36),
-          const SizedBox(height: DesignSystem.spaceSm),
-          Text(label, style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSurfaceVariant), textAlign: TextAlign.center),
-          const SizedBox(height: DesignSystem.spaceXs),
-          Text(value, style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold, color: DesignSystem.primary), textAlign: TextAlign.center, softWrap: true),
-        ],
+      child: IntrinsicHeight(
+        child: Row(
+          children: [
+            for (var i = 0; i < stats.length; i++) ...[
+              if (i > 0) const VerticalDivider(color: DesignSystem.rule, width: DesignSystem.spaceLg, thickness: 1),
+              Expanded(child: stats[i]),
+            ],
+          ],
+        ),
       ),
     );
   }
 }
 
-/// Isolated countdown timer widget — only this rebuilds every second,
-/// not the entire HomePage. Shows a "concluded" state after the event ends
-/// and stops ticking.
-class _CountdownTimer extends StatefulWidget {
+/// One mono line: time to opening, live now, or held. Ticks once a minute.
+class _EventStatus extends StatefulWidget {
+  const _EventStatus({required this.eventStart, required this.eventEnd});
+
   final DateTime eventStart;
   final DateTime eventEnd;
 
-  /// Mobile: the concluded / live states render as a small pill.
-  final bool compact;
-
-  const _CountdownTimer({required this.eventStart, required this.eventEnd, this.compact = false});
-
   @override
-  State<_CountdownTimer> createState() => _CountdownTimerState();
+  State<_EventStatus> createState() => _EventStatusState();
 }
 
-class _CountdownTimerState extends State<_CountdownTimer> {
+class _EventStatusState extends State<_EventStatus> {
   Timer? _timer;
-  Duration _timeRemaining = const Duration();
-  bool _concluded = false;
-  bool _live = false;
 
   @override
   void initState() {
     super.initState();
-    _calculateTimeRemaining();
-    if (!_concluded) {
-      _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-        _calculateTimeRemaining();
+    if (DateTime.now().isBefore(widget.eventEnd)) {
+      _timer = Timer.periodic(const Duration(minutes: 1), (_) {
+        if (!mounted) return;
+        setState(() {});
+        if (!DateTime.now().isBefore(widget.eventEnd)) _timer?.cancel();
       });
     }
   }
@@ -530,148 +371,306 @@ class _CountdownTimerState extends State<_CountdownTimer> {
     super.dispose();
   }
 
-  void _calculateTimeRemaining() {
+  @override
+  Widget build(BuildContext context) {
     final now = DateTime.now();
-    if (widget.eventEnd.isBefore(now)) {
-      // Event finished — stop ticking.
-      _timer?.cancel();
-      setState(() {
-        _concluded = true;
-        _live = false;
-        _timeRemaining = Duration.zero;
-      });
-    } else if (widget.eventStart.isBefore(now)) {
-      // Event in progress.
-      setState(() {
-        _live = true;
-        _timeRemaining = widget.eventEnd.difference(now);
-      });
+    final String text;
+    final Color dot;
+    if (now.isAfter(widget.eventEnd)) {
+      text = 'CONCLUDED · THANK YOU FOR VISITING';
+      dot = DesignSystem.onSurfaceVariant;
+    } else if (now.isAfter(widget.eventStart)) {
+      text = 'LIVE NOW';
+      dot = DesignSystem.secondary;
     } else {
-      setState(() {
-        _timeRemaining = widget.eventStart.difference(now);
-      });
+      final left = widget.eventStart.difference(now);
+      String d(int v) => v.toString().padLeft(2, '0');
+      text = 'OPENS IN ${d(left.inDays)}D ${d(left.inHours % 24)}H ${d(left.inMinutes % 60)}M';
+      dot = DesignSystem.tertiary;
     }
+    return Row(
+      key: const Key('home-event-status'),
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(width: 8, height: 8, decoration: BoxDecoration(color: dot, shape: BoxShape.circle)),
+        const SizedBox(width: DesignSystem.spaceSm),
+        Flexible(child: Text(text, style: DesignSystem.kicker.copyWith(color: DesignSystem.onSurfaceVariant))),
+      ],
+    );
   }
+}
+
+class _ViewAll extends StatelessWidget {
+  const _ViewAll({required this.label, required this.route});
+
+  final String label;
+  final String route;
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.sizeOf(context).width >= 768;
-
-    if (_concluded) {
-      return _statusBadge(
-        icon: Icons.emoji_events,
-        text: widget.compact ? 'Exhibition concluded — thank you!' : 'Exhibition Concluded — Thank You for Visiting',
-        fill: Colors.white.withValues(alpha: 0.08),
-        border: Colors.white24,
-      );
-    }
-
-    if (_live) {
-      return _statusBadge(
-        icon: Icons.celebration,
-        text: 'The Exhibition is Live Now!',
-        fill: DesignSystem.secondaryContainer.withValues(alpha: 0.15),
-        border: DesignSystem.secondaryContainer,
-      );
-    }
-
-    final days = _timeRemaining.inDays;
-    final hours = _timeRemaining.inHours % 24;
-    final minutes = _timeRemaining.inMinutes % 60;
-    final seconds = _timeRemaining.inSeconds % 60;
-
-    // FittedBox scales the 4-item strip down on narrow screens instead of
-    // overflowing (pre-existing 25px overflow at ~390px).
-    // One sentence for screen readers, updated per minute rather than every
-    // second so it is not read out four times a second.
-    return Semantics(
-      label: 'Starts in $days ${days == 1 ? 'day' : 'days'}, '
-          '$hours ${hours == 1 ? 'hour' : 'hours'} and '
-          '$minutes ${minutes == 1 ? 'minute' : 'minutes'}',
-      excludeSemantics: true,
-      child: FittedBox(
-      fit: BoxFit.scaleDown,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          _buildCountdownItem(days.toString().padLeft(2, '0'), 'Days', isDesktop),
-          _buildCountdownDivider(),
-          _buildCountdownItem(hours.toString().padLeft(2, '0'), 'Hours', isDesktop),
-          _buildCountdownDivider(),
-          _buildCountdownItem(minutes.toString().padLeft(2, '0'), 'Mins', isDesktop),
-          _buildCountdownDivider(),
-          _buildCountdownItem(seconds.toString().padLeft(2, '0'), 'Secs', isDesktop),
-        ],
-      ),
-      ),
-    );
-  }
-
-  Widget _statusBadge({required IconData icon, required String text, required Color fill, required Color border}) {
-    final compact = widget.compact;
-    return Container(
-      padding: compact
-          ? const EdgeInsets.symmetric(horizontal: 12, vertical: 6)
-          : const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      decoration: BoxDecoration(
-        color: fill,
-        borderRadius: compact ? DesignSystem.radiusFull : DesignSystem.radiusXl,
-        border: Border.all(color: border),
-      ),
+    return TextButton(
+      onPressed: () => context.go(route),
+      style: TextButton.styleFrom(foregroundColor: DesignSystem.secondary),
       child: Row(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Icon(icon, color: DesignSystem.secondaryContainer, size: compact ? 16 : 20),
-          SizedBox(width: compact ? 6 : DesignSystem.spaceSm),
-          Flexible(
-            child: Text(
-              text,
-              textAlign: TextAlign.center,
-              softWrap: true,
-              style: (compact ? DesignSystem.bodySm : DesignSystem.bodyMd).copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
+          Text(label, style: DesignSystem.button.copyWith(fontSize: 14)),
+          const SizedBox(width: 4),
+          const Icon(Icons.arrow_forward, size: 16),
+        ],
+      ),
+    );
+  }
+}
+
+class _FeaturedProjects extends ConsumerWidget {
+  const _FeaturedProjects({required this.number, required this.isDesktop});
+
+  final String number;
+  final bool isDesktop;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // A short, curated row: the catalogue is for browsing everything.
+    final display = featuredForHome(ref.watch(mostVisitedProjectsProvider));
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionHeader(
+          number: number,
+          title: 'Featured projects',
+          action: isDesktop ? const _ViewAll(label: 'View All', route: '/projects') : null,
+        ),
+        const SizedBox(height: DesignSystem.spaceLg),
+        if (display.isEmpty)
+          Text('Projects appear here once they are published.', style: DesignSystem.bodyMd)
+        else if (isDesktop)
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: ProjectCard.gridDelegate(
+              MediaQuery.sizeOf(context).width,
+              textScale: MediaQuery.textScalerOf(context).scale(1),
+            ),
+            itemCount: display.length,
+            itemBuilder: (context, i) => ProjectCard(
+              project: display[i],
+              onTap: () => context.push('/projects/${display[i].slug}'),
+            ),
+          )
+        else
+          for (var i = 0; i < display.length; i++)
+            Padding(
+              padding: EdgeInsets.only(bottom: i == display.length - 1 ? 0 : DesignSystem.spaceMd),
+              child: ProjectCard(
+                project: display[i],
+                imageHeight: 160,
+                onTap: () => context.push('/projects/${display[i].slug}'),
               ),
             ),
-          ),
+        if (!isDesktop) ...[
+          const SizedBox(height: DesignSystem.spaceSm),
+          const Align(alignment: Alignment.centerLeft, child: _ViewAll(label: 'View All Projects', route: '/projects')),
         ],
-      ),
+      ],
     );
   }
+}
 
-  Widget _buildCountdownItem(String value, String label, bool isDesktop) {
-    return Container(
-      constraints: const BoxConstraints(minWidth: 60, maxWidth: 80),
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: DesignSystem.spaceSm),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.08),
-        borderRadius: DesignSystem.radiusLg,
-        border: Border.all(color: Colors.white10),
-      ),
-      child: Column(
-        children: [
-          Text(
-            value,
-            style: (isDesktop ? DesignSystem.h3 : DesignSystem.h3Mobile).copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+class _AwardWinners extends StatelessWidget {
+  const _AwardWinners({required this.number, required this.winners, required this.isDesktop});
+
+  final String number;
+  final List<PublishedAwardWinner> winners;
+  final bool isDesktop;
+
+  @override
+  Widget build(BuildContext context) {
+    final cards = [
+      for (final w in winners)
+        Container(
+          padding: const EdgeInsets.all(DesignSystem.spaceMd),
+          decoration: BoxDecoration(
+            color: DesignSystem.surfaceContainerLowest,
+            borderRadius: DesignSystem.radiusLg,
+            border: Border.all(color: DesignSystem.rule),
           ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: DesignSystem.labelCaps.copyWith(color: Colors.white60, fontSize: 11),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Wrap(
+                spacing: DesignSystem.spaceXs,
+                runSpacing: DesignSystem.spaceXs,
+                children: [
+                  const CodeTag('WINNER', winner: true, icon: Icons.emoji_events_outlined),
+                  if ((w.programmeCode ?? '').isNotEmpty) CodeTag(w.programmeCode!),
+                ],
+              ),
+              const SizedBox(height: DesignSystem.spaceSm),
+              Text(
+                w.projectTitle,
+                style: DesignSystem.h3Mobile.copyWith(color: DesignSystem.primary),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              if ((w.teamDisplayName ?? '').isNotEmpty) ...[
+                const SizedBox(height: DesignSystem.spaceXs),
+                Text(w.teamDisplayName!, style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant)),
+              ],
+            ],
           ),
+        ),
+    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionHeader(
+          number: number,
+          title: 'Award winners',
+          action: isDesktop ? const _ViewAll(label: 'All Winners', route: '/awards') : null,
+        ),
+        const SizedBox(height: DesignSystem.spaceLg),
+        if (isDesktop)
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (var i = 0; i < cards.length; i++) ...[
+                  if (i > 0) const SizedBox(width: DesignSystem.spaceMd),
+                  Expanded(child: cards[i]),
+                ],
+                // Keep card widths stable when there are fewer than three.
+                for (var i = cards.length; i < 3; i++) ...[
+                  const SizedBox(width: DesignSystem.spaceMd),
+                  const Expanded(child: SizedBox.shrink()),
+                ],
+              ],
+            ),
+          )
+        else ...[
+          for (final c in cards) Padding(padding: const EdgeInsets.only(bottom: DesignSystem.spaceSm), child: c),
+          const _ViewAll(label: 'All Winners', route: '/awards'),
         ],
-      ),
+      ],
     );
   }
+}
 
-  Widget _buildCountdownDivider() {
-    return const Padding(
-      padding: EdgeInsets.symmetric(horizontal: 8.0),
-      child: Text(
-        ':',
-        style: TextStyle(color: Colors.white30, fontSize: 24, fontWeight: FontWeight.bold),
-      ),
+class _GuideTeaser extends StatelessWidget {
+  const _GuideTeaser({required this.number, required this.isDesktop});
+
+  final String number;
+  final bool isDesktop;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Browse earlier CSP600 proposals and CSP650 projects by programme and topic, '
+          'and spot titles that are already taken, before you choose your own.',
+          style: (isDesktop ? DesignSystem.bodyLg : DesignSystem.bodyLgMobile).copyWith(color: DesignSystem.onBackground),
+        ),
+        const SizedBox(height: DesignSystem.spaceMd),
+        const Wrap(
+          spacing: DesignSystem.spaceXs,
+          runSpacing: DesignSystem.spaceXs,
+          children: [CodeTag('CSP600'), CodeTag('CSP650'), CodeTag('BY PROGRAMME'), CodeTag('SIMILAR TITLES')],
+        ),
+      ],
+    );
+    final button = FilledButton.icon(
+      key: const Key('home-guide'),
+      onPressed: () => context.go('/projects/junior-guide'),
+      iconAlignment: IconAlignment.end,
+      icon: const Icon(Icons.arrow_forward, size: 18),
+      label: const Text('Open the Guide'),
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionHeader(number: number, title: 'Past Projects Guide'),
+        const SizedBox(height: DesignSystem.spaceLg),
+        if (isDesktop)
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(child: text),
+              const SizedBox(width: 48),
+              button,
+            ],
+          )
+        else ...[
+          text,
+          const SizedBox(height: DesignSystem.spaceMd),
+          Align(alignment: Alignment.centerLeft, child: button),
+        ],
+      ],
+    );
+  }
+}
+
+class _PlanYourVisit extends StatelessWidget {
+  const _PlanYourVisit({required this.number, required this.event, required this.isDesktop});
+
+  final String number;
+  final Event event;
+  final bool isDesktop;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget fact(String label, String value) => Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: DesignSystem.kicker.copyWith(color: DesignSystem.onSurfaceVariant)),
+            const SizedBox(height: DesignSystem.spaceXs),
+            Text(value, style: DesignSystem.bodyLgMobile.copyWith(color: DesignSystem.primary, fontWeight: FontWeight.w600)),
+          ],
+        );
+    final facts = [
+      fact('DATES', exhibitionDates(event)),
+      fact('HOURS', event.dailyHours.isEmpty ? 'To be announced' : event.dailyHours),
+      fact('VENUE', event.venue.isEmpty ? 'To be announced' : event.venue),
+    ];
+    final map = safeExternalUri(event.mapUrl);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionHeader(number: number, title: 'Plan your visit'),
+        const SizedBox(height: DesignSystem.spaceLg),
+        if (isDesktop)
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [for (final f in facts) Expanded(child: f)],
+          )
+        else
+          for (final f in facts) Padding(padding: const EdgeInsets.only(bottom: DesignSystem.spaceMd), child: f),
+        const SizedBox(height: DesignSystem.spaceLg),
+        Wrap(
+          spacing: DesignSystem.spaceSm,
+          runSpacing: DesignSystem.spaceSm,
+          children: [
+            OutlinedButton.icon(
+              onPressed: () => context.go('/booths'),
+              icon: const Icon(Icons.place_outlined, size: 18),
+              label: const Text('Find a Booth'),
+            ),
+            OutlinedButton.icon(
+              onPressed: () => context.go('/info'),
+              icon: const Icon(Icons.info_outline, size: 18),
+              label: const Text('Exhibition Info'),
+            ),
+            if (map != null)
+              TextButton.icon(
+                onPressed: () => launchUrl(map, webOnlyWindowName: '_blank'),
+                style: TextButton.styleFrom(foregroundColor: DesignSystem.secondary),
+                icon: const Icon(Icons.map_outlined, size: 18),
+                label: const Text('Open Map'),
+              ),
+          ],
+        ),
+      ],
     );
   }
 }

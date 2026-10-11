@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/widgets/scholar_lab.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/widgets/public_load_state.dart';
 import '../../../../core/domain/models/project.dart';
@@ -630,9 +631,8 @@ class _BoothsPageState extends ConsumerState<BoothsPage> with UrlStateSync<Booth
                     overflow: TextOverflow.ellipsis,
                     softWrap: true,
                   ),
-                  trailing: isDesktop
-                      ? const Icon(Icons.arrow_forward_ios, size: 16, color: DesignSystem.primary)
-                      : null,
+                  // Booth code in mono, the way it is printed at the booth.
+                  trailing: boothNumber.isEmpty ? null : CodeTag(boothNumber),
                 ),
               );
             },

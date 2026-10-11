@@ -68,9 +68,15 @@ flutter:
           weight: 600
         - asset: assets/fonts/Inter-Bold.ttf
           weight: 700
-    - family: Montserrat
+    # "Scholar + Lab": Fraunces (72pt optical size) for display and page
+    # headlines, JetBrains Mono for codes and numbers.
+    - family: Fraunces
       fonts:
-        - asset: assets/fonts/Montserrat-SemiBold.ttf
+        - asset: assets/fonts/Fraunces-SemiBold.ttf
           weight: 600
-        - asset: assets/fonts/Montserrat-Bold.ttf
+        - asset: assets/fonts/Fraunces-Bold.ttf
           weight: 700
+    - family: JetBrains Mono
+      fonts:
+        - asset: assets/fonts/JetBrainsMono-Medium.ttf
+          weight: 500

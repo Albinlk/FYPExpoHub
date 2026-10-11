@@ -89,7 +89,8 @@ import '../features/junior_project_guide/presentation/pages/similar_projects_pag
 import 'widgets/admin_shell.dart';
 import 'widgets/fypms_shell.dart';
 import 'widgets/public_shell.dart';
-import '../features/portal/presentation/pages/portal_home_page.dart';
+import 'site_hosts.dart';
+import 'widgets/external_redirect_page.dart';
 import '../features/fypms/presentation/pages/csp_cohort_page.dart';
 import '../features/fypms/presentation/widgets/nomination_documents.dart';
 
@@ -123,14 +124,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ShellRoute(
         builder: (context, state, child) => PublicShell(child: child),
         routes: [
-          // The portal: Exhibition, CSP600 and CSP650 side by side.
+          // The exhibition is the homepage. CSP600 / CSP650 (the FYP
+          // Workspace) is reached by signing in; /expo redirects here.
           GoRoute(
             path: '/',
-            builder: (context, state) => const PortalHomePage(),
-          ),
-          // The exhibition's own home (was "/").
-          GoRoute(
-            path: '/expo',
             builder: (context, state) => const HomePage(),
           ),
           GoRoute(
@@ -229,6 +226,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: kSignInPath,
         builder: (context, state) => const SignInPage(),
+      ),
+      // Hop to the other site (exhibition ↔ FYP Workspace host).
+      GoRoute(
+        path: kExternalRedirectPath,
+        builder: (context, state) => ExternalRedirectPage(to: state.uri.queryParameters['to']),
       ),
       // Old address; resolveRouterRedirect forwards it to /sign-in.
       GoRoute(
@@ -678,8 +680,7 @@ class RouteTitleObserver extends NavigatorObserver {
 
   static String _titleForPath(String path) {
     String t(String s) => '$s · FYP Expo Hub';
-    if (path == '/') return 'FYP Expo Hub — FSKM Final Year Project Portal';
-    if (path == '/expo') return t('FYP Exhibition');
+    if (path == '/') return 'FYP Expo Hub — FSKM Final Year Project Exhibition';
     if (path == '/info') return t('Exhibition Info');
     if (path == '/schedule') return t('Schedule');
     if (path == '/booths') return t('Booths');

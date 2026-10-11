@@ -280,7 +280,7 @@ class _CoverContent extends StatelessWidget {
             _initials,
             style: const TextStyle(
               color: Colors.white,
-              fontFamily: 'Montserrat',
+              fontFamily: 'Fraunces',
               fontSize: 13,
               fontWeight: FontWeight.w700,
               letterSpacing: 1.5,

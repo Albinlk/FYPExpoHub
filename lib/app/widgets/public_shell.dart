@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/state/state_providers.dart';
+import '../../core/widgets/scholar_lab.dart';
 import '../theme/theme.dart';
 import 'feedback_form_widget.dart';
 
@@ -125,13 +126,7 @@ class _DesktopNavBar extends StatelessWidget {
             onTap: () => _navigateTo(context, '/'),
             child: MouseRegion(
               cursor: SystemMouseCursors.click,
-              child: Text(
-                'FYP Expo Hub',
-                style: DesignSystem.h3.copyWith(
-                  color: DesignSystem.primary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              child: const BrandMark(),
             ),
           ),
           ),
@@ -148,7 +143,6 @@ class _DesktopNavBar extends StatelessWidget {
                 final width = MediaQuery.sizeOf(context).width;
                 final links = <(String, String)>[
                   ('Home', '/'),
-                  ('Exhibition', '/expo'),
                   ('Projects', '/projects'),
                   ('Booths', '/booths'),
                   ('Schedule', '/schedule'),
@@ -210,7 +204,9 @@ class _DesktopNavBar extends StatelessWidget {
 
           // Right: Login Button
           if (!lecturerSignedIn)
-            ElevatedButton(
+            Tooltip(
+              message: 'Students and lecturers: CSP600, CSP650 and booth visits',
+              child: ElevatedButton(
               onPressed: () => _openSignIn(context),
               style: ElevatedButton.styleFrom(
                 backgroundColor: DesignSystem.primary,
@@ -228,6 +224,7 @@ class _DesktopNavBar extends StatelessWidget {
                 'Sign In',
                 style: DesignSystem.button.copyWith(fontSize: 14),
               ),
+            ),
             ),
         ],
       ),
@@ -324,12 +321,6 @@ class _MobileBottomNavBar extends StatelessWidget {
                 if (!lecturerSignedIn)
                   _buildMenuItemExternal(context, 'Sign In', Icons.login),
                 if (!lecturerSignedIn) const Divider(),
-                _buildMenuItem(
-                  context,
-                  'Exhibition',
-                  Icons.storefront_outlined,
-                  '/expo',
-                ),
                 _buildMenuItem(
                   context,
                   'Project Catalogue',

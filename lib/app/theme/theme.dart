@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-/// Design tokens extracted directly from the Stitch "FYP Expo Hub" project.
+/// Design tokens ("Scholar + Lab", see DESIGN.md). Colours are the Ink &
+/// Terracotta palette checked by test/app/theme_contrast_test.dart.
 class DesignSystem {
   DesignSystem._();
 
@@ -50,20 +51,49 @@ class DesignSystem {
   static const double marginMobile = 16.0;
   static const double marginDesktop = 48.0;
 
-  // Typography TextStyles
-  static const TextStyle h1 = TextStyle(
-    fontFamily: 'Montserrat',
+  /// Graph-paper lines behind heroes (Ink at 6%). Decorative only.
+  static const Color gridLine = Color(0x0F2A1838);
+
+  /// Hairline rules and card borders.
+  static const Color rule = outlineVariant;
+
+  // Typography ("Scholar + Lab"): Fraunces for display and page headlines,
+  // Inter for body and UI, JetBrains Mono for codes and numbers.
+  // Flutter letterSpacing is in logical pixels, so em values are multiplied
+  // by the font size.
+  static const String serif = 'Fraunces';
+  static const String mono = 'JetBrains Mono';
+
+  /// Hero headline only.
+  static const TextStyle display = TextStyle(
+    fontFamily: serif,
+    fontSize: 56.0,
+    fontWeight: FontWeight.bold,
+    height: 1.05,
+    letterSpacing: -0.02 * 56.0,
+  );
+
+  static const TextStyle displayMobile = TextStyle(
+    fontFamily: serif,
     fontSize: 40.0,
     fontWeight: FontWeight.bold,
-    height: 1.2,
-    letterSpacing: -0.02 * 40.0, // -0.02em; Flutter letterSpacing is in logical pixels
+    height: 1.08,
+    letterSpacing: -0.02 * 40.0,
+  );
+
+  static const TextStyle h1 = TextStyle(
+    fontFamily: serif,
+    fontSize: 40.0,
+    fontWeight: FontWeight.bold,
+    height: 1.15,
+    letterSpacing: -0.02 * 40.0,
   );
 
   static const TextStyle h1Mobile = TextStyle(
-    fontFamily: 'Montserrat',
+    fontFamily: serif,
     fontSize: 32.0,
     fontWeight: FontWeight.bold,
-    height: 1.2,
+    height: 1.15,
     letterSpacing: -0.02 * 32.0,
   );
 
@@ -73,31 +103,68 @@ class DesignSystem {
       MediaQuery.sizeOf(context).width >= 768 ? h1 : h1Mobile.copyWith(fontSize: 28);
 
   static const TextStyle h2 = TextStyle(
-    fontFamily: 'Montserrat',
-    fontSize: 32.0,
+    fontFamily: serif,
+    fontSize: 30.0,
     fontWeight: FontWeight.w600,
-    height: 1.3,
+    height: 1.2,
+    letterSpacing: -0.01 * 30.0,
   );
 
   static const TextStyle h2Mobile = TextStyle(
-    fontFamily: 'Montserrat',
+    fontFamily: serif,
     fontSize: 24.0,
     fontWeight: FontWeight.w600,
-    height: 1.3,
+    height: 1.2,
+    letterSpacing: -0.01 * 24.0,
   );
 
+  /// Card titles and panel headings (UI, so Inter).
   static const TextStyle h3 = TextStyle(
-    fontFamily: 'Montserrat',
-    fontSize: 24.0,
+    fontFamily: 'Inter',
+    fontSize: 20.0,
     fontWeight: FontWeight.w600,
     height: 1.3,
   );
 
   static const TextStyle h3Mobile = TextStyle(
-    fontFamily: 'Montserrat',
-    fontSize: 20.0,
+    fontFamily: 'Inter',
+    fontSize: 18.0,
     fontWeight: FontWeight.w600,
     height: 1.3,
+  );
+
+  /// Eyebrow above a headline: "FSKM · UiTM JASIN". Pass upper-case text.
+  static const TextStyle kicker = TextStyle(
+    fontFamily: mono,
+    fontSize: 12.0,
+    fontWeight: FontWeight.w500,
+    height: 1.2,
+    letterSpacing: 0.08 * 12.0,
+  );
+
+  /// Codes: booth BK1-07, programme CS266, form F6b, matric numbers.
+  static const TextStyle code = TextStyle(
+    fontFamily: mono,
+    fontSize: 13.0,
+    fontWeight: FontWeight.w500,
+    height: 1.2,
+  );
+
+  /// Big numbers in stat blocks.
+  static const TextStyle stat = TextStyle(
+    fontFamily: mono,
+    fontSize: 32.0,
+    fontWeight: FontWeight.w500,
+    height: 1.0,
+    letterSpacing: -0.01 * 32.0,
+  );
+
+  static const TextStyle statMobile = TextStyle(
+    fontFamily: mono,
+    fontSize: 26.0,
+    fontWeight: FontWeight.w500,
+    height: 1.0,
+    letterSpacing: -0.01 * 26.0,
   );
 
   static const TextStyle bodyLg = TextStyle(
@@ -138,8 +205,8 @@ class DesignSystem {
 
   static const TextStyle button = TextStyle(
     fontFamily: 'Inter',
-    fontSize: 16.0,
-    fontWeight: FontWeight.w500,
+    fontSize: 15.0,
+    fontWeight: FontWeight.w600,
     height: 1.0,
   );
 }
@@ -176,9 +243,27 @@ class AppTheme {
       // targets below 48dp; keep the standard size everywhere.
       visualDensity: VisualDensity.standard,
       materialTapTargetSize: MaterialTapTargetSize.padded,
-      filledButtonTheme: FilledButtonThemeData(style: FilledButton.styleFrom(minimumSize: const Size(48, 48))),
+      // One accent: primary actions are terracotta; secondary actions are
+      // ink outlines.
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          minimumSize: const Size(48, 48),
+          backgroundColor: DesignSystem.secondary,
+          foregroundColor: DesignSystem.onPrimary,
+          textStyle: DesignSystem.button,
+          shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
+        ),
+      ),
       elevatedButtonTheme: ElevatedButtonThemeData(style: ElevatedButton.styleFrom(minimumSize: const Size(48, 48))),
-      outlinedButtonTheme: OutlinedButtonThemeData(style: OutlinedButton.styleFrom(minimumSize: const Size(48, 48))),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          minimumSize: const Size(48, 48),
+          foregroundColor: DesignSystem.primary,
+          textStyle: DesignSystem.button,
+          side: const BorderSide(color: DesignSystem.primary),
+          shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
+        ),
+      ),
       textButtonTheme: TextButtonThemeData(style: TextButton.styleFrom(minimumSize: const Size(48, 48))),
       fontFamily: 'Inter',
       textTheme: const TextTheme(
@@ -195,13 +280,13 @@ class AppTheme {
         scrolledUnderElevation: 0,
         iconTheme: IconThemeData(color: DesignSystem.primary),
       ),
+      // Flat and editorial: hierarchy from rules and paper tones, not shadows.
       cardTheme: CardThemeData(
         color: DesignSystem.surfaceContainerLowest,
-        elevation: 1,
-        shadowColor: Colors.black.withValues(alpha: 0.04),
+        elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: DesignSystem.radiusLg,
-          side: const BorderSide(color: DesignSystem.surfaceContainer, width: 1),
+          side: const BorderSide(color: DesignSystem.rule, width: 1),
         ),
       ),
       dividerTheme: const DividerThemeData(

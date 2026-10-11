@@ -36,6 +36,15 @@ void main() {
     'error text on card': (DesignSystem.error, white),
     'error text on page': (DesignSystem.error, DesignSystem.background),
     'error container text': (DesignSystem.onErrorContainer, DesignSystem.errorContainer),
+    // "Scholar + Lab": text sitting on a graph-paper line, code tags,
+    // terracotta section numbers and kickers on parchment.
+    'ink on a graph-paper line': (DesignSystem.primary, Color.alphaBlend(DesignSystem.gridLine, DesignSystem.background)),
+    'muted on a graph-paper line':
+        (DesignSystem.onSurfaceVariant, Color.alphaBlend(DesignSystem.gridLine, DesignSystem.background)),
+    'terracotta on a graph-paper line':
+        (DesignSystem.secondary, Color.alphaBlend(DesignSystem.gridLine, DesignSystem.background)),
+    'code tag (ink on parchment)': (DesignSystem.primary, DesignSystem.surfaceContainerLow),
+    'kicker (terracotta on parchment)': (DesignSystem.secondary, DesignSystem.surfaceContainerLow),
   };
 
   for (final e in pairs.entries) {

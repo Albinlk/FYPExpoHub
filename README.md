@@ -49,7 +49,7 @@ The Expo site reads live from **Supabase Postgres** and ships with a bundled off
 | State management | `flutter_riverpod` `^3.3.2` (Notifier / FutureProvider / Provider) |
 | Routing | `go_router` `^17.3.0` (SPA with role-aware redirect guards) |
 | Data models | `freezed` + `json_serializable`, generated via `build_runner` |
-| UI helpers | custom `DesignSystem` tokens (Inter / Montserrat bundled as TTF in `assets/fonts`, Material 3), `cached_network_image`, `file_picker`, `uuid`, `crypto` (import file hashes), `excel` (in-browser Excel parsing), `csv` |
+| UI helpers | custom `DesignSystem` tokens ("Scholar + Lab": Fraunces / Inter / JetBrains Mono bundled as TTF in `assets/fonts`, Material 3), `cached_network_image`, `file_picker`, `uuid`, `crypto` (import file hashes), `excel` (in-browser Excel parsing), `csv` |
 | Supabase client | `supabase_flutter` `^2.8.4` (PKCE auth flow) |
 | URL strategy | `usePathUrlStrategy()` (clean paths, no `/#/`) |
 
