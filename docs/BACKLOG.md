@@ -45,8 +45,8 @@ Priority: **H** high · **M** medium · **L** low
 
 | Done | # | Item |
 |---|---|---|
-| [ ] | C1 | Supabase Auth → Redirect URLs: add `https://fskmjasinfypexhibition.site/reset-password` and `https://admin.fskmjasinfypexhibition.site/reset-password` |
-| [ ] | C2 | Create real lecturer accounts, then run *Lecturer Assignments → Match from project names* |
+| [x] | C1 | Supabase Auth → Redirect URLs: `https://fskmjasinfypexhibition.site/reset-password` and `https://fyp.fskmjasinfypexhibition.site/reset-password` (done 11 Oct 2026; `admin.` only redirects, so it needs none) |
+| [x] | C2 | Create real lecturer accounts (done 11 Oct 2026). Booth-visit assignments now come from FYPMS when projects are published (#58), so name matching is no longer needed |
 | [ ] | C3 | Grant `programme_head` (PU) roles if nomination approval is wanted — now done in-app from FYPMS → Users & Roles |
 | [ ] | C4 | Review the import setting *mandatory worksheets* (`COMMITTEE` will always warn) |
 
@@ -120,6 +120,7 @@ The exhibition is the homepage; CSP600 / CSP650 sit behind sign-in and will move
 | [x] | D1 | Design system: Fraunces + JetBrains Mono, type and colour tokens, `GraphPaper`, `SectionHeader`, `StatBlock`, `CodeTag`, `BrandMark`; DESIGN.md for Google Stitch (#62) | H |
 | [x] | D2 | Apply to the public site: new exhibition home, project cards, section headers, code tags (#62) | H |
 | [x] | D3 | Follow-ups: Past Projects Guide counts in mono, graph-paper sign-in page, full desktop menu from 1312 px (measured with the real fonts) (#63) | L |
+| [x] | N1 | Side menus grouped: the Workspace menu has one collapsible section per role (only the current one open) with labelled groups; the exhibition admin menu is grouped into Exhibition, Projects & booths, Lecturers & visits and System (#67) | M |
 
 ## Suggested order
 
