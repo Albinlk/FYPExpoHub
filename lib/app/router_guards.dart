@@ -9,6 +9,11 @@ import 'site_hosts.dart';
 /// admins). It used to live at [kLegacySignInPath], which now redirects here.
 const kSignInPath = '/sign-in';
 
+/// `?reason=` on the sign-in page when a signed-in account opened an admin
+/// page without being an admin. The page then says so and offers to switch
+/// account, instead of bouncing to that account's own workspace.
+const kNotAdminReason = 'not-admin';
+
 /// Old sign-in address, kept so bookmarks and emailed links still work.
 const kLegacySignInPath = '/admin/sign-in';
 
@@ -56,6 +61,11 @@ Future<String?> resolveRouterRedirect(Ref ref, String location) async {
   }
 
   if (user != null && isLoggingIn) {
+    // Stay on the sign-in page (it explains why) until an admin signs in.
+    if (uri.queryParameters['reason'] == kNotAdminReason &&
+        !await _safeFlag(ref, isAdminProvider)) {
+      return null;
+    }
     return _postLoginRedirect(ref, from: uri.queryParameters['from']);
   }
 
@@ -154,7 +164,7 @@ Future<String?> _adminPathGuard(
   }
   final isAdmin = await ref.read(isAdminProvider.future);
   if (!isAdmin) {
-    return kSignInPath;
+    return Uri(path: kSignInPath, queryParameters: {'from': location, 'reason': kNotAdminReason}).toString();
   }
   return null;
 }

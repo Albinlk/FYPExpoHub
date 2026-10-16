@@ -15,7 +15,10 @@ void _goToMainSite() {
 }
 
 class SignInPage extends ConsumerStatefulWidget {
-  const SignInPage({super.key});
+  const SignInPage({super.key, this.notAdmin = false});
+
+  /// A signed-in account opened an admin page but isn't an admin.
+  final bool notAdmin;
 
   @override
   ConsumerState<SignInPage> createState() => _SignInPageState();
@@ -90,8 +93,16 @@ class _SignInPageState extends ConsumerState<SignInPage> {
     }
   }
 
+  Future<void> _switchAccount() async {
+    await ref.read(supabaseClientProvider).auth.signOut();
+    ref.invalidate(currentProfileProvider);
+    ref.invalidate(isAdminProvider);
+    ref.invalidate(isLecturerProvider);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final signedInEmail = widget.notAdmin ? ref.watch(currentAuthUserProvider)?.email : null;
     return Scaffold(
       backgroundColor: DesignSystem.background,
       // Warm Paper with the graph-paper grid, like the exhibition hero.
@@ -131,6 +142,34 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                         ),
                       ),
                       const Divider(height: 32),
+
+                      if (signedInEmail != null) ...[
+                        Container(
+                          key: const Key('not-admin-notice'),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: DesignSystem.errorContainer,
+                            borderRadius: DesignSystem.radiusLg,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "You're signed in as $signedInEmail, which isn't an admin account. "
+                                'Sign in with an admin account to open this page.',
+                                style: DesignSystem.bodySm.copyWith(color: DesignSystem.onErrorContainer),
+                              ),
+                              const SizedBox(height: 8),
+                              OutlinedButton.icon(
+                                onPressed: _switchAccount,
+                                icon: const Icon(Icons.logout, size: 18),
+                                label: const Text('Switch Account'),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
 
                       if (_errorMessage != null) ...[
                         Semantics(
