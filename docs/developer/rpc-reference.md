@@ -1,8 +1,13 @@
-# Database Functions (RPC) — FYP Expo Hub
+# RPC reference
 
-The database defines **~55 functions**: read-only policy helpers
-(`is_admin()`, `can_read_fyp_record()`, `is_csp_lecturer()`, ...) plus
-**~30 SECURITY DEFINER RPCs** for mutations. All SECURITY DEFINER functions
+> Checked against the live project on 2026-10-16.
+
+The app's schema defines **117 functions** (excluding triggers): policy
+helpers (`is_admin()`, `can_read_fyp_record()`, `is_csp_lecturer()`, ...)
+and SECURITY DEFINER RPCs for every mutation. Five more
+(`cleanup_oauth_states`, `get_content_filtered`, `get_dashboard_stats`,
+`is_editor`, `publish_scheduled_content`) belong to the unrelated template
+tables and are unused. All SECURITY DEFINER functions
 pin `search_path` and use `auth.uid()` to identify and gate the caller.
 
 The 5 Expo Hub RPCs are documented in detail below; the FYPMS RPC set is
@@ -194,7 +199,7 @@ gate (`42501`), argument validation (`22023`), state-machine preconditions
 | `assign_supervisor_to_fyp_record` | CSP lecturer or coordinator | One active holder per role (replaces the previous); sets main/co-supervisor/examiner ids; workflow only advances from pre-supervision stages; nobody both supervises and examines (`20260926000008`) |
 | `assign_examiner` | CSP lecturer or coordinator | Delegates to `assign_supervisor_to_fyp_record(..., 'examiner')` |
 | `create_or_update_milestone` | CSP lecturer / supervisor | Upsert milestone |
-| `grant_milestone_extension` | (defined; no UI yet) | Milestone extension workflow |
+| `grant_milestone_extension` | CSP lecturer of the course or coordinator | Staff-initiated extension (records and decides it in one step); student requests use `request_milestone_extension` + `decide_milestone_extension` |
 | `finalize_marks` | CSP lecturer for the course — cross-checked against the record's actual course | Legacy: sums a typed breakdown. The app now uses `finalize_fyp_course_marks` |
 | `compute_fyp_course_marks` | course lecturer or coordinator | Course marks from rubric evaluations: Σ evaluator share × role's average evaluation %, per CLO for F11/F16; returns breakdown, total, UiTM grade, missing evaluations (`20260926000003`) |
 | `get_special_evaluation_checks` | CSP650 lecturer or coordinator | F14 checks for a CSP650 record: Progress (F9) + LMC (F13) marks vs 7.5, final report on file, exhibition visit recorded, plus the saved decision (`20260926000010`) |
@@ -235,6 +240,15 @@ gate (`42501`), argument validation (`22023`), state-machine preconditions
 | `publish_fyp_record_to_expo` | coordinator/admin | Upsert into public `projects`; marks publication published |
 | `archive_fyp_record` | coordinator/admin | Archive record |
 | `list_fyp_students` / `list_fyp_staff` / `list_fyp_coordinators` | coordinator / CSP lecturer / admin (in-function gate) | Profile listings for pickers (RLS blocks direct reads) |
+| `submit_nomination_documents` | the nominator: CSP lecturer of the course or coordinator (`fyp_can_nominate_for_assignment`) | Attaches the nominee's CV (`fyp-nomination-cvs`, PDF ≤ 5 MB) and the "not related to the student" declaration to a pending nomination; audited (`20261010000005`) |
+| `list_my_pending_nominations` | nominator | Pending nominations the caller can document, with CV / declaration state (`20261010000005`) |
+| `fyp_can_view_nomination_cv` / `fyp_nomination_cv_assignment` | storage helpers | Who may read a CV object (nominator, the record's PU, coordinator) and which assignment a CV path belongs to (`20261010000005`) |
+| `approve_final_report` | assigned supervisor | Supervisor's final approval after corrections; sets `supervisor_approved_at/by` on the record (workflow status unchanged); main supervisor only (`20261010000004`) |
+| `fyp_form_course` | helper | The course a form belongs to (CSP600 F2–F8, CSP650 F9–F16), so `submit_fyp_form` refuses forms from the other course (`20261010000001`) |
+| `review_progress_log` | assigned supervisor / co-sup | Validate or reject a consultation log with a comment (newer name used by the app) |
+| `is_programme_head` / `programme_has_pu` / `has_academic_role_for_programme` | helpers | PU checks scoped to a programme code |
+| `list_supervisors_public` | authenticated | Active supervisors for the student's supervision-request picker |
+| `can_publish_fyp_record_to_expo` / `fyp_storage_object_is_submitted` | helpers | Expo publication eligibility; storage objects locked once submitted |
 
 ## September 2026 hardening notes
 

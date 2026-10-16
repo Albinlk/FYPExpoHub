@@ -77,7 +77,7 @@ Per-role workspace **entry routes are covered by the automated guard suite**
 ## 4. Manual QA
 
 Refer to `docs/FYPMS_E2E_QA_RUNBOOK.md`. Demo accounts are in
-`docs/FYPMS_DEMO_SEEDING.md` (now incl. `cosupervisor@fypms.test`).
+[fypms-demo-seeding.md](fypms-demo-seeding.md) (now incl. `cosupervisor@fypms.test`).
 
 ## 5. Definition of done
 

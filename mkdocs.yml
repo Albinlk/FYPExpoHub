@@ -1,0 +1,94 @@
+# FYP Expo Hub Handbook (MkDocs Material).
+#
+# Built by .github/workflows/deploy.yml into build/web/handbook, so it is
+# served at /handbook/ on the exhibition site and (via the Workspace copy) on
+# the FYP Workspace host. CI builds it with --strict so a broken link fails
+# the PR. Local preview:
+#   python -m pip install -r docs/requirements.txt
+#   python -m mkdocs serve
+#
+# Only the home page, the user guides and the developer overview are
+# published; the rest of docs/developer/ is repo-only (see exclude_docs).
+
+site_name: FYP Expo Hub Handbook
+site_url: https://fskmjasinfypexhibition.site/handbook/
+site_description: How to use the FSKM UiTM Jasin Final Year Project exhibition and FYP Workspace.
+docs_dir: docs
+
+theme:
+  name: material
+  language: en
+  font:
+    text: Inter
+    code: JetBrains Mono
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+    - content.code.copy
+
+extra_css:
+  - stylesheets/extra.css
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+nav:
+  - Home: index.md
+  - Guides:
+      - Accounts and sign-in: guides/accounts.md
+      - Visitor: guides/visitor.md
+      - Student: guides/student.md
+      - Lecturer: guides/lecturer.md
+      - Coordinator: guides/coordinator.md
+      - Exhibition admin: guides/exhibition-admin.md
+  - Developer overview: developer/overview.md
+
+# gitignore-style patterns, relative to docs_dir. The other developer docs
+# stay in the repo (overview.md links to them on GitHub).
+exclude_docs: |
+  /requirements.txt
+  /developer/*
+  !/developer/overview.md
+
+# Every finding below "warn" fails `mkdocs build --strict`.
+validation:
+  nav:
+    omitted_files: warn
+    not_found: warn
+    # Links to app pages such as /fypms are fine.
+    absolute_links: info
+  links:
+    not_found: warn
+    anchors: warn
+    absolute_links: info
+    unrecognized_links: warn

@@ -490,6 +490,33 @@ class _NavMenuState extends State<_NavMenu> {
   }
 }
 
+/// "Help": opens the handbook guide for the role section holding the current
+/// page (see [handbookGuideForWorkspacePath]) in a new tab.
+class _HelpTile extends StatelessWidget {
+  const _HelpTile({required this.currentPath, this.onBeforeOpen});
+
+  final String currentPath;
+  final VoidCallback? onBeforeOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      type: MaterialType.transparency,
+      child: ListTile(
+        key: const Key('nav-help'),
+        leading: const Icon(Icons.menu_book_outlined, color: Colors.white70, size: 20),
+        title: Text('Help', style: DesignSystem.bodySm.copyWith(color: Colors.white70)),
+        onTap: () {
+          onBeforeOpen?.call();
+          openHandbook(handbookGuideForWorkspacePath(currentPath));
+        },
+        shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
+        dense: true,
+      ),
+    );
+  }
+}
+
 class _FypmsSidebar extends ConsumerWidget {
   final String currentPath;
   final bool isAdmin;
@@ -544,6 +571,7 @@ class _FypmsSidebar extends ConsumerWidget {
             ),
           ),
           const Divider(color: Colors.white10),
+          _HelpTile(currentPath: currentPath),
           Material(
             type: MaterialType.transparency,
             child: ListTile(
@@ -637,6 +665,7 @@ class _FypmsDrawer extends ConsumerWidget {
                 dense: true,
               ),
             ),
+            _HelpTile(currentPath: currentPath, onBeforeOpen: () => Navigator.pop(context)),
             Material(
               type: MaterialType.transparency,
               child: ListTile(

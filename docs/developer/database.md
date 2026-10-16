@@ -1,4 +1,6 @@
-# Supabase Schema Reference — FYP Expo Hub
+# Database reference
+
+> Checked against the live project on 2026-10-16 (66 migrations, last `20261010000005_nomination_cv.sql`).
 
 ## Project Details
 - **Project Ref**: `siedglubjcedkbrpdzgi`
@@ -7,9 +9,9 @@
 
 ## Scope
 
-The database contains **44 tables**: the **19 Expo Hub tables** documented
-in detail below, plus **25 FYPMS tables** (see the addendum at the end and
-the source of truth in `supabase/migrations/`).
+The app uses **46 tables**: **22 exhibition tables** (documented below) and
+**24 FYPMS tables** (`fyp_*`, summarised at the end). The source of truth is
+`supabase/migrations/`; never change the live schema outside a migration.
 
 > **Note:** The live project also carries a small number of tables from an
 > unrelated content-scheduler template (`users`, `content`, `channels`,
@@ -17,7 +19,70 @@ the source of truth in `supabase/migrations/`).
 > `site_settings`, `oauth_states`). They are RLS-protected and unused by
 > this app.
 
-## Tables (19) — Expo Hub
+## Data model at a glance
+
+Exhibition side: one row in `events` per exhibition; everything public hangs
+off it.
+
+```mermaid
+erDiagram
+    events ||--o{ projects : shows
+    events ||--o{ booths : has
+    events ||--o{ schedule_items : has
+    events ||--o{ announcements : has
+    events ||--o{ award_categories : has
+    award_categories ||--o{ award_winners : groups
+    projects ||--o{ award_winners : wins
+    booths |o--o| projects : "linked project"
+    events ||--o{ lecturer_assignments : has
+    projects ||--o{ lecturer_assignments : "assessed by"
+    profiles ||--o{ lecturer_assignments : lecturer
+    lecturer_assignments ||--o{ student_project_visits : records
+    events ||--o{ feedback_entries : receives
+    events ||--o{ imports : "master file"
+    imports ||--o{ import_schedule_candidates : stages
+    imports ||--o{ import_award_candidates : stages
+    imports ||--o{ import_validation_issues : reports
+    imports ||--o{ import_review_decisions : decides
+    academic_semesters |o--o{ events : "linked semester"
+```
+
+FYPMS side: one `fyp_records` row per student per course (CSP600 or CSP650)
+per semester; everything else hangs off it.
+
+```mermaid
+erDiagram
+    profiles ||--o{ profile_academic_roles : "holds roles"
+    academic_semesters ||--o{ fyp_course_offerings : runs
+    academic_courses ||--o{ fyp_course_offerings : "offered as"
+    academic_semesters ||--o{ fyp_records : contains
+    profiles ||--o{ fyp_records : student
+    fyp_records |o--o| fyp_records : "CSP600 to CSP650"
+    fyp_records ||--o{ fyp_record_assignments : "SV, co-SV, examiner"
+    fyp_records ||--o{ fyp_supervision_requests : has
+    fyp_records ||--o{ fyp_supervisor_change_requests : has
+    fyp_records ||--o{ fyp_progress_logs : has
+    fyp_records ||--o{ fyp_form_submissions : has
+    fyp_form_submissions ||--o{ fyp_form_evaluations : "scored by"
+    fyp_rubric_templates ||--o{ fyp_form_evaluations : uses
+    fyp_records ||--o{ fyp_report_submissions : has
+    fyp_records ||--o{ fyp_correction_items : has
+    fyp_correction_items ||--o{ fyp_correction_confirmations : confirmed
+    fyp_records ||--o{ fyp_milestones : has
+    fyp_milestones ||--o{ fyp_milestone_extensions : extends
+    fyp_records ||--o{ fyp_deliverables : has
+    fyp_records ||--o{ fyp_lean_canvases : has
+    fyp_records ||--o{ fyp_marks_summaries : graded
+    fyp_records |o--o| fyp_special_evaluations : "F14 check"
+    fyp_course_offerings ||--o{ fyp_presentation_sessions : schedules
+    fyp_presentation_sessions ||--o{ fyp_presentation_slots : has
+    fyp_records ||--o{ fyp_presentation_slots : booked
+    fyp_records ||--o{ fyp_expo_publications : "published as"
+    fyp_expo_publications |o--o| projects : "becomes"
+    profiles ||--o{ fyp_notifications : receives
+```
+
+## Tables (22) — Exhibition
 
 ### 1. profiles
 User profiles linked to Supabase Auth (`auth.users`).
@@ -55,6 +120,8 @@ Exhibition events.
 | `poster_url` | `text` | — | Poster image path |
 | `public_contact_email` | `text` | — | Contact email |
 | `faq_items` | `jsonb` | NOT NULL, DEFAULT '[]' | FAQ Q&A list |
+| `is_current` | `boolean` | one row true | The exhibition the public site shows (`set_current_event`) |
+| `academic_semester_id` | `uuid` | FK → academic_semesters | Limits expo publication to that semester's CSP650 cohort |
 | `updated_by` | `uuid` | FK → profiles(id) | Last editor |
 | `created_at` | `timestamptz` | NOT NULL, DEFAULT now() | Created timestamp |
 | `updated_at` | `timestamptz` | NOT NULL, DEFAULT now() | Updated timestamp |
@@ -94,7 +161,7 @@ FYP projects exhibited at the event.
 | `created_at` | `timestamptz` | NOT NULL, DEFAULT now() | Created timestamp |
 | `updated_at` | `timestamptz` | NOT NULL, DEFAULT now() | Updated timestamp |
 
-### 4–19. Remaining Tables
+### 4–22. Remaining tables
 
 | Table | Key Columns | Description |
 |-------|-------------|-------------|
@@ -114,6 +181,8 @@ FYP projects exhibited at the event.
 | `import_review_decisions` | id, import_id, candidate_id, action, reviewed_by | Review decisions |
 | `settings` | key (PK), value (jsonb), updated_by | App settings |
 | `audit_logs` | id, actor_uid, action, target_type, metadata_safe | Audit trail |
+| `profile_academic_roles` | profile_id, role_code, programme_code, is_active | FYPMS role grants |
+| `academic_semesters`, `academic_courses` | code, status / stage | Shared with FYPMS |
 
 ## Indexes
 
@@ -143,15 +212,15 @@ FYP projects exhibited at the event.
 - `unique (event_id, project_id, lecturer_id, role)` on lecturer_assignments
 - `unique (event_id, project_id, lecturer_id, visit_role)` on student_project_visits
 
-## FYPMS Tables (25) — Summary
+## FYPMS tables (24) — summary
 
 Detailed DDL lives in `supabase/migrations/20260817000001_fypms_core_tables.sql`
 (+ additive migrations). All have RLS and `updated_at` triggers.
 
 | Table | Purpose | Key columns / relations |
 |-------|---------|------------------------|
-| `fyp_records` | Central FYP entity | `student_id → profiles`, `academic_semester_id`, `current_course_code` (CSP600/CSP650), `main_supervisor_id` / `co_supervisor_id` / `examiner_id`, `workflow_status` (17 states), unique per (semester, student, course) |
-| `fyp_record_assignments` | Parallel assignment rows | `fyp_record_id`, `lecturer_id`, `academic_role` (supervisor/co_supervisor/examiner), `is_active`; PU approval `pu_status` (pending/approved/rejected, set pending by trigger once the programme has a PU), `pu_decided_by`, `pu_decided_at`, `pu_comment` (`20260927000003`) |
+| `fyp_records` | Central FYP entity | `student_id → profiles`, `academic_semester_id`, `current_course_code` (CSP600/CSP650), `main_supervisor_id` / `co_supervisor_id` / `examiner_id`, `workflow_status` (17 states + `withdrawn`, `incomplete`), `status_before_hold`, `status_reason`, `supervisor_approved_at/by` (`20261010000004`), unique per (semester, student, course) |
+| `fyp_record_assignments` | Parallel assignment rows | `fyp_record_id`, `lecturer_id`, `academic_role` (supervisor/co_supervisor/examiner), `is_active`; PU approval `pu_status` (pending/approved/rejected, set pending by trigger once the programme has a PU), `pu_decided_by`, `pu_decided_at`, `pu_comment` (`20260927000003`); nomination `cv_path`, `not_related_declared_at/by` (`20261010000005`) |
 | `academic_semesters` | Semester reference | `code`, `status` (planned/active/completed/archived) |
 | `academic_courses` | Course reference | `code` (CSP600/CSP650), `stage` (formulation/project) |
 | `fyp_course_offerings` | Who teaches what, when | (semester, course, `lecturer_id`), `is_active`, `max_students` |
@@ -175,10 +244,51 @@ Detailed DDL lives in `supabase/migrations/20260817000001_fypms_core_tables.sql`
 | `fyp_presentation_slots` | Slot bookings | session FK + record FK, `slot_number`, times, `room` |
 | `fyp_expo_publications` | FYPMS → Expo bridge | record FK + `events` FK, `payload jsonb` (public-safe whitelist), `published_project_id` |
 | `fyp_audit_logs` | RPC audit trail | actor, action, target, `metadata_safe jsonb`, `source='database_rpc'` |
+| `fyp_notifications` | In-app bell | `recipient_id`, `kind`, `title`, `body`, `link`, `read_at`; written by `fyp_notify` |
 
-### Storage buckets (5)
-`fyp-proposal-reports`, `fyp-final-reports`, `fyp-deliverables`,
-`fyp-correction-evidence` (private; path-scoped via
-`can_read/write_fyp_storage_path`) and `fyp-public-assets` (public read;
-coordinator/admin write). Path convention:
+### `fyp_records.workflow_status`
+
+```mermaid
+stateDiagram-v2
+    [*] --> awaiting_supervisor_assignment
+    awaiting_supervisor_assignment --> supervision_requested
+    supervision_requested --> supervision_approved
+    supervision_approved --> formulation_in_progress
+    formulation_in_progress --> proposal_submitted
+    proposal_submitted --> proposal_under_review
+    proposal_under_review --> proposal_revision_required
+    proposal_revision_required --> proposal_submitted
+    proposal_under_review --> proposal_approved
+    proposal_approved --> formulation_completed
+    formulation_completed --> project_registered: promote to CSP650
+    project_registered --> project_ongoing
+    project_ongoing --> final_report_submitted
+    final_report_submitted --> final_report_under_review
+    final_report_under_review --> final_report_approved
+    final_report_approved --> project_pending_presentation
+    project_pending_presentation --> project_completed
+    project_completed --> project_archived
+    project_archived --> [*]
+```
+
+Any state can move to `withdrawn` or `incomplete` through
+`set_fyp_record_standing`; `reinstate_fyp_record` restores
+`status_before_hold`.
+
+### Storage buckets (6, FYPMS)
+
+| Bucket | Public | Limit | Types | Used for |
+|---|---|---|---|---|
+| `fyp-proposal-reports` | no | 20 MB | PDF, DOC, DOCX | CSP600 proposals |
+| `fyp-final-reports` | no | 20 MB | PDF, DOC, DOCX | CSP650 final reports |
+| `fyp-deliverables` | no | 100 MB | any | Deliverables checklist |
+| `fyp-correction-evidence` | no | 20 MB | any | Evidence for corrections |
+| `fyp-nomination-cvs` | no | 5 MB | PDF | Nomination CVs (`fyp_can_view_nomination_cv`) |
+| `fyp-public-assets` | yes | 20 MB | PNG, JPEG, WebP, PDF | Images published to the exhibition |
+
+Private buckets are path-scoped via `can_read_fyp_storage_path` /
+`can_write_fyp_storage_path`. Path convention:
 `{semester_code}/{fyp_record_id}/{resource_type}/{version}/{file_name}`.
+
+> The `avatars` and `media` buckets, like the template tables above, belong
+> to the unrelated content-scheduler template and are unused.

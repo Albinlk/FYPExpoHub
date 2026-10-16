@@ -3,9 +3,9 @@
 > **Status: COMPLETE (August 2026), kept as a historical/reference runbook.**
 > The Firebase → Supabase migration described here has already been applied
 > to the live project. For a record of what was actually run and verified,
-> see [MIGRATION_REPORT.md](MIGRATION_REPORT.md). The current production
+> see [migration-report.md](migration-report.md). The current production
 > deploy path is the GitHub Actions workflow at
-> [.github/workflows/deploy.yml](.github/workflows/deploy.yml), which builds
+> [.github/workflows/deploy.yml](../../../.github/workflows/deploy.yml), which builds
 > and pushes to GitHub Pages automatically on every push to `main` — the
 > manual "Step 6: Deploy" options below are historical alternatives, not the
 > path actually in use.

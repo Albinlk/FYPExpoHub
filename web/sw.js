@@ -68,6 +68,9 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
   // Same-origin only; Supabase and third parties handle their own caching.
   if (url.origin !== self.location.origin) return;
+  // The handbook (/handbook/) is a separate static MkDocs site: let the
+  // browser fetch it normally so the SPA fallback never answers for it.
+  if (url.pathname === '/handbook' || url.pathname.startsWith('/handbook/')) return;
 
   if (isLongCached(url)) {
     // Stale-while-revalidate: serve instantly from cache, refresh in the

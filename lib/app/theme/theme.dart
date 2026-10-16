@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Design tokens ("Scholar + Lab", see DESIGN.md). Colours are the Ink &
+/// Design tokens ("Scholar + Lab", see docs/developer/design-system.md). Colours are the Ink &
 /// Terracotta palette checked by test/app/theme_contrast_test.dart.
 class DesignSystem {
   DesignSystem._();

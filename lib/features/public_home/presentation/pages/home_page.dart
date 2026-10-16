@@ -17,7 +17,7 @@ import '../widgets/workspace_band.dart';
 /// Widest the home content grows; wider screens get margins instead.
 const kHomeMaxWidth = 1200.0;
 
-/// The exhibition home, and the site's homepage ("Scholar + Lab", DESIGN.md):
+/// The exhibition home, and the site's homepage ("Scholar + Lab", docs/developer/design-system.md):
 /// a left-aligned hero on graph paper with live numbers, then numbered
 /// sections, then the FYP Workspace band for students and lecturers.
 class HomePage extends ConsumerStatefulWidget {

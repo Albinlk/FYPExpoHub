@@ -57,10 +57,22 @@ jobs:
           sed -i "s/{{BUILD_VERSION}}/${DEPLOY_VERSION}/g" \
             build/web/sw.js build/web/flutter_bootstrap.js
 
+      # The handbook (mkdocs.yml, docs/) is served at /handbook/ on both
+      # hosts: it is built into build/web before the Workspace copy is made.
+      - name: Setup Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: '3.12'
+
+      - name: Build Handbook
+        run: |
+          pip install -r docs/requirements.txt
+          mkdocs build --strict -d build/web/handbook
+
       # The same build serves the FYP Workspace (CSP600 / CSP650) on its own
       # host; the app tells the two apart at runtime (lib/app/site_hosts.dart).
-      # Repo variable CSP_HOST stays empty until fyp. is live, so the main site
-      # keeps /fypms until then. See DEPLOYMENT.md, "Moving the FYP Workspace".
+      # Repo variable CSP_HOST names that host; deleting it puts /fypms back on
+      # the main site. See docs/developer/deployment.md, "Moving the FYP Workspace".
       - name: Prepare Workspace Copy
         run: |
           cp -r build/web build/workspace

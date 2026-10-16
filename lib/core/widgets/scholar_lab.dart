@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../app/theme/theme.dart';
 
-/// "Scholar + Lab" building blocks (see DESIGN.md): graph paper behind
+/// "Scholar + Lab" building blocks (see docs/developer/design-system.md): graph paper behind
 /// heroes, numbered section headers, mono stats and code tags, and the
 /// FYP Expo Hub wordmark.
 

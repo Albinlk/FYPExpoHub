@@ -194,7 +194,7 @@ every SV/EX pairing needs an active assignment.
 ## Import Master File
 
 The Master File import covers **schedule items and award winners only**
-(see `IMPORT_PIPELINE.md` for the workbook layout and every check).
+(see [import-pipeline.md](../import-pipeline.md) for the workbook layout and every check).
 
 `/admin/imports`
 1. Click **Upload & Parse .xlsx** and select the master workbook. Files

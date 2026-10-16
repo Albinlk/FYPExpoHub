@@ -191,7 +191,7 @@ This RPC function (admin only; an import can be published once):
 The one-time Firebase migration tooling (`tools/firebase_to_supabase/`,
 including `migrate_data.js` and its `seed_data.sql` output) was removed from
 the repository in September 2026 after the migration completed. See
-`MIGRATION_REPORT.md` for the historical record.
+[history/migration-report.md](history/migration-report.md) for the historical record.
 - `migration_summary.json`
 - `migration_errors.csv`
 - `rollback_plan.md`

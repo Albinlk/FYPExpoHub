@@ -42,3 +42,15 @@ jobs:
         # picking a no-op stub under dart2wasm. This compiles exactly what
         # deploy.yml ships.
         run: flutter build web --release --wasm --base-href "/"
+
+      - name: Setup Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: '3.12'
+
+      - name: Build Handbook (strict)
+        # --strict turns broken links, missing nav pages and bad anchors in
+        # docs/ into a failed PR instead of a broken /handbook/ page.
+        run: |
+          pip install -r docs/requirements.txt
+          mkdocs build --strict -d build/handbook-check
