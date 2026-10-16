@@ -4,6 +4,7 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app/router.dart';
 import 'app/theme/theme.dart';
+import 'core/supabase/shared_session_storage.dart';
 import 'core/supabase/supabase_database_service.dart';
 import 'core/utils/logger.dart';
 
@@ -27,8 +28,10 @@ void main() async {
     await Supabase.initialize(
       url: supabaseUrl,
       anonKey: supabaseAnonKey, // ignore: deprecated_member_use
-      authOptions: const FlutterAuthClientOptions(
+      authOptions: FlutterAuthClientOptions(
         authFlowType: AuthFlowType.pkce,
+        // One sign-in for the exhibition and the FYP Workspace (W4).
+        localStorage: sharedSessionStorageFor(Uri.base.host, supabaseUrl: supabaseUrl),
       ),
     );
     // Which exhibition is current (backlog S6); capped so a slow network
