@@ -39,6 +39,7 @@ Future<Uri> _resolve(
   String host = kMainHost,
   User? user,
   List<String> roles = const [],
+  bool isAdmin = false,
 }) async {
   tester.view.physicalSize = const Size(1440, 900);
   tester.view.devicePixelRatio = 1.0;
@@ -48,6 +49,7 @@ Future<Uri> _resolve(
     overrides: [
       currentAuthUserProvider.overrideWith((ref) => user),
       fypmsCurrentRolesProvider.overrideWith((ref) async => roles),
+      isAdminProvider.overrideWith((ref) async => isAdmin),
       cspHostProvider.overrideWithValue(cspHost),
       currentHostProvider.overrideWithValue(host),
     ],
@@ -92,6 +94,14 @@ void main() {
     testWidgets('a signed-in student lands in their CSP workspace', (tester) async {
       final uri = await _resolve(tester, target: '/fypms', user: _user(), roles: const ['student']);
       expect(uri.path, '/fypms/student');
+    });
+
+    testWidgets('a signed-in non-admin opening /admin stays on sign-in, told why', (tester) async {
+      final uri = await _resolve(tester, target: '/admin/settings', user: _user(), roles: const ['supervisor']);
+      expect(uri.path, '/sign-in');
+      expect(uri.queryParameters['reason'], 'not-admin');
+      expect(find.byKey(const Key('not-admin-notice')), findsOneWidget);
+      expect(find.textContaining('s@student.uitm.edu.my'), findsOneWidget);
     });
   });
 
