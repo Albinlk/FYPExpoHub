@@ -15,7 +15,7 @@ signing in, see the [Visitor guide](visitor.md).
     The same email and password work on both sites. Sign in once and you are
     signed in on the other site too.
 
-## The two sites
+## The two sites {#two-sites}
 
 | Site | Address | What it is for |
 |---|---|---|
@@ -42,17 +42,29 @@ Both sites keep your sign-in in a shared place, so signing in or out on one
 also applies to the other. A tab that is already open on the other site
 notices the change the next time it loads a page.
 
-## 1. Sign in
+## 1. Sign in {#sign-in}
 
-1. Go to **Sign In**:
-    - On the exhibition site, click **Sign In** at the top right (on a
-      phone: **Menu** → **Sign In**), or open `/sign-in` directly.
-    - On the FYP Workspace site, you are sent to the sign-in page
-      automatically when you are not signed in.
-2. Type your university email in **Official Email**.
-3. Type your **Password**. Use the eye button (**Show password**) to check
+[Open Sign In :octicons-link-external-16:](https://fskmjasinfypexhibition.site/sign-in){ .md-button target=_blank rel=noopener }
+
+First open the sign-in page:
+
+=== "Desktop"
+
+    On the exhibition site, click **Sign In** at the top right, or open
+    `/sign-in` directly.
+
+=== "Phone"
+
+    On the exhibition site, tap **Menu** (the last tab at the bottom), then
+    **Sign In**. You can also open `/sign-in` directly.
+
+On the FYP Workspace site you are sent to the sign-in page automatically
+when you are not signed in. Then:
+
+1. Type your university email in **Official Email**.
+2. Type your **Password**. Use the eye button (**Show password**) to check
    what you typed.
-4. Click **Sign In**.
+3. Click **Sign In**.
 
 The page says *Students and lecturers use one account.* Students,
 lecturers, coordinators and admins all use this same page.
@@ -61,7 +73,7 @@ If you opened a link to a particular page before signing in, you are taken
 back to that page after signing in. Otherwise you land on your own home
 page, shown below.
 
-### Where you land after signing in
+### Where you land after signing in {#landing}
 
 | Your account | Where you land |
 |---|---|
@@ -98,14 +110,22 @@ flowchart TD
     Clicking **Sign In** again while you are signed in simply takes you to
     your home page. You do not need to type your password again.
 
-### Sign out
+### Sign out {#sign-out}
 
-- In the FYP Workspace, click the **Sign Out** button (the arrow icon) at
-  the top right. On a narrow phone it is in the menu (the three-line icon at
-  the top left) at the bottom.
-- Signing out on one site signs you out on the other too.
+=== "Desktop"
 
-## 2. Reset a forgotten password
+    In the FYP Workspace, click the **Sign Out** button (the arrow icon) at
+    the top right.
+
+=== "Phone"
+
+    In the FYP Workspace, tap the **Sign Out** button (the arrow icon) at the
+    top right. On a narrow phone it is not there: tap the three-line icon at
+    the top left to open the menu, and tap **Sign Out** at the bottom.
+
+Signing out on one site signs you out on the other too.
+
+## 2. Reset a forgotten password {#reset-password}
 
 1. On the sign-in page, click **Forgot password?**.
 2. In the **Reset password** box, check the **Email** (it copies what you
@@ -136,7 +156,7 @@ sequenceDiagram
     App-->>You: Your password has been updated
 ```
 
-## 3. My Account: your name and password
+## 3. My Account: your name and password {#my-account}
 
 **My Account** is in the top bar of the FYP Workspace and the admin pages.
 On a computer it shows your email address; on a phone it is the round
@@ -158,7 +178,7 @@ person icon (**My account**).
 The new password needs at least 8 characters, with letters and numbers. If
 you see *Your current password is not correct.*, check the first box.
 
-## 4. Two-step verification (MFA)
+## 4. Two-step verification (MFA) {#mfa}
 
 Two-step verification adds a 6-digit code from an authenticator app on your
 phone (for example Google Authenticator or Microsoft Authenticator) to your
@@ -175,28 +195,34 @@ When it is on, the FYP Workspace and the admin pages show
 the **6-digit code** from your app and click **Verify**. The exhibition
 pages themselves never ask for the code.
 
-### Tutorial: set up two-step verification
+### Tutorial: set up two-step verification {#mfa-setup}
 
 You need your phone with an authenticator app installed, and about five
 minutes.
 
-1. Sign in and open the FYP Workspace.
-2. Click your email at the top right (on a phone, the person icon) to open
-   **My Account**.
-3. Scroll to **Two-step verification**. It says **Off**. Click **Turn on**.
-4. A QR code appears with the text *Scan this with your authenticator app,
-   then enter the code it shows.*
-5. In your authenticator app, add a new account and scan the QR code. If you
-   cannot scan it, choose manual entry in the app and type the key shown
-   under **Or enter this key:**.
-6. The app now shows **FYP Expo Hub** with a 6-digit code that changes every
-   30 seconds.
-7. Type the current code in **6-digit code** and click **Confirm**.
-8. You see *Two-step verification is on.* The section now says
-   **On — sign-in asks for a code from your authenticator app.**
-9. Test it: click **Close**, sign out, and sign in again. After your
-   password, the **Two-step verification** screen asks for a code. Enter it
-   and click **Verify**.
+Tick steps as you go; your progress stays in this browser.
+
+<div class="hb-checklist" data-hb-checklist="accounts-mfa" markdown>
+
+- [ ] Sign in and open the FYP Workspace.
+- [ ] Click your email at the top right (on a phone, the person icon) to open
+  **My Account**.
+- [ ] Scroll to **Two-step verification**. It says **Off**. Click **Turn on**.
+- [ ] A QR code appears with the text *Scan this with your authenticator app,
+  then enter the code it shows.*
+- [ ] In your authenticator app, add a new account and scan the QR code. If you
+  cannot scan it, choose manual entry in the app and type the key shown
+  under **Or enter this key:**.
+- [ ] The app now shows **FYP Expo Hub** with a 6-digit code that changes every
+  30 seconds.
+- [ ] Type the current code in **6-digit code** and click **Confirm**.
+- [ ] You see *Two-step verification is on.* The section now says
+  **On — sign-in asks for a code from your authenticator app.**
+- [ ] Test it: click **Close**, sign out, and sign in again. After your
+  password, the **Two-step verification** screen asks for a code. Enter it
+  and click **Verify**.
+
+</div>
 
 ```mermaid
 sequenceDiagram
@@ -222,7 +248,7 @@ may stop working until you turn it on again.
 
 ## 5. Messages you may see
 
-### "No FYPMS Access"
+### "No FYPMS Access" {#no-access}
 
 You signed in and opened the FYP Workspace, but it shows **No FYPMS
 Access**: *Your account is not assigned an active FYPMS role yet. Please
@@ -233,7 +259,7 @@ This means your account exists but nobody has given it a Workspace role
 add roles. Click **Sign Out**, and ask your coordinator to add you. Once they
 have, sign in again.
 
-### "You're signed in as …, which isn't an admin account"
+### "You're signed in as …, which isn't an admin account" {#not-admin}
 
 You opened an exhibition admin page (`/admin…`) while signed in with an
 account that is not an admin, for example your student account. The sign-in

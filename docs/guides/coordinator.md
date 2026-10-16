@@ -19,7 +19,7 @@ own account, see [Accounts and sign-in](accounts.md).
     after you enter the code at sign-in. The database checks this, not just the
     screen. See [Accounts and sign-in](accounts.md).
 
-## The Coordinator menu at a glance
+## The Coordinator menu at a glance {#menu}
 
 **Menu items and what they are for**
 
@@ -54,12 +54,14 @@ The top bar has a semester selector. Every staff list, including All Records
 and Reports, follows the semester you choose. Pick **All semesters** to see
 history. Records from past semesters stay as they were.
 
-## Coordinator Dashboard
+## Coordinator Dashboard {#dashboard}
 
 The dashboard shows two counts, **Total Records** and **Expo Publications**,
 and a **Recent Records** list. Tap a record to open it.
 
-## All Records
+## All Records {#records}
+
+[Open All Records :octicons-link-external-16:](https://fyp.fskmjasinfypexhibition.site/fypms/coordinator/records){ .md-button target=_blank rel=noopener }
 
 **All Records** lists every FYP record in the chosen semester, with its course
 (CSP600 or CSP650) and workflow status. Tap a record to open the record detail
@@ -68,7 +70,7 @@ assigned, submissions, evaluations and marks.
 
 ### Create a record by hand
 
-You normally create records with [Enrol Students](#enrol-students). To add a
+You normally create records with [Enrol Students](#enrol). To add a
 single one:
 
 1. Open **All Records** and click **New Record** (or **Create First Record**
@@ -79,7 +81,7 @@ single one:
    and **Project Description (optional)**.
 4. Click **Create**. You see "FYP record created."
 
-### Record actions
+### Record actions {#record-actions}
 
 Each record has a **Record actions** menu (the ⋮ button). The menu only shows
 actions that make sense for that record.
@@ -125,7 +127,7 @@ Completed and archived records cannot be put on hold.
 #### Promote a CSP600 record to CSP650
 
 1. Make sure the CSP600 marks are **finalized and passed** (not grade F), and
-   that the next semester exists in [Semesters & Courses](#semesters-courses).
+   that the next semester exists in [Semesters & Courses](#semesters).
 2. Choose **Promote to CSP650…**.
 3. Pick the **CSP650 semester**. Only planned or active semesters that start
    after the record's semester are offered. If there are none, the dialog says
@@ -142,7 +144,7 @@ be promoted once. CSP600 lecturers can promote too.
 2. Type a **Reason** and click **Archive**. The record stays readable but
    leaves the active workflow.
 
-### The record workflow
+### The record workflow {#record-workflow}
 
 Every record moves through these statuses. Students, supervisors, examiners and
 CSP lecturers move it forward; you step in with the record actions above.
@@ -177,6 +179,10 @@ stateDiagram-v2
     hold --> project_ongoing: Reinstate, back to the earlier status
 ```
 
+Click a step to see what it means and who acts next.
+
+<div data-hb-explorer="record"></div>
+
 !!! note "Reading the diagram"
     Any active status can go on hold, not only `project_ongoing`; the diagram
     shows one arrow to keep it readable. **Reinstate** always returns the
@@ -184,7 +190,9 @@ stateDiagram-v2
     status. Scheduling a presentation slot moves a record to
     `project_pending_presentation`.
 
-## Reports
+## Reports {#reports}
+
+[Open Reports :octicons-link-external-16:](https://fyp.fskmjasinfypexhibition.site/fypms/coordinator/reports){ .md-button target=_blank rel=noopener }
 
 **Reports** (`/fypms/coordinator/reports`) opens **Cohort Reports** for the
 semester chosen in the top bar ("Follows the semester chosen in the top bar.").
@@ -203,7 +211,9 @@ report holds counts only, no student details.
 
 ## People
 
-### Users & Roles
+### Users & Roles {#users-roles}
+
+[Open Users & Roles :octicons-link-external-16:](https://fyp.fskmjasinfypexhibition.site/fypms/coordinator/users){ .md-button target=_blank rel=noopener }
 
 **Users & Roles** lists people with their account type and academic roles.
 Search by name, email or matric (**Search name, email or matric**).
@@ -257,7 +267,9 @@ own type.
 
 Every change on this page is written to the audit log.
 
-### Enrol Students
+### Enrol Students {#enrol}
+
+[Open Enrol Students :octicons-link-external-16:](https://fyp.fskmjasinfypexhibition.site/fypms/coordinator/enrol){ .md-button target=_blank rel=noopener }
 
 **Enrol Students** creates students' logins (when missing) and their FYP
 records for a semester and course in one go.
@@ -285,7 +297,9 @@ Good to know:
 - Enrolling the same student again is safe; it reports **Already enrolled**.
 - Staff accounts are refused.
 
-### Assignments
+### Assignments {#assignments}
+
+[Open Assignments :octicons-link-external-16:](https://fyp.fskmjasinfypexhibition.site/fypms/coordinator/assignments){ .md-button target=_blank rel=noopener }
 
 **Assignments** lists each record with its current people and three buttons:
 **Supervisor**, **Co-Supervisor** and **Examiner**.
@@ -299,7 +313,9 @@ Nobody can both supervise and examine the same record. If the record's
 programme has a PU, the assignment is a **nomination** that waits for PU
 approval (see below).
 
-### Supervision Requests
+### Supervision Requests {#supervision-requests}
+
+[Open Supervision Requests :octicons-link-external-16:](https://fyp.fskmjasinfypexhibition.site/fypms/coordinator/requests){ .md-button target=_blank rel=noopener }
 
 This page has two parts.
 
@@ -317,7 +333,9 @@ can decide them on the chosen supervisor's behalf: **Approve**, or **Reject**
 with an optional reason. When none are waiting you see "No pending supervision
 requests."
 
-### Nomination CVs
+### Nomination CVs {#nomination-cvs}
+
+[Open Nomination CVs :octicons-link-external-16:](https://fyp.fskmjasinfypexhibition.site/fypms/coordinator/nominations){ .md-button target=_blank rel=noopener }
 
 The PU approves a supervisor or examiner nomination only after the nominator
 attaches the nominee's CV and a declaration. **Nomination CVs** lists the
@@ -333,7 +351,7 @@ nominations you made that are waiting for the PU.
 
 Use **View CV** or **Replace CV** to check or change it later.
 
-### Appointment Letters
+### Appointment Letters {#letters}
 
 **Appointment Letters** lists approved supervisor and examiner appointments.
 
@@ -364,9 +382,15 @@ sequenceDiagram
     end
 ```
 
+Click a step to see what it means and who acts next.
+
+<div data-hb-explorer="nomination"></div>
+
 ## Assessment
 
-### Presentations
+### Presentations {#presentations}
+
+[Open Presentations :octicons-link-external-16:](https://fyp.fskmjasinfypexhibition.site/fypms/coordinator/presentations){ .md-button target=_blank rel=noopener }
 
 **Presentations** lists presentation sessions for all courses.
 
@@ -395,7 +419,9 @@ remove a session. Deleting a session also removes its slots.
 Scheduling a slot moves the record to `project_pending_presentation`. Remove a
 slot with **Remove slot**.
 
-### Mark Allocation
+### Mark Allocation {#mark-allocation}
+
+[Open Mark Allocation :octicons-link-external-16:](https://fyp.fskmjasinfypexhibition.site/fypms/coordinator/mark-allocation){ .md-button target=_blank rel=noopener }
 
 **Mark Allocation** shows how each form contributes to the CSP600 and CSP650
 grades, with the total per course.
@@ -410,7 +436,9 @@ F7 25 % and F8 45 %, and leaves the remaining 30 % to the course OBE document.
 
 Other shares come from each form's rubric (see below).
 
-### Rubrics
+### Rubrics {#rubrics}
+
+[Open Rubrics :octicons-link-external-16:](https://fyp.fskmjasinfypexhibition.site/fypms/coordinator/rubrics){ .md-button target=_blank rel=noopener }
 
 **Rubrics** lists the active rubric for each form, with its version, number of
 criteria and evaluator shares.
@@ -427,7 +455,7 @@ criteria and evaluator shares.
     Saving never edits the old rubric. It creates a new version and makes it
     active. Evaluations already made keep the version they were scored with.
 
-### How marks become a grade
+### How marks become a grade {#marks}
 
 ```mermaid
 flowchart TD
@@ -457,7 +485,9 @@ stay locked.
 
 ## Setup
 
-### Semesters & Courses
+### Semesters & Courses {#semesters}
+
+[Open Semesters & Courses :octicons-link-external-16:](https://fyp.fskmjasinfypexhibition.site/fypms/coordinator/semesters){ .md-button target=_blank rel=noopener }
 
 Semesters move through four statuses. Exactly one semester is active at a
 time; making one active completes the previous active one. Semesters are never
@@ -492,7 +522,9 @@ Each semester shows CSP600 and CSP650 with their lecturer.
 The **Courses** list lets you **Edit course** to change the **Name**, **Credit
 hours** and whether the course is active.
 
-### Expo Publications
+### Expo Publications {#expo}
+
+[Open Expo Publications :octicons-link-external-16:](https://fyp.fskmjasinfypexhibition.site/fypms/coordinator/expo){ .md-button target=_blank rel=noopener }
 
 This is how CSP650 projects reach the public exhibition site.
 
@@ -522,13 +554,17 @@ stateDiagram-v2
     ready --> ready: Prepare again
 ```
 
+Click a step to see what it means and who acts next.
+
+<div data-hb-explorer="expo"></div>
+
 Preparing the same record for the same event again refreshes the public
 details and sets the publication back to **ready**; publish it again to update
 the exhibition. The database also allows **draft** and **failed** statuses,
 but the app does not use them today: a failed publish shows an error and
 leaves the publication **ready**.
 
-### Audit Logs
+### Audit Logs {#audit}
 
 **Audit Logs** lists Workspace actions with the time, who did it and their
 role, and the target. Examples include semester changes, promotions, role
@@ -540,7 +576,7 @@ The exhibition has its own **Audit Log**; see the
 
 ## Tutorials
 
-### Typical semester timeline
+### Typical semester timeline {#timeline}
 
 The weeks below are typical. Follow the faculty calendar for real dates.
 
@@ -567,46 +603,77 @@ gantt
     Complete semester                  :milestone, c2, 2027-08-01, 0d
 ```
 
-### Start-of-semester checklist
+### Start-of-semester checklist {#start-semester}
+
+Tick steps as you go; your progress stays in this browser.
+
+<div class="hb-checklist" data-hb-checklist="coord-start" markdown>
 
 **Before students arrive**
 
-| # | Task | Where | Done when |
-|---|---|---|---|
-| 1 | Create the new semester | Semesters & Courses → **New Semester** | It shows as planned |
-| 2 | Set CSP600 and CSP650 lecturers | Semesters & Courses → **Offer** | Both courses show a lecturer |
-| 3 | Check rubrics | Rubrics | Each form has the version you want |
-| 4 | Set the CSP600 F2/F3/F4 split | Mark Allocation | "F2 + F3 + F4 = 30 / 30" and saved |
-| 5 | Make the semester active | Semesters & Courses → **Make active** | Old semester shows completed |
-| 6 | Promote passed CSP600 records | All Records → **Promote to CSP650…** | CSP650 records exist in the new semester |
-| 7 | Give staff their roles, including PU head per programme | Users & Roles → **Add role** | Chips show on each lecturer |
-| 8 | Enrol new CSP600 students | Enrol Students | Summary shows no failures |
-| 9 | Tell new students to use **Forgot password?** | Your usual channel | Students can sign in |
+- [ ] **Create the new semester** in Semesters & Courses → **New
+  Semester**. Done when it shows as planned.
+- [ ] **Set CSP600 and CSP650 lecturers** in Semesters & Courses →
+  **Offer**. Done when both courses show a lecturer.
+- [ ] **Check rubrics** in Rubrics. Done when each form has the version you
+  want.
+- [ ] **Set the CSP600 F2/F3/F4 split** in Mark Allocation. Done when it
+  shows "F2 + F3 + F4 = 30 / 30" and is saved.
+- [ ] **Make the semester active** in Semesters & Courses → **Make
+  active**. Done when the old semester shows completed.
+- [ ] **Promote passed CSP600 records** in All Records → **Promote to
+  CSP650…**. Done when CSP650 records exist in the new semester.
+- [ ] **Give staff their roles, including PU head per programme** in Users &
+  Roles → **Add role**. Done when chips show on each lecturer.
+- [ ] **Enrol new CSP600 students** in Enrol Students. Done when the summary
+  shows no failures.
+- [ ] **Tell new students to use Forgot password?** through your usual
+  channel. Done when students can sign in.
 
 **In the first weeks**
 
-| # | Task | Where | Done when |
-|---|---|---|---|
-| 10 | Watch supervision requests | Supervision Requests | No old requests waiting |
-| 11 | Assign supervisors and examiners still missing | Assignments; Reports → **No supervisor yet** | Count is 0 |
-| 12 | Attach nomination CVs | Nomination CVs → **Send to PU** | List is empty |
-| 13 | Print appointment letters | Appointment Letters → **All N letters** | Letters sent |
-| 14 | Create presentation sessions | Presentations → **New Session** | Sessions listed |
+- [ ] **Watch supervision requests** in Supervision Requests. Done when no
+  old requests are waiting.
+- [ ] **Assign supervisors and examiners still missing** in Assignments
+  (Reports → **No supervisor yet** shows the count). Done when the count is 0.
+- [ ] **Attach nomination CVs** in Nomination CVs → **Send to PU**. Done when
+  the list is empty.
+- [ ] **Print appointment letters** in Appointment Letters → **All N
+  letters**. Done when the letters are sent.
+- [ ] **Create presentation sessions** in Presentations → **New Session**.
+  Done when the sessions are listed.
 
-### End-of-semester checklist
+</div>
 
-| # | Task | Where | Done when |
-|---|---|---|---|
-| 1 | Schedule final presentation slots | Presentations → **Schedule Slot** | Every record has a slot |
-| 2 | Publish CSP650 projects to the exhibition | Expo Publications | All CSP650 projects are published |
-| 3 | Chase missing evaluations | Reports; course lecturers' Marks pages | Lecturers can finalize |
-| 4 | Confirm marks are finalized | Reports → **Grade distribution (finalized marks)** | Counts match the cohort |
-| 5 | Handle late or carried-over students | All Records → **Mark incomplete (TL)…** or **Mark withdrawn…** | Status set, reason recorded |
-| 6 | Fix any wrong grade | All Records → **Reopen finalized marks…** | Lecturer has finalized again |
-| 7 | Download the cohort report | Reports → **Download CSV** | File saved |
-| 8 | Create the next semester | Semesters & Courses → **New Semester** | Next semester is planned |
-| 9 | Promote passed CSP600 records | All Records → **Promote to CSP650…** | CSP650 records exist |
-| 10 | Archive finished records if wanted | All Records → **Archive…** | Status is `project_archived` |
+### End-of-semester checklist {#end-semester}
+
+Tick steps as you go; your progress stays in this browser.
+
+<div class="hb-checklist" data-hb-checklist="coord-end" markdown>
+
+- [ ] **Schedule final presentation slots** in Presentations → **Schedule
+  Slot**. Done when every record has a slot.
+- [ ] **Publish CSP650 projects to the exhibition** in Expo Publications.
+  Done when all CSP650 projects are published.
+- [ ] **Chase missing evaluations** using Reports and the course lecturers'
+  Marks pages. Done when lecturers can finalize.
+- [ ] **Confirm marks are finalized** in Reports → **Grade distribution
+  (finalized marks)**. Done when the counts match the cohort.
+- [ ] **Handle late or carried-over students** in All Records → **Mark
+  incomplete (TL)…** or **Mark withdrawn…**. Done when the status is set and
+  the reason recorded.
+- [ ] **Fix any wrong grade** in All Records → **Reopen finalized marks…**.
+  Done when the lecturer has finalized again.
+- [ ] **Download the cohort report** in Reports → **Download CSV**. Done when
+  the file is saved.
+- [ ] **Create the next semester** in Semesters & Courses → **New
+  Semester**. Done when the next semester is planned.
+- [ ] **Promote passed CSP600 records** in All Records → **Promote to
+  CSP650…**. Done when the CSP650 records exist.
+- [ ] **Archive finished records if wanted** in All Records → **Archive…**.
+  Done when the status is `project_archived`.
+
+</div>
 
 ## Troubleshooting
 

@@ -55,10 +55,12 @@ Widget _adminGroupLabel(String label) => Padding(
       ),
     );
 
-/// "Help": opens the exhibition admin guide of the handbook in a new tab.
+/// "Help": opens the exhibition admin guide of the handbook at the section
+/// for the current page (see [handbookUrlForLocation]) in a new tab.
 class _AdminHelpTile extends StatelessWidget {
-  const _AdminHelpTile({this.onBeforeOpen});
+  const _AdminHelpTile({required this.currentPath, this.onBeforeOpen});
 
+  final String currentPath;
   final VoidCallback? onBeforeOpen;
 
   @override
@@ -71,7 +73,7 @@ class _AdminHelpTile extends StatelessWidget {
         title: Text('Help', style: DesignSystem.bodySm.copyWith(color: Colors.white70)),
         onTap: () {
           onBeforeOpen?.call();
-          openHandbook(kHandbookAdminGuide);
+          openHandbookAt(currentPath);
         },
         shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
         dense: true,
@@ -212,7 +214,7 @@ class _AdminSidebar extends StatelessWidget {
             ),
           ),
           const Divider(color: Colors.white10),
-          const _AdminHelpTile(),
+          _AdminHelpTile(currentPath: currentPath),
           Material(
             type: MaterialType.transparency,
             child: ListTile(
@@ -305,7 +307,7 @@ class _AdminDrawer extends StatelessWidget {
                 dense: true,
               ),
             ),
-            _AdminHelpTile(onBeforeOpen: () => Navigator.pop(context)),
+            _AdminHelpTile(currentPath: currentPath, onBeforeOpen: () => Navigator.pop(context)),
             Material(
               type: MaterialType.transparency,
               child: ListTile(
