@@ -170,3 +170,218 @@
 .md-typeset details {
   border-radius: 8px;
 }
+
+/* ------------------------------------------------------------------ */
+/* Interactive pieces (docs/javascripts/handbook.js)                  */
+/* ------------------------------------------------------------------ */
+
+/* Task finder */
+.hb-finder {
+  margin: 1.2rem 0 1.6rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 8px;
+  background: var(--fyp-card-bg);
+}
+.hb-finder__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  align-items: flex-end;
+}
+.hb-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1 1 14rem;
+  min-width: 0;
+  font-family: var(--md-code-font-family);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--md-default-fg-color--light);
+}
+.hb-select {
+  min-height: 44px;
+  width: 100%;
+  padding: 0 0.6rem;
+  font: inherit;
+  font-family: var(--md-text-font-family);
+  font-size: 0.8rem;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--md-typeset-color);
+  background: var(--md-default-bg-color);
+  border: 1px solid var(--md-default-fg-color--lighter);
+  border-radius: 6px;
+}
+.hb-select:focus-visible,
+.hb-chip:focus-visible,
+.hb-progress__reset:focus-visible {
+  outline: 2px solid var(--md-accent-fg-color);
+  outline-offset: 2px;
+}
+.md-typeset .hb-go {
+  min-height: 44px;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+}
+.md-typeset .hb-go[aria-disabled="true"] {
+  opacity: 0.45;
+  pointer-events: none;
+}
+.hb-finder__hint {
+  margin: 0.6rem 0 0;
+  min-height: 1.2em;
+  font-size: 0.72rem;
+  color: var(--md-default-fg-color--light);
+}
+
+/* Checklists */
+.hb-checklist {
+  margin: 1rem 0;
+  padding: 0.8rem 1rem 0.4rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-left: 3px solid var(--md-accent-fg-color);
+  border-radius: 8px;
+  background: var(--fyp-card-bg);
+}
+.hb-progress {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-bottom: 0.4rem;
+}
+.hb-progress__label {
+  font-family: var(--md-code-font-family);
+  font-size: 0.66rem;
+  white-space: nowrap;
+}
+.hb-progress__bar {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--md-default-fg-color--lightest);
+  overflow: hidden;
+}
+.hb-progress__fill {
+  height: 100%;
+  width: 0;
+  background: var(--md-accent-fg-color);
+  transition: width 0.2s ease;
+}
+.hb-progress__reset {
+  min-height: 32px;
+  padding: 0 0.6rem;
+  font: inherit;
+  font-size: 0.66rem;
+  color: var(--md-typeset-a-color);
+  background: none;
+  border: 1px solid var(--md-default-fg-color--lighter);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.hb-checklist--done .hb-progress__label { color: var(--md-accent-fg-color); font-weight: 700; }
+.md-typeset .hb-checklist .task-list-item { padding: 0.15rem 0; }
+@media (prefers-reduced-motion: reduce) {
+  .hb-progress__fill { transition: none; }
+}
+
+/* Status explorer */
+.hb-explorer {
+  margin: 0.8rem 0 1.4rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 8px;
+  background: var(--fyp-card-bg);
+}
+.md-typeset .hb-explorer__title {
+  margin: 0 0 0.5rem;
+  font-family: var(--md-code-font-family);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--md-default-fg-color--light);
+}
+.hb-explorer__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.hb-chip {
+  min-height: 36px;
+  padding: 0.25rem 0.7rem;
+  font: inherit;
+  font-size: 0.68rem;
+  color: var(--md-typeset-color);
+  background: var(--md-default-bg-color);
+  border: 1px solid var(--md-default-fg-color--lighter);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.hb-chip:hover { border-color: var(--md-accent-fg-color); }
+.hb-chip[aria-pressed="true"] {
+  color: var(--md-accent-bg-color);
+  background: var(--md-accent-fg-color);
+  border-color: var(--md-accent-fg-color);
+}
+.hb-chip--end { border-style: dashed; }
+.hb-chip--hold { border-style: dotted; }
+@media (pointer: coarse) {
+  .hb-chip { min-height: 44px; }
+}
+.hb-explorer__panel {
+  margin-top: 0.7rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--md-default-fg-color--lightest);
+}
+.md-typeset .hb-explorer__step {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin: 0 0 0.4rem;
+}
+.hb-explorer__num {
+  font-family: var(--md-code-font-family);
+  font-size: 0.62rem;
+  color: var(--md-default-fg-color--light);
+}
+.md-typeset .hb-explorer dl { margin: 0; }
+.hb-explorer__row {
+  display: grid;
+  grid-template-columns: 8.5rem 1fr;
+  gap: 0.6rem;
+  padding: 0.2rem 0;
+}
+.md-typeset .hb-explorer__row dt { font-weight: 700; margin: 0; }
+.md-typeset .hb-explorer__row dd { margin: 0; }
+@media (max-width: 480px) {
+  .hb-explorer__row { grid-template-columns: 1fr; gap: 0; }
+}
+.md-typeset .hb-explorer__links { margin: 0.6rem 0 0; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.md-typeset .hb-explorer__links .md-button { margin: 0; font-size: 0.68rem; padding: 0.35em 1em; }
+
+/* Phones: one swipeable row of steps, so the panel stays in view. */
+@media (max-width: 600px) {
+  .hb-explorer__chips {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    padding-bottom: 0.4rem;
+    -webkit-overflow-scrolling: touch;
+  }
+  .hb-chip { flex: 0 0 auto; scroll-snap-align: center; white-space: nowrap; }
+}
+
+/* Dark mode: Material's outline buttons use the (dark) primary colour; use
+   Apricot so "Open in app" and "How to" stay readable. */
+[data-md-color-scheme="slate"] .md-typeset .md-button:not(.md-button--primary) {
+  color: var(--fyp-apricot);
+  border-color: var(--fyp-apricot);
+}
+[data-md-color-scheme="slate"] .md-typeset .md-button:not(.md-button--primary):hover {
+  color: var(--fyp-ink);
+  background-color: var(--fyp-apricot);
+}

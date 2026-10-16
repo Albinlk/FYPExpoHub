@@ -11,8 +11,9 @@ import 'package:fyp_expo_hub/core/state/fypms_state_providers.dart';
 import 'package:fyp_expo_hub/core/supabase/supabase_client_provider.dart';
 import 'package:fyp_expo_hub/features/fypms/presentation/pages/notifications_page.dart';
 
-/// Every shell offers "Help", which opens the handbook guide for where the
-/// person is (`/handbook/guides/<guide>/` on the current host, new tab).
+/// Every shell offers "Help", which opens the handbook section for the page
+/// the person is on (`/handbook/guides/<guide>/#<id>` on the current host,
+/// new tab).
 SupabaseClient _client() => SupabaseClient(
       'https://placeholder-project.supabase.co',
       'placeholder-anon-key',
@@ -122,26 +123,73 @@ void main() {
       );
     });
 
-    test('Workspace pages map to the guide for their role section', () {
+    test('each area lands on its section', () {
       const cases = {
-        '/fypms/student': 'student',
-        '/fypms/student/reports': 'student',
-        '/fypms/supervisor': 'lecturer',
-        '/fypms/supervisor/evaluations': 'lecturer',
-        '/fypms/examiner/records': 'lecturer',
-        '/fypms/csp': 'lecturer',
-        '/fypms/csp/marks?offering=1': 'lecturer',
-        '/fypms/pu': 'lecturer',
-        '/fypms/coordinator': 'coordinator',
-        '/fypms/coordinator/users': 'coordinator',
-        '/fypms': 'accounts',
-        '/fypms/notifications': 'accounts',
-        '/fypms/students-list': 'accounts', // a prefix, not the section
-        '/sign-in': 'accounts',
+        // Exhibition site.
+        '/': '/handbook/guides/visitor/#home',
+        '/projects': '/handbook/guides/visitor/#projects',
+        '/projects/some-slug': '/handbook/guides/visitor/#projects',
+        '/projects/junior-guide': '/handbook/guides/visitor/#past-projects',
+        '/projects/junior-guide/similar/42': '/handbook/guides/visitor/#past-projects',
+        '/announcements': '/handbook/guides/visitor/#awards',
+        '/faq': '/handbook/guides/visitor/#info',
+        '/lecturer': '/handbook/guides/visitor/#by-lecturer',
+        '/lecturer/visits/7': '/handbook/guides/lecturer/#visits',
+        // Accounts.
+        '/sign-in': '/handbook/guides/accounts/#sign-in',
+        '/reset-password': '/handbook/guides/accounts/#reset-password',
+        '/fypms': '/handbook/guides/accounts/',
+        '/fypms/notifications': '/handbook/guides/accounts/',
+        // Workspace roles.
+        '/fypms/student': '/handbook/guides/student/#workspace',
+        '/fypms/student/records/abc': '/handbook/guides/student/#record',
+        '/fypms/student/progress': '/handbook/guides/student/#progress-logs',
+        '/fypms/supervisor/requests': '/handbook/guides/lecturer/#approve-supervision',
+        '/fypms/supervisor/milestones': '/handbook/guides/lecturer/#supervisor-milestones',
+        '/fypms/examiner/records/abc': '/handbook/guides/lecturer/#examiner',
+        '/fypms/csp/marks': '/handbook/guides/lecturer/#finalize-marks',
+        '/fypms/pu': '/handbook/guides/lecturer/#pu-decide',
+        '/fypms/coordinator': '/handbook/guides/coordinator/#dashboard',
+        '/fypms/coordinator/requests': '/handbook/guides/coordinator/#supervision-requests',
+        // Exhibition admin.
+        '/admin': '/handbook/guides/exhibition-admin/#dashboard',
+        '/admin/imports/12': '/handbook/guides/exhibition-admin/#import',
+        '/admin/assignments': '/handbook/guides/exhibition-admin/#lecturer-assignments',
       };
-      cases.forEach((path, guide) {
-        expect(handbookGuideForWorkspacePath(path), guide, reason: path);
+      cases.forEach((location, url) {
+        expect(handbookUrlForLocation(location), url, reason: location);
       });
+    });
+
+    test('query, fragment and trailing slash are ignored', () {
+      expect(handbookUrlForLocation('/fypms/csp/marks?offering=1'), '/handbook/guides/lecturer/#finalize-marks');
+      expect(handbookUrlForLocation('/projects?q=robot#top'), '/handbook/guides/visitor/#projects');
+      expect(handbookUrlForLocation('/admin/settings/'), '/handbook/guides/exhibition-admin/#settings');
+      expect(handbookUrlForLocation('/?utm_source=x'), '/handbook/guides/visitor/#home');
+    });
+
+    test('longest prefix wins, on segment boundaries only', () {
+      expect(handbookUrlForLocation('/fypms/csp/requests'), '/handbook/guides/lecturer/#approve-supervision');
+      expect(handbookUrlForLocation('/fypms/csp/offerings'), '/handbook/guides/lecturer/#csp-lecturer');
+      expect(handbookUrlForLocation('/fypms/students-list'), '/handbook/guides/accounts/');
+      expect(handbookUrlForLocation('/administer'), '/handbook/guides/visitor/');
+    });
+
+    test('unknown pages fall back to their area guide', () {
+      expect(handbookUrlForLocation('/no-such-page'), '/handbook/guides/visitor/');
+      expect(handbookUrlForLocation(''), '/handbook/guides/visitor/#home');
+      expect(handbookUrlForLocation('/fypms/student/unknown'), '/handbook/guides/student/#workspace');
+      expect(handbookUrlForLocation('/fypms/coordinator/unknown'), '/handbook/guides/coordinator/#dashboard');
+      expect(handbookUrlForLocation('/admin/unknown'), '/handbook/guides/exhibition-admin/#dashboard');
+    });
+
+    test('URL resolves against the current host', () {
+      expect(
+        Uri.parse('https://fyp.fskmjasinfypexhibition.site/fypms/student/reports')
+            .resolve(handbookUrlForLocation('/fypms/student/reports'))
+            .toString(),
+        'https://fyp.fskmjasinfypexhibition.site/handbook/guides/student/#reports',
+      );
     });
   });
 

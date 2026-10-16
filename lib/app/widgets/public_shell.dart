@@ -182,7 +182,7 @@ class _DesktopNavBar extends StatelessWidget {
                       key: const Key('nav-more'),
                       tooltip: 'More',
                       onSelected: (route) => route == _kHelpMenuValue
-                          ? openHandbook(kHandbookVisitorGuide)
+                          ? openHandbookAt(currentPath)
                           : _navigateTo(context, route),
                       itemBuilder: (_) => [
                         for (final (title, route) in menu)
@@ -403,7 +403,7 @@ class _MobileBottomNavBar extends StatelessWidget {
                     title: Text('Help', style: DesignSystem.bodyMd),
                     onTap: () {
                       Navigator.pop(context);
-                      openHandbook(kHandbookVisitorGuide);
+                      openHandbookAt(currentPath);
                     },
                   ),
                 ),

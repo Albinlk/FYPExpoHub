@@ -3,6 +3,10 @@
 How to use the FSKM UiTM Jasin Final Year Project platform. Pick the guide
 for what you do.
 
+## Find what you need
+
+<div data-hb-finder></div>
+
 <div class="grid cards" markdown>
 
 -   **Visiting the exhibition**

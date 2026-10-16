@@ -14,28 +14,33 @@ tablet or computer.
     The site is designed for phones. Keep it open while you walk around the
     exhibition: the booth list and the map are one tap away.
 
-## Finding your way around
+## Finding your way around {#navigation}
 
-**On a computer** the links run across the top: **Home**, **Projects**,
-**Booths**, **Schedule**, **Past Projects Guide**, **Announcements**,
-**Awards** and **Find by Lecturer**. On smaller screens some of these move
-into **More**, which also holds **Exhibition Info**, **FAQ**, **Past
-Exhibitions** and **Privacy Policy**.
+=== "Desktop"
 
-**On a phone** there are five tabs at the bottom:
+    The links run across the top: **Home**, **Projects**, **Booths**,
+    **Schedule**, **Past Projects Guide**, **Announcements**, **Awards** and
+    **Find by Lecturer**. In a narrower window some of these move into
+    **More**, which also holds **Exhibition Info**, **FAQ**, **Past
+    Exhibitions**, **Privacy Policy** and **Help** (this handbook). The
+    **Feedback** button sits at the bottom right.
 
-| Tab | Opens |
-|---|---|
-| **Home** | The home page |
-| **Booths** | The booth finder |
-| **Guide** | The Past Projects Guide |
-| **Staff** | Find by Lecturer |
-| **Menu** | Everything else: **Project Catalogue**, **Schedule**, **Announcements**, **Award Winners**, **Exhibition Info**, **Frequently Asked Questions**, **Past Exhibitions**, **Privacy Policy** and **Send Feedback** |
+=== "Phone"
+
+    There are five tabs at the bottom:
+
+    | Tab | Opens |
+    |---|---|
+    | **Home** | The home page |
+    | **Booths** | The booth finder |
+    | **Guide** | The Past Projects Guide |
+    | **Staff** | Find by Lecturer |
+    | **Menu** | Everything else: **Project Catalogue**, **Schedule**, **Announcements**, **Award Winners**, **Exhibition Info**, **Frequently Asked Questions**, **Past Exhibitions**, **Privacy Policy**, **Help** and **Send Feedback** |
 
 The **Sign In** button is for students and lecturers only. Visitors can
 ignore it.
 
-## 1. The home page
+## 1. The home page {#home}
 
 The home page shows the exhibition dates, hours and venue, with a
 countdown before it opens (**LIVE NOW** while it is running). From here you
@@ -54,7 +59,9 @@ can:
 The **FYP WORKSPACE** band with **Open FYP Workspace** is for CSP600 and
 CSP650 students and lecturers (see the [Student guide](student.md)).
 
-## 2. Browse and search projects
+## 2. Browse and search projects {#projects}
+
+[Open Projects :octicons-link-external-16:](https://fskmjasinfypexhibition.site/projects){ .md-button target=_blank rel=noopener }
 
 1. Click **Projects** (on a phone: **Menu** → **Project Catalogue**).
 2. Type in the search box (*Search by project title, student, or
@@ -68,7 +75,7 @@ CSP650 students and lecturers (see the [Student guide](student.md)).
 5. If nothing matches you see **No Projects Found**. Click **Reset Filters**
    to start again.
 
-## 3. Read a project's details
+## 3. Read a project's details {#project-details}
 
 The **Project Details** page shows:
 
@@ -84,7 +91,9 @@ The **Project Details** page shows:
 Use the back arrow (**Back**) to return to the list, or **Back to
 Catalogue** if the project was not found.
 
-## 4. Find a booth
+## 4. Find a booth {#booths}
+
+[Open Booths :octicons-link-external-16:](https://fskmjasinfypexhibition.site/booths){ .md-button target=_blank rel=noopener }
 
 1. Click **Booths** (on a phone, the **Booths** tab). The page is called
    **Find Exhibition Booths**.
@@ -95,13 +104,17 @@ Catalogue** if the project was not found.
 4. Search by booth number, project title or student name.
 5. Click a booth to open its project.
 
-## 5. Check the schedule
+## 5. Check the schedule {#schedule}
+
+[Open Schedule :octicons-link-external-16:](https://fskmjasinfypexhibition.site/schedule){ .md-button target=_blank rel=noopener }
 
 Click **Schedule** to see the **Event Schedule**. Each exhibition day has
 its own tab. A slot marked **Ongoing** is happening now. Slots marked
 **Internal** are for staff and students, not the public.
 
-## 6. Awards and announcements
+## 6. Awards and announcements {#awards}
+
+[Open Awards :octicons-link-external-16:](https://fskmjasinfypexhibition.site/awards){ .md-button target=_blank rel=noopener }
 
 - **Awards** shows the **Award Winners** with the team, programme,
   supervisor and sponsor. Click **View project** to open the winning
@@ -110,7 +123,9 @@ its own tab. A slot marked **Ongoing** is happening now. Slots marked
 - **Announcements** lists the official updates from the FSKM organising
   committee, newest first.
 
-## 7. The Past Projects Guide (for junior students)
+## 7. The Past Projects Guide (for junior students) {#past-projects}
+
+[Open Past Projects Guide :octicons-link-external-16:](https://fskmjasinfypexhibition.site/projects/junior-guide){ .md-button target=_blank rel=noopener }
 
 The **Past Projects Guide** helps CSP600 students choose a topic. It lists
 earlier CSP650 projects and CSP600 proposals, and shows which ones are
@@ -140,7 +155,9 @@ something new.
     CSP600 proposals have no detail page yet, so their rows do not open.
     Only CSP650 projects can be marked **Industry Candidate**.
 
-## 8. Find projects by lecturer
+## 8. Find projects by lecturer {#by-lecturer}
+
+[Open Find by Lecturer :octicons-link-external-16:](https://fskmjasinfypexhibition.site/lecturer){ .md-button target=_blank rel=noopener }
 
 **Find by Lecturer** (on a phone, the **Staff** tab) is for lecturers who
 want to see the projects they supervise or examine, and for anyone looking
@@ -151,13 +168,13 @@ for a lecturer's projects.
    want.
 3. Click a project to open it. **Clear** starts again.
 
-## 9. Past exhibitions
+## 9. Past exhibitions {#archive}
 
 **Past Exhibitions** (under **More**, or **Menu** on a phone) lists earlier
 FSKM FYP exhibitions. Open one to see its **Projects** and **Award
 winners**.
 
-## 10. Exhibition info, FAQ and privacy
+## 10. Exhibition info, FAQ and privacy {#info}
 
 - **Exhibition Info** (**Exhibition Information**) explains the
   background, main objectives and competition categories, and shows the
@@ -169,7 +186,7 @@ winners**.
   may include a matric number) is public; contact details, evaluations and
   login details never are.
 
-## 11. Send feedback
+## 11. Send feedback {#feedback}
 
 - On a computer, click the **Feedback** button at the bottom right.
 - On a phone, tap **Menu** → **Send Feedback**.
@@ -177,7 +194,7 @@ winners**.
 Fill in **Subject** and **Message**, optionally give a **Usability Rating
 (optional)**, and click **Submit**. You see *Thank you for your feedback!*
 
-## Tutorial: plan your exhibition visit
+## Tutorial: plan your exhibition visit {#plan-visit}
 
 This takes about ten minutes, the day before you visit.
 

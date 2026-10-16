@@ -71,28 +71,127 @@ const kHandbookAccountsGuide = 'accounts';
 /// Path of a handbook guide on the current host, e.g. `/handbook/guides/visitor/`.
 String handbookGuideUrl(String guide) => '/handbook/guides/$guide/';
 
-/// The guide for the Workspace menu section holding [location] (path, query
-/// ignored): student pages → student; supervisor, examiner, CSP lecturer and
-/// programme unit pages → lecturer; coordinator pages → coordinator;
-/// anything else (notifications, the Workspace root) → accounts.
-String handbookGuideForWorkspacePath(String location) {
-  final path = Uri.parse(location).path;
-  bool under(String prefix) => path == prefix || path.startsWith('$prefix/');
-  if (under('/fypms/student')) return kHandbookStudentGuide;
-  if (under('/fypms/supervisor') ||
-      under('/fypms/examiner') ||
-      under('/fypms/csp') ||
-      under('/fypms/pu')) {
-    return kHandbookLecturerGuide;
+/// Where "Help" lands for each app page: path prefix → handbook guide and
+/// section id (the `{#id}` on a heading in `docs/guides/<guide>.md`; null =
+/// top of the guide). A prefix matches itself and the pages below it
+/// (`/admin` matches `/admin/x`, not `/administer`); the longest match wins.
+/// `/` matches only the home page. Keep the anchors in sync with the guides
+/// (test/app/handbook_routes_test.dart checks them).
+const kHandbookRoutes = <String, ({String guide, String? anchor})>{
+  // Exhibition site.
+  '/': (guide: kHandbookVisitorGuide, anchor: 'home'),
+  '/projects': (guide: kHandbookVisitorGuide, anchor: 'projects'),
+  '/projects/junior-guide': (guide: kHandbookVisitorGuide, anchor: 'past-projects'),
+  '/booths': (guide: kHandbookVisitorGuide, anchor: 'booths'),
+  '/schedule': (guide: kHandbookVisitorGuide, anchor: 'schedule'),
+  '/awards': (guide: kHandbookVisitorGuide, anchor: 'awards'),
+  '/announcements': (guide: kHandbookVisitorGuide, anchor: 'awards'),
+  '/lecturer': (guide: kHandbookVisitorGuide, anchor: 'by-lecturer'),
+  '/lecturer/sign-in': (guide: kHandbookLecturerGuide, anchor: 'open-my-visits'),
+  '/lecturer/visits': (guide: kHandbookLecturerGuide, anchor: 'visits'),
+  '/archive': (guide: kHandbookVisitorGuide, anchor: 'archive'),
+  '/info': (guide: kHandbookVisitorGuide, anchor: 'info'),
+  '/faq': (guide: kHandbookVisitorGuide, anchor: 'info'),
+  '/privacy': (guide: kHandbookVisitorGuide, anchor: 'info'),
+  // Accounts.
+  '/sign-in': (guide: kHandbookAccountsGuide, anchor: 'sign-in'),
+  '/admin/sign-in': (guide: kHandbookAccountsGuide, anchor: 'sign-in'),
+  '/reset-password': (guide: kHandbookAccountsGuide, anchor: 'reset-password'),
+  kExternalRedirectPath: (guide: kHandbookAccountsGuide, anchor: 'two-sites'),
+  // FYP Workspace.
+  '/fypms': (guide: kHandbookAccountsGuide, anchor: null),
+  '/fypms/notifications': (guide: kHandbookAccountsGuide, anchor: null),
+  // Student.
+  '/fypms/student': (guide: kHandbookStudentGuide, anchor: 'workspace'),
+  '/fypms/student/records': (guide: kHandbookStudentGuide, anchor: 'record'),
+  '/fypms/student/supervision': (guide: kHandbookStudentGuide, anchor: 'supervision'),
+  '/fypms/student/progress': (guide: kHandbookStudentGuide, anchor: 'progress-logs'),
+  '/fypms/student/forms': (guide: kHandbookStudentGuide, anchor: 'forms'),
+  '/fypms/student/reports': (guide: kHandbookStudentGuide, anchor: 'reports'),
+  '/fypms/student/lean-canvas': (guide: kHandbookStudentGuide, anchor: 'lean-canvas'),
+  '/fypms/student/milestones': (guide: kHandbookStudentGuide, anchor: 'milestones'),
+  '/fypms/student/corrections': (guide: kHandbookStudentGuide, anchor: 'corrections'),
+  '/fypms/student/deliverables': (guide: kHandbookStudentGuide, anchor: 'deliverables'),
+  '/fypms/student/presentations': (guide: kHandbookStudentGuide, anchor: 'presentations'),
+  '/fypms/student/marks': (guide: kHandbookStudentGuide, anchor: 'marks'),
+  // Supervisor.
+  '/fypms/supervisor': (guide: kHandbookLecturerGuide, anchor: 'supervisor'),
+  '/fypms/supervisor/requests': (guide: kHandbookLecturerGuide, anchor: 'approve-supervision'),
+  '/fypms/supervisor/progress': (guide: kHandbookLecturerGuide, anchor: 'consultation-logs'),
+  '/fypms/supervisor/reports': (guide: kHandbookLecturerGuide, anchor: 'endorse-report'),
+  '/fypms/supervisor/evaluations': (guide: kHandbookLecturerGuide, anchor: 'evaluations'),
+  '/fypms/supervisor/corrections': (guide: kHandbookLecturerGuide, anchor: 'corrections'),
+  '/fypms/supervisor/milestones': (guide: kHandbookLecturerGuide, anchor: 'supervisor-milestones'),
+  // Examiner.
+  '/fypms/examiner': (guide: kHandbookLecturerGuide, anchor: 'examiner'),
+  // CSP600 / CSP650 lecturer.
+  '/fypms/csp': (guide: kHandbookLecturerGuide, anchor: 'csp-lecturer'),
+  '/fypms/csp/requests': (guide: kHandbookLecturerGuide, anchor: 'approve-supervision'),
+  '/fypms/csp/nominations': (guide: kHandbookLecturerGuide, anchor: 'nominate'),
+  '/fypms/csp/cohort': (guide: kHandbookLecturerGuide, anchor: 'handover'),
+  '/fypms/csp/milestones': (guide: kHandbookLecturerGuide, anchor: 'csp-milestones'),
+  '/fypms/csp/presentations': (guide: kHandbookLecturerGuide, anchor: 'csp-presentations'),
+  '/fypms/csp/evaluations': (guide: kHandbookLecturerGuide, anchor: 'csp-evaluations'),
+  '/fypms/csp/marks': (guide: kHandbookLecturerGuide, anchor: 'finalize-marks'),
+  // Programme Unit head.
+  '/fypms/pu': (guide: kHandbookLecturerGuide, anchor: 'pu-decide'),
+  // Coordinator.
+  '/fypms/coordinator': (guide: kHandbookCoordinatorGuide, anchor: 'dashboard'),
+  '/fypms/coordinator/records': (guide: kHandbookCoordinatorGuide, anchor: 'records'),
+  '/fypms/coordinator/reports': (guide: kHandbookCoordinatorGuide, anchor: 'reports'),
+  '/fypms/coordinator/users': (guide: kHandbookCoordinatorGuide, anchor: 'users-roles'),
+  '/fypms/coordinator/enrol': (guide: kHandbookCoordinatorGuide, anchor: 'enrol'),
+  '/fypms/coordinator/assignments': (guide: kHandbookCoordinatorGuide, anchor: 'assignments'),
+  '/fypms/coordinator/requests': (guide: kHandbookCoordinatorGuide, anchor: 'supervision-requests'),
+  '/fypms/coordinator/nominations': (guide: kHandbookCoordinatorGuide, anchor: 'nomination-cvs'),
+  '/fypms/coordinator/letters': (guide: kHandbookCoordinatorGuide, anchor: 'letters'),
+  '/fypms/coordinator/presentations': (guide: kHandbookCoordinatorGuide, anchor: 'presentations'),
+  '/fypms/coordinator/mark-allocation': (guide: kHandbookCoordinatorGuide, anchor: 'mark-allocation'),
+  '/fypms/coordinator/rubrics': (guide: kHandbookCoordinatorGuide, anchor: 'rubrics'),
+  '/fypms/coordinator/semesters': (guide: kHandbookCoordinatorGuide, anchor: 'semesters'),
+  '/fypms/coordinator/expo': (guide: kHandbookCoordinatorGuide, anchor: 'expo'),
+  '/fypms/coordinator/audit': (guide: kHandbookCoordinatorGuide, anchor: 'audit'),
+  // Exhibition admin.
+  '/admin': (guide: kHandbookAdminGuide, anchor: 'dashboard'),
+  '/admin/event': (guide: kHandbookAdminGuide, anchor: 'event'),
+  '/admin/schedule': (guide: kHandbookAdminGuide, anchor: 'schedule'),
+  '/admin/announcements': (guide: kHandbookAdminGuide, anchor: 'announcements'),
+  '/admin/awards': (guide: kHandbookAdminGuide, anchor: 'awards'),
+  '/admin/projects': (guide: kHandbookAdminGuide, anchor: 'projects'),
+  '/admin/booths': (guide: kHandbookAdminGuide, anchor: 'booths'),
+  '/admin/imports': (guide: kHandbookAdminGuide, anchor: 'import'),
+  '/admin/lecturers': (guide: kHandbookAdminGuide, anchor: 'lecturers'),
+  '/admin/assignments': (guide: kHandbookAdminGuide, anchor: 'lecturer-assignments'),
+  '/admin/visits': (guide: kHandbookAdminGuide, anchor: 'visits'),
+  '/admin/feedback': (guide: kHandbookAdminGuide, anchor: 'feedback'),
+  '/admin/audit': (guide: kHandbookAdminGuide, anchor: 'audit'),
+  '/admin/settings': (guide: kHandbookAdminGuide, anchor: 'settings'),
+};
+
+/// Handbook URL (path on the current host) for the app page at [location]:
+/// `/handbook/guides/<guide>/#<id>`, or the guide's top when the page has no
+/// section. Query and fragment are ignored; pages outside [kHandbookRoutes]
+/// get the visitor guide.
+String handbookUrlForLocation(String location) {
+  var path = Uri.tryParse(location)?.path ?? '/';
+  if (path.isEmpty) path = '/';
+  if (path.length > 1 && path.endsWith('/')) path = path.substring(0, path.length - 1);
+  String? best;
+  for (final prefix in kHandbookRoutes.keys) {
+    final matches = prefix == '/' ? path == '/' : path == prefix || path.startsWith('$prefix/');
+    if (matches && (best == null || prefix.length > best.length)) best = prefix;
   }
-  if (under('/fypms/coordinator')) return kHandbookCoordinatorGuide;
-  return kHandbookAccountsGuide;
+  if (best == null) return handbookGuideUrl(kHandbookVisitorGuide);
+  final route = kHandbookRoutes[best]!;
+  final anchor = route.anchor;
+  return anchor == null ? handbookGuideUrl(route.guide) : '${handbookGuideUrl(route.guide)}#$anchor';
 }
 
-/// Opens a handbook [guide] in a new tab. The handbook is a static site
-/// outside the Flutter router, so it is loaded by the browser, not go_router.
-Future<bool> openHandbook(String guide) =>
-    launchUrl(Uri.base.resolve(handbookGuideUrl(guide)), webOnlyWindowName: '_blank');
+/// Opens the handbook section for the app page at [location] in a new tab.
+/// The handbook is a static site outside the Flutter router, so it is loaded
+/// by the browser, not go_router.
+Future<bool> openHandbookAt(String location) =>
+    launchUrl(Uri.base.resolve(handbookUrlForLocation(location)), webOnlyWindowName: '_blank');
 
 /// Opens [path] on the exhibition site, leaving the Workspace host if needed.
 void openExhibitionSite(BuildContext context, WidgetRef ref, [String path = '/']) {

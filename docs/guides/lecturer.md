@@ -11,7 +11,7 @@ coordinator's side is in the [Coordinator guide](coordinator.md), and
 exhibition set-up (booths, visit windows, lecturer lists) is in the
 [Exhibition admin guide](exhibition-admin.md). Back to the [handbook home](../index.md).
 
-## How the system fits together
+## How the system fits together {#overview}
 
 **One account, several roles.** You sign in once with your UiTM account.
 The same account can hold several roles at the same time, for example
@@ -38,7 +38,7 @@ you choose), the **notification bell**, your account button and **Sign Out**.
 **Booth visits are on the exhibition site, not in the Workspace.** On
 exhibition day you mark booth visits on the exhibition site under **My
 Visits** (on a phone, the **Visits** tab at the bottom). See
-[Exhibition day: marking booth visits](#exhibition-day-marking-booth-visits).
+[Exhibition day: marking booth visits](#visits).
 
 !!! tip "Where you land after signing in"
     From the day before the exhibition until the day after it, a lecturer
@@ -61,7 +61,7 @@ co-supervisor menu.
 
 ---
 
-## Supervisor
+## Supervisor {#supervisor}
 
 ### What you can do
 
@@ -75,7 +75,9 @@ co-supervisor menu.
 | List corrections, confirm the student's fixes (F12) and approve the final report | **Corrections** |
 | See your students' milestones and their status | **Milestones** |
 
-### Approve a supervision request
+### Approve a supervision request {#approve-supervision}
+
+[Open Supervision Requests :octicons-link-external-16:](https://fyp.fskmjasinfypexhibition.site/fypms/supervisor/requests){ .md-button target=_blank rel=noopener }
 
 A student sends you an F1 Mutual Acceptance request when they choose you as
 their supervisor. You get a notification.
@@ -94,7 +96,7 @@ was named, becomes co-supervisor). The record moves on from
 !!! note "Programme Unit approval"
     If your programme has a PU head, the new supervisor and co-supervisor
     appointments wait for the PU to approve them (see
-    [Programme Unit head](#programme-unit-head-pu)). You can already work
+    [Programme Unit head](#pu)). You can already work
     with the student while the PU decides.
 
 ```mermaid
@@ -115,6 +117,10 @@ sequenceDiagram
     Note over S,W: A request that is no longer active shows as withdrawn
 ```
 
+Click a step to see what it means and who acts next.
+
+<div data-hb-explorer="supervision"></div>
+
 **Supervision request statuses**
 
 | Status | Shown on the card as | Meaning |
@@ -124,7 +130,9 @@ sequenceDiagram
 | rejected | **Declined** | You declined; the student must ask someone else |
 | withdrawn | **withdrawn** | The request is no longer active |
 
-### Review consultation logs (F5)
+### Review consultation logs (F5) {#consultation-logs}
+
+[Open Progress Reviews :octicons-link-external-16:](https://fyp.fskmjasinfypexhibition.site/fypms/supervisor/progress){ .md-button target=_blank rel=noopener }
 
 1. Open **Progress Reviews**. Each project lists its logs by week (**W1**,
    **W2**, ...), with the meeting date, the summary and the **Next:** plan.
@@ -137,7 +145,9 @@ sequenceDiagram
 
 Log statuses: *draft*, *submitted*, *validated*, *rejected*.
 
-### Endorse a report (F6)
+### Endorse a report (F6) {#endorse-report}
+
+[Open Report Endorsement :octicons-link-external-16:](https://fyp.fskmjasinfypexhibition.site/fypms/supervisor/reports){ .md-button target=_blank rel=noopener }
 
 Before a proposal or final report goes for review, you check the report and
 its plagiarism report. The similarity index must be **30 % or less**; the
@@ -177,6 +187,10 @@ sequenceDiagram
     W-->>S: Final report approved, ready to bind
 ```
 
+Click a step to see what it means and who acts next.
+
+<div data-hb-explorer="report"></div>
+
 **Report statuses**
 
 | Status | Shown as | Meaning |
@@ -186,7 +200,9 @@ sequenceDiagram
 | approved | **Approved** | The report is accepted |
 | rejected | **Returned** | You returned it; the student resubmits a new version |
 
-### Corrections and final approval (F12, CSP650)
+### Corrections and final approval (F12, CSP650) {#corrections}
+
+[Open Corrections :octicons-link-external-16:](https://fyp.fskmjasinfypexhibition.site/fypms/supervisor/corrections){ .md-button target=_blank rel=noopener }
 
 After the final presentation, the supervisor or examiner lists the
 corrections. The student fixes each one and uploads evidence. You confirm
@@ -237,6 +253,10 @@ stateDiagram-v2
     closed --> [*]
 ```
 
+Click a step to see what it means and who acts next.
+
+<div data-hb-explorer="corrections"></div>
+
 **Correction statuses**
 
 | Status | Shown as | What you do |
@@ -247,7 +267,9 @@ stateDiagram-v2
 | confirmed | green tick | Done |
 | closed | green tick | Done; counts as finished for final approval |
 
-### Score evaluations
+### Score evaluations {#evaluations}
+
+[Open Evaluations :octicons-link-external-16:](https://fyp.fskmjasinfypexhibition.site/fypms/supervisor/evaluations){ .md-button target=_blank rel=noopener }
 
 1. Open **Evaluations**. Each project lists the forms you score.
 2. Select **Evaluate** next to a form. The **Evaluate Submission** dialog
@@ -274,7 +296,7 @@ stateDiagram-v2
 | F9 | | | yes |
 | F13 | yes | | yes |
 
-### Milestones
+### Milestones {#supervisor-milestones}
 
 **Milestones** lists each student's milestones with the **Target** date and
 a status badge: *pending*, *in progress*, *completed* or *overdue*. The CSP
@@ -298,7 +320,7 @@ The dashboard shows each record's course and status. Common ones:
 
 ---
 
-## Co-supervisor
+## Co-supervisor {#co-supervisor}
 
 A co-supervisor works from the same **Supervisor** menu section and sees the
 same pages for the students they co-supervise.
@@ -327,7 +349,7 @@ The statuses are the same as for the supervisor.
 
 ---
 
-## Examiner
+## Examiner {#examiner}
 
 ### What you can do
 
@@ -346,7 +368,7 @@ CSP600 lecturer or the coordinator assigns examiners.
 1. **Open a record.** On **Examiner Dashboard**, select a project to see its
    course, programme, status, matric ID, description and **Assignments**.
 2. **Score a form.** Open **Evaluations** and select **Evaluate**. Follow
-   [Score evaluations](#score-evaluations). Supervisor-only criteria are
+   [Score evaluations](#evaluations). Supervisor-only criteria are
    hidden from you.
 3. **List corrections.** Open **Corrections**, select **Add Correction**,
    fill in **Correction** and **Severity**, then **Create**.
@@ -360,7 +382,7 @@ tables under [Supervisor](#supervisor)).
 
 ---
 
-## CSP600 / CSP650 Lecturer
+## CSP600 / CSP650 Lecturer {#csp-lecturer}
 
 The menu section is named after the course you teach: **CSP600 Lecturer**,
 **CSP650 Lecturer**, or **CSP600 & CSP650 Lecturer** if you teach both. The
@@ -384,7 +406,9 @@ dashboard is **CSP600 Dashboard** (or **CSP650 Dashboard**).
     You see pending F1 requests for your course so you can follow up, but
     you cannot accept or decline them. The chosen supervisor decides.
 
-### Nominate an examiner with a CV
+### Nominate an examiner with a CV {#nominate}
+
+[Open Nomination CVs :octicons-link-external-16:](https://fyp.fskmjasinfypexhibition.site/fypms/csp/nominations){ .md-button target=_blank rel=noopener }
 
 Assigning an examiner (or a supervisor accepting a student) is a
 **nomination**. If the programme has a PU head, the PU must approve it, and
@@ -419,7 +443,7 @@ lecturer is the CSP lecturer of the student's course (or the coordinator).
 7. The card now shows **View CV** and *Declared not a relative or close
    friend on dd-mm-yyyy*. To swap the file, select **Replace CV**.
 
-**Step 3: the PU decides** (see [Programme Unit head](#programme-unit-head-pu)).
+**Step 3: the PU decides** (see [Programme Unit head](#pu)).
 
 ```mermaid
 sequenceDiagram
@@ -442,12 +466,18 @@ sequenceDiagram
     end
 ```
 
+Click a step to see what it means and who acts next.
+
+<div data-hb-explorer="nomination"></div>
+
 !!! info "The nominee can start at once"
     A pending nomination still works: the examiner can see and score the
     student while the PU decides. A rejected nomination is removed from the
     record.
 
-### Hand the cohort over to CSP650 (CSP600)
+### Hand the cohort over to CSP650 (CSP600) {#handover}
+
+[Open Examiners & Handover :octicons-link-external-16:](https://fyp.fskmjasinfypexhibition.site/fypms/csp/cohort){ .md-button target=_blank rel=noopener }
 
 At the end of the semester, each student whose CSP600 marks are finalized
 and passed gets a CSP650 record in the next semester, keeping the title,
@@ -460,7 +490,9 @@ supervisors and examiner.
 
 To move one student only, use **Promote to CSP650** on their card.
 
-### Set milestones and decide extensions
+### Set milestones and decide extensions {#csp-milestones}
+
+[Open Course Milestones :octicons-link-external-16:](https://fyp.fskmjasinfypexhibition.site/fypms/csp/milestones){ .md-button target=_blank rel=noopener }
 
 1. Open **Milestones** (page title *Course Milestones*). Choose the student
    from **Record:**.
@@ -477,17 +509,19 @@ To move one student only, use **Promote to CSP650** on their card.
 Extension statuses the student sees: *Extension to dd-mm-yyyy pending*,
 *Extension approved to dd-mm-yyyy*, *Extension rejected: reason*.
 
-### Presentations
+### Presentations {#csp-presentations}
+
+[Open Presentations :octicons-link-external-16:](https://fyp.fskmjasinfypexhibition.site/fypms/csp/presentations){ .md-button target=_blank rel=noopener }
 
 Open **Presentations** and select **New Session** to create a session, then
 open it and select **Schedule Slot** to book a student (**FYP Record**,
 **Slot Number**, start and end time, **Room (optional)**). Use the menu on a
 session to **Edit…** or **Delete…** it.
 
-### Score evaluations and decide F14
+### Score evaluations and decide F14 {#csp-evaluations}
 
 1. Open **Evaluations**. Score your forms with **Evaluate** as described in
-   [Score evaluations](#score-evaluations).
+   [Score evaluations](#evaluations).
 2. **CSP650 only:** each project has an **F14 — Special evaluation** row.
    Select **Check** to see the four checks (Progress F9 + Lean Model Canvas
    F13 at least 7.5 %, complete chapters 1–5 submitted, presented at the
@@ -495,7 +529,9 @@ session to **Edit…** or **Delete…** it.
    **Note (optional)** and **Save**. A qualified student can then be scored
    on F15 and F16.
 
-### Finalize marks
+### Finalize marks {#finalize-marks}
+
+[Open Marks :octicons-link-external-16:](https://fyp.fskmjasinfypexhibition.site/fypms/csp/marks){ .md-button target=_blank rel=noopener }
 
 ```mermaid
 flowchart TD
@@ -530,7 +566,7 @@ flowchart TD
 
 ---
 
-## Programme Unit head (PU)
+## Programme Unit head (PU) {#pu}
 
 The PU head approves supervisor, co-supervisor and examiner nominations for
 their programme, and issues appointment letters.
@@ -542,7 +578,9 @@ their programme, and issues appointment letters.
 | Approve or reject pending nominations | **Nominations** → **Awaiting approval** |
 | Download appointment letters | **Nominations** → **Approved · letters** |
 
-### Approve or reject a nomination
+### Approve or reject a nomination {#pu-decide}
+
+[Open Nominations :octicons-link-external-16:](https://fyp.fskmjasinfypexhibition.site/fypms/pu){ .md-button target=_blank rel=noopener }
 
 1. In the **Programme Unit** section, open **Nominations**. The
    **Awaiting approval** tab lists each nomination as *Role: Lecturer name*,
@@ -563,7 +601,7 @@ their programme, and issues appointment letters.
     declaration from the nominating lecturer.* Ask the CSP lecturer of the
     course to attach them under **Nomination CVs**. You can still **Reject**.
 
-### Download appointment letters
+### Download appointment letters {#letters}
 
 1. Open the **Approved · letters** tab. Each approved appointment shows the
    role, lecturer, project, student and *Approved dd-mm-yyyy*.
@@ -580,26 +618,65 @@ their programme, and issues appointment letters.
 
 ---
 
-## Exhibition day: marking booth visits
+## Exhibition day: marking booth visits {#visits}
 
 On exhibition day, supervisors (**SV**) and examiners (**EX**) visit their
 students' booths and record each visit. This happens on the **exhibition
 site**, not in the Workspace. Your list of booths comes from the exhibition
 admin, not from the FYP Workspace.
 
-### Open My Visits
+Tick steps as you go; your progress stays in this browser.
 
-1. On the exhibition site, select **Sign In** and sign in with your UiTM
-   account. (During the exhibition you land on **My Visits** directly.)
-2. Open **My Visits** from the top menu, or the **Visits** tab on a phone.
-   From the Workspace, use **Exhibition Site** at the bottom of the menu.
-3. The page shows *Welcome, your name* and two counters, **Supervisor (SV)**
+<div class="hb-checklist" data-hb-checklist="lecturer-expo-day" markdown>
+
+**On the day**
+
+- [ ] Sign in on the exhibition site and open **My Visits** (see
+  [Open My Visits](#open-my-visits)).
+- [ ] Check the **Supervisor (SV)** and **Examiner (EX)** counters, and set
+  **Day:** to today.
+- [ ] At each booth, open the project and select **Mark as Visited**, then
+  **Confirm Visit** ([Mark a visit](#mark-visit)).
+- [ ] If the card shows **Score F10** (or **Score F15**), score every
+  criterion and **Submit** ([Score F10 at the booth](#score-booth)).
+- [ ] Marked the wrong booth? Select **Undo** straight away, or **Cancel
+  Visit** within the undo window ([Cancel a visit](#cancel-visit)).
+- [ ] Before you leave, set **Status:** to **Not Yet Visited** and check that
+  no booth is left.
+
+</div>
+
+### Open My Visits {#open-my-visits}
+
+[Open My Visits :octicons-link-external-16:](https://fskmjasinfypexhibition.site/lecturer/visits){ .md-button target=_blank rel=noopener }
+
+=== "Desktop"
+
+    1. On the exhibition site, select **Sign In** at the top right and sign
+       in with your UiTM account. (During the exhibition you land on **My
+       Visits** directly.)
+    2. Select **My Visits** in the links across the top. In a narrow window
+       it moves into **More**. From the Workspace, use **Exhibition Site** at
+       the bottom of the menu on the left.
+
+=== "Phone"
+
+    1. On the exhibition site, tap **Menu** (the last tab at the bottom),
+       then **Sign In**, and sign in with your UiTM account. (During the
+       exhibition you land on **My Visits** directly.)
+    2. Tap the **Visits** tab at the bottom. It replaces the **Staff** tab
+       once you are signed in. From the Workspace, tap the three-line icon at
+       the top left and choose **Exhibition Site** at the bottom of the menu.
+
+Once **My Visits** is open:
+
+1. The page shows *Welcome, your name* and two counters, **Supervisor (SV)**
    and **Examiner (EX)**, as *visited / total*.
-4. Narrow the list with the search box (*Search projects, students,
+2. Narrow the list with the search box (*Search projects, students,
    booths…*) and the **Role:** (All, SV, EX), **Status:** (All, Not Yet
    Visited, Visited, Voided) and **Day:** filters.
 
-### Mark a visit
+### Mark a visit {#mark-visit}
 
 1. Select a project card to open it. The page has a **Supervisor (SV)** card
    and an **Examiner (EX)** card; use the one for your role.
@@ -614,7 +691,7 @@ admin, not from the FYP Workspace.
     Select **Undo** on the message straight away. The visit is cancelled
     with the reason *Marked by mistake (undone straight away)*.
 
-### Cancel a visit
+### Cancel a visit {#cancel-visit}
 
 If the message has gone, you can still cancel your own visit within the
 **undo window**, which is **30 minutes by default**. The exhibition admin
@@ -659,6 +736,10 @@ sequenceDiagram
     end
 ```
 
+Click a step to see what it means and who acts next.
+
+<div data-hb-explorer="visit"></div>
+
 ### When you can mark visits
 
 Visits can only be marked **inside the open/close window** the exhibition
@@ -667,14 +748,14 @@ it you will see *Visits open on 08 Aug 2026 09:00.* or *Visits closed on
 ...*, and if visits are switched off, *Student project visits are currently
 disabled.*
 
-### Score F10 (or F15) at the booth
+### Score F10 (or F15) at the booth {#score-booth}
 
 If the exhibition project is linked to the student's FYP record, your card
 also shows **Score F10 (final presentation)**, or **Score F15 (special
 evaluation)** for a student qualified on F14.
 
 1. Select the score button. The rubric dialog opens, as in
-   [Score evaluations](#score-evaluations).
+   [Score evaluations](#evaluations).
 2. Score every criterion and select **Submit**.
 3. The button then reads *F10 scored · 82.5% — update*. Select it to change
    your scores.

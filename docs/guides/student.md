@@ -15,7 +15,9 @@ know the form numbers by heart: each page tells you which form it is.
     coordinator creates it. If you have never signed in, read
     [Accounts and signing in](accounts.md) first.
 
-## 1. Get into the FYP Workspace
+## 1. Get into the FYP Workspace {#workspace}
+
+[Open Student Dashboard :octicons-link-external-16:](https://fyp.fskmjasinfypexhibition.site/fypms/student){ .md-button target=_blank rel=noopener }
 
 1. Go to `fyp.fskmjasinfypexhibition.site`, or on the exhibition site click
    **Open FYP Workspace** (on the home page) or **Sign In**.
@@ -27,9 +29,23 @@ your FYP coordinator.
 
 ### The Workspace screen
 
-- **Top bar**: the **Notifications** bell (requests, decisions and
-  results), your email (opens **My Account**), and **Sign Out**.
-- **Menu** (on the left on a computer; the three-line icon on a phone):
+=== "Desktop"
+
+    - **Top bar**: the **Notifications** bell (requests, decisions and
+      results), your email (opens **My Account**), and **Sign Out** (the
+      arrow icon).
+    - **Menu**: always shown down the left side of the screen.
+
+=== "Phone"
+
+    - **Top bar**: the **Notifications** bell, the round person icon (opens
+      **My Account**) and **Sign Out** (the arrow icon). On the narrowest
+      phones **Sign Out** moves to the bottom of the menu instead.
+    - **Menu**: hidden until you need it. Tap the three-line icon at the top
+      left and the menu slides in from the side as a drawer. Tap a page to
+      open it; the drawer closes by itself.
+
+The menu holds these pages:
 
 | Group | Menu item | Page |
 |---|---|---|
@@ -55,7 +71,9 @@ you back to the public exhibition.
     record), **Supervision** and the pages under **My work** and **Dates & results** show an
     **Active Record** selector at the top. Pick the one you are working on.
 
-## 2. Your FYP record
+## 2. Your FYP record {#record}
+
+[Open My Records :octicons-link-external-16:](https://fyp.fskmjasinfypexhibition.site/fypms/student/records){ .md-button target=_blank rel=noopener }
 
 Everything you do belongs to an **FYP record**: one per course per
 semester. Your coordinator may create it when enrolling you. If not:
@@ -106,10 +124,16 @@ stateDiagram-v2
     s11 --> [*]
 ```
 
+Click a step to see what it means and who acts next.
+
+<div data-hb-explorer="record"></div>
+
 A record can also be put on hold as **withdrawn** or **incomplete** by the
 coordinator.
 
-## 3. Supervision: request a supervisor (F1)
+## 3. Supervision: request a supervisor (F1) {#supervision}
+
+[Open Supervision :octicons-link-external-16:](https://fyp.fskmjasinfypexhibition.site/fypms/student/supervision){ .md-button target=_blank rel=noopener }
 
 F1, the **Mutual Acceptance** form, is an agreement between you and your
 supervisor. **Talk to the lecturer first.** Only submit F1 once they have
@@ -153,7 +177,11 @@ sequenceDiagram
     end
 ```
 
-### Changing supervisor
+Click a step to see what it means and who acts next.
+
+<div data-hb-explorer="supervision"></div>
+
+### Changing supervisor {#supervisor-change}
 
 Changing supervisor is discouraged and needs the FYP coordinator's
 approval.
@@ -168,7 +196,9 @@ The page then shows *Supervisor change requested — waiting for the FYP
 coordinator.*, and later **Supervisor change approved.** or **Supervisor
 change rejected** with the reason.
 
-## 4. Progress Logs: your consultations (F5)
+## 4. Progress Logs: your consultations (F5) {#progress-logs}
+
+[Open Progress Logs :octicons-link-external-16:](https://fyp.fskmjasinfypexhibition.site/fypms/student/progress){ .md-button target=_blank rel=noopener }
 
 Log every meeting with your supervisor. You need signed consultations in at
 least **80 %** of the semester weeks so far.
@@ -205,11 +235,17 @@ stateDiagram-v2
     ok --> [*]
 ```
 
+Click a step to see what it means and who acts next.
+
+<div data-hb-explorer="progress-log"></div>
+
 **Log Meeting** submits straight away, so you will normally go directly to
 **Awaiting supervisor signature**. You can log only one meeting per date,
 the date cannot be in the future, and it must fall inside the semester.
 
-## 5. Forms (F2 to F16)
+## 5. Forms (F2 to F16) {#forms}
+
+[Open Forms :octicons-link-external-16:](https://fyp.fskmjasinfypexhibition.site/fypms/student/forms){ .md-button target=_blank rel=noopener }
 
 1. Open **Forms** (**Forms & Submissions**) and click **Submit Form**.
 2. Choose the **Form**. Only the forms for your course are listed.
@@ -247,7 +283,9 @@ Click it to see your answers. You may see **submitted**, **under review**,
     your eligibility; if you qualify the banner says *You qualified for
     special evaluation — F15 and F16 are open.*
 
-## 6. Reports: proposal and final report (F6)
+## 6. Reports: proposal and final report (F6) {#reports}
+
+[Open Reports :octicons-link-external-16:](https://fyp.fskmjasinfypexhibition.site/fypms/student/reports){ .md-button target=_blank rel=noopener }
 
 1. Open **Reports** (**Reports & Deliverables**) and click **Submit
    Report**.
@@ -304,7 +342,13 @@ sequenceDiagram
     end
 ```
 
-## 7. Lean Canvas (F13, CSP650)
+Click a step to see what it means and who acts next.
+
+<div data-hb-explorer="report"></div>
+
+## 7. Lean Canvas (F13, CSP650) {#lean-canvas}
+
+[Open Lean Canvas :octicons-link-external-16:](https://fyp.fskmjasinfypexhibition.site/fypms/student/lean-canvas){ .md-button target=_blank rel=noopener }
 
 1. Open **Lean Canvas**.
 2. Fill in the boxes: **Problem**, **Customer Segments**, **Unique Value
@@ -314,7 +358,9 @@ sequenceDiagram
 3. Click **Save Canvas**. You see *Lean Canvas saved.* Each save creates a
    new revision.
 
-## 8. Milestones and extension requests
+## 8. Milestones and extension requests {#milestones}
+
+[Open Milestones :octicons-link-external-16:](https://fyp.fskmjasinfypexhibition.site/fypms/student/milestones){ .md-button target=_blank rel=noopener }
 
 **Milestones** lists the target dates your course lecturer set for your
 record, each with a **Code**, **Target** date and status (for example
@@ -332,7 +378,9 @@ The milestone then shows *Extension to (date) pending*, and later
 CSP lecturer or the coordinator decides. You can have only one pending
 request per milestone.
 
-## 9. Corrections (F12, CSP650)
+## 9. Corrections (F12, CSP650) {#corrections}
+
+[Open Corrections :octicons-link-external-16:](https://fyp.fskmjasinfypexhibition.site/fypms/student/corrections){ .md-button target=_blank rel=noopener }
 
 After your presentation, your supervisor or examiner may list corrections.
 They appear under **Corrections** as **Correction Items**.
@@ -363,7 +411,13 @@ stateDiagram-v2
     cl --> [*]
 ```
 
-## 10. Deliverables (CSP650)
+Click a step to see what it means and who acts next.
+
+<div data-hb-explorer="corrections"></div>
+
+## 10. Deliverables (CSP650) {#deliverables}
+
+[Open Deliverables :octicons-link-external-16:](https://fyp.fskmjasinfypexhibition.site/fypms/student/deliverables){ .md-button target=_blank rel=noopener }
 
 **Deliverables** is the final checklist before the exhibition. The top
 shows your **Exhibition Readiness**.
@@ -395,21 +449,25 @@ Exhibition Page** once it is live.
     Attending the exhibition is required: no presentation means an F (FSKM
     handbook).
 
-## 11. Presentations
+## 11. Presentations {#presentations}
+
+[Open Presentations :octicons-link-external-16:](https://fyp.fskmjasinfypexhibition.site/fypms/student/presentations){ .md-button target=_blank rel=noopener }
 
 **Presentations** lists the slots your course lecturer assigned you: the
 session, date, time, slot number, room and venue. Until then it says *No
 presentation has been scheduled for you yet. Your course lecturer will
 assign your slot.*
 
-## 12. Marks
+## 12. Marks {#marks}
+
+[Open Marks :octicons-link-external-16:](https://fyp.fskmjasinfypexhibition.site/fypms/student/marks){ .md-button target=_blank rel=noopener }
 
 **Marks** shows a **Marks Summary** for each course: the marks for each
 component, the **Weighted Total** out of 100, and your **Grade**. A summary
 marked **Not finalized** may still change; **Finalized** means your
 lecturer has locked it.
 
-## Typical semester timeline
+## Typical semester timeline {#timeline}
 
 These timelines are **typical**. The real dates come from your course
 lecturer's milestones and the semester calendar. Week numbers are relative
@@ -451,87 +509,105 @@ gantt
     Deliverables checklist               :c9, 2026-03-30, 2w
 ```
 
-## Tutorial: your first week
+## Tutorial: your first week {#first-week}
 
 Goal: be signed in, have a record, and have your supervisor request in.
 
-1. **Sign in.** Open `fyp.fskmjasinfypexhibition.site` and sign in. If you
-   forgot your password, use **Forgot password?** (see [Accounts and
-   signing in](accounts.md)).
-2. **Protect your account.** Open **My Account**, check your **Display
-   name**, and consider turning on two-step verification.
-3. **Check your record.** Open **My Records**. If there is no CSP600
-   record, click **New Record**, choose the semester and **CSP600**, and
-   click **Create**.
-4. **Look for ideas.** On the exhibition site, open the **Past Projects
-   Guide** to see earlier projects and avoid a topic that is already taken
-   (see the [Visitor guide](visitor.md)).
-5. **Agree with a supervisor.** Meet the lecturer you want and agree on a
-   project area and title.
-6. **Submit F1.** Open **Supervision** → **New Request**, name that
-   lecturer as **Supervisor \***, add the title and area, and **Submit**.
-7. **Log the meeting.** Open **Progress Logs** → **Log Meeting** and record
-   your first consultation.
-8. **Check Milestones.** Open **Milestones** to see your first deadlines,
-   and keep an eye on the **Notifications** bell for your supervisor's
-   decision.
+Tick steps as you go; your progress stays in this browser.
 
-## Tutorial: submitting your proposal (CSP600)
+<div class="hb-checklist" data-hb-checklist="student-first-week" markdown>
+
+- [ ] **Sign in.** Open `fyp.fskmjasinfypexhibition.site` and sign in. If you
+  forgot your password, use **Forgot password?** (see [Accounts and
+  signing in](accounts.md)).
+- [ ] **Protect your account.** Open **My Account**, check your **Display
+  name**, and consider turning on two-step verification.
+- [ ] **Check your record.** Open **My Records**. If there is no CSP600
+  record, click **New Record**, choose the semester and **CSP600**, and
+  click **Create**.
+- [ ] **Look for ideas.** On the exhibition site, open the **Past Projects
+  Guide** to see earlier projects and avoid a topic that is already taken
+  (see the [Visitor guide](visitor.md)).
+- [ ] **Agree with a supervisor.** Meet the lecturer you want and agree on a
+  project area and title.
+- [ ] **Submit F1.** Open **Supervision** → **New Request**, name that
+  lecturer as **Supervisor \***, add the title and area, and **Submit**.
+- [ ] **Log the meeting.** Open **Progress Logs** → **Log Meeting** and record
+  your first consultation.
+- [ ] **Check Milestones.** Open **Milestones** to see your first deadlines,
+  and keep an eye on the **Notifications** bell for your supervisor's
+  decision.
+
+</div>
+
+## Tutorial: submitting your proposal (CSP600) {#proposal}
 
 Goal: get your proposal report endorsed and evaluated.
 
-1. **Finish the groundwork.** Make sure F2, F3 and F4 are submitted under
-   **Forms** and discussed with your supervisor in logged consultations.
-2. **Run the plagiarism check.** Run your report through the
-   anti-plagiarism tool. The similarity index must be **30 % or less**.
-   Save the original report as a PDF.
-3. **Count.** Note the number of pages (at least 30), references (at least
-   15) and academic references (at least half of all references).
-4. **Ethics.** If you use surveys, interviews or user testing, get the REC
-   ethics form signed and saved as a PDF.
-5. **Upload.** Open **Reports** → **Submit Report**. The **Report type** is
-   **Proposal (F6a)**. Attach the report, type the similarity index, attach
-   the plagiarism report, type the counts, and turn on **The project
-   involves human subjects** if it applies (then attach the REC form).
-   Click **Submit**.
-6. **Wait for endorsement.** The version shows **Awaiting supervisor
-   endorsement**. If it comes back **Returned**, read the comment, fix the
-   report and submit again (it becomes a new version).
-7. **Ask for evaluation.** Once it shows **Endorsed — under review**, open
-   **Forms** → **Submit Form**, choose **F8 — Proposal Report
-   Evaluation**, type the report version, and **Submit**.
-8. **Present.** Check **Presentations** for your slot, and submit **F7 —
-   Proposal Presentation** with your slides link under **Forms**.
+Tick steps as you go; your progress stays in this browser.
 
-## Tutorial: submitting the final report (CSP650)
+<div class="hb-checklist" data-hb-checklist="student-proposal" markdown>
+
+- [ ] **Finish the groundwork.** Make sure F2, F3 and F4 are submitted under
+  **Forms** and discussed with your supervisor in logged consultations.
+- [ ] **Run the plagiarism check.** Run your report through the
+  anti-plagiarism tool. The similarity index must be **30 % or less**.
+  Save the original report as a PDF.
+- [ ] **Count.** Note the number of pages (at least 30), references (at least
+  15) and academic references (at least half of all references).
+- [ ] **Ethics.** If you use surveys, interviews or user testing, get the REC
+  ethics form signed and saved as a PDF.
+- [ ] **Upload.** Open **Reports** → **Submit Report**. The **Report type** is
+  **Proposal (F6a)**. Attach the report, type the similarity index, attach
+  the plagiarism report, type the counts, and turn on **The project
+  involves human subjects** if it applies (then attach the REC form).
+  Click **Submit**.
+- [ ] **Wait for endorsement.** The version shows **Awaiting supervisor
+  endorsement**. If it comes back **Returned**, read the comment, fix the
+  report and submit again (it becomes a new version).
+- [ ] **Ask for evaluation.** Once it shows **Endorsed — under review**, open
+  **Forms** → **Submit Form**, choose **F8 — Proposal Report
+  Evaluation**, type the report version, and **Submit**.
+- [ ] **Present.** Check **Presentations** for your slot, and submit **F7 —
+  Proposal Presentation** with your slides link under **Forms**.
+
+</div>
+
+## Tutorial: submitting the final report (CSP650) {#final-report}
 
 Goal: final report endorsed, corrections done, deliverables in.
 
-1. **Check the numbers.** The final report needs at least **50 pages**,
-   **30 references** (at least half academic), and a similarity index of
-   **30 % or less**.
-2. **Upload.** Open **Reports** → **Submit Report**. The type is **Final
-   report (F6b)**. Attach the report and the plagiarism report, type the
-   numbers, and **Submit**.
-3. **Endorsement.** Wait for **Endorsed — under review**. If it is
-   **Returned**, fix it and submit a new version.
-4. **Ask for evaluation.** Under **Forms**, submit **F11 — Project Report
-   Evaluation** with the abstract and the report version.
-5. **Present at the exhibition.** Submit **F10 — Final Presentation** with
-   your slides, poster and (optional) demo video links. Check
-   **Presentations** for your slot and the **My Exhibition** card on your
-   dashboard for your booth.
-6. **Do the corrections.** After the presentation, open **Corrections**.
-   For each item, amend your report, click **Submit Evidence**, describe
-   **What was amended** and attach the corrected file.
-7. **Wait for confirmation.** When every correction is confirmed, your
-   supervisor approves the final report. **Deliverables** then shows
-   *Supervisor approved your final report on (date).*
-8. **Hand in the deliverables.** Under **Deliverables**, upload the FYP
-   report (PDF and Word), the presentation slides and the poster, plus any
-   "If relevant" items.
-9. **Check your marks.** Open **Marks** to see your **Marks Summary** once
-   it is **Finalized**.
+Tick steps as you go; your progress stays in this browser.
+
+<div class="hb-checklist" data-hb-checklist="student-final-report" markdown>
+
+- [ ] **Check the numbers.** The final report needs at least **50 pages**,
+  **30 references** (at least half academic), and a similarity index of
+  **30 % or less**.
+- [ ] **Upload.** Open **Reports** → **Submit Report**. The type is **Final
+  report (F6b)**. Attach the report and the plagiarism report, type the
+  numbers, and **Submit**.
+- [ ] **Endorsement.** Wait for **Endorsed — under review**. If it is
+  **Returned**, fix it and submit a new version.
+- [ ] **Ask for evaluation.** Under **Forms**, submit **F11 — Project Report
+  Evaluation** with the abstract and the report version.
+- [ ] **Present at the exhibition.** Submit **F10 — Final Presentation** with
+  your slides, poster and (optional) demo video links. Check
+  **Presentations** for your slot and the **My Exhibition** card on your
+  dashboard for your booth.
+- [ ] **Do the corrections.** After the presentation, open **Corrections**.
+  For each item, amend your report, click **Submit Evidence**, describe
+  **What was amended** and attach the corrected file.
+- [ ] **Wait for confirmation.** When every correction is confirmed, your
+  supervisor approves the final report. **Deliverables** then shows
+  *Supervisor approved your final report on (date).*
+- [ ] **Hand in the deliverables.** Under **Deliverables**, upload the FYP
+  report (PDF and Word), the presentation slides and the poster, plus any
+  "If relevant" items.
+- [ ] **Check your marks.** Open **Marks** to see your **Marks Summary** once
+  it is **Finalized**.
+
+</div>
 
 ## Troubleshooting
 

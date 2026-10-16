@@ -8,7 +8,7 @@ booth visits, feedback and settings.
 The FYP Workspace side (semesters, records, marks, publishing CSP650 projects)
 is in the [Coordinator guide](coordinator.md).
 
-## Getting in
+## Getting in {#getting-in}
 
 1. Go to `https://fskmjasinfypexhibition.site/admin`. (The shortcut
    `admin.fskmjasinfypexhibition.site` takes you to the same place.)
@@ -33,7 +33,7 @@ are explained in [Accounts and sign-in](accounts.md).
     lecturer login is first created in Supabase Authentication by an existing
     admin.
 
-## The admin menu at a glance
+## The admin menu at a glance {#menu}
 
 The sidebar (or the drawer on a phone) is labelled **EXHIBITION ADMIN**. At the
 bottom are **Send Feedback** and **Exhibition Site** (back to the public site).
@@ -60,7 +60,7 @@ bottom are **Send Feedback** and **Exhibition Site** (back to the public site).
 | System | Settings | `/admin/settings` | Import limits and visit tracker settings |
 | System | FYP Management | `/fypms/coordinator` | Jump to the Coordinator section of the Workspace |
 
-## Overview Dashboard
+## Overview Dashboard {#dashboard}
 
 The dashboard shows six counts: **Total Projects**, **Booths Available**,
 **Event Schedules**, **Files Imported**, **FYP Records** and **Pending
@@ -75,7 +75,9 @@ Requests**.
 
 ## Exhibition
 
-### Event Information
+### Event Information {#event}
+
+[Open Event Information :octicons-link-external-16:](https://fskmjasinfypexhibition.site/admin/event){ .md-button target=_blank rel=noopener }
 
 **Update Event Information** holds everything the public site says about the
 event.
@@ -102,7 +104,7 @@ Click **Save Changes**. You see "Event information saved."
 !!! tip "Link the CSP650 cohort"
     Set **CSP650 Cohort** to the semester whose CSP650 students exhibit. The
     coordinator's **Expo Publications** then offers only that cohort. See the
-    [Coordinator guide](coordinator.md#expo-publications).
+    [Coordinator guide](coordinator.md#expo).
 
 #### The current exhibition
 
@@ -120,7 +122,9 @@ all work on it.
 The previous exhibition keeps its projects, booths and winners and moves to
 the public Past Exhibitions page.
 
-### Schedule Management
+### Schedule Management {#schedule}
+
+[Open Schedule Management :octicons-link-external-16:](https://fskmjasinfypexhibition.site/admin/schedule){ .md-button target=_blank rel=noopener }
 
 1. Click **Add Slot**.
 2. Fill in **Slot Title (e.g. Jury Briefing)**, **Brief Description**, **Venue
@@ -132,9 +136,11 @@ the public Past Exhibitions page.
 
 The **Existing Slot List** groups slots by day. Use the edit and delete
 buttons on each slot. Most schedules come from the
-[master file import](#import-master-file).
+[master file import](#import).
 
-### Announcements
+### Announcements {#announcements}
+
+[Open Announcements :octicons-link-external-16:](https://fskmjasinfypexhibition.site/admin/announcements){ .md-button target=_blank rel=noopener }
 
 1. Click **Create Announcement**.
 2. Fill in **Announcement Title**, **Announcement Body (Description)** and
@@ -144,7 +150,9 @@ buttons on each slot. Most schedules come from the
 
 **All Announcements** lists them with their date and category.
 
-### Award Winners
+### Award Winners {#awards}
+
+[Open Award Winners :octicons-link-external-16:](https://fskmjasinfypexhibition.site/admin/awards){ .md-button target=_blank rel=noopener }
 
 The page **Exhibition Award & Category Listings** has two parts.
 
@@ -167,7 +175,7 @@ The page **Exhibition Award & Category Listings** has two parts.
 
 Winners can also come from the master file import.
 
-### Draft, published and archived content
+### Draft, published and archived content {#content-states}
 
 Schedule slots, announcements, award winners and projects all have a
 publication status. Only **Published** items appear on the public site.
@@ -188,7 +196,9 @@ is kept with its exhibition when you switch the current exhibition.
 
 ## Projects & booths
 
-### Project Catalogue
+### Project Catalogue {#projects}
+
+[Open Project Catalogue :octicons-link-external-16:](https://fskmjasinfypexhibition.site/admin/projects){ .md-button target=_blank rel=noopener }
 
 **Student Project Catalogue** lists all projects in the current exhibition.
 
@@ -220,7 +230,9 @@ here.
    straight away.
 6. Click **Import N**.
 
-### Booth Management
+### Booth Management {#booths}
+
+[Open Booth Management :octicons-link-external-16:](https://fskmjasinfypexhibition.site/admin/booths){ .md-button target=_blank rel=noopener }
 
 **Booth & Project Mapping List** shows each booth and its project.
 
@@ -231,7 +243,9 @@ here.
    Vacant**.
 4. Click **Save**.
 
-### Import Master File
+### Import Master File {#import}
+
+[Open Import Master File :octicons-link-external-16:](https://fskmjasinfypexhibition.site/admin/imports){ .md-button target=_blank rel=noopener }
 
 The master file import loads **schedule items and award winners** from the
 faculty's Excel workbook. Projects and booths use the
@@ -267,6 +281,10 @@ flowchart TD
     K -- yes --> L["Rows go live; import is Published"]
 ```
 
+Click a step to see what it means and who acts next.
+
+<div data-hb-explorer="import"></div>
+
 **Import statuses**
 
 | Status | Meaning |
@@ -279,7 +297,9 @@ raw status. A file that fails to parse shows an error and is not saved.
 
 ## Lecturers & visits
 
-### Lecturer Management
+### Lecturer Management {#lecturers}
+
+[Open Lecturer Management :octicons-link-external-16:](https://fskmjasinfypexhibition.site/admin/lecturers){ .md-button target=_blank rel=noopener }
 
 **Registered Lecturers** lists lecturer profiles used for booth visits.
 
@@ -297,7 +317,9 @@ If you see "No account found for *email*", the login does not exist yet.
 **Backfill Lecturer IDs** links assignments that have no lecturer account to
 the lecturer whose name matches exactly. Confirm with **Backfill**.
 
-### Lecturer Assignments
+### Lecturer Assignments {#lecturer-assignments}
+
+[Open Lecturer Assignments :octicons-link-external-16:](https://fskmjasinfypexhibition.site/admin/assignments){ .md-button target=_blank rel=noopener }
 
 Lecturers can mark visits only for projects they are assigned to, so every
 supervisor and examiner pairing needs an assignment.
@@ -313,7 +335,9 @@ supervisor and examiner pairing needs an assignment.
 Projects published from the Workspace get their supervisor and examiner
 assigned automatically.
 
-### Booth Visits
+### Booth Visits {#visits}
+
+[Open Booth Visits :octicons-link-external-16:](https://fskmjasinfypexhibition.site/admin/visits){ .md-button target=_blank rel=noopener }
 
 **Student Visit Monitoring** shows how visit marking is going.
 
@@ -326,14 +350,14 @@ assigned automatically.
 
 The page does not refresh by itself; reload it to see new visits.
 
-### My Visits (Lecturer)
+### My Visits (Lecturer) {#my-visits}
 
 Admins can mark their own booth visits like any lecturer. See the
 [Lecturer guide](lecturer.md).
 
 ## System
 
-### Users & Roles
+### Users & Roles {#users-roles}
 
 This opens **Users & Roles** in the FYP Workspace. As an admin you can change
 each person's account type (**Admin**, **Lecturer**, **Student**), add or
@@ -341,7 +365,9 @@ remove academic roles (including **FYP coordinator**, which only admins can
 give) and activate or deactivate accounts. Full steps are in the
 [Coordinator guide](coordinator.md#users-roles).
 
-### Feedback
+### Feedback {#feedback}
+
+[Open Feedback :octicons-link-external-16:](https://fskmjasinfypexhibition.site/admin/feedback){ .md-button target=_blank rel=noopener }
 
 **Feedback Management** lists feedback and issue reports sent with **Send
 Feedback** on the site.
@@ -359,10 +385,14 @@ stateDiagram-v2
     new --> archived: Not actionable
 ```
 
+Click a step to see what it means and who acts next.
+
+<div data-hb-explorer="feedback"></div>
+
 The **Status** list lets you pick any of **New**, **Reviewed**, **Resolved**
 and **Archived** at any time; the diagram shows the usual order.
 
-### Audit Log
+### Audit Log {#audit}
 
 **Audit Log** shows the latest 300 exhibition actions, newest first, in
 Malaysia time: visits marked and voided, imports created and published,
@@ -374,7 +404,9 @@ profiles created, exhibitions created and switched, and project imports.
 
 Workspace actions are in **Audit Logs** in the Coordinator section.
 
-### Settings
+### Settings {#settings}
+
+[Open Settings :octicons-link-external-16:](https://fskmjasinfypexhibition.site/admin/settings){ .md-button target=_blank rel=noopener }
 
 **Portal Settings** has two parts. Click **Save Configuration** when done; you
 see "Settings saved successfully!" Changes take effect straight away.
@@ -401,7 +433,7 @@ see "Settings saved successfully!" Changes take effect straight away.
 | **Allow visits after the exhibition** | Off | Off: marking closes at the end of the last exhibition day |
 | **Lecturer Undo Window (Minutes)** | `30` | How long a lecturer can cancel a visit after marking it. Whole number, 1 or more |
 
-### FYP Management
+### FYP Management {#fyp-management}
 
 **FYP Management** opens the Coordinator section of the FYP Workspace. From
 there, **Exhibition Admin** in the menu brings you back. See the
@@ -409,7 +441,7 @@ there, **Exhibition Admin** in the menu brings you back. See the
 
 ## Tutorials
 
-### Before-the-exhibition timeline
+### Before-the-exhibition timeline {#timeline}
 
 The weeks are typical; adjust them to your event.
 
@@ -438,37 +470,64 @@ gantt
 
 **Checklist**
 
-| # | When | Task | Where | Done when |
-|---|---|---|---|---|
-| 1 | 6 weeks before | Create the exhibition and make it current | Event Information → **New exhibition**, **Make current** | It shows "current" |
-| 2 | 5 weeks before | Fill in dates, venue, FAQ; link the **CSP650 Cohort** | Event Information | Saved; status **Upcoming** |
-| 3 | 5 weeks before | Check file size and worksheet names | Settings | `SCHEDULE, AWARD` saved |
-| 4 | 4 weeks before | Import projects and booths | Project Catalogue → **Import** | Counts look right |
-| 5 | 3 weeks before | Ask the coordinator to publish CSP650 projects | [Coordinator guide](coordinator.md#expo-publications) | Projects listed |
-| 6 | 3 weeks before | Register or fix booths | Booth Management | Every project has a booth |
-| 7 | 2 weeks before | Import the schedule | Import Master File | Import is Published |
-| 8 | 2 weeks before | Add lecturers and match assignments | Lecturer Management; Lecturer Assignments → **Match from project names** | No unmatched names |
-| 9 | 1 week before | Post announcements | Announcements | Pinned notice shows on the site |
-| 10 | 1 week before | Ask a lecturer to test **My Visits** | [Lecturer guide](lecturer.md) | A visit can be marked and undone |
-| 11 | Event day | Set **Event Status** to **Active (running)** | Event Information | Public site shows the event live |
-| 12 | Event days | Watch visits; void mistakes | Booth Visits | Visit counts rising |
-| 13 | After judging | Import or add award winners | Import Master File or Award Winners | Winners published |
-| 14 | After the event | Export visits and feedback; set status **Completed** | Booth Visits, Feedback → **Export CSV**; Event Information | Files saved |
+Tick steps as you go; your progress stays in this browser.
 
-### Importing the master file
+<div class="hb-checklist" data-hb-checklist="admin-before-expo" markdown>
 
-1. Check **Settings**: **Maximum File Size** is big enough and **Mandatory
-   Worksheet Names** is `SCHEDULE, AWARD`.
-2. Open **Import Master File** and click **Upload & Parse .xlsx**. Pick the
-   workbook.
-3. Wait while it says it is parsing. On success you see "Excel parsed and
-   staged successfully!" and the review page opens. Otherwise the import also
-   appears under **Staged Imports History**; click **Review & Publish** on it.
-4. On **Review Master File Import**, read the checks first: warnings come
-   before notes. A missing mandatory sheet shows as "The file has no "X"
-   worksheet, which Settings lists as mandatory."
-5. Go through **Schedule Candidates (TENTATIF)** and **Award Candidates
-   (PEMENANG ANUGERAH)**. Each row may carry flags:
+- [ ] **6 weeks before: create the exhibition and make it current** in Event
+  Information → **New exhibition**, **Make current**. Done when it shows
+  "current".
+- [ ] **5 weeks before: fill in dates, venue, FAQ; link the CSP650 Cohort**
+  in Event Information. Done when saved with status **Upcoming**.
+- [ ] **5 weeks before: check file size and worksheet names** in Settings.
+  Done when `SCHEDULE, AWARD` is saved.
+- [ ] **4 weeks before: import projects and booths** in Project Catalogue →
+  **Import**. Done when the counts look right.
+- [ ] **3 weeks before: ask the coordinator to publish CSP650 projects**
+  ([Coordinator guide](coordinator.md#expo)). Done when the projects are
+  listed.
+- [ ] **3 weeks before: register or fix booths** in Booth Management. Done
+  when every project has a booth.
+- [ ] **2 weeks before: import the schedule** in Import Master File. Done
+  when the import is Published.
+- [ ] **2 weeks before: add lecturers and match assignments** in Lecturer
+  Management and Lecturer Assignments → **Match from project names**. Done
+  when no names are unmatched.
+- [ ] **1 week before: post announcements** in Announcements. Done when the
+  pinned notice shows on the site.
+- [ ] **1 week before: ask a lecturer to test My Visits**
+  ([Lecturer guide](lecturer.md)). Done when a visit can be marked and
+  undone.
+- [ ] **Event day: set Event Status to Active (running)** in Event
+  Information. Done when the public site shows the event live.
+- [ ] **Event days: watch visits; void mistakes** in Booth Visits. Done when
+  the visit counts are rising.
+- [ ] **After judging: import or add award winners** in Import Master File
+  or Award Winners. Done when the winners are published.
+- [ ] **After the event: export visits and feedback; set status Completed**
+  in Booth Visits and Feedback → **Export CSV**, then Event Information.
+  Done when the files are saved.
+
+</div>
+
+### Importing the master file {#import-tutorial}
+
+Tick steps as you go; your progress stays in this browser.
+
+<div class="hb-checklist" data-hb-checklist="admin-import" markdown>
+
+- [ ] Check **Settings**: **Maximum File Size** is big enough and **Mandatory
+  Worksheet Names** is `SCHEDULE, AWARD`.
+- [ ] Open **Import Master File** and click **Upload & Parse .xlsx**. Pick the
+  workbook.
+- [ ] Wait while it says it is parsing. On success you see "Excel parsed and
+  staged successfully!" and the review page opens. Otherwise the import also
+  appears under **Staged Imports History**; click **Review & Publish** on it.
+- [ ] On **Review Master File Import**, read the checks first: warnings come
+  before notes. A missing mandatory sheet shows as "The file has no "X"
+  worksheet, which Settings lists as mandatory."
+- [ ] Go through **Schedule Candidates (TENTATIF)** and **Award Candidates
+  (PEMENANG ANUGERAH)**. Each row may carry flags:
 
     | Flag | Meaning | Default choice |
     |---|---|---|
@@ -478,15 +537,17 @@ gantt
     | Overlaps another item | Same venue at an overlapping time | **Publish** (check it) |
     | No flag | New item | **Publish** |
 
-6. Change any row to **Publish**, **Skip** or **Replace Existing**.
-   **Replace Existing** really replaces: it first deletes the live item it
-   matches (schedule: same day and same title, or same venue at an overlapping
-   time; awards: same award and team), then adds the row.
-7. Check **Audit & Privacy Protection Skips** to see which confidential sheets
-   were skipped.
-8. Click **Approve & Publish Selected**, then **Publish** in **Publish this
-   import?**.
-9. Check the public schedule and awards pages.
+- [ ] Change any row to **Publish**, **Skip** or **Replace Existing**.
+  **Replace Existing** really replaces: it first deletes the live item it
+  matches (schedule: same day and same title, or same venue at an overlapping
+  time; awards: same award and team), then adds the row.
+- [ ] Check **Audit & Privacy Protection Skips** to see which confidential sheets
+  were skipped.
+- [ ] Click **Approve & Publish Selected**, then **Publish** in **Publish this
+  import?**.
+- [ ] Check the public schedule and awards pages.
+
+</div>
 
 !!! warning "One publish per import"
     An import can only be published once. To fix something afterwards, edit

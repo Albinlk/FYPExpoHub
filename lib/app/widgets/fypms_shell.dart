@@ -490,8 +490,8 @@ class _NavMenuState extends State<_NavMenu> {
   }
 }
 
-/// "Help": opens the handbook guide for the role section holding the current
-/// page (see [handbookGuideForWorkspacePath]) in a new tab.
+/// "Help": opens the handbook section for the current page (see
+/// [handbookUrlForLocation]) in a new tab.
 class _HelpTile extends StatelessWidget {
   const _HelpTile({required this.currentPath, this.onBeforeOpen});
 
@@ -508,7 +508,7 @@ class _HelpTile extends StatelessWidget {
         title: Text('Help', style: DesignSystem.bodySm.copyWith(color: Colors.white70)),
         onTap: () {
           onBeforeOpen?.call();
-          openHandbook(handbookGuideForWorkspacePath(currentPath));
+          openHandbookAt(currentPath);
         },
         shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
         dense: true,
