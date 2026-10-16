@@ -47,8 +47,8 @@ Priority: **H** high · **M** medium · **L** low
 |---|---|---|
 | [x] | C1 | Supabase Auth → Redirect URLs: `https://fskmjasinfypexhibition.site/reset-password` and `https://fyp.fskmjasinfypexhibition.site/reset-password` (done 11 Oct 2026; `admin.` only redirects, so it needs none) |
 | [x] | C2 | Create real lecturer accounts (done 11 Oct 2026). Booth-visit assignments now come from FYPMS when projects are published (#58), so name matching is no longer needed |
-| [ ] | C3 | Grant `programme_head` (PU) roles if nomination approval is wanted — now done in-app from FYPMS → Users & Roles |
-| [ ] | C4 | Review the import setting *mandatory worksheets* (`COMMITTEE` will always warn) |
+| [x] | C3 | Grant `programme_head` (PU) roles if nomination approval is wanted — now done in-app from FYPMS → Users & Roles |
+| [x] | C4 | Review the import setting *mandatory worksheets* (`COMMITTEE` will always warn) |
 
 These need the project owner (dashboard access or real staff data); code cannot do them. Also recommended: turn on two-step verification (My Account) for every admin and coordinator account.
 

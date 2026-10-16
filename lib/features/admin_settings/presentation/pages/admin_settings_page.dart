@@ -167,8 +167,6 @@ class _AdminSettingsPageState extends ConsumerState<AdminSettingsPage> {
                           Text('Excel Master File Parsing', style: DesignSystem.h3Mobile.copyWith(color: DesignSystem.primary)),
                           const Divider(height: 32),
 
-                          Text('Maximum File Size Limit', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.primary)),
-                          const SizedBox(height: 6),
                           TextFormField(
                             controller: _maxSizeController,
                             decoration: const InputDecoration(
@@ -179,13 +177,11 @@ class _AdminSettingsPageState extends ConsumerState<AdminSettingsPage> {
                           ),
                           const SizedBox(height: 16),
 
-                          Text('Mandatory Worksheet Names', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.primary)),
-                          const SizedBox(height: 6),
                           TextFormField(
                             controller: _worksheetsController,
                             decoration: const InputDecoration(
                               labelText: 'Mandatory Worksheet Names',
-                              helperText: 'Comma-separated, for example TENTATIF, PEMENANG ANUGERAH',
+                              helperText: 'Sheets the import warns about when missing. Comma-separated, e.g. SCHEDULE, AWARD',
                               prefixIcon: Icon(Icons.table_chart),
                             ),
                           ),
@@ -220,8 +216,6 @@ class _AdminSettingsPageState extends ConsumerState<AdminSettingsPage> {
                           ),
                           const SizedBox(height: 12),
 
-                          Text('Lecturer Undo Window (Minutes)', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.primary)),
-                          const SizedBox(height: 6),
                           TextFormField(
                             controller: _undoWindowController,
                             keyboardType: TextInputType.number,
