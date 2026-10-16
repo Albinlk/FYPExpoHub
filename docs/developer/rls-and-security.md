@@ -1,4 +1,4 @@
-# Security Policy — FYP Expo Hub
+# Security
 
 ## Supabase Project
 - **Project Ref**: `siedglubjcedkbrpdzgi`
@@ -18,6 +18,18 @@
   helpers, not only in the UI. Admins and coordinators should turn it on.
 - No per-account lockout; repeated sign-in attempts are throttled by
   Supabase Auth rate limits
+- **Shared session across hosts** (W4, #71): the session lives in cookies on
+  `.fskmjasinfypexhibition.site` (`Secure`, `SameSite=Lax`, 30 days), not
+  per-origin localStorage, so the exhibition and the Workspace share one
+  sign-in. Like localStorage, the cookies are readable by page scripts (not
+  `HttpOnly`), so XSS exposure is unchanged; they are sent only over HTTPS
+  and only to our own domain and subdomains. Details:
+  [hosts-and-auth.md](hosts-and-auth.md#shared-sign-in-libcoresupabaseshared_session_storagedart)
+- **Cross-host redirects** go through `/go?to=`, which follows only https
+  URLs on our own hosts (no open redirect); `safeReturnPath` rejects
+  cross-origin `?from=` values
+- **Non-admins opening `/admin`** stay on the sign-in page with a notice;
+  RLS and `is_admin()` remain the real gate
 
 ### User Roles
 Roles are stored in the `profiles.role` column (`'admin'` or `'lecturer'`),
@@ -37,8 +49,8 @@ an admin can grant or revoke `fyp_coordinator`.
 
 ## Row Level Security (RLS)
 
-All **44 tables** (19 Expo Hub + 25 FYPMS) have RLS enabled. See
-[`SUPABASE_RLS_POLICIES.md`](./SUPABASE_RLS_POLICIES.md)
+All **46 app tables** (22 exhibition + 24 FYPMS) have RLS enabled. See
+[`rls-policies.md`](rls-policies.md)
 for the Expo policy matrix; FYPMS policies live in
 `supabase/migrations/20260817000003_fypms_rls_policies.sql` and the
 September 2026 hardening migrations.

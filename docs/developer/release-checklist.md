@@ -26,10 +26,10 @@ Expo Hub + FYPMS release.
 - [ ] `finalize_marks` cross-checks the record's course code
 - [ ] F14–F16 server-side feature flag verified
 - [ ] **All 11 `@fypms.test` demo accounts disabled or password-rotated**
-      (see SECURITY.md accepted-risk register — REQUIRED before production)
+      (see [rls-and-security.md](rls-and-security.md) accepted-risk register — REQUIRED before production)
 - [ ] Production anon key rotated
 - [ ] Supabase Auth Redirect URLs include both `/reset-password` pages
-      (public + admin domains — see DEPLOYMENT.md)
+      (public + admin domains — see [deployment.md](deployment.md))
 
 ### 3. Application Configuration
 - [ ] `pubspec.yaml` — no Firebase dependencies

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/supabase/supabase_client_provider.dart';
 import '../../core/widgets/scholar_lab.dart';
+import '../site_hosts.dart';
 import '../theme/theme.dart';
 import 'feedback_form_widget.dart';
 import '../../features/admin_auth/presentation/widgets/my_account_dialog.dart';
@@ -53,6 +54,31 @@ Widget _adminGroupLabel(String label) => Padding(
         style: DesignSystem.kicker.copyWith(color: DesignSystem.onPrimaryContainer, fontSize: 10.5),
       ),
     );
+
+/// "Help": opens the exhibition admin guide of the handbook in a new tab.
+class _AdminHelpTile extends StatelessWidget {
+  const _AdminHelpTile({this.onBeforeOpen});
+
+  final VoidCallback? onBeforeOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      type: MaterialType.transparency,
+      child: ListTile(
+        key: const Key('nav-help'),
+        leading: const Icon(Icons.menu_book_outlined, color: Colors.white70, size: 20),
+        title: Text('Help', style: DesignSystem.bodySm.copyWith(color: Colors.white70)),
+        onTap: () {
+          onBeforeOpen?.call();
+          openHandbook(kHandbookAdminGuide);
+        },
+        shape: RoundedRectangleBorder(borderRadius: DesignSystem.radiusLg),
+        dense: true,
+      ),
+    );
+  }
+}
 
 class AdminShell extends ConsumerWidget {
   final Widget child;
@@ -186,6 +212,7 @@ class _AdminSidebar extends StatelessWidget {
             ),
           ),
           const Divider(color: Colors.white10),
+          const _AdminHelpTile(),
           Material(
             type: MaterialType.transparency,
             child: ListTile(
@@ -278,6 +305,7 @@ class _AdminDrawer extends StatelessWidget {
                 dense: true,
               ),
             ),
+            _AdminHelpTile(onBeforeOpen: () => Navigator.pop(context)),
             Material(
               type: MaterialType.transparency,
               child: ListTile(

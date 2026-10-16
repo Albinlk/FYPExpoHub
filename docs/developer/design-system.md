@@ -1,4 +1,4 @@
-# DESIGN.md: FYP Expo Hub, "Scholar + Lab"
+# Design system: FYP Expo Hub, "Scholar + Lab"
 
 FSKM UiTM Jasin Final Year Project platform. Two sites, one design language. This file is written so it can be fed to Google Stitch as-is; the source of truth for values is `DesignSystem` in `lib/app/theme/theme.dart`.
 

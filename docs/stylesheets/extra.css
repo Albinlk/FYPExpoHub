@@ -1,0 +1,172 @@
+/*
+ * FYP Expo Hub Handbook: the app's "Scholar + Lab" look
+ * (docs/developer/design-system.md, lib/app/theme/theme.dart).
+ * Inter and JetBrains Mono come from theme.font in mkdocs.yml; Fraunces
+ * (headlines) is loaded here.
+ */
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap");
+
+:root {
+  --fyp-ink: #2a1838;          /* primary, Aubergine Ink */
+  --fyp-plum: #3d2a52;         /* primaryContainer */
+  --fyp-lilac: #c2aedd;        /* onPrimaryContainer */
+  --fyp-terracotta: #9a3a12;   /* secondary */
+  --fyp-apricot: #f6b48a;      /* secondaryContainer */
+  --fyp-umber: #6e2609;        /* onSecondaryContainer */
+  --fyp-paper: #faf7f2;        /* background, Warm Paper */
+  --fyp-parchment: #f3eee7;    /* surfaceContainerLow */
+  --fyp-rule: #ece5db;         /* surfaceContainer */
+  --fyp-ink-black: #1e1a20;    /* onBackground */
+  --fyp-muted: #4e4652;        /* onSurfaceVariant */
+  --fyp-heading-font: "Fraunces", Georgia, "Times New Roman", serif;
+}
+
+/* Light: Warm Paper page, Ink header, Terracotta links. */
+[data-md-color-scheme="default"] {
+  --md-primary-fg-color: var(--fyp-ink);
+  --md-primary-fg-color--light: var(--fyp-plum);
+  --md-primary-fg-color--dark: #1b0f25;
+  --md-primary-bg-color: #ffffff;
+  --md-primary-bg-color--light: rgba(255, 255, 255, 0.7);
+  --md-accent-fg-color: var(--fyp-terracotta);
+  --md-accent-fg-color--transparent: rgba(154, 58, 18, 0.1);
+  --md-accent-bg-color: #ffffff;
+
+  --md-default-bg-color: var(--fyp-paper);
+  --md-default-fg-color: rgba(30, 26, 32, 0.92);
+  --md-default-fg-color--light: rgba(30, 26, 32, 0.66);
+  --md-default-fg-color--lighter: rgba(30, 26, 32, 0.32);
+  --md-default-fg-color--lightest: rgba(30, 26, 32, 0.08);
+
+  --md-typeset-color: var(--fyp-ink-black);
+  --md-typeset-a-color: var(--fyp-terracotta);
+  --md-code-bg-color: var(--fyp-parchment);
+  --md-code-fg-color: var(--fyp-ink);
+  --md-typeset-table-color: var(--fyp-rule);
+  --md-footer-bg-color: var(--fyp-ink);
+  --md-footer-bg-color--dark: #1b0f25;
+
+  --fyp-heading-color: var(--fyp-ink);
+  --fyp-card-bg: #ffffff;
+}
+
+/* Dark (slate): deep aubergine page, Apricot links, Lilac headings. */
+[data-md-color-scheme="slate"] {
+  --md-hue: 280;
+  --md-primary-fg-color: var(--fyp-plum);
+  --md-primary-fg-color--light: #57406f;
+  --md-primary-fg-color--dark: var(--fyp-ink);
+  --md-primary-bg-color: #ffffff;
+  --md-primary-bg-color--light: rgba(255, 255, 255, 0.7);
+  --md-accent-fg-color: var(--fyp-apricot);
+  --md-accent-fg-color--transparent: rgba(246, 180, 138, 0.12);
+  --md-accent-bg-color: var(--fyp-ink);
+
+  --md-default-bg-color: #1a1220;
+  --md-default-fg-color: rgba(240, 233, 245, 0.88);
+  --md-default-fg-color--light: rgba(240, 233, 245, 0.62);
+  --md-default-fg-color--lighter: rgba(240, 233, 245, 0.32);
+  --md-default-fg-color--lightest: rgba(240, 233, 245, 0.1);
+
+  --md-typeset-color: rgba(240, 233, 245, 0.88);
+  --md-typeset-a-color: var(--fyp-apricot);
+  --md-code-bg-color: #261b2e;
+  --md-code-fg-color: #e9dff2;
+  --md-typeset-table-color: rgba(240, 233, 245, 0.12);
+  --md-footer-bg-color: #140d19;
+  --md-footer-bg-color--dark: #0f0a13;
+
+  --fyp-heading-color: var(--fyp-lilac);
+  --fyp-card-bg: #221829;
+}
+
+/* Headlines: Fraunces for the title and section headings, Inter below. */
+.md-typeset h1,
+.md-typeset h2 {
+  font-family: var(--fyp-heading-font);
+  color: var(--fyp-heading-color);
+  font-optical-sizing: auto;
+}
+
+.md-typeset h1 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.md-typeset h2 {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.md-typeset h3,
+.md-typeset h4 {
+  color: var(--fyp-heading-color);
+  font-weight: 600;
+}
+
+.md-header__title,
+.md-nav__title {
+  font-family: var(--fyp-heading-font);
+  font-weight: 600;
+}
+
+/* Links: underline on hover only, like the app's text buttons. */
+.md-typeset a {
+  text-underline-offset: 0.15em;
+}
+
+.md-typeset a:hover {
+  text-decoration: underline;
+}
+
+/* Inline code reads like the app's code tags (BK1-07, CS266, F9). */
+.md-typeset :not(pre) > code {
+  border: 1px solid var(--md-typeset-table-color);
+  border-radius: 4px;
+  padding: 0 0.3em;
+}
+
+.md-typeset pre > code {
+  border-radius: 8px;
+}
+
+/* Grid cards on the home page: white card, hairline rule, 8px radius, no shadow. */
+.md-typeset .grid.cards > ul > li,
+.md-typeset .grid > .card {
+  background: var(--fyp-card-bg);
+  border: 1px solid var(--md-typeset-table-color);
+  border-left: 3px solid var(--md-accent-fg-color);
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+.md-typeset .grid.cards > ul > li:hover,
+.md-typeset .grid > .card:hover {
+  border-color: var(--md-accent-fg-color);
+  box-shadow: none;
+}
+
+.md-typeset .grid.cards > ul > li > hr,
+.md-typeset .grid > .card > hr {
+  border-color: var(--md-typeset-table-color);
+}
+
+/* Tables: hairline rules, Parchment header. */
+.md-typeset table:not([class]) {
+  border: 1px solid var(--md-typeset-table-color);
+  border-radius: 8px;
+  font-size: 0.75rem;
+}
+
+.md-typeset table:not([class]) th {
+  background: var(--md-code-bg-color);
+  color: var(--fyp-heading-color);
+}
+
+/* Admonitions: 8px radius to match the app's cards. */
+.md-typeset .admonition,
+.md-typeset details {
+  border-radius: 8px;
+}

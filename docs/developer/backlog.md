@@ -116,11 +116,33 @@ The exhibition is the homepage; CSP600 / CSP650 sit behind sign-in and will move
 | [x] | W1 | `/` is the exhibition home (`/expo` redirects); portal page removed; "Exhibition" nav link dropped; FYP Workspace band on the home page (#62) | H |
 | [x] | W2 | Host-ready routing: `CSP_HOST` build define, `_siteHostGuard`, `/go` hop limited to our hosts (#62) | H |
 | [x] | W3 | Workspace moved to `fyp.fskmjasinfypexhibition.site`: Cloudflare Pages project `fyp-workspace` deployed from the same build, `CSP_HOST` repo variable set (11 Oct 2026); main-site `/fypms` → `fyp.`, exhibition pages on `fyp.` → main site (#65) | M |
-| [x] | W4 | Shared sign-in across the two sites: session in cookies on `.fskmjasinfypexhibition.site` (`lib/core/supabase/shared_session_storage.dart`) | L |
+| [x] | W4 | Shared sign-in across the two sites: session in cookies on `.fskmjasinfypexhibition.site` (`lib/core/supabase/shared_session_storage.dart`) (#71) | L |
 | [x] | D1 | Design system: Fraunces + JetBrains Mono, type and colour tokens, `GraphPaper`, `SectionHeader`, `StatBlock`, `CodeTag`, `BrandMark`; DESIGN.md for Google Stitch (#62) | H |
 | [x] | D2 | Apply to the public site: new exhibition home, project cards, section headers, code tags (#62) | H |
 | [x] | D3 | Follow-ups: Past Projects Guide counts in mono, graph-paper sign-in page, full desktop menu from 1312 px (measured with the real fonts) (#63) | L |
 | [x] | N1 | Side menus grouped: the Workspace menu has one collapsible section per role (only the current one open) with labelled groups; the exhibition admin menu is grouped into Exhibition, Projects & booths, Lecturers & visits and System (#67) | M |
+
+## 9. Documentation and handbook (16 Oct 2026)
+
+| Done | # | Item | Pri |
+|---|---|---|---|
+| [x] | H1 | Docs reorganised under `docs/`: user guides in `docs/guides/`, developer docs in `docs/developer/`, superseded reports in `docs/developer/history/` | H |
+| [x] | H2 | Role guides with Mermaid diagrams and tutorials: accounts, visitor, student, lecturer, coordinator, exhibition admin | H |
+| [x] | H3 | Developer docs refreshed against the live project: hosts and sign-in, architecture diagrams, ER diagrams, RPC catalogue, CI/CD diagram | M |
+| [x] | H4 | Handbook site (MkDocs Material) built into `/handbook/` on both hosts, strict build in CI; Help links in all three menus | M |
+
+**UI inconsistencies found while writing the guides** (not fixed yet)
+
+| Done | # | Item | Pri |
+|---|---|---|---|
+| [ ] | X1 | Co-supervisors see **Approve Final Report**, but only the main supervisor may approve (`supervisor_corrections_page.dart`) | H |
+| [ ] | X2 | An account with no role that signs in on the exhibition stays on `/sign-in` with no message (`router_guards.dart` `_postLoginRedirect`) | H |
+| [ ] | X3 | Statuses shown as raw words ("proposal under review", "pending") instead of friendly labels (`fypms_format.dart`, student supervision page) | M |
+| [ ] | X4 | Rubric dialog opens empty when updating an existing score (`rubric_evaluation_dialog.dart`) | M |
+| [ ] | X5 | Booth and lecturer day filters hard-code 2026 dates (`booths_page.dart`, `lecturer_page.dart`) | M |
+| [ ] | X6 | Wording: PU reject dialog vs server message; "Not Yet Visited" / "Not Yet" / "Not Visited"; menu labels vs page titles; "Sign out" vs "Sign Out"; admin email hint shown to students | L |
+| [ ] | X7 | Status values nothing sets: imports `completed/error/cancelled`, expo publication `draft/failed`, content `archived`, supervision request `withdrawn`, correction `closed`; default worksheet setting still "TENTATIF, PEMENANG ANUGERAH" | L |
+| [ ] | X8 | My Visits has no link back to the FYP Workspace | L |
 
 ## Suggested order
 

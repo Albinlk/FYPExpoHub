@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/state/state_providers.dart';
 import '../../core/widgets/scholar_lab.dart';
+import '../site_hosts.dart';
 import '../theme/theme.dart';
 import 'feedback_form_widget.dart';
 
@@ -14,6 +15,9 @@ void _openSignIn(BuildContext context) => context.go('/sign-in');
 /// labelled Feedback button).
 const kNavAllLinksWidth = 1312.0;
 const kNavFiveLinksWidth = 1024.0;
+
+/// More-menu value for Help (not a route: it opens the handbook).
+const _kHelpMenuValue = 'help';
 
 class PublicShell extends ConsumerWidget {
   final Widget child;
@@ -177,10 +181,19 @@ class _DesktopNavBar extends StatelessWidget {
                     PopupMenuButton<String>(
                       key: const Key('nav-more'),
                       tooltip: 'More',
-                      onSelected: (route) => _navigateTo(context, route),
+                      onSelected: (route) => route == _kHelpMenuValue
+                          ? openHandbook(kHandbookVisitorGuide)
+                          : _navigateTo(context, route),
                       itemBuilder: (_) => [
                         for (final (title, route) in menu)
                           PopupMenuItem(value: route, child: Text(title)),
+                        const PopupMenuDivider(),
+                        // The handbook is a separate static site; it opens in a new tab.
+                        const PopupMenuItem(
+                          key: Key('nav-help'),
+                          value: _kHelpMenuValue,
+                          child: Text('Help'),
+                        ),
                       ],
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -382,6 +395,18 @@ class _MobileBottomNavBar extends StatelessWidget {
                   '/privacy',
                 ),
                 const Divider(),
+                Material(
+                  type: MaterialType.transparency,
+                  child: ListTile(
+                    key: const Key('menu-help'),
+                    leading: const Icon(Icons.menu_book_outlined, color: DesignSystem.primary),
+                    title: Text('Help', style: DesignSystem.bodyMd),
+                    onTap: () {
+                      Navigator.pop(context);
+                      openHandbook(kHandbookVisitorGuide);
+                    },
+                  ),
+                ),
                 Material(
                   type: MaterialType.transparency,
                   child: ListTile(

@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fyp_expo_hub/app/theme/theme.dart';
 import 'package:fyp_expo_hub/core/widgets/scholar_lab.dart';
 
-/// "Scholar + Lab" building blocks (DESIGN.md §4).
+/// "Scholar + Lab" building blocks (docs/developer/design-system.md §4).
 void main() {
   Future<void> pump(WidgetTester tester, Widget child, {double width = 1280}) async {
     tester.view.physicalSize = Size(width, 800);

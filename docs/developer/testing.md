@@ -1,10 +1,12 @@
-# Testing — FYP Expo Hub
+# Testing
 
 ## Test Suite
 
-The project includes **463 Flutter tests, all passing** (unit, widget,
-route-guard and theme-audit; `flutter test`, September 2026) in 63 files
-under `test/` — all runnable offline (no live backend needed).
+The project includes **588 Flutter tests, all passing** (unit, widget,
+route-guard and theme-audit; `flutter test`, 16 October 2026) in 86 files
+under `test/` — all runnable offline (no live backend needed). The handbook
+is checked separately by `mkdocs build --strict` in CI (broken links or
+pages fail the PR).
 
 ### Running Tests
 

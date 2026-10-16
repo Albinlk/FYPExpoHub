@@ -1,4 +1,4 @@
-# Architecture — FYP Expo Hub
+# Architecture
 
 ## Overview
 
@@ -12,23 +12,71 @@ FYP Expo Hub is a **Flutter Web** application backed by **Supabase**
 
 The architecture is feature-first with a layered service abstraction.
 
+### System context
+
+```mermaid
+flowchart LR
+    U([Browser<br/>visitor, student, staff])
+    subgraph Hosting
+        GH[GitHub Pages<br/>fskmjasinfypexhibition.site<br/>exhibition, admin, /handbook]
+        CF[Cloudflare Pages<br/>fyp.fskmjasinfypexhibition.site<br/>FYP Workspace]
+        RR[Cloudflare redirect<br/>admin.fskmjasinfypexhibition.site]
+    end
+    subgraph Supabase
+        AUTH[Auth<br/>email + password, TOTP MFA]
+        DB[(Postgres<br/>46 tables, RLS, 117 functions)]
+        ST[Storage<br/>6 FYPMS buckets]
+        RT[Realtime<br/>FYPMS invalidation]
+        EF[Edge Function<br/>enroll-students]
+    end
+    CI[GitHub Actions<br/>ci.yml, deploy.yml] -->|same build| GH
+    CI -->|same build, CSP_HOST set| CF
+    U --> GH
+    U --> CF
+    U --> RR --> GH
+    U -->|supabase_flutter| AUTH
+    U -->|RPC + selects| DB
+    U --> ST
+    RT -.-> U
+    U --> EF --> DB
 ```
-┌─────────────────────────────────────────────────┐
-│                  User Browser                  │
-│           (Flutter Web PWA — SPA)              │
-└──────────────────┬─────────────────────────────┘
-                   │ HTTPS / WebSocket (Realtime)
-┌──────────────────┴─────────────────────────────┐
-│                  Supabase Cloud                │
-│  ┌──────────────┐  ┌────────────────────┐      │
-│  │ Supabase Auth│  │ Supabase Postgres  │      │
-│  │  (Auth UID)  │  │  45 tables + RLS   │      │
-│  └──────────────┘  └─────────┬──────────┘      │
-│                              │                 │
-│                    Realtime invalidation       │
-│                    + 5 Storage buckets         │
-└────────────────────────────────────────────────┘
+
+One Flutter build serves both hosts; the app decides at runtime which site it
+is (see [hosts-and-auth.md](hosts-and-auth.md)). The session is shared
+between them through a cookie on `.fskmjasinfypexhibition.site`.
+
+### Code layers
+
+```mermaid
+flowchart TB
+    subgraph app["lib/app"]
+        R[router.dart + router_guards.dart]
+        SH[shells: public, admin, fypms]
+        HO[site_hosts.dart]
+        TH[theme/]
+    end
+    subgraph features["lib/features/*"]
+        PG[presentation/pages + widgets]
+        FD[domain/ helpers per feature]
+    end
+    subgraph core["lib/core"]
+        SP[state/ Riverpod providers]
+        DM[domain/ models + rules]
+        SV[supabase/ services, RPC wrappers, shared session storage]
+        WG[widgets/ shared UI]
+    end
+    SB[(Supabase)]
+    R --> SH --> PG
+    PG --> SP
+    PG --> WG
+    PG --> FD
+    SP --> SV
+    SP --> DM
+    SV --> SB
 ```
+
+Pages never call Supabase directly: they read providers, and mutations go
+through the service layer to SECURITY DEFINER RPCs.
 
 ## Layers
 
@@ -112,7 +160,7 @@ are not subscribed; they refresh by refetch-after-mutation.
 
 ### 5. Backend Layer
 
-#### 5.1 Supabase Postgres (45 tables)
+#### 5.1 Supabase Postgres (46 tables)
 | Category | Tables |
 |----------|--------|
 | Expo public (published-only reads) | events, projects, schedule_items, booths, announcements, award_categories, award_winners |
@@ -123,13 +171,13 @@ are not subscribed; they refresh by refetch-after-mutation.
 | FYPMS bridge/audit | fyp_expo_publications, fyp_audit_logs, fyp_notifications |
 
 #### 5.2 Security (RLS)
-- All 45 tables have RLS enabled; ~119 policies
-- ~55 functions: read-only helpers (`can_read_fyp_record`, `is_csp_lecturer`,
-  ...) backing policies, plus ~30 SECURITY DEFINER RPCs for mutations
+- All 46 app tables have RLS enabled
+- 117 functions: read-only helpers (`can_read_fyp_record`, `is_csp_lecturer`,
+  ...) backing policies, plus SECURITY DEFINER RPCs for every mutation
 - All SECURITY DEFINER functions pin `search_path`
 - Audit logs are RPC-written only (no client write policies)
 - Storage policies are path-scoped to the owning FYP record
-- See `SECURITY.md` and `SUPABASE_RLS_POLICIES.md`
+- See [rls-and-security.md](rls-and-security.md) and [rls-policies.md](rls-policies.md)
 
 #### 5.3 RPC Functions (mutations)
 All critical mutations go through audited SECURITY DEFINER functions:
@@ -161,7 +209,7 @@ All critical mutations go through audited SECURITY DEFINER functions:
   `list_approved_nominations`, `mfa_satisfied` (inside `is_admin` /
   `is_fyp_coordinator`)
 
-See `DATABASE_FUNCTIONS.md` for every function.
+See [rpc-reference.md](rpc-reference.md) for every function.
 
 ## Deployment Targets
 

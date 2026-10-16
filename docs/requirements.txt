@@ -1,0 +1,4 @@
+# Handbook build (mkdocs.yml). Pinned so a release can't change the site
+# between two runs of the same commit; bump deliberately.
+mkdocs==1.6.1
+mkdocs-material==9.7.7
