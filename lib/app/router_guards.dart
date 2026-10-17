@@ -14,6 +14,11 @@ const kSignInPath = '/sign-in';
 /// account, instead of bouncing to that account's own workspace.
 const kNotAdminReason = 'not-admin';
 
+/// `?reason=` on the sign-in page when a signed-in account has no admin,
+/// lecturer or FYP Workspace role yet. The page says so and offers to
+/// switch account; the guard leaves it there until a role is granted.
+const kNoAccessReason = 'no-access';
+
 /// Old sign-in address, kept so bookmarks and emailed links still work.
 const kLegacySignInPath = '/admin/sign-in';
 
@@ -66,7 +71,16 @@ Future<String?> resolveRouterRedirect(Ref ref, String location) async {
         !await _safeFlag(ref, isAdminProvider)) {
       return null;
     }
-    return _postLoginRedirect(ref, from: uri.queryParameters['from']);
+    final from = uri.queryParameters['from'];
+    final target = await _postLoginRedirect(ref, from: from);
+    if (target != null) return target;
+    // No role anywhere: explain on the sign-in page. Already there with the
+    // reason set, stay put (no redirect loop).
+    if (uri.queryParameters['reason'] == kNoAccessReason) return null;
+    return Uri(path: kSignInPath, queryParameters: {
+      'from': ?from,
+      'reason': kNoAccessReason,
+    }).toString();
   }
 
   return null;
@@ -109,6 +123,16 @@ String? safeReturnPath(String? from) {
 Future<bool> _safeFlag(Ref ref, FutureProvider<bool> provider) async {
   try {
     return await ref.read(provider.future);
+  } catch (_) {
+    return false;
+  }
+}
+
+/// Whether the lecturer config has matched the signed-in account, treating
+/// a failed lecturer lookup as "no" (the profile role is checked as well).
+bool _lecturerSignedIn(Ref ref) {
+  try {
+    return ref.read(lecturerAuthProvider) != null;
   } catch (_) {
     return false;
   }
@@ -178,7 +202,7 @@ Future<String?> _lecturerVisitsGuard(
   required User? user,
 }) async {
   if (user == null) return signInRedirect(location);
-  if (ref.read(lecturerAuthProvider) != null) return null;
+  if (_lecturerSignedIn(ref)) return null;
   // The lecturer config loads asynchronously; the profile role is the
   // authoritative answer while it does.
   if (await _safeFlag(ref, isLecturerProvider)) return null;
@@ -204,7 +228,7 @@ Future<String?> _postLoginRedirect(Ref ref, {String? from}) async {
   if (isAdmin) {
     return '/admin';
   }
-  final isLecturer = ref.read(lecturerAuthProvider) != null || await _safeFlag(ref, isLecturerProvider);
+  final isLecturer = _lecturerSignedIn(ref) || await _safeFlag(ref, isLecturerProvider);
   var roles = const <String>[];
   try {
     roles = await ref.read(fypmsCurrentRolesProvider.future);
@@ -218,7 +242,7 @@ Future<String?> _postLoginRedirect(Ref ref, {String? from}) async {
   }
   if (roles.isNotEmpty) return _fypmsHomeForRoles(roles);
   if (isLecturer) return '/lecturer/visits';
-  // Stay on the sign-in page, which explains there's no access.
+  // No access anywhere: the caller shows the sign-in page's no-access notice.
   return null;
 }
 

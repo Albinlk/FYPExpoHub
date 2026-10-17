@@ -147,13 +147,13 @@ agreed to supervise you.
     - **Co-supervisor (if any)**
     - **Rationale / notes**
 3. Click **Submit**. You see *F1 submitted to your supervisor.*
-4. The request shows **Status: pending** until your supervisor decides. You
+4. The request shows **Awaiting decision** until your supervisor decides. You
    get a notification when they do.
 
-When the supervisor accepts, the status becomes **approved**, they become
+When the supervisor accepts, the status becomes **Accepted**, they become
 your main supervisor (and the co-supervisor is added), and your record moves
-to **supervision approved**. If they decline, the status becomes
-**rejected** with their **Decision** reason; talk to them or another
+to **Supervision approved**. If they decline, the status becomes
+**Declined** with their **Decision** reason; talk to them or another
 lecturer, then submit a new request.
 
 You can only have one pending request at a time, and **New Request**
@@ -203,7 +203,7 @@ change rejected** with the reason.
 Log every meeting with your supervisor. You need signed consultations in at
 least **80 %** of the semester weeks so far.
 
-1. Open **Progress Logs** (the page is called **Consultation Log (F5)**).
+1. Open **Progress Logs** (subtitle *Consultation log (F5)*).
 2. Click **Log Meeting**.
 3. Fill in **Date of meeting**, **Completed activity \*** (what you did since
    the last meeting), **Next activity**, and **Challenges (optional)**.
@@ -247,7 +247,7 @@ the date cannot be in the future, and it must fall inside the semester.
 
 [Open Forms :octicons-link-external-16:](https://fyp.fskmjasinfypexhibition.site/fypms/student/forms){ .md-button target=_blank rel=noopener }
 
-1. Open **Forms** (**Forms & Submissions**) and click **Submit Form**.
+1. Open **Forms** and click **Submit Form**.
 2. Choose the **Form**. Only the forms for your course are listed.
 3. Read the short purpose under the form name and fill in each question.
    Links must start with `http://` or `https://`.
@@ -287,7 +287,7 @@ Click it to see your answers. You may see **submitted**, **under review**,
 
 [Open Reports :octicons-link-external-16:](https://fyp.fskmjasinfypexhibition.site/fypms/student/reports){ .md-button target=_blank rel=noopener }
 
-1. Open **Reports** (**Reports & Deliverables**) and click **Submit
+1. Open **Reports** and click **Submit
    Report**.
 2. In **Submit Report (F6)**, the **Report type** is set by your course:
    **Proposal (F6a)** for CSP600, **Final report (F6b)** for CSP650.

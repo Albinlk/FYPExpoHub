@@ -15,10 +15,13 @@ void _goToMainSite() {
 }
 
 class SignInPage extends ConsumerStatefulWidget {
-  const SignInPage({super.key, this.notAdmin = false});
+  const SignInPage({super.key, this.notAdmin = false, this.noAccess = false});
 
   /// A signed-in account opened an admin page but isn't an admin.
   final bool notAdmin;
+
+  /// A signed-in account has no admin, lecturer or FYP Workspace role yet.
+  final bool noAccess;
 
   @override
   ConsumerState<SignInPage> createState() => _SignInPageState();
@@ -102,7 +105,8 @@ class _SignInPageState extends ConsumerState<SignInPage> {
 
   @override
   Widget build(BuildContext context) {
-    final signedInEmail = widget.notAdmin ? ref.watch(currentAuthUserProvider)?.email : null;
+    final signedInEmail =
+        widget.notAdmin || widget.noAccess ? ref.watch(currentAuthUserProvider)?.email : null;
     return Scaffold(
       backgroundColor: DesignSystem.background,
       // Warm Paper with the graph-paper grid, like the exhibition hero.
@@ -145,7 +149,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
 
                       if (signedInEmail != null) ...[
                         Container(
-                          key: const Key('not-admin-notice'),
+                          key: Key(widget.notAdmin ? 'not-admin-notice' : 'no-access-notice'),
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
                             color: DesignSystem.errorContainer,
@@ -155,8 +159,11 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                "You're signed in as $signedInEmail, which isn't an admin account. "
-                                'Sign in with an admin account to open this page.',
+                                widget.notAdmin
+                                    ? "You're signed in as $signedInEmail, which isn't an admin account. "
+                                        'Sign in with an admin account to open this page.'
+                                    : "You're signed in as $signedInEmail, but this account has no access yet. "
+                                        'Ask the FYP coordinator to give you a role.',
                                 style: DesignSystem.bodySm.copyWith(color: DesignSystem.onErrorContainer),
                               ),
                               const SizedBox(height: 8),
@@ -197,7 +204,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                         enableSuggestions: false,
                         decoration: const InputDecoration(
                           labelText: 'Official Email',
-                          hintText: 'e.g. admin@uitm.edu.my',
+                          hintText: 'e.g. name@uitm.edu.my',
                           prefixIcon: Icon(Icons.email_outlined),
                         ),
                         validator: (value) {

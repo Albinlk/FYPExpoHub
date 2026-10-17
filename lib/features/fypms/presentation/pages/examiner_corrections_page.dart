@@ -280,7 +280,7 @@ class _RecordCorrectionsSection extends ConsumerWidget {
                             for (final s in items)
                               DropdownMenuItem<String?>(
                                 value: s.id,
-                                child: Text('Form ${s.formCode} (${s.status.replaceAll('_', ' ')})'),
+                                child: Text('Form ${s.formCode} (${formStatusLabel(s.status)})'),
                               ),
                           ],
                           onChanged: (v) => setState(() => formSubmissionId = v),

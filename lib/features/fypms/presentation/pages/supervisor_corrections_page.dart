@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/fypms/fyp_record.dart';
 import '../../../../core/state/fypms_state_providers.dart';
+import '../../../../core/state/fypms/user_scope.dart';
 import '../../../../core/utils/fypms_format.dart';
 import '../widgets/correction_evidence_dialog.dart' show kCorrectionEvidenceBucket;
 import '../widgets/fypms_file_link.dart';
@@ -285,7 +286,7 @@ class _RecordCorrectionsSection extends ConsumerWidget {
                             for (final s in items)
                               DropdownMenuItem<String?>(
                                 value: s.id,
-                                child: Text('Form ${s.formCode} (${s.status.replaceAll('_', ' ')})'),
+                                child: Text('Form ${s.formCode} (${formStatusLabel(s.status)})'),
                               ),
                           ],
                           onChanged: (v) => setState(() => formSubmissionId = v),
@@ -340,6 +341,18 @@ class _RecordCorrectionsSection extends ConsumerWidget {
 
 /// FSKM handbook (Table 2.1 #50): once every correction is confirmed (F12), the
 /// main supervisor signs the Supervisor Approval page for the final report.
+/// Whether [uid] may sign the CSP650 final report approval for [record].
+///
+/// Mirrors approve_final_report: only the record's main supervisor signs.
+/// When the record carries no main supervisor id (legacy rows) the button
+/// stays available to anyone but the co-supervisor and the server decides.
+bool canGiveFinalApproval(FypRecord record, String? uid) {
+  if (uid == null) return false;
+  final main = record.mainSupervisorId;
+  if (main != null) return main == uid;
+  return record.coSupervisorId != uid;
+}
+
 class _FinalApproval extends ConsumerStatefulWidget {
   const _FinalApproval({required this.record, required this.items});
 
@@ -386,6 +399,10 @@ class _FinalApprovalState extends ConsumerState<_FinalApproval> {
     final approvedAt = widget.record.supervisorApprovedAt;
     final items = widget.items;
     final open = items?.where((i) => i.status != 'confirmed' && i.status != 'closed').length;
+    // approve_final_report only accepts the main supervisor; co-supervisors
+    // see the status but cannot sign.
+    final uid = ref.watch(fypmsUserScopeProvider);
+    final isMainSupervisor = canGiveFinalApproval(widget.record, uid);
     return Card(
       margin: const EdgeInsets.only(top: DesignSystem.spaceXs),
       color: DesignSystem.surfaceContainerLow,
@@ -408,13 +425,15 @@ class _FinalApprovalState extends ConsumerState<_FinalApproval> {
                         : open == null
                             ? 'Supervisor approval of the final report'
                             : open == 0
-                                ? 'Corrections confirmed (F12). Ready for your approval.'
+                                ? isMainSupervisor
+                                    ? 'Corrections confirmed (F12). Ready for your approval.'
+                                    : 'Corrections confirmed (F12). Awaiting the main supervisor\'s approval.'
                                 : 'Approval opens once all $open open correction ${open == 1 ? 'item is' : 'items are'} confirmed (F12).',
                     key: Key('final-approval-${widget.record.id}'),
                     style: DesignSystem.bodySm.copyWith(fontWeight: FontWeight.w600),
                   ),
                 ),
-                if (approvedAt == null)
+                if (approvedAt == null && isMainSupervisor)
                   BusyButton(
                     label: 'Approve Final Report',
                     busyLabel: 'Approving…',
@@ -423,6 +442,15 @@ class _FinalApprovalState extends ConsumerState<_FinalApproval> {
                   ),
               ],
             ),
+            if (approvedAt == null && !isMainSupervisor)
+              Padding(
+                padding: const EdgeInsets.only(top: DesignSystem.spaceXs),
+                child: Text(
+                  'Only the main supervisor can give final approval.',
+                  key: Key('final-approval-main-only-${widget.record.id}'),
+                  style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant),
+                ),
+              ),
             if (_error != null)
               Semantics(
                 liveRegion: true,

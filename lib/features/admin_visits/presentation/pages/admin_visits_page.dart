@@ -156,7 +156,7 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
       if (_roleFilter == 'EX' && a.role != 'examiner') return false;
       final visit = visits.where((v) => v.projectId == a.projectId && v.visitRole == a.role).firstOrNull;
       if (_statusFilter == 'Visited' && (visit == null || visit.status != 'completed')) return false;
-      if (_statusFilter == 'Not Yet' && visit != null && (visit.status == 'completed' || visit.status == 'voided')) return false;
+      if (_statusFilter == 'Not visited' && visit != null && (visit.status == 'completed' || visit.status == 'voided')) return false;
       if (_statusFilter == 'Voided' && (visit == null || visit.status != 'voided')) return false;
 
       final query = _searchController.text.toLowerCase().trim();
@@ -213,7 +213,7 @@ class _AdminVisitsPageState extends ConsumerState<AdminVisitsPage> {
                         children: [
                           _filterChip('Role', _roleFilter, ['All', 'SV', 'EX']),
                           const SizedBox(width: DesignSystem.spaceSm),
-                          _filterChip('Status', _statusFilter, ['All', 'Visited', 'Not Yet', 'Voided']),
+                          _filterChip('Status', _statusFilter, ['All', 'Visited', 'Not visited', 'Voided']),
                           const SizedBox(width: DesignSystem.spaceSm),
                           ElevatedButton.icon(
                             onPressed: () => _exportCsv(filteredAssignments, visits, projectsById),

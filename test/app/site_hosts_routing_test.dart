@@ -4,7 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:fyp_expo_hub/app/router.dart';
 import 'package:fyp_expo_hub/app/site_hosts.dart';
+import 'package:fyp_expo_hub/core/domain/models/lecturer.dart';
 import 'package:fyp_expo_hub/core/state/fypms_state_providers.dart';
+import 'package:fyp_expo_hub/core/state/state_providers.dart';
 import 'package:fyp_expo_hub/core/supabase/supabase_client_provider.dart';
 
 /// The exhibition is the homepage; CSP600 / CSP650 (the FYP Workspace) is
@@ -22,6 +24,12 @@ User _user() => User.fromJson({
       'created_at': '2026-01-01T00:00:00.000Z',
       'updated_at': '2026-01-01T00:00:00.000Z',
     })!;
+
+/// Not a lecturer (the real notifier reads an uninitialised Supabase).
+class _NoLecturer extends LecturerAuthNotifier {
+  @override
+  Lecturer? build() => null;
+}
 
 class _Host extends ConsumerWidget {
   const _Host();
@@ -50,6 +58,8 @@ Future<Uri> _resolve(
       currentAuthUserProvider.overrideWith((ref) => user),
       fypmsCurrentRolesProvider.overrideWith((ref) async => roles),
       isAdminProvider.overrideWith((ref) async => isAdmin),
+      isLecturerProvider.overrideWith((ref) async => false),
+      lecturerAuthProvider.overrideWith(_NoLecturer.new),
       cspHostProvider.overrideWithValue(cspHost),
       currentHostProvider.overrideWithValue(host),
     ],
@@ -102,6 +112,36 @@ void main() {
       expect(uri.queryParameters['reason'], 'not-admin');
       expect(find.byKey(const Key('not-admin-notice')), findsOneWidget);
       expect(find.textContaining('s@student.uitm.edu.my'), findsOneWidget);
+    });
+
+    testWidgets('a signed-in account with no role is told why on sign-in', (tester) async {
+      final uri = await _resolve(tester, target: '/sign-in', user: _user());
+      expect(uri.path, '/sign-in');
+      expect(uri.queryParameters['reason'], 'no-access');
+      expect(find.byKey(const Key('no-access-notice')), findsOneWidget);
+      expect(find.textContaining('has no access yet'), findsOneWidget);
+      expect(find.text('Switch Account'), findsOneWidget);
+    });
+
+    testWidgets('the no-access notice keeps the return path and does not loop', (tester) async {
+      final uri = await _resolve(tester,
+          target: '/sign-in?from=%2Fadmin&reason=no-access', user: _user());
+      expect(uri.path, '/sign-in');
+      expect(uri.queryParameters['reason'], 'no-access');
+      expect(uri.queryParameters['from'], '/admin');
+      expect(find.byKey(const Key('no-access-notice')), findsOneWidget);
+    });
+
+    testWidgets('once a role is granted, the no-access page moves on', (tester) async {
+      final uri = await _resolve(tester,
+          target: '/sign-in?reason=no-access', user: _user(), roles: const ['student']);
+      expect(uri.path, '/fypms/student');
+    });
+
+    testWidgets('signed out, the sign-in page shows no access notice', (tester) async {
+      final uri = await _resolve(tester, target: '/sign-in?reason=no-access');
+      expect(uri.path, '/sign-in');
+      expect(find.byKey(const Key('no-access-notice')), findsNothing);
     });
   });
 

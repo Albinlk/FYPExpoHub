@@ -86,13 +86,13 @@ class StudentSupervisionPage extends ConsumerWidget {
                           contentPadding: const EdgeInsets.all(DesignSystem.spaceMd),
                           leading: const Icon(Icons.supervisor_account, size: 40, color: DesignSystem.primary),
                           title: Text(
-                            req.projectTitle ?? 'Status: ${req.status.replaceAll('_', ' ')}',
+                            req.projectTitle ?? 'Supervision request',
                             style: DesignSystem.bodyLg.copyWith(fontWeight: FontWeight.bold),
                           ),
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Status: ${req.status.replaceAll('_', ' ')}', style: DesignSystem.bodySm),
+                              Text('Status: ${supervisionRequestStatusLabel(req.status)}', style: DesignSystem.bodySm),
                               if (req.projectArea?.isNotEmpty == true)
                                 Text('Area: ${req.projectArea}', style: DesignSystem.bodySm),
                               if (req.preferredSupervisorId != null)

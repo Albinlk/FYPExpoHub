@@ -4,6 +4,7 @@ import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/models/fypms/fyp_supervision_request.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import '../../../../core/widgets/admin_actions.dart';
+import '../../../../core/utils/fypms_format.dart';
 
 /// One F1 Mutual Acceptance request: project title and area, the chosen
 /// supervisor and co-supervisor, the student's rationale and, when [canDecide],
@@ -157,17 +158,21 @@ class _StatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final approved = status == 'approved';
+    final color = switch (status) {
+      'approved' => DesignSystem.tertiary,
+      'rejected' => DesignSystem.error,
+      _ => DesignSystem.onSurfaceVariant,
+    };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: (approved ? DesignSystem.tertiary : DesignSystem.error).withValues(alpha: 0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: DesignSystem.radiusSm,
       ),
       child: Text(
-        approved ? 'Accepted' : (status == 'rejected' ? 'Declined' : status),
+        supervisionRequestStatusLabel(status),
         style: DesignSystem.bodySm.copyWith(
-          color: approved ? DesignSystem.tertiary : DesignSystem.error,
+          color: color,
           fontWeight: FontWeight.bold,
         ),
       ),

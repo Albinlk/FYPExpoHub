@@ -10,6 +10,7 @@ import '../../../../core/state/state_providers.dart';
 import '../../../../core/widgets/collapsible_filter_panel.dart';
 import '../../../../core/utils/url_state.dart';
 import '../../../../core/widgets/page_heading.dart';
+import '../../presentation_days.dart';
 
 class BoothsPage extends ConsumerStatefulWidget {
   const BoothsPage({super.key});
@@ -21,7 +22,16 @@ class BoothsPage extends ConsumerStatefulWidget {
 class _BoothsPageState extends ConsumerState<BoothsPage> with UrlStateSync<BoothsPage> {
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
-  String _selectedDay = 'Day 1 - 06 Aug 2026';
+  /// The day the visitor picked (or a `?day=` link asked for). Shown only
+  /// while it is one of [_dayOptions]; otherwise the first day is shown.
+  String? _requestedDay;
+
+  /// The Day filter's options, rebuilt from the data / event every build.
+  List<String> _dayOptions = const [];
+
+  String get _selectedDay => _requestedDay != null && _dayOptions.contains(_requestedDay)
+      ? _requestedDay!
+      : (_dayOptions.isEmpty ? '' : _dayOptions.first);
   String _selectedVenue = 'All';
   String _selectedProgram = 'All';
   bool _initializedFromQuery = false;
@@ -63,8 +73,9 @@ class _BoothsPageState extends ConsumerState<BoothsPage> with UrlStateSync<Booth
       }
       // ?day=<presentation day>: open on the booth's day, not always Day 1.
       final day = params['day'];
-      if (day != null && _dayOrder.contains(day)) {
-        _selectedDay = day;
+      // Kept even before the data loads; a day that never appears is ignored.
+      if (day != null && day.isNotEmpty) {
+        _requestedDay = day;
       }
       // Shared / refreshed links keep the venue and programme filters too. Values
       // that no longer exist are ignored by the dropdowns (they show "All").
@@ -141,12 +152,6 @@ class _BoothsPageState extends ConsumerState<BoothsPage> with UrlStateSync<Booth
     return _venueBadgeColor[prefix] ?? DesignSystem.primary;
   }
 
-  /// Returns the stable, canonical day order for grouping.
-  /// Days are derived from the `presentation_day` field ("Day N - DD Mon YYYY").
-  static final List<String> _dayOrder = [
-    'Day 1 - 06 Aug 2026',
-    'Day 2 - 07 Aug 2026',
-  ];
 
   /// Projects that pass the current filters: day, venue, program, and search.
   List<Project> _filteredProjects(
@@ -225,6 +230,12 @@ class _BoothsPageState extends ConsumerState<BoothsPage> with UrlStateSync<Booth
 
     final projects = ref.watch(publicProjectsProvider);
     final searchNeedle = _searchController.text.toLowerCase();
+    final event = ref.watch(eventProvider);
+    _dayOptions = presentationDayOptions(
+      projects.map((p) => p.presentationDay),
+      eventStart: event.startAt,
+      eventEnd: event.endAt,
+    );
 
     // Derive available venues for the selected day.
     final previewProjects = _filteredProjects(
@@ -259,7 +270,7 @@ class _BoothsPageState extends ConsumerState<BoothsPage> with UrlStateSync<Booth
     final hasProjects = filtered.isNotEmpty;
 
     syncUrl({
-      'day': _selectedDay == 'Day 1 - 06 Aug 2026' ? null : _selectedDay,
+      'day': _selectedDay == _dayOptions.first ? null : _selectedDay,
       'venue': _selectedVenue == 'All' ? null : _selectedVenue,
       'program': _selectedProgram == 'All' ? null : _selectedProgram,
       'search': _searchController.text,
@@ -436,10 +447,10 @@ class _BoothsPageState extends ConsumerState<BoothsPage> with UrlStateSync<Booth
           contentPadding: const EdgeInsets.symmetric(horizontal: 12),
         ),
         onChanged: (val) => setState(() {
-          _selectedDay = val!;
+          _requestedDay = val!;
           _selectedVenue = 'All';
         }),
-        items: _dayOrder.map((day) {
+        items: _dayOptions.map((day) {
           return DropdownMenuItem(
             value: day,
             child: Text(

@@ -24,7 +24,7 @@ class StudentReportsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return StudentRecordWorkspace(
-      title: 'Reports & Deliverables',
+      title: 'Reports',
       builder: (context, ref, record) {
         final reports = ref.watch(fypReportSubmissionsProvider(record.id));
         return Column(

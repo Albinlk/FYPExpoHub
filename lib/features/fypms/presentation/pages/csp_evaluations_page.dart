@@ -11,7 +11,7 @@ class CspEvaluationsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return FormEvaluationsView(
-      title: 'Course Evaluations',
+      title: 'Evaluations',
       role: 'lecturer',
       records: ref.watch(cspRecordsProvider),
       emptyText: 'No records in your course yet.',

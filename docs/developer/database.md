@@ -13,11 +13,12 @@ The app uses **46 tables**: **22 exhibition tables** (documented below) and
 **24 FYPMS tables** (`fyp_*`, summarised at the end). The source of truth is
 `supabase/migrations/`; never change the live schema outside a migration.
 
-> **Note:** The live project also carries a small number of tables from an
-> unrelated content-scheduler template (`users`, `content`, `channels`,
-> `activities`, `processing_jobs`, `schedules`, `telemetry`,
-> `site_settings`, `oauth_states`). They are RLS-protected and unused by
-> this app.
+> **Note:** The live project also holds tables of a separate
+> content-scheduler app (`users`, `content`, `channels`, `activities`,
+> `processing_jobs`, `schedules`, `telemetry`, `site_settings`,
+> `oauth_states`). Some contain data. They are RLS-protected and FYP Expo
+> Hub never reads them. **Do not drop them**; the owner decided to keep
+> them (17 Oct 2026).
 
 ## Data model at a glance
 
@@ -290,5 +291,5 @@ Private buckets are path-scoped via `can_read_fyp_storage_path` /
 `can_write_fyp_storage_path`. Path convention:
 `{semester_code}/{fyp_record_id}/{resource_type}/{version}/{file_name}`.
 
-> The `avatars` and `media` buckets, like the template tables above, belong
-> to the unrelated content-scheduler template and are unused.
+> The `avatars` and `media` buckets, like the tables in the note above,
+> belong to the separate content-scheduler app. Keep them.

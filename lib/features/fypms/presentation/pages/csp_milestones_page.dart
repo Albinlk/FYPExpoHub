@@ -38,7 +38,7 @@ class _CspMilestonesPageState extends ConsumerState<CspMilestonesPage> {
         surfaceTintColor: Colors.transparent,
         shape: const Border(bottom: BorderSide(color: DesignSystem.outlineVariant)),
         title: Text(
-          'Course Milestones',
+          'Milestones',
           style: DesignSystem.h3.copyWith(
             color: DesignSystem.primary,
             fontWeight: FontWeight.bold,
@@ -123,7 +123,7 @@ class _MilestonesList extends ConsumerWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Flexible(child: Text('Course Milestones', style: DesignSystem.h2)),
+              Flexible(child: Text('Milestones', style: DesignSystem.h2)),
               Wrap(
                 spacing: DesignSystem.spaceSm,
                 children: [

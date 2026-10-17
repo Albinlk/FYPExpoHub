@@ -65,7 +65,7 @@ class _AdminSettingsPageState extends ConsumerState<AdminSettingsPage> {
     if (mounted) {
       setState(() {
         _maxSizeController.text = excelData?['maxFileSize'] as String? ?? '10 MB';
-        _worksheetsController.text = excelData?['mandatoryWorksheets'] as String? ?? 'TENTATIF, PEMENANG ANUGERAH';
+        _worksheetsController.text = excelData?['mandatoryWorksheets'] as String? ?? 'SCHEDULE, AWARD';
         _visitsEnabled = (visitData?['visitsEnabled'] as bool?) ?? true;
         _allowBefore = (visitData?['allowVisitsBeforeEvent'] as bool?) ?? false;
         _allowAfter = (visitData?['allowVisitsAfterEvent'] as bool?) ?? false;

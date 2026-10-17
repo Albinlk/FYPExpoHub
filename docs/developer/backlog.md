@@ -126,23 +126,24 @@ The exhibition is the homepage; CSP600 / CSP650 sit behind sign-in and will move
 
 | Done | # | Item | Pri |
 |---|---|---|---|
-| [x] | H1 | Docs reorganised under `docs/`: user guides in `docs/guides/`, developer docs in `docs/developer/`, superseded reports in `docs/developer/history/` | H |
-| [x] | H2 | Role guides with Mermaid diagrams and tutorials: accounts, visitor, student, lecturer, coordinator, exhibition admin | H |
-| [x] | H3 | Developer docs refreshed against the live project: hosts and sign-in, architecture diagrams, ER diagrams, RPC catalogue, CI/CD diagram | M |
-| [x] | H4 | Handbook site (MkDocs Material) built into `/handbook/` on both hosts, strict build in CI; Help links in all three menus | M |
+| [x] | H1 | Docs reorganised under `docs/`: user guides in `docs/guides/`, developer docs in `docs/developer/`, superseded reports in `docs/developer/history/` (#72) | H |
+| [x] | H2 | Role guides with Mermaid diagrams and tutorials: accounts, visitor, student, lecturer, coordinator, exhibition admin (#72) | H |
+| [x] | H3 | Developer docs refreshed against the live project: hosts and sign-in, architecture diagrams, ER diagrams, RPC catalogue, CI/CD diagram (#72) | M |
+| [x] | H4 | Handbook site (MkDocs Material) built into `/handbook/` on both hosts, strict build in CI; Help links in all three menus (#72) | M |
+| [x] | H5 | Interactive handbook: task finder, tick-off checklists, status explorers, Open-in-app buttons, Desktop/Phone tabs; app Help opens the section for the current page (#73) | M |
 
-**UI inconsistencies found while writing the guides** (not fixed yet)
+**UI inconsistencies found while writing the guides** (fixed 17 Oct 2026)
 
 | Done | # | Item | Pri |
 |---|---|---|---|
-| [ ] | X1 | Co-supervisors see **Approve Final Report**, but only the main supervisor may approve (`supervisor_corrections_page.dart`) | H |
-| [ ] | X2 | An account with no role that signs in on the exhibition stays on `/sign-in` with no message (`router_guards.dart` `_postLoginRedirect`) | H |
-| [ ] | X3 | Statuses shown as raw words ("proposal under review", "pending") instead of friendly labels (`fypms_format.dart`, student supervision page) | M |
-| [ ] | X4 | Rubric dialog opens empty when updating an existing score (`rubric_evaluation_dialog.dart`) | M |
-| [ ] | X5 | Booth and lecturer day filters hard-code 2026 dates (`booths_page.dart`, `lecturer_page.dart`) | M |
-| [ ] | X6 | Wording: PU reject dialog vs server message; "Not Yet Visited" / "Not Yet" / "Not Visited"; menu labels vs page titles; "Sign out" vs "Sign Out"; admin email hint shown to students | L |
-| [ ] | X7 | Status values nothing sets: imports `completed/error/cancelled`, expo publication `draft/failed`, content `archived`, supervision request `withdrawn`, correction `closed`; default worksheet setting still "TENTATIF, PEMENANG ANUGERAH" | L |
-| [ ] | X8 | My Visits has no link back to the FYP Workspace | L |
+| [x] | X1 | Co-supervisors see **Approve Final Report**, but only the main supervisor may approve (`supervisor_corrections_page.dart`) | H |
+| [x] | X2 | An account with no role that signs in on the exhibition stays on `/sign-in` with no message (`router_guards.dart` `_postLoginRedirect`) | H |
+| [x] | X3 | Statuses shown as raw words ("proposal under review", "pending") instead of friendly labels (`fypms_format.dart`, student supervision page) | M |
+| [x] | X4 | Rubric dialog opens empty when updating an existing score (`rubric_evaluation_dialog.dart`) | M |
+| [x] | X5 | Booth and lecturer day filters hard-code 2026 dates (`booths_page.dart`, `lecturer_page.dart`) | M |
+| [x] | X6 | Wording: PU reject dialog vs server message; "Not Yet Visited" / "Not Yet" / "Not Visited"; menu labels vs page titles; "Sign out" vs "Sign Out"; admin email hint shown to students | L |
+| [x] | X7 | Status values nothing sets: imports `completed/error/cancelled`, expo publication `draft/failed`, content `archived`, supervision request `withdrawn`, correction `closed`; default worksheet setting still "TENTATIF, PEMENANG ANUGERAH" | L |
+| [x] | X8 | My Visits has no link back to the FYP Workspace | L |
 
 ## Suggested order
 

@@ -9,7 +9,7 @@ class ExaminerEvaluationsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return FormEvaluationsView(
-      title: 'Examiner Evaluations',
+      title: 'Evaluations',
       role: 'examiner',
       records: ref.watch(assignedFypRecordsProvider('examiner')),
       emptyText: 'No records assigned for examination.',

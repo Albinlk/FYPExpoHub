@@ -9,6 +9,7 @@ import '../widgets/fypms_file_link.dart';
 import '../widgets/fypms_loading_widget.dart';
 import '../widgets/student_record_workspace.dart';
 import '../../../../core/widgets/async_state.dart';
+import '../../../../core/utils/fypms_format.dart';
 
 class StudentCorrectionsPage extends ConsumerWidget {
   const StudentCorrectionsPage({super.key});
@@ -77,7 +78,7 @@ class StudentCorrectionsPage extends ConsumerWidget {
                                 Text(item.description, style: DesignSystem.bodySm),
                                 const SizedBox(height: DesignSystem.spaceXs),
                                 Text(
-                                  'Status: ${item.status.replaceAll('_', ' ')}',
+                                  'Status: ${fypStatusLabel(item.status)}',
                                   style: DesignSystem.bodySm.copyWith(
                                     color: _statusColor(item.status),
                                     fontWeight: FontWeight.w600,

@@ -99,7 +99,7 @@ class _RecordProgressSection extends ConsumerWidget {
                       title: Text(log.summary, style: DesignSystem.bodySm),
                       subtitle: Text(
                         [
-                          '${formatFypDate(log.progressDate)} · ${log.status.replaceAll('_', ' ')}',
+                          '${formatFypDate(log.progressDate)} · ${progressLogStatusLabel(log.status)}',
                           if (log.nextPlan?.isNotEmpty == true) 'Next: ${log.nextPlan}',
                         ].join('\n'),
                         style: DesignSystem.bodySm,

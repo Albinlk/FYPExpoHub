@@ -14,7 +14,10 @@ abstract class ImportRecord with _$ImportRecord {
     required String uploadedBy,
     required DateTime uploadedAt,
     required String parserVersion,
-    required String status, // 'processing', 'pending_review', 'completed', 'error', 'cancelled'
+    // One of `importStatuses` (row_mappers.dart, the `imports.status` check):
+    // normally 'pending_review' -> 'published'; also 'processing',
+    // 'partially_published', 'completed_with_warnings', 'failed'.
+    required String status,
     required Map<String, int> summary, // e.g., {'schedule': 12, 'winners': 4}
     required Map<String, int> warningCounts, // e.g., {'overlap': 1, 'privacy': 3}
     String? errorSummary,

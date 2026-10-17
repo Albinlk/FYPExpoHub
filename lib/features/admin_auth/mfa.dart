@@ -178,7 +178,7 @@ class _MfaChallengeViewState extends ConsumerState<MfaChallengeView> {
                   width: double.infinity,
                   child: BusyButton(label: 'Verify', busyLabel: 'Verifying…', busy: _busy, onPressed: _verify),
                 ),
-                TextButton(onPressed: _busy ? null : _signOut, child: const Text('Sign out')),
+                TextButton(onPressed: _busy ? null : _signOut, child: const Text('Sign Out')),
               ],
             ),
           ),

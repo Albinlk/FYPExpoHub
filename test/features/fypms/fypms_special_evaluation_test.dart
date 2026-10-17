@@ -98,7 +98,7 @@ void main() {
     await pump(
       tester,
       FormEvaluationsView(
-        title: 'Course Evaluations',
+        title: 'Evaluations',
         role: 'lecturer',
         records: AsyncData([_record()]),
         emptyText: 'none',

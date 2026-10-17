@@ -259,6 +259,15 @@ This means your account exists but nobody has given it a Workspace role
 add roles. Click **Sign Out**, and ask your coordinator to add you. Once they
 have, sign in again.
 
+### "This account has no access yet"
+
+If you sign in on the exhibition site with an account that has no role at
+all, the sign-in page stays open and says *You're signed in as …, but this
+account has no access yet. Ask the FYP coordinator to give you a role.*
+Click **Switch Account** to sign in with a different account, or ask your
+coordinator to add a role. Once they have, sign in again and you go straight
+to your page.
+
 ### "You're signed in as …, which isn't an admin account" {#not-admin}
 
 You opened an exhibition admin page (`/admin…`) while signed in with an
@@ -283,7 +292,7 @@ page shows:
 | The reset email does not arrive | Check your spam or junk folder. The message is the same whether or not the email has an account, so make sure you used the address your coordinator registered. |
 | *This reset link is invalid or has expired* | The link was used already or is over an hour old. Ask for a new one. |
 | *That code did not work. Check the time on your phone and try again.* | Your phone's clock may be wrong. Turn on automatic date and time on your phone, then try the newest code. |
-| I signed in on the exhibition site but nothing changed | Your account may have no Workspace role yet. Open the FYP Workspace: if it shows **No FYPMS Access**, ask your coordinator. |
+| *This account has no access yet* after signing in | Your account has no role. Ask your FYP coordinator to add one, or click **Switch Account**. |
 | **No FYPMS Access** | Your account has no Workspace role yet. Ask your FYP coordinator to add one. |
 | I am signed in on one site but not the other | Reload the page on the other site. A tab that was already open only sees the change after it loads a new page. |
 | A page says *This link does not lead to one of our sites.* | The link was changed or is not ours. Go to the address you know (see the table at the top) instead. |

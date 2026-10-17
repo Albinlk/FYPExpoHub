@@ -4,11 +4,65 @@ import '../../../../app/theme/theme.dart';
 import '../../../../core/domain/fypms_form_definitions.dart';
 import '../../../../core/domain/fypms_rubric.dart';
 import '../../../../core/domain/models/fypms/fyp_form_submission.dart';
+import '../../../../core/state/expo/service_providers.dart';
+import '../../../../core/state/fypms/user_scope.dart';
 import '../../../../core/state/fypms_state_providers.dart';
+import '../../../../core/supabase/fypms_database_service.dart';
+import '../../../../core/utils/fypms_format.dart';
 import 'student_form_dialog.dart' show FormAnswersView;
 import '../../../../core/widgets/async_state.dart';
 import '../../../../core/widgets/admin_actions.dart';
 import '../../../../core/layout/responsive.dart';
+
+/// The caller's own earlier evaluation of a submission (fyp_form_evaluations
+/// row), used to prefill the dialog when they update it.
+class ExistingFormEvaluation {
+  const ExistingFormEvaluation({required this.scores, this.comments, this.evaluatedAt});
+
+  /// Criterion key -> 0–10 score, from the `scores` jsonb.
+  final Map<String, int> scores;
+  final String? comments;
+  final DateTime? evaluatedAt;
+
+  /// Parses a fyp_form_evaluations row. Scores may arrive as int, double or
+  /// numeric strings; anything else is skipped.
+  factory ExistingFormEvaluation.fromRow(Map<String, dynamic> row) {
+    final raw = row['scores'];
+    final scores = <String, int>{};
+    if (raw is Map) {
+      for (final e in raw.entries) {
+        final v = e.value;
+        final n = v is num ? v : (v is String ? num.tryParse(v) : null);
+        if (n != null) scores['${e.key}'] = n.round();
+      }
+    }
+    final comments = row['comments'];
+    final at = row['evaluated_at'] ?? row['updated_at'];
+    return ExistingFormEvaluation(
+      scores: scores,
+      comments: comments is String && comments.trim().isNotEmpty ? comments : null,
+      evaluatedAt: at is String ? DateTime.tryParse(at) : (at is DateTime ? at : null),
+    );
+  }
+}
+
+/// The signed-in evaluator's own evaluation of a form submission, or null
+/// when they have not evaluated it yet. Never fails: a load problem just
+/// means the dialog opens empty, as it did before.
+final myFormEvaluationProvider =
+    FutureProvider.family<ExistingFormEvaluation?, String>((ref, formSubmissionId) async {
+  try {
+    final uid = ref.watch(fypmsUserScopeProvider);
+    if (uid == null) return null;
+    final rows = await ref.read(supabaseDbServiceProvider).getEvaluationsForSubmissionOnce(formSubmissionId);
+    for (final row in rows) {
+      if (row['evaluator_id'] == uid) return ExistingFormEvaluation.fromRow(row);
+    }
+    return null;
+  } catch (_) {
+    return null;
+  }
+});
 
 /// Scores one form submission against its textbook rubric: one 0–10 score per
 /// criterion with its band and marks (W × S), and a live total that matches
@@ -32,6 +86,40 @@ class _RubricEvaluationDialogState extends ConsumerState<RubricEvaluationDialog>
   String _decision = 'approved';
   bool _submitting = false;
 
+  /// The evaluator's earlier evaluation, once loaded; its scores and
+  /// comments are copied into the form unless the user already started.
+  ExistingFormEvaluation? _existing;
+
+  /// Bumped when prefilled values arrive so the dropdowns (which only read
+  /// their initial value once) rebuild with them.
+  int _prefillGeneration = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadExisting();
+  }
+
+  Future<void> _loadExisting() async {
+    ExistingFormEvaluation? existing;
+    try {
+      existing = await ref.read(myFormEvaluationProvider(widget.submission.id).future);
+    } catch (_) {
+      existing = null;
+    }
+    if (!mounted || existing == null) return;
+    final e = existing;
+    setState(() {
+      _existing = e;
+      // Do not overwrite anything the evaluator already changed.
+      if (_scores.isEmpty) _scores.addAll(e.scores);
+      if (_comments.text.isEmpty && e.comments != null) _comments.text = e.comments!;
+      const decisions = {'approved', 'rejected', 'resubmission_required'};
+      if (decisions.contains(widget.submission.status)) _decision = widget.submission.status;
+      _prefillGeneration++;
+    });
+  }
+
   @override
   void dispose() {
     _comments.dispose();
@@ -52,9 +140,10 @@ class _RubricEvaluationDialogState extends ConsumerState<RubricEvaluationDialog>
         widget.submission.fypRecordId,
       );
       if (!mounted) return;
+      ref.invalidate(myFormEvaluationProvider(widget.submission.id));
       final messenger = ScaffoldMessenger.of(context);
       Navigator.pop(context);
-      messenger.showSnackBar(const SnackBar(content: Text('Evaluation submitted.')));
+      messenger.showSnackBar(SnackBar(content: Text(_existing == null ? 'Evaluation submitted.' : 'Evaluation updated.')));
     } catch (e) {
       if (!mounted) return;
       setState(() => _submitting = false);
@@ -67,6 +156,7 @@ class _RubricEvaluationDialogState extends ConsumerState<RubricEvaluationDialog>
     final rubric = ref.watch(fypActiveRubricProvider(widget.submission.formCode));
     final criteria = rubric.value == null ? null : _criteriaOf(rubric.value!.criteria);
     // Submit only once every criterion has a score.
+    // Ignore stored scores for criteria the current rubric no longer has.
     final ready = criteria != null && criteria.every((c) => _scores.containsKey(c.key));
 
     return AlertDialog(
@@ -86,7 +176,7 @@ class _RubricEvaluationDialogState extends ConsumerState<RubricEvaluationDialog>
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
         FilledButton(
           onPressed: ready && !_submitting ? () => _submit(criteria) : null,
-          child: const Text('Submit'),
+          child: Text(_existing == null ? 'Submit' : 'Update'),
         ),
       ],
     );
@@ -95,11 +185,24 @@ class _RubricEvaluationDialogState extends ConsumerState<RubricEvaluationDialog>
   Widget _buildForm(String rubricName, List<RubricCriterion> criteria) {
     final marks = rubricMarks(criteria, _scores);
     final scored = criteria.where((c) => _scores.containsKey(c.key)).length;
+    final existing = _existing;
     return SingleChildScrollView(
+      key: ValueKey('rubric-form-$_prefillGeneration'),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (existing != null) ...[
+            Text(
+              existing.evaluatedAt == null
+                  ? 'You already evaluated this submission. Your scores and comments are filled in; change them and press Update.'
+                  : 'You evaluated this submission on ${formatFypDate(existing.evaluatedAt!)}. '
+                      'Your scores and comments are filled in; change them and press Update.',
+              key: const Key('existing-evaluation-note'),
+              style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant),
+            ),
+            const SizedBox(height: DesignSystem.spaceSm),
+          ],
           // What the student submitted (backlog U1), above the scores.
           if (formAnswers(widget.submission.formCode, widget.submission.payload).isNotEmpty) ...[
             Text('Student submission', style: DesignSystem.bodyMd.copyWith(fontWeight: FontWeight.bold)),

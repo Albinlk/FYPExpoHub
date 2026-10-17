@@ -226,7 +226,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: kSignInPath,
         builder: (context, state) =>
-            SignInPage(notAdmin: state.uri.queryParameters['reason'] == kNotAdminReason),
+            SignInPage(notAdmin: state.uri.queryParameters['reason'] == kNotAdminReason, noAccess: state.uri.queryParameters['reason'] == kNoAccessReason),
       ),
       // Hop to the other site (exhibition ↔ FYP Workspace host).
       GoRoute(

@@ -330,7 +330,12 @@ class _PickSupervisorDialogState extends State<_PickSupervisorDialog> {
 }
 
 class _ReasonDialog extends StatefulWidget {
-  const _ReasonDialog();
+  const _ReasonDialog({this.fieldLabel = 'Reason (shown to the requester)'});
+
+  /// Says who reads the reason: the student for a supervisor change, the
+  /// FYP coordinator for a PU nomination decision (decide_nomination keeps
+  /// it as pu_comment and in the audit log; nominees are not notified).
+  final String fieldLabel;
 
   @override
   State<_ReasonDialog> createState() => _ReasonDialogState();
@@ -355,7 +360,7 @@ class _ReasonDialogState extends State<_ReasonDialog> {
         autofocus: true,
         maxLines: 2,
         onChanged: (_) => setState(() {}),
-        decoration: const InputDecoration(labelText: 'Reason (shown to the requester)'),
+        decoration: InputDecoration(labelText: widget.fieldLabel),
       ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
@@ -379,7 +384,10 @@ class PuNominationsPage extends ConsumerWidget {
     if (_inFlight.contains(n.assignmentId)) return;
     String? comment;
     if (decision == 'rejected') {
-      comment = await showDialog<String>(context: context, builder: (_) => const _ReasonDialog());
+      comment = await showDialog<String>(
+        context: context,
+        builder: (_) => const _ReasonDialog(fieldLabel: 'Reason for the FYP coordinator'),
+      );
       if (comment == null) return;
     } else {
       // Approval drives the appointment letter and cannot be undone here.

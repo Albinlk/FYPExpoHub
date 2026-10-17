@@ -145,7 +145,7 @@ class VisitDataTable extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(color: DesignSystem.surfaceContainerHighest, borderRadius: DesignSystem.radiusSm),
-      child: Text('Not Yet', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSurfaceVariant, fontSize: 11)),
+      child: Text('Not visited', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSurfaceVariant, fontSize: 11)),
     );
   }
 
@@ -173,7 +173,7 @@ String exportVisitsCsv(
   for (final a in assignments) {
     final project = projects[a.projectId];
     final visit = visits.where((v) => v.projectId == a.projectId && v.visitRole == a.role).firstOrNull;
-    final status = visit != null ? (visit.status == 'completed' ? 'Visited' : 'Voided') : 'Not Yet';
+    final status = visit != null ? (visit.status == 'completed' ? 'Visited' : 'Voided') : 'Not visited';
     final timeStr = visit != null ? visit.visitedAt.toIso8601String() : '';
     final note = visit?.visitNote ?? '';
 

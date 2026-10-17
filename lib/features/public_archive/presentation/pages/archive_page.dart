@@ -119,7 +119,7 @@ class ArchivedEventPage extends ConsumerWidget {
                     TextButton.icon(
                       onPressed: () => context.go('/archive'),
                       icon: const Icon(Icons.arrow_back),
-                      label: const Text('Past exhibitions'),
+                      label: const Text('Past Exhibitions'),
                     ),
                     PageHeading(event.title),
                     Text('${event.year}${event.venue == null ? '' : ' · ${event.venue}'} · ${projects.length} ${projects.length == 1 ? 'project' : 'projects'}',

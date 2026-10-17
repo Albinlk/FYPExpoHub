@@ -27,6 +27,7 @@ import 'package:fyp_expo_hub/features/fypms/presentation/pages/supervisor_correc
 import 'package:fyp_expo_hub/features/fypms/presentation/pages/supervisor_evaluations_page.dart';
 import 'package:fyp_expo_hub/features/fypms/presentation/pages/supervisor_progress_page.dart';
 import 'package:fyp_expo_hub/features/fypms/presentation/pages/supervisor_requests_page.dart';
+import 'package:fyp_expo_hub/features/fypms/presentation/widgets/rubric_evaluation_dialog.dart';
 
 FypRecord _record() => FypRecord(
       id: 'rec-1',
@@ -392,7 +393,7 @@ void main() {
     testWidgets('renders finalized marks summary', (tester) async {
       await _pump(tester, app(const CspMarksPage()));
 
-      expect(find.text('Finalize Marks'), findsOneWidget);
+      expect(find.text('Marks'), findsOneWidget);
       expect(find.text('AI Health Assistant'), findsOneWidget);
       expect(find.text('CSP600 — Grade: A'), findsOneWidget);
     });
@@ -586,6 +587,85 @@ void main() {
     });
   });
 
+  group('Updating an evaluation', () {
+    testWidgets('prefills the scores and comments the evaluator already submitted', (tester) async {
+      final called = <Object?>[];
+      await _pump(
+        tester,
+        ProviderScope(
+          overrides: [
+            ...baseOverrides(submissions: [_submission().copyWith(status: 'resubmission_required')]),
+            myFormEvaluationProvider.overrideWith((ref, id) async => ExistingFormEvaluation.fromRow({
+                  'scores': {'literature_review': 8, 'methodology': '6', 'progress_evaluation': 5.0},
+                  'comments': 'Tighten chapter 2.',
+                  'evaluated_at': '2026-08-20T10:00:00Z',
+                })),
+            submitFormEvaluationProvider.overrideWithValue(
+                (submissionId, scores, comments, decision, recordId) async {
+              called.addAll([submissionId, scores, comments, decision]);
+            }),
+          ],
+          child: home(const SupervisorEvaluationsPage()),
+        ),
+      );
+
+      await tester.tap(find.text('Evaluate'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('existing-evaluation-note')), findsOneWidget);
+      expect(find.text('Tighten chapter 2.'), findsOneWidget);
+      expect(
+        tester.widget<DropdownButton<int>>(
+          find.descendant(of: find.byKey(const Key('score-methodology')), matching: find.byType(DropdownButton<int>)),
+        ).value,
+        6,
+      );
+      expect(find.text('Marks 86 / 130'), findsOneWidget);
+      final update = find.widgetWithText(FilledButton, 'Update');
+      expect(tester.widget<FilledButton>(update).onPressed, isNotNull,
+          reason: 'every criterion already has its stored score');
+
+      await tester.tap(update);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(called, [
+        'sub-1',
+        {'literature_review': 8, 'methodology': 6, 'progress_evaluation': 5},
+        'Tighten chapter 2.',
+        'resubmission_required',
+      ]);
+      expect(find.text('Evaluation updated.'), findsOneWidget);
+    });
+
+    testWidgets('opens empty with Submit when there is no earlier evaluation', (tester) async {
+      await _pump(
+        tester,
+        ProviderScope(
+          overrides: [
+            ...baseOverrides(),
+            myFormEvaluationProvider.overrideWith((ref, id) async => null),
+          ],
+          child: home(const SupervisorEvaluationsPage()),
+        ),
+      );
+      await tester.tap(find.text('Evaluate'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('existing-evaluation-note')), findsNothing);
+      expect(find.widgetWithText(FilledButton, 'Submit'), findsOneWidget);
+    });
+
+    test('ExistingFormEvaluation.fromRow tolerates odd score values', () {
+      final e = ExistingFormEvaluation.fromRow({
+        'scores': {'a': 7, 'b': 6.6, 'c': '3', 'd': 'x', 'e': null},
+        'comments': '  ',
+      });
+      expect(e.scores, {'a': 7, 'b': 7, 'c': 3});
+      expect(e.comments, isNull);
+      expect(e.evaluatedAt, isNull);
+    });
+  });
+
   group('Evaluator per form (textbook)', () {
     Widget withBothForms(Widget page) => ProviderScope(
           overrides: baseOverrides(submissions: [_submission(), _lecturerOnlySubmission()]),
@@ -603,7 +683,7 @@ void main() {
     testWidgets('CSP lecturer gets Evaluate on F3 only', (tester) async {
       await _pump(tester, withBothForms(const CspEvaluationsPage()));
 
-      expect(find.text('Course Evaluations'), findsOneWidget);
+      expect(find.text('Evaluations'), findsOneWidget);
       expect(find.text('Form F3'), findsOneWidget);
       expect(find.text('Form F8'), findsNothing);
       expect(find.text('Evaluate'), findsOneWidget);
@@ -644,7 +724,7 @@ void main() {
     testWidgets('opens evaluate dialog with decision options', (tester) async {
       await _pump(tester, app(const ExaminerEvaluationsPage()));
 
-      expect(find.text('Examiner Evaluations'), findsOneWidget);
+      expect(find.text('Evaluations'), findsOneWidget);
       expect(find.text('Form F8'), findsOneWidget);
 
       await tester.tap(find.text('Evaluate'));
@@ -781,7 +861,7 @@ void main() {
       expect(find.text('Expo Publications'), findsOneWidget);
       expect(find.text('AI Health Assistant'), findsOneWidget);
       // Event is now resolved to its title (was a raw UUID).
-      expect(find.textContaining('Status: ready | Expo 2026'), findsOneWidget);
+      expect(find.textContaining('Status: Ready | Expo 2026'), findsOneWidget);
       expect(find.text('Publish'), findsOneWidget);
     });
 

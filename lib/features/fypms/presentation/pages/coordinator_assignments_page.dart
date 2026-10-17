@@ -6,6 +6,7 @@ import '../../../../core/state/fypms_state_providers.dart';
 import '../widgets/fypms_loading_widget.dart';
 import '../../../../core/widgets/async_state.dart';
 import '../../../../core/widgets/admin_actions.dart';
+import '../../../../core/utils/fypms_format.dart';
 
 class CoordinatorAssignmentsPage extends ConsumerWidget {
   const CoordinatorAssignmentsPage({super.key});
@@ -56,7 +57,7 @@ class CoordinatorAssignmentsPage extends ConsumerWidget {
                         ),
                         const SizedBox(height: DesignSystem.spaceXs),
                         Text(
-                          '${record.currentCourseCode} | ${record.workflowStatus.replaceAll('_', ' ')}',
+                          '${record.currentCourseCode} | ${workflowStatusLabel(record.workflowStatus)}',
                           style: DesignSystem.bodySm,
                         ),
                         const SizedBox(height: DesignSystem.spaceSm),
