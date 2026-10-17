@@ -10,6 +10,7 @@ import '../../../../core/supabase/fypms_rpc_service.dart';
 import '../widgets/fypms_loading_widget.dart';
 import '../../../../core/widgets/async_state.dart';
 import '../../../../core/widgets/admin_actions.dart';
+import '../../../../core/utils/fypms_format.dart';
 
 class StudentRecordsPage extends ConsumerWidget {
   const StudentRecordsPage({super.key});
@@ -291,7 +292,7 @@ class _RecordListTile extends ConsumerWidget {
           children: [
             const SizedBox(height: DesignSystem.spaceXs),
             Text('Course: ${record.currentCourseCode}', style: DesignSystem.bodySm),
-            Text('Status: ${record.workflowStatus.replaceAll('_', ' ')}', style: DesignSystem.bodySm),
+            Text('Status: ${workflowStatusLabel(record.workflowStatus)}', style: DesignSystem.bodySm),
           ],
         ),
         trailing: const Icon(Icons.chevron_right),

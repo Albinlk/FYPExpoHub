@@ -6,6 +6,7 @@ import '../widgets/fypms_loading_widget.dart';
 import '../widgets/student_form_dialog.dart';
 import '../widgets/student_record_workspace.dart';
 import '../../../../core/widgets/async_state.dart';
+import '../../../../core/utils/fypms_format.dart';
 
 class StudentFormsPage extends ConsumerWidget {
   const StudentFormsPage({super.key});
@@ -63,7 +64,7 @@ class StudentFormsPage extends ConsumerWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Forms & Submissions', style: DesignSystem.h2),
+                  Text('Forms', style: DesignSystem.h2),
                   FilledButton.icon(
                     onPressed: () =>
                         _showSubmitFormDialog(context, ref, record.id, formCodes),
@@ -110,7 +111,7 @@ class StudentFormsPage extends ConsumerWidget {
                               style: DesignSystem.bodySm.copyWith(fontWeight: FontWeight.bold),
                             ),
                             subtitle: Text(
-                              'Status: ${sub.status.replaceAll('_', ' ')}',
+                              'Status: ${formStatusLabel(sub.status)}',
                               style: DesignSystem.bodySm,
                             ),
                             expandedAlignment: Alignment.centerLeft,

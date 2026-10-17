@@ -10,6 +10,7 @@ import '../widgets/record_admin_dialogs.dart';
 import '../widgets/semester_selector.dart';
 import '../../../../core/widgets/async_state.dart';
 import '../../../../core/widgets/admin_actions.dart';
+import '../../../../core/utils/fypms_format.dart';
 
 class CoordinatorRecordsPage extends ConsumerWidget {
   const CoordinatorRecordsPage({super.key});
@@ -86,7 +87,7 @@ class CoordinatorRecordsPage extends ConsumerWidget {
                       style: DesignSystem.bodyLg.copyWith(fontWeight: FontWeight.bold),
                     ),
                     subtitle: Text(
-                      '${record.currentCourseCode} | ${record.workflowStatus.replaceAll('_', ' ')}',
+                      '${record.currentCourseCode} | ${workflowStatusLabel(record.workflowStatus)}',
                       style: DesignSystem.bodySm,
                     ),
                     trailing: PopupMenuButton<String>(

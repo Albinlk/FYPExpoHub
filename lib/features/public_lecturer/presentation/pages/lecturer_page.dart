@@ -7,6 +7,7 @@ import '../../../../core/state/state_providers.dart';
 import '../../../../core/widgets/project_card.dart';
 import '../../../../core/utils/url_state.dart';
 import '../../../../core/widgets/page_heading.dart';
+import '../../../public_booths/presentation_days.dart';
 
 class LecturerPage extends ConsumerStatefulWidget {
   const LecturerPage({super.key});
@@ -24,7 +25,12 @@ class _LecturerPageState extends ConsumerState<LecturerPage> with UrlStateSync<L
   bool _readQuery = false;
 
   static const _roles = ['All', 'Supervisor', 'Examiner'];
-  static const _days = ['All', 'Day 1 - 06 Aug 2026', 'Day 2 - 07 Aug 2026'];
+  /// 'All' plus the presentation days, rebuilt from the data / event every
+  /// build (see [presentationDayOptions]).
+  List<String> _days = const ['All'];
+
+  /// [_selectedDay] while it is still one of [_days], else 'All'.
+  String get _effectiveDay => _days.contains(_selectedDay) ? _selectedDay : 'All';
 
   @override
   void didChangeDependencies() {
@@ -37,8 +43,10 @@ class _LecturerPageState extends ConsumerState<LecturerPage> with UrlStateSync<L
     _nameController.text = params['name'] ?? '';
     final role = params['role'];
     if (_roles.contains(role)) _selectedRole = role!;
+    // Days come from the data, which may not have loaded yet; a day that
+    // never appears falls back to 'All' (see [_effectiveDay]).
     final day = params['day'];
-    if (_days.contains(day)) _selectedDay = day!;
+    if (day != null && day.isNotEmpty) _selectedDay = day;
     _calonIndustriOnly = params['industry'] == 'true';
   }
 
@@ -51,17 +59,26 @@ class _LecturerPageState extends ConsumerState<LecturerPage> with UrlStateSync<L
 
   @override
   Widget build(BuildContext context) {
+    // `publicProjectsProvider` already only exposes `published` projects.
+    final allProjects = ref.watch(publicProjectsProvider);
+    final event = ref.watch(eventProvider);
+    _days = [
+      'All',
+      ...presentationDayOptions(
+        allProjects.map((p) => p.presentationDay),
+        eventStart: event.startAt,
+        eventEnd: event.endAt,
+      ),
+    ];
+    final selectedDay = _effectiveDay;
     syncUrl({
       'name': _nameController.text,
       'role': _selectedRole == 'All' ? null : _selectedRole,
-      'day': _selectedDay == 'All' ? null : _selectedDay,
+      'day': selectedDay == 'All' ? null : selectedDay,
       'industry': _calonIndustriOnly ? 'true' : null,
     });
     final isDesktop = MediaQuery.sizeOf(context).width >= 768;
     final padding = isDesktop ? DesignSystem.marginDesktop : DesignSystem.marginMobile;
-
-    // `publicProjectsProvider` already only exposes `published` projects.
-    final allProjects = ref.watch(publicProjectsProvider);
 
     final filteredProjects = allProjects.where((project) {
       final query = _nameController.text.toLowerCase().trim();
@@ -76,8 +93,8 @@ class _LecturerPageState extends ConsumerState<LecturerPage> with UrlStateSync<L
               ? supervisorMatch
               : examinerMatch;
       if (!roleMatch) return false;
-      if (_selectedDay != 'All') {
-        if (project.presentationDay != _selectedDay) return false;
+      if (selectedDay != 'All') {
+        if (project.presentationDay != selectedDay) return false;
       }
       if (_calonIndustriOnly && !project.calonIndustri) return false;
       return true;
@@ -149,7 +166,7 @@ class _LecturerPageState extends ConsumerState<LecturerPage> with UrlStateSync<L
                               children: [
                                 Expanded(child: _buildDropdown('Role', _selectedRole, _roles, (val) => setState(() => _selectedRole = val!))),
                                 const SizedBox(width: DesignSystem.spaceMd),
-                                Expanded(child: _buildDropdown('Day', _selectedDay, _days, (val) => setState(() => _selectedDay = val!))),
+                                Expanded(child: _buildDropdown('Day', selectedDay, _days, (val) => setState(() => _selectedDay = val!))),
                                 const SizedBox(width: DesignSystem.spaceMd),
                                 Expanded(child: _buildDropdown('Type', _calonIndustriOnly ? 'Industry Candidate' : 'All', ['All', 'Industry Candidate'], (val) => setState(() => _calonIndustriOnly = val == 'Industry Candidate'))),
                               ],
@@ -159,7 +176,7 @@ class _LecturerPageState extends ConsumerState<LecturerPage> with UrlStateSync<L
                               children: [
                                 _buildDropdown('Role', _selectedRole, _roles, (val) => setState(() => _selectedRole = val!)),
                                 const SizedBox(height: DesignSystem.spaceSm),
-                                _buildDropdown('Day', _selectedDay, _days, (val) => setState(() => _selectedDay = val!)),
+                                _buildDropdown('Day', selectedDay, _days, (val) => setState(() => _selectedDay = val!)),
                                 const SizedBox(height: DesignSystem.spaceSm),
                                 _buildDropdown('Type', _calonIndustriOnly ? 'Industry Candidate' : 'All', ['All', 'Industry Candidate'], (val) => setState(() => _calonIndustriOnly = val == 'Industry Candidate')),
                               ],
@@ -223,6 +240,9 @@ class _LecturerPageState extends ConsumerState<LecturerPage> with UrlStateSync<L
 
   Widget _buildDropdown(String label, String value, List<String> options, ValueChanged<String?> onChanged) {
     return DropdownButtonFormField<String>(
+      // initialValue is only read once; re-key when the value or the options
+      // change (the Day options arrive with the data).
+      key: ValueKey('$label|$value|${options.join('|')}'),
       initialValue: value,
       decoration: InputDecoration(
         labelText: label,

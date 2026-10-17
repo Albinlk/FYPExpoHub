@@ -181,7 +181,7 @@ class _StatusChip extends StatelessWidget {
         borderRadius: DesignSystem.radiusSm,
       ),
       child: Text(
-        status,
+        fypStatusLabel(status),
         style: DesignSystem.bodySm.copyWith(color: active ? DesignSystem.onSecondaryContainer : DesignSystem.onSurfaceVariant),
       ),
     );

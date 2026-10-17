@@ -10,6 +10,8 @@ import '../../../../core/state/state_providers.dart';
 import '../../../../core/widgets/project_card.dart';
 import '../../../../core/widgets/async_state.dart';
 import '../../../../core/widgets/page_heading.dart';
+import '../../../../core/state/fypms_state_providers.dart';
+import '../../../../app/site_hosts.dart';
 
 class LecturerVisitsPage extends ConsumerStatefulWidget {
   const LecturerVisitsPage({super.key});
@@ -45,6 +47,9 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
     }
 
     final displayName = lecturer?.displayName ?? authUser?.email?.split('@').first.toUpperCase() ?? 'Lecturer';
+    // A failed or pending role lookup just hides the link.
+    final hasWorkspaceRoles = authUser != null &&
+        ref.watch(fypmsCurrentRolesProvider).maybeWhen(data: (roles) => roles.isNotEmpty, orElse: () => false);
 
     final svAssignments = assignments.where((a) => a.role == 'supervisor').toList();
     final exAssignments = assignments.where((a) => a.role == 'examiner').toList();
@@ -64,7 +69,7 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
       if (_roleFilter == 'EX' && a.role != 'examiner') return false;
 
       final key = '${a.projectId}_${a.role}';
-      if (_statusFilter == 'Not Yet Visited' && completedSet.contains(key)) return false;
+      if (_statusFilter == 'Not visited' && completedSet.contains(key)) return false;
       if (_statusFilter == 'Visited' && !completedSet.contains(key)) return false;
       if (_statusFilter == 'Voided' && !voidedSet.contains(key)) return false;
 
@@ -100,9 +105,19 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
                     ),
                   ],
                 ),
-                Wrap(
+                Flexible(child: Wrap(
                   spacing: 8,
+                  alignment: WrapAlignment.end,
                   children: [
+                    // Staff who also supervise / examine / coordinate in the
+                    // FYP Workspace get a way back to it from here.
+                    if (hasWorkspaceRoles)
+                      TextButton.icon(
+                        key: const Key('fyp-workspace-link'),
+                        onPressed: () => openCspWorkspace(context, ref),
+                        icon: const Icon(Icons.school_outlined, size: 16),
+                        label: Text('FYP Workspace', style: DesignSystem.bodySm.copyWith(color: DesignSystem.primary)),
+                      ),
                     TextButton.icon(
                       onPressed: () {
                         ref.read(lecturerAuthProvider.notifier).signOut();
@@ -111,7 +126,7 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
                       label: Text('Sign Out', style: DesignSystem.bodySm.copyWith(color: DesignSystem.error)),
                     ),
                   ],
-                ),
+                )),
               ],
             ),
             const SizedBox(height: DesignSystem.spaceLg),
@@ -153,7 +168,7 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
                         children: [
                           _buildFilterChip('Role:', _roleFilter, ['All', 'SV', 'EX']),
                           const SizedBox(width: DesignSystem.spaceSm),
-                          _buildFilterChip('Status:', _statusFilter, ['All', 'Not Yet Visited', 'Visited', 'Voided']),
+                          _buildFilterChip('Status:', _statusFilter, ['All', 'Not visited', 'Visited', 'Voided']),
                           const SizedBox(width: DesignSystem.spaceSm),
                           _buildFilterChip('Day:', _dayFilter, ['All', ...{
                             for (final a in assignments)
@@ -427,7 +442,7 @@ class _LecturerVisitsPageState extends ConsumerState<LecturerVisitsPage> {
         color: Colors.black54,
         borderRadius: DesignSystem.radiusSm,
       ),
-      child: Text('Not Yet', style: DesignSystem.labelCaps.copyWith(color: Colors.white, fontSize: 11)),
+      child: Text('Not visited', style: DesignSystem.labelCaps.copyWith(color: Colors.white, fontSize: 11)),
     );
   }
 }

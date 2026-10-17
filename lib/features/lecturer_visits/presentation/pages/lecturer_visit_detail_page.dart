@@ -350,7 +350,7 @@ class _LecturerVisitDetailPageState extends ConsumerState<LecturerVisitDetailPag
                       color: DesignSystem.surfaceContainerHighest,
                       borderRadius: DesignSystem.radiusSm,
                     ),
-                    child: Text('Not Visited', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSurfaceVariant)),
+                    child: Text('Not visited', style: DesignSystem.labelCaps.copyWith(color: DesignSystem.onSurfaceVariant)),
                   ),
               ],
             ),

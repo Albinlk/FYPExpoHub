@@ -4,6 +4,7 @@ import '../../../../app/theme/theme.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import '../widgets/fypms_loading_widget.dart';
 import '../../../../core/widgets/async_state.dart';
+import '../../../../core/utils/fypms_format.dart';
 
 class CoordinatorDashboardPage extends ConsumerWidget {
   const CoordinatorDashboardPage({super.key});
@@ -71,7 +72,7 @@ class CoordinatorDashboardPage extends ConsumerWidget {
                     style: DesignSystem.bodySm.copyWith(fontWeight: FontWeight.w500),
                   ),
                   subtitle: Text(
-                    '${record.currentCourseCode} | ${record.workflowStatus.replaceAll('_', ' ')}',
+                    '${record.currentCourseCode} | ${workflowStatusLabel(record.workflowStatus)}',
                     style: DesignSystem.bodySm,
                   ),
                 ),

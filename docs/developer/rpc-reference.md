@@ -6,8 +6,9 @@ The app's schema defines **117 functions** (excluding triggers): policy
 helpers (`is_admin()`, `can_read_fyp_record()`, `is_csp_lecturer()`, ...)
 and SECURITY DEFINER RPCs for every mutation. Five more
 (`cleanup_oauth_states`, `get_content_filtered`, `get_dashboard_stats`,
-`is_editor`, `publish_scheduled_content`) belong to the unrelated template
-tables and are unused. All SECURITY DEFINER functions
+`is_editor`, `publish_scheduled_content`) belong to the separate
+content-scheduler app that shares the project; FYP Expo Hub never calls
+them. Keep them. All SECURITY DEFINER functions
 pin `search_path` and use `auth.uid()` to identify and gate the caller.
 
 The 5 Expo Hub RPCs are documented in detail below; the FYPMS RPC set is

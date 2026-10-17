@@ -4,6 +4,7 @@ import '../../../../app/theme/theme.dart';
 import '../../../../core/state/fypms_state_providers.dart';
 import '../widgets/fypms_loading_widget.dart';
 import '../../../../core/widgets/async_state.dart';
+import '../../../../core/utils/fypms_format.dart';
 
 class LecturerRecordDetailPage extends ConsumerWidget {
   final String recordId;
@@ -50,7 +51,7 @@ class LecturerRecordDetailPage extends ConsumerWidget {
             children: [
               _Row(label: 'Course', value: record.currentCourseCode),
               _Row(label: 'Programme', value: record.programmeCode),
-              _Row(label: 'Status', value: record.workflowStatus.replaceAll('_', ' ')),
+              _Row(label: 'Status', value: workflowStatusLabel(record.workflowStatus)),
               _Row(label: 'Matric ID', value: record.matricId ?? '—'),
               _Row(label: 'Description', value: record.projectDescription ?? '—'),
               const SizedBox(height: DesignSystem.spaceMd),

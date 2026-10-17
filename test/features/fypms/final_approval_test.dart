@@ -5,12 +5,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fyp_expo_hub/core/domain/models/fypms/fyp_correction_item.dart';
 import 'package:fyp_expo_hub/core/domain/models/fypms/fyp_record.dart';
+import 'package:fyp_expo_hub/core/state/fypms/user_scope.dart';
 import 'package:fyp_expo_hub/core/state/fypms_state_providers.dart';
 import 'package:fyp_expo_hub/features/fypms/presentation/pages/supervisor_corrections_page.dart';
 
 /// P12: after F12 the supervisor approves the final report (handbook Table
 /// 2.1 #50).
 FypRecord _rec({DateTime? approvedAt}) => FypRecord(
+      mainSupervisorId: 'sup-main',
+      coSupervisorId: 'sup-co',
       id: 'rec-1',
       academicSemesterId: 's26',
       studentId: 'stu-1',
@@ -34,13 +37,15 @@ FypCorrectionItem _item(String status) => FypCorrectionItem(
       updatedAt: DateTime(2026, 8, 12),
     );
 
-Future<void> _pump(WidgetTester tester, FypRecord record, List<FypCorrectionItem> items) async {
+Future<void> _pump(WidgetTester tester, FypRecord record, List<FypCorrectionItem> items,
+    {String uid = 'sup-main'}) async {
   tester.view.physicalSize = const Size(1200, 1400);
   tester.view.devicePixelRatio = 1.0;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
   await tester.pumpWidget(ProviderScope(
     overrides: [
+      fypmsUserScopeProvider.overrideWithValue(uid),
       assignedFypRecordsProvider.overrideWith((ref, role) async => [record]),
       fypCorrectionItemsProvider.overrideWith((ref, id) async => items),
     ],
@@ -69,6 +74,28 @@ void main() {
     await _pump(tester, _rec(approvedAt: DateTime(2026, 9, 20)), [_item('confirmed')]);
     expect(find.textContaining('Final report approved on'), findsOneWidget);
     expect(find.widgetWithText(FilledButton, 'Approve Final Report'), findsNothing);
+  });
+
+  testWidgets('a co-supervisor gets no approve button, only a note', (tester) async {
+    await _pump(tester, _rec(), [_item('confirmed'), _item('closed')], uid: 'sup-co');
+    expect(find.widgetWithText(FilledButton, 'Approve Final Report'), findsNothing);
+    expect(find.text('Only the main supervisor can give final approval.'), findsOneWidget);
+    expect(find.textContaining('Ready for your approval'), findsNothing);
+    expect(find.textContaining("Awaiting the main supervisor's approval"), findsOneWidget);
+  });
+
+  testWidgets('the main supervisor sees no co-supervisor note', (tester) async {
+    await _pump(tester, _rec(), [_item('confirmed')]);
+    expect(_approveButton(tester).onPressed, isNotNull);
+    expect(find.text('Only the main supervisor can give final approval.'), findsNothing);
+  });
+
+  test('canGiveFinalApproval matches the main supervisor only', () {
+    final rec = _rec();
+    expect(canGiveFinalApproval(rec, 'sup-main'), isTrue);
+    expect(canGiveFinalApproval(rec, 'sup-co'), isFalse);
+    expect(canGiveFinalApproval(rec, 'someone'), isFalse);
+    expect(canGiveFinalApproval(rec, null), isFalse);
   });
 
   test('the server only lets the supervisor approve, and only after F12', () {

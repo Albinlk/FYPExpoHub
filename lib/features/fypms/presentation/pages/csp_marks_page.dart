@@ -49,7 +49,7 @@ class CspMarksPage extends ConsumerWidget {
         surfaceTintColor: Colors.transparent,
         shape: const Border(bottom: BorderSide(color: DesignSystem.outlineVariant)),
         title: Text(
-          'Finalize Marks',
+          'Marks',
           style: DesignSystem.h3.copyWith(color: DesignSystem.primary, fontWeight: FontWeight.bold),
         ),
         actions: [

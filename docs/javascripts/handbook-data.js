@@ -69,7 +69,7 @@
     { role: "Lecturer", task: "Nominate an examiner with a CV", href: "guides/lecturer/#nominate",
       hint: "Assign the examiner, then attach the CV and declaration under Nomination CVs." },
     { role: "Lecturer", task: "Decide extension requests", href: "guides/lecturer/#csp-milestones",
-      hint: "Course Milestones shows an Extension requests box to Approve or Reject." },
+      hint: "Milestones shows an Extension requests box to Approve or Reject." },
     { role: "Lecturer", task: "Finalize course marks", href: "guides/lecturer/#finalize-marks",
       hint: "Marks, Finalize is enabled once every evaluation is in." },
     { role: "Lecturer", task: "Approve a nomination as PU head", href: "guides/lecturer/#pu-decide",

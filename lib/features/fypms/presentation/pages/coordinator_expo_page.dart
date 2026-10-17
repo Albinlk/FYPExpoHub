@@ -6,6 +6,7 @@ import '../widgets/fypms_loading_widget.dart';
 import '../../../../core/widgets/async_state.dart';
 import '../../../../core/widgets/admin_actions.dart';
 import '../../domain/expo_eligibility.dart';
+import '../../../../core/utils/fypms_format.dart';
 
 class CoordinatorExpoPage extends ConsumerWidget {
   const CoordinatorExpoPage({super.key});
@@ -71,7 +72,7 @@ class CoordinatorExpoPage extends ConsumerWidget {
                       style: DesignSystem.bodyLg.copyWith(fontWeight: FontWeight.bold),
                     ),
                     subtitle: Text(
-                      'Status: ${pub.status.replaceAll('_', ' ')} | '
+                      'Status: ${fypStatusLabel(pub.status)} | '
                       '${eventTitleById[pub.eventId] ?? 'Event'}',
                       style: DesignSystem.bodySm,
                     ),

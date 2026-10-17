@@ -22,7 +22,7 @@ class StudentProgressPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return StudentRecordWorkspace(
-      title: 'Consultation Log',
+      title: 'Progress Logs',
       builder: (context, ref, record) {
         final logs = ref.watch(fypProgressLogsProvider(record.id));
         return Column(
@@ -32,7 +32,15 @@ class StudentProgressPage extends ConsumerWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Flexible(child: Text('Consultation Log (F5)', style: DesignSystem.h2)),
+                  Flexible(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Progress Logs', style: DesignSystem.h2),
+                        Text('Consultation log (F5)', style: DesignSystem.bodySm.copyWith(color: DesignSystem.onSurfaceVariant)),
+                      ],
+                    ),
+                  ),
                   FilledButton.icon(
                     onPressed: () => showDialog<void>(
                       context: context,
@@ -92,7 +100,7 @@ class StudentProgressPage extends ConsumerWidget {
                                   'validated' => 'Signed by supervisor',
                                   'rejected' => 'Not accepted by supervisor',
                                   'submitted' => 'Awaiting supervisor signature',
-                                  _ => log.status,
+                                  _ => progressLogStatusLabel(log.status),
                                 },
                                 style: DesignSystem.bodySm.copyWith(fontWeight: FontWeight.w600),
                               ),

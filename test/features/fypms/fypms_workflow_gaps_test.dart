@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fyp_expo_hub/core/domain/models/fypms/fyp_correction_item.dart';
 import 'package:fyp_expo_hub/core/domain/models/fypms/fyp_milestone.dart';
 import 'package:fyp_expo_hub/core/domain/models/fypms/fyp_record.dart';
+import 'package:fyp_expo_hub/core/state/fypms/user_scope.dart';
 import 'package:fyp_expo_hub/core/state/fypms_state_providers.dart';
 import 'package:fyp_expo_hub/features/fypms/presentation/pages/supervisor_corrections_page.dart';
 import 'package:fyp_expo_hub/features/fypms/presentation/pages/supervisor_milestones_page.dart';
@@ -36,6 +37,7 @@ FypCorrectionItem _item({String status = 'evidence_submitted'}) => FypCorrection
 
 Widget _app(Widget home) => ProviderScope(
       overrides: [
+        fypmsUserScopeProvider.overrideWithValue('sup-1'),
         assignedFypRecordsProvider.overrideWith((ref, role) async => [_record()]),
         fypCorrectionItemsProvider.overrideWith((ref, recordId) async => [_item()]),
         fypMilestonesProvider.overrideWith((ref, recordId) async => [

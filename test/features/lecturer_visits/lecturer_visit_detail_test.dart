@@ -222,7 +222,7 @@ void main() {
     expect(find.text('Industry Candidate'), findsOneWidget);
     expect(find.text('Booth B12'), findsOneWidget);
     expect(find.text('Mark as Visited'), findsNWidgets(2));
-    expect(find.text('Not Visited'), findsNWidgets(2));
+    expect(find.text('Not visited'), findsNWidgets(2));
   });
 
   testWidgets('mark as visited opens dialog and forwards assignmentId + note to the RPC',
@@ -297,7 +297,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Visited'), findsOneWidget); // SV section chip
-    expect(find.text('Not Visited'), findsOneWidget); // EX section still unvisited
+    expect(find.text('Not visited'), findsOneWidget); // EX section still unvisited
     expect(find.text('Visit Time'), findsOneWidget);
     expect(find.text('Note'), findsOneWidget);
     expect(find.text('Great demo.'), findsOneWidget);

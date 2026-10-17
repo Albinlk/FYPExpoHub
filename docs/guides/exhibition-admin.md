@@ -342,8 +342,8 @@ assigned automatically.
 **Student Visit Monitoring** shows how visit marking is going.
 
 - Tabs: **Overview**, **By Lecturer**, **By Project**, **Visit Log**.
-- Filters: **Role** (All, SV, EX) and **Status** (All, Visited, Not Yet,
-  Voided), plus **Search lecturers, projects, students, booths…**.
+- Filters: **Role** (All, SV, EX) and **Status** (All, Visited, Not
+  visited, Voided), plus **Search lecturers, projects, students, booths…**.
 - **Export CSV** downloads the visits.
 - To cancel a wrong visit, click **Void Visit**, enter a **Reason \*** and
   click **Void**. This cannot be undone.
@@ -416,7 +416,7 @@ see "Settings saved successfully!" Changes take effect straight away.
 | Setting | Default | Effect |
 |---|---|---|
 | **Maximum File Size** | `10 MB` | Larger master files are refused before parsing. Accepts e.g. `10 MB`, `500 KB`, `2.5 MB` or plain bytes |
-| **Mandatory Worksheet Names** | `TENTATIF, PEMENANG ANUGERAH` | Comma-separated. The import warns when a listed sheet is missing; it still stages |
+| **Mandatory Worksheet Names** | `SCHEDULE, AWARD` | Comma-separated. The import warns when a listed sheet is missing; it still stages |
 
 !!! tip "Use SCHEDULE, AWARD"
     The parser reads sheets whose names contain `TENTATIF` or `SCHEDULE`, and

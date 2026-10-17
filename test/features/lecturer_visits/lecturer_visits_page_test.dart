@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:fyp_expo_hub/core/domain/models/project.dart';
+import 'package:fyp_expo_hub/core/state/fypms_state_providers.dart';
 import 'package:fyp_expo_hub/core/state/state_providers.dart';
 import 'package:fyp_expo_hub/core/supabase/supabase_client_provider.dart';
 import 'package:fyp_expo_hub/features/lecturer_visits/presentation/pages/lecturer_visits_page.dart';
@@ -49,7 +50,8 @@ void main() {
       allVisitsProvider.overrideWith((ref) async => []),
     ], settle: false);
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
-    expect(find.textContaining('visited'), findsNothing);
+    // ('Not visited' is a filter chip, not a claim about progress.)
+    expect(find.textContaining(RegExp('all visited|been visited', caseSensitive: false)), findsNothing);
     expect(find.text('You have no projects assigned yet.'), findsNothing);
   });
 
@@ -69,6 +71,25 @@ void main() {
     ]);
     expect(find.text('You have no projects assigned yet.'), findsOneWidget);
     expect(find.textContaining('All projects have been visited'), findsNothing);
+  });
+
+  testWidgets('staff with FYP Workspace roles get a link back to it', (tester) async {
+    await pump(tester, [
+      allAssignmentsProvider.overrideWith((ref) async => []),
+      allVisitsProvider.overrideWith((ref) async => []),
+      fypmsCurrentRolesProvider.overrideWith((ref) async => const ['supervisor']),
+    ]);
+    expect(find.byKey(const Key('fyp-workspace-link')), findsOneWidget);
+    expect(find.text('FYP Workspace'), findsOneWidget);
+  });
+
+  testWidgets('no FYP Workspace roles, no Workspace link', (tester) async {
+    await pump(tester, [
+      allAssignmentsProvider.overrideWith((ref) async => []),
+      allVisitsProvider.overrideWith((ref) async => []),
+      fypmsCurrentRolesProvider.overrideWith((ref) async => const <String>[]),
+    ]);
+    expect(find.byKey(const Key('fyp-workspace-link')), findsNothing);
   });
 }
 

@@ -128,7 +128,7 @@ Click a step to see what it means and who acts next.
 | pending | Accept / Decline buttons | Waiting for the named supervisor |
 | approved | **Accepted** | You accepted; you are now the supervisor |
 | rejected | **Declined** | You declined; the student must ask someone else |
-| withdrawn | **withdrawn** | The request is no longer active |
+| withdrawn | **Withdrawn** | The request is no longer active |
 
 ### Review consultation logs (F5) {#consultation-logs}
 
@@ -236,10 +236,10 @@ At the bottom of each CSP650 project on the **Corrections** page there is a
    records your signature on the Supervisor Approval page.
 4. The box changes to *Final report approved on dd-mm-yyyy*.
 
-!!! warning "Main supervisor only"
+!!! note "Main supervisor only"
     Only the student's main supervisor can approve the final report. A
-    co-supervisor sees the same button, but the system refuses with
-    *Only the student's supervisor approves the final report.*
+    co-supervisor sees *Only the main supervisor can give final approval.*
+    instead of the button.
 
 ```mermaid
 stateDiagram-v2
@@ -356,7 +356,7 @@ The statuses are the same as for the supervisor.
 | Task | Page |
 |---|---|
 | See the projects you examine | **Examiner Dashboard** (*Records To Examine*) / **Assigned Records** |
-| Score examiner forms (F7, F8, F10, F11, F15, F16) | **Evaluations** (page title *Examiner Evaluations*) |
+| Score examiner forms (F7, F8, F10, F11, F15, F16) | **Evaluations**  |
 | List corrections and confirm the student's fixes (F12) | **Corrections** |
 | Score F10 (or F15) at the booth on exhibition day | **My Visits** on the exhibition site |
 
@@ -399,8 +399,8 @@ dashboard is **CSP600 Dashboard** (or **CSP650 Dashboard**).
 | Attach the nominee's CV and declaration for the PU | **Nomination CVs** | both |
 | Set milestones and decide extension requests | **Milestones** | both |
 | Create presentation sessions and slots | **Presentations** | both |
-| Score course-lecturer forms (F2, F3, F4, F7, F9, F13) and decide F14 | **Evaluations** (page title *Course Evaluations*) | both |
-| Compute, finalize and export marks | **Marks** (page title *Finalize Marks*) | both |
+| Score course-lecturer forms (F2, F3, F4, F7, F9, F13) and decide F14 | **Evaluations**  | both |
+| Compute, finalize and export marks | **Marks**  | both |
 
 !!! note "Supervision requests"
     You see pending F1 requests for your course so you can follow up, but
@@ -492,9 +492,9 @@ To move one student only, use **Promote to CSP650** on their card.
 
 ### Set milestones and decide extensions {#csp-milestones}
 
-[Open Course Milestones :octicons-link-external-16:](https://fyp.fskmjasinfypexhibition.site/fypms/csp/milestones){ .md-button target=_blank rel=noopener }
+[Open Milestones :octicons-link-external-16:](https://fyp.fskmjasinfypexhibition.site/fypms/csp/milestones){ .md-button target=_blank rel=noopener }
 
-1. Open **Milestones** (page title *Course Milestones*). Choose the student
+1. Open **Milestones**. Choose the student
    from **Record:**.
 2. Select **Add**, fill in **Milestone Code**, **Title**, **Description**,
    the target date and **Status** (**Pending**, **In Progress**,
@@ -592,8 +592,8 @@ their programme, and issues appointment letters.
    **Approve This Nomination?**. You will see *Nomination approved.* This
    creates the appointment and its letter and cannot be undone from this
    page.
-4. To reject, select **Reject**, type the **Reason (shown to the
-   requester)** and select **Reject**. You will see *Nomination rejected.*
+4. To reject, select **Reject**, type the **Reason for the FYP
+   coordinator** and select **Reject**. You will see *Nomination rejected.*
    The nomination is removed and the coordinator nominates someone else.
 
 !!! note "Approve needs the CV and declaration"
@@ -641,7 +641,7 @@ Tick steps as you go; your progress stays in this browser.
   criterion and **Submit** ([Score F10 at the booth](#score-booth)).
 - [ ] Marked the wrong booth? Select **Undo** straight away, or **Cancel
   Visit** within the undo window ([Cancel a visit](#cancel-visit)).
-- [ ] Before you leave, set **Status:** to **Not Yet Visited** and check that
+- [ ] Before you leave, set **Status:** to **Not visited** and check that
   no booth is left.
 
 </div>
@@ -673,8 +673,11 @@ Once **My Visits** is open:
 1. The page shows *Welcome, your name* and two counters, **Supervisor (SV)**
    and **Examiner (EX)**, as *visited / total*.
 2. Narrow the list with the search box (*Search projects, students,
-   booths…*) and the **Role:** (All, SV, EX), **Status:** (All, Not Yet
-   Visited, Visited, Voided) and **Day:** filters.
+   booths…*) and the **Role:** (All, SV, EX), **Status:** (All, Not
+   visited, Visited, Voided) and **Day:** filters.
+
+If you also hold a Workspace role, the **FYP Workspace** button next to
+**Sign Out** takes you back to the FYP Workspace.
 
 ### Mark a visit {#mark-visit}
 
@@ -764,7 +767,7 @@ evaluation)** for a student qualified on F14.
 
 | On the list | On the project | Meaning |
 |---|---|---|
-| **Not Yet** | **Not Visited** | No visit recorded |
+| **Not visited** | **Not visited** | No visit recorded |
 | time, for example **10:42** | **Visited** | Visit recorded at that time |
 | **Voided** | **Voided** | Visit cancelled; you can mark it again |
 

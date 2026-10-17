@@ -23,8 +23,105 @@ String formatFypDateTime(DateTime dt) {
       '${local.minute.toString().padLeft(2, '0')}';
 }
 
-/// Human label for a snake_case status value.
-String fypStatusLabel(String status) => status.replaceAll('_', ' ');
+/// Friendly labels for the 17 fyp_records.workflow_status values plus the
+/// `withdrawn` / `incomplete` hold states (fyp_records_workflow_status_check).
+const kWorkflowStatusLabels = <String, String>{
+  'awaiting_supervisor_assignment': 'Awaiting supervisor',
+  'supervision_requested': 'Supervision requested',
+  'supervision_approved': 'Supervisor assigned',
+  'formulation_in_progress': 'Formulation in progress',
+  'proposal_submitted': 'Proposal submitted',
+  'proposal_under_review': 'Proposal under review',
+  'proposal_revision_required': 'Proposal revision required',
+  'proposal_approved': 'Proposal approved',
+  'formulation_completed': 'Formulation completed',
+  'project_registered': 'Project registered',
+  'project_ongoing': 'Project in progress',
+  'final_report_submitted': 'Final report submitted',
+  'final_report_under_review': 'Final report under review',
+  'final_report_approved': 'Final report approved',
+  'project_pending_presentation': 'Awaiting presentation',
+  'project_completed': 'Completed',
+  'project_archived': 'Archived',
+  'withdrawn': 'Withdrawn',
+  'incomplete': 'Incomplete',
+};
+
+/// Friendly labels for fyp_supervision_requests.status. Matches what the
+/// supervisor sees on the request card (Accepted / Declined).
+const kSupervisionRequestStatusLabels = <String, String>{
+  'pending': 'Awaiting decision',
+  'approved': 'Accepted',
+  'rejected': 'Declined',
+  'withdrawn': 'Withdrawn',
+};
+
+/// Friendly labels for fyp_form_submissions.status.
+const kFormStatusLabels = <String, String>{
+  'draft': 'Draft',
+  'submitted': 'Submitted',
+  'under_review': 'Under review',
+  'approved': 'Approved',
+  'rejected': 'Rejected',
+  'resubmission_required': 'Resubmission required',
+};
+
+/// Friendly labels for fyp_correction_items.status.
+const kCorrectionStatusLabels = <String, String>{
+  'open': 'Open',
+  'in_progress': 'In progress',
+  'evidence_submitted': 'Evidence submitted',
+  'confirmed': 'Confirmed',
+  'closed': 'Closed',
+};
+
+/// Friendly labels for fyp_milestones.status.
+const kMilestoneStatusLabels = <String, String>{
+  'pending': 'Pending',
+  'in_progress': 'In progress',
+  'completed': 'Completed',
+  'overdue': 'Overdue',
+};
+
+/// Friendly labels for fyp_progress_logs.status (F5).
+const kProgressLogStatusLabels = <String, String>{
+  'draft': 'Draft',
+  'submitted': 'Submitted',
+  'validated': 'Validated',
+  'rejected': 'Rejected',
+};
+
+/// Sentence-case fallback for a snake_case value nobody mapped yet.
+String _humanise(String value) {
+  final spaced = value.replaceAll('_', ' ').trim();
+  if (spaced.isEmpty) return spaced;
+  return spaced[0].toUpperCase() + spaced.substring(1);
+}
+
+/// Label for a fyp_records.workflow_status value.
+String workflowStatusLabel(String status) => kWorkflowStatusLabels[status] ?? _humanise(status);
+
+/// Label for a fyp_supervision_requests.status value.
+String supervisionRequestStatusLabel(String status) =>
+    kSupervisionRequestStatusLabels[status] ?? _humanise(status);
+
+/// Label for a fyp_form_submissions.status value.
+String formStatusLabel(String status) => kFormStatusLabels[status] ?? _humanise(status);
+
+/// Label for a fyp_progress_logs.status value.
+String progressLogStatusLabel(String status) => kProgressLogStatusLabels[status] ?? _humanise(status);
+
+/// Human label for any FYPMS status value (workflow, form, correction,
+/// milestone or progress log). The tables agree wherever a value is shared;
+/// supervision requests use [supervisionRequestStatusLabel] because their
+/// `approved` / `rejected` read as Accepted / Declined.
+String fypStatusLabel(String status) =>
+    kWorkflowStatusLabels[status] ??
+    kFormStatusLabels[status] ??
+    kCorrectionStatusLabels[status] ??
+    kMilestoneStatusLabels[status] ??
+    kProgressLogStatusLabels[status] ??
+    _humanise(status);
 
 /// Semantic color for the fyp_records.workflow_status values.
 Color workflowStatusColor(String status) {
@@ -33,14 +130,16 @@ Color workflowStatusColor(String status) {
     case 'supervision_requested':
       return DesignSystem.onSurfaceVariant;
     case 'supervision_approved':
+    case 'formulation_in_progress':
     case 'proposal_submitted':
-    case 'proposal_reviewed':
-    case 'proposal_defended':
+    case 'proposal_under_review':
+    case 'proposal_revision_required':
+    case 'proposal_approved':
+    case 'formulation_completed':
       return DesignSystem.tertiary;
     case 'final_report_submitted':
-    case 'final_report_reviewed':
-    case 'corrections_ongoing':
-    case 'corrections_completed':
+    case 'final_report_under_review':
+    case 'final_report_approved':
     case 'project_pending_presentation':
       return DesignSystem.secondary;
     case 'project_completed':
@@ -52,6 +151,7 @@ Color workflowStatusColor(String status) {
     case 'incomplete':
       return DesignSystem.tertiary;
     case 'project_registered':
+    case 'project_ongoing':
     default:
       return DesignSystem.primary;
   }

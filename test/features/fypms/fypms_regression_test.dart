@@ -158,7 +158,7 @@ void main() {
         ),
       );
 
-      expect(find.textContaining('Status: draft'), findsOneWidget);
+      expect(find.textContaining('Status: Draft'), findsOneWidget);
       expect(find.text('Publish'), findsNothing);
     });
 

@@ -41,7 +41,7 @@ void main() {
     ));
     await tester.pumpAndSettle();
     expect(find.text('Cohort Reports'), findsOneWidget);
-    expect(find.text('project ongoing'), findsOneWidget);
+    expect(find.text('Project in progress'), findsOneWidget);
     expect(find.text('CSP600 — 2 finalized, average 71.3%'), findsOneWidget);
     final a = tester.getTopLeft(find.text('A-')).dy;
     final b = tester.getTopLeft(find.text('B+')).dy;

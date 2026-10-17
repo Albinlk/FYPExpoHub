@@ -23,7 +23,7 @@ class CspOfferingsPage extends ConsumerWidget {
         surfaceTintColor: Colors.transparent,
         shape: const Border(bottom: BorderSide(color: DesignSystem.outlineVariant)),
         title: Text(
-          'Course Offerings',
+          'Offerings',
           style: DesignSystem.h3.copyWith(color: DesignSystem.primary, fontWeight: FontWeight.bold),
         ),
       ),
