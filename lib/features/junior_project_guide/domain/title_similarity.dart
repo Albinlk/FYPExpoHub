@@ -131,27 +131,11 @@ class TitleSimilarity {
       return parent[x];
     }
 
-    void union(int x, int y) {
-      final rx = find(x);
-      final ry = find(y);
-      if (rx != ry) parent[rx] = ry;
-    }
-
-    for (int i = 0; i < n; i++) {
-      final aTokens = index[projects[i].id] ?? const {};
-      if (aTokens.isEmpty) continue; // placeholder title — never matches
-      for (int j = i + 1; j < n; j++) {
-        final bTokens = index[projects[j].id] ?? const {};
-        if (bTokens.isEmpty) continue;
-        final interCount = aTokens.intersection(bTokens).length;
-        if (interCount < minSharedTitleWords) continue;
-        final unionCount = aTokens.length + bTokens.length - interCount;
-        if (unionCount == 0) continue;
-        if (interCount / unionCount >= minTitleJaccard) {
-          union(i, j);
-        }
-      }
-    }
+    _forEachTitlePair(projects, index, (i, j) {
+      final ri = find(i);
+      final rj = find(j);
+      if (ri != rj) parent[ri] = rj;
+    });
 
     final clusterMap = <int, List<int>>{};
     for (int i = 0; i < n; i++) {
@@ -195,10 +179,10 @@ class TitleSimilarity {
   /// categories would appear together in the report's title-cluster section
   /// while each row is still marked "Unique" and hidden by "Has Similar".
   ///
-  /// Runs a single combined O(n^2) pass — rather than computing the two
-  /// signals' counts separately and summing them — because a pair that
-  /// satisfies BOTH signals must still only increment each project's count
-  /// once; summing separate counts would double-count such pairs.
+  /// Collects the matching pairs of both signals into one set — rather than
+  /// computing the two signals' counts separately and summing them —
+  /// because a pair that satisfies BOTH must still only increment each
+  /// project's count once; summing separate counts would double-count it.
   static Map<String, int> computeCombinedSimilarityCounts(
     List<Project> projects, {
     Map<String, Set<String>>? categoryTagIndex,
@@ -207,26 +191,39 @@ class TitleSimilarity {
     final catIndex =
         categoryTagIndex ?? ProjectSimilarity.buildCategoryTagIndex(projects);
     final titleIndex = titleTokenIndex ?? buildTitleTokenIndex(projects);
+    final n = projects.length;
+    // Pair key i * n + j: a pair matching both signals is counted once.
+    final pairs = <int>{};
+    ProjectSimilarity.forEachOverlappingPair(
+      [for (final p in projects) catIndex[p.id] ?? const <String>{}],
+      ProjectSimilarity.minSharedCategoriesForCluster,
+      (i, j, _) => pairs.add(i * n + j),
+    );
+    _forEachTitlePair(projects, titleIndex, (i, j) => pairs.add(i * n + j));
+
     final counts = <String, int>{for (final p in projects) p.id: 0};
-    for (int i = 0; i < projects.length; i++) {
-      for (int j = i + 1; j < projects.length; j++) {
-        final a = projects[i];
-        final b = projects[j];
-        final tagSimilar = ProjectSimilarity.sharedTagCount(a, b,
-                tagIndex: catIndex) >=
-            ProjectSimilarity.minSharedCategoriesForCluster;
-        final titleSimilar = tagSimilar
-            ? false
-            : sharedTitleWordCount(a, b, tokenIndex: titleIndex) >=
-                    minSharedTitleWords &&
-                titleJaccard(a, b, tokenIndex: titleIndex) >= minTitleJaccard;
-        if (tagSimilar || titleSimilar) {
-          counts[a.id] = (counts[a.id] ?? 0) + 1;
-          counts[b.id] = (counts[b.id] ?? 0) + 1;
-        }
-      }
+    for (final key in pairs) {
+      final a = projects[key ~/ n].id;
+      final b = projects[key % n].id;
+      counts[a] = counts[a]! + 1;
+      counts[b] = counts[b]! + 1;
     }
     return counts;
+  }
+
+  /// Every pair `i < j` whose titles are near-identically worded: at least
+  /// [minSharedTitleWords] shared words AND a Jaccard of [minTitleJaccard].
+  /// Placeholder titles have no tokens, so they never pair.
+  static void _forEachTitlePair(
+    List<Project> projects,
+    Map<String, Set<String>> index,
+    void Function(int i, int j) visit,
+  ) {
+    final sets = [for (final p in projects) index[p.id] ?? const <String>{}];
+    ProjectSimilarity.forEachOverlappingPair(sets, minSharedTitleWords, (i, j, shared) {
+      final union = sets[i].length + sets[j].length - shared;
+      if (union > 0 && shared / union >= minTitleJaccard) visit(i, j);
+    });
   }
 
   /// Finds every project flagged similar to [target] by EITHER signal —

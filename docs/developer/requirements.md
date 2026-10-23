@@ -299,7 +299,7 @@ Purpose: help junior students check whether a proposed topic has already been do
 | FR-JPG-08 | The status badge shall read "Unique" (green) or "N similar" (red); the red badge shall open `/projects/junior-guide/similar/:id`. |
 | FR-JPG-09 | Two projects shall be considered similar if they share **≥ 2 normalised technology categories**, **or** share **≥ 3 significant title words with Jaccard ≥ 0.35** (stopwords, FYP boilerplate and programme codes removed; placeholder titles never match). |
 | FR-JPG-10 | Similarity shall always be computed over the full unfiltered data set, so a project's status does not change with filters. |
-| FR-JPG-11 | The Redundancy Report tab shall group similar projects transitively into clusters ("Similar by Tech Stack", "Similar by Project Title"), list cross-cohort (CSP650 + CSP600) clusters first, and label each with a High (≥ 0.5) / Medium (≥ 0.25) / Low average-overlap pill. |
+| FR-JPG-11 | The Redundancy Report tab shall group similar projects into clusters: "Similar by Tech Stack" groups projects that all share the same 2+ categories (every pair counted on the Browse tab appears in at least one group), "Similar by Project Title" groups near-identical titles transitively; list cross-cohort (CSP650 + CSP600) clusters first, and label each with a High (≥ 0.5) / Medium (≥ 0.25) / Low average-overlap pill. |
 | FR-JPG-12 | The Similar Projects page shall list every match with the reasons ("Shared categories", "Shared title words"); CSP650 matches open the project, CSP600 matches are marked "no detail page yet". |
 
 ### 5.11 M12 Feedback

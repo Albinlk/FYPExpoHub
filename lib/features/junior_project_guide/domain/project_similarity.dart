@@ -1,8 +1,11 @@
 // ignore_for_file: curly_braces_in_flow_control_structures
+import 'dart:typed_data';
+
 import '../../../core/domain/models/project.dart';
 
 /// Computes tag-overlap similarity between projects and identifies
-/// potentially redundant clusters (projects sharing 3+ technology tags).
+/// potentially redundant clusters (projects sharing the same 3+ technology
+/// tags, or 2+ categories on the category vocabulary).
 class ProjectSimilarity {
   static const minSharedTagsForCluster = 3;
 
@@ -32,9 +35,25 @@ class ProjectSimilarity {
     return effective.map(_normalizeTag).toSet();
   }
 
+  /// Results of [inferTagsFromTitle], keyed by input. The same raw CSP600
+  /// tags ("MQTT", "Wi-Fi", ...) are inferred over and over when the guide
+  /// builds its indices, and each inference runs ~150 substring checks.
+  static final Map<String, List<String>> _inferCache = {};
+  static const _inferCacheLimit = 4000;
+
   /// Lightweight title → tech tag inference (mirrors tech_tags_inferred.csv).
-  /// Keeps Project Guide readable even before Supabase migration.
+  /// Keeps Project Guide readable even before Supabase migration. The
+  /// returned list is shared (cached), so it is unmodifiable.
   static List<String> inferTagsFromTitle(String title) {
+    final cached = _inferCache[title];
+    if (cached != null) return cached;
+    final result = List<String>.unmodifiable(_inferTagsFromTitle(title));
+    if (_inferCache.length >= _inferCacheLimit) _inferCache.clear();
+    _inferCache[title] = result;
+    return result;
+  }
+
+  static List<String> _inferTagsFromTitle(String title) {
     final t = ' ${title.toLowerCase()} ';
     final out = <String>[];
     void add(String tag) { if (!out.contains(tag)) out.add(tag); }
@@ -245,9 +264,64 @@ class ProjectSimilarity {
     return findSimilar(target, all, tagIndex: tagIndex).length;
   }
 
-  /// Computes every project's similar-project count in a single O(n^2) pass,
-  /// keyed by id. Prefer this over calling [similarCount] per row when
-  /// rendering a list, since that would repeat the O(n) scan per row.
+  /// Calls [visit] once for every pair `i < j` of [sets] that shares at
+  /// least [minShared] tokens, with the shared count.
+  ///
+  /// Uses an inverted index (token -> projects that carry it) so only pairs
+  /// that share a token are ever looked at, and counts overlaps in a reused
+  /// integer array instead of building an intersection Set per pair. On the
+  /// real guide (490 projects) that is a few thousand counter bumps instead
+  /// of ~120,000 set intersections.
+  static void forEachOverlappingPair(
+    List<Set<String>> sets,
+    int minShared,
+    void Function(int i, int j, int shared) visit,
+  ) {
+    assert(minShared >= 1);
+    final n = sets.length;
+    final tokenIds = <String, int>{};
+    final postings = <List<int>>[];
+    final ids = List<List<int>>.generate(n, (i) {
+      return [
+        for (final t in sets[i])
+          tokenIds.putIfAbsent(t, () {
+            postings.add(<int>[]);
+            return postings.length - 1;
+          }),
+      ];
+    });
+    for (var i = 0; i < n; i++) {
+      for (final t in ids[i]) {
+        postings[t].add(i);
+      }
+    }
+    // cursor[t] is where project i sits in postings[t] when i is processed:
+    // projects are visited in ascending order and each one advances the
+    // cursor of every token it carries, so only partners j > i are read.
+    final cursor = Int32List(postings.length);
+    final shared = Int32List(n);
+    final touched = <int>[];
+    for (var i = 0; i < n; i++) {
+      for (final t in ids[i]) {
+        final list = postings[t];
+        final start = cursor[t] + 1;
+        cursor[t] = start;
+        for (var k = start; k < list.length; k++) {
+          final j = list[k];
+          if (shared[j]++ == 0) touched.add(j);
+        }
+      }
+      for (final j in touched) {
+        if (shared[j] >= minShared) visit(i, j, shared[j]);
+        shared[j] = 0;
+      }
+      touched.clear();
+    }
+  }
+
+  /// Computes every project's similar-project count in one pass, keyed by
+  /// id. Prefer this over calling [similarCount] per row when rendering a
+  /// list, since that would repeat the O(n) scan per row.
   static Map<String, int> computeSimilarityCounts(
     List<Project> projects, {
     Map<String, Set<String>>? tagIndex,
@@ -256,23 +330,26 @@ class ProjectSimilarity {
     final index = tagIndex ?? buildTagIndex(projects);
     final threshold = minShared ?? minSharedTagsForCluster;
     final counts = <String, int>{for (final p in projects) p.id: 0};
-    for (int i = 0; i < projects.length; i++) {
-      for (int j = i + 1; j < projects.length; j++) {
-        if (sharedTagCount(projects[i], projects[j], tagIndex: index) >=
-            threshold) {
-          final aId = projects[i].id;
-          final bId = projects[j].id;
-          counts[aId] = (counts[aId] ?? 0) + 1;
-          counts[bId] = (counts[bId] ?? 0) + 1;
-        }
-      }
-    }
+    final sets = [for (final p in projects) index[p.id] ?? const <String>{}];
+    forEachOverlappingPair(sets, threshold, (i, j, _) {
+      counts[projects[i].id] = counts[projects[i].id]! + 1;
+      counts[projects[j].id] = counts[projects[j].id]! + 1;
+    });
     return counts;
   }
 
-  /// Groups projects into clusters where each pair in a cluster shares
-  /// [minSharedTagsForCluster] or more tags. Uses union-find so transitive
-  /// relationships are included (A~B, B~C => A, B, C in same cluster).
+  /// Groups projects that share the SAME [minShared] (or more) tags: every
+  /// member of a cluster carries every tag in [RedundancyCluster.sharedTags].
+  ///
+  /// One group is formed per tag combination of size [minShared]; groups
+  /// with the same members are merged, and a group whose members all sit in
+  /// a larger group is dropped. So every pair [computeSimilarityCounts]
+  /// counts appears together in at least one cluster.
+  ///
+  /// This replaced transitive (union-find) clustering, which chained
+  /// A~B and B~C into one group: on the real guide it joined 78 projects
+  /// that had no tag in common, and the whole group was then hidden, so the
+  /// report showed 5 small groups while 112 projects were marked "similar".
   static List<RedundancyCluster> buildClusters(
     List<Project> projects, {
     Map<String, Set<String>>? tagIndex,
@@ -283,61 +360,65 @@ class ProjectSimilarity {
     final index = tagIndex ?? buildTagIndex(projects);
     final threshold = minShared ?? minSharedTagsForCluster;
     final n = projects.length;
-    final parent = List<int>.generate(n, (i) => i);
+    final sets = [for (final p in projects) index[p.id] ?? const <String>{}];
 
-    int find(int x) {
-      if (parent[x] != x) {
-        parent[x] = find(parent[x]);
-      }
-      return parent[x];
-    }
-
-    void union(int x, int y) {
-      final rx = find(x);
-      final ry = find(y);
-      if (rx != ry) {
-        parent[rx] = ry;
+    // Every tag combination of the threshold size -> projects carrying it.
+    final byCombo = <String, List<int>>{};
+    for (var i = 0; i < n; i++) {
+      if (sets[i].length < threshold) continue;
+      final tags = sets[i].toList()..sort();
+      for (final combo in _combinations(tags, threshold)) {
+        byCombo.putIfAbsent(combo.join('\u0001'), () => <int>[]).add(i);
       }
     }
 
-    for (int i = 0; i < n; i++) {
-      for (int j = i + 1; j < n; j++) {
-        if (sharedTagCount(projects[i], projects[j], tagIndex: index) >=
-            threshold) {
-          union(i, j);
-        }
+    // Merge combinations with the same members.
+    final byMembers = <String, List<int>>{};
+    for (final members in byCombo.values) {
+      if (members.length < 2) continue;
+      byMembers.putIfAbsent(members.join(','), () => members);
+    }
+
+    // Largest first; drop a group contained in a larger kept one.
+    final candidates = byMembers.values.toList()
+      ..sort((a, b) {
+        final bySize = b.length.compareTo(a.length);
+        return bySize != 0 ? bySize : a.first.compareTo(b.first);
+      });
+    final kept = <Set<int>>[];
+    final clusters = <RedundancyCluster>[];
+    for (final members in candidates) {
+      final memberSet = members.toSet();
+      if (kept.any((k) => k.length > memberSet.length && k.containsAll(memberSet))) {
+        continue;
       }
+      kept.add(memberSet);
+      final clusterProjects =
+          members.map((i) => projects[i]).toList(growable: false);
+      clusters.add(RedundancyCluster(
+        projects: clusterProjects,
+        sharedTags: _sharedTagsAcrossCluster(clusterProjects, tagIndex: index),
+      ));
     }
-
-    final clusterMap = <int, List<int>>{};
-    for (int i = 0; i < n; i++) {
-      final root = find(i);
-      clusterMap.putIfAbsent(root, () => []).add(i);
-    }
-
-    final clusters = clusterMap.values
-        .where((indices) => indices.length >= 2)
-        .map((indices) {
-          final clusterProjects =
-              indices.map((i) => projects[i]).toList(growable: false);
-          final sharedTags =
-              _sharedTagsAcrossCluster(clusterProjects, tagIndex: index);
-          return RedundancyCluster(
-            projects: clusterProjects,
-            sharedTags: sharedTags,
-          );
-        })
-        // Union-find only guarantees each PAIR in a cluster met the
-        // threshold, not that every tag survives intersection across the
-        // whole (transitively-joined) group — a 3+ member cluster can end
-        // up with zero tags common to all members. Such a cluster has
-        // nothing concrete to show a reader, so it's dropped rather than
-        // rendered as an unexplained "shares nothing" group.
-        .where((c) => c.sharedTags.isNotEmpty)
-        .toList()
-      ..sort((a, b) => b.projects.length.compareTo(a.projects.length));
-
     return clusters;
+  }
+
+  /// All [k]-element combinations of [items] (already sorted), in order.
+  static Iterable<List<String>> _combinations(List<String> items, int k) sync* {
+    if (k <= 0 || k > items.length) return;
+    final idx = List<int>.generate(k, (i) => i);
+    while (true) {
+      yield [for (final i in idx) items[i]];
+      var pos = k - 1;
+      while (pos >= 0 && idx[pos] == items.length - k + pos) {
+        pos--;
+      }
+      if (pos < 0) return;
+      idx[pos]++;
+      for (var r = pos + 1; r < k; r++) {
+        idx[r] = idx[r - 1] + 1;
+      }
+    }
   }
 
   /// Intersects tag sets across all projects in a cluster to find
@@ -377,8 +458,8 @@ class ProjectSimilarity {
   }
 }
 
-/// A group of projects that share [ProjectSimilarity.minSharedTagsForCluster]
-/// or more technology tags.
+/// A group of projects that all carry every tag in [sharedTags] (at least
+/// the threshold [ProjectSimilarity.buildClusters] was called with).
 class RedundancyCluster {
   final List<Project> projects;
   final List<String> sharedTags;
