@@ -219,55 +219,67 @@ class _JuniorProjectBrowserPageState
     final csp600Async = ref.watch(csp600ProposalsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: DesignSystem.primary,
-        foregroundColor: Colors.white,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Past Projects Guide',
-              style: (isDesktop ? DesignSystem.h2Mobile : DesignSystem.h3Mobile.copyWith(fontFamily: DesignSystem.serif))
-                  .copyWith(color: Colors.white),
-            ),
-            // How much there is to browse, in mono ("Scholar + Lab").
-            Text(
-              [
-                '${csp650Async.length} CSP650',
-                if (csp600Async.value != null) '${csp600Async.value!.length} CSP600',
-              ].join(' · '),
-              key: const Key('guide-counts'),
-              style: DesignSystem.kicker.copyWith(color: DesignSystem.onPrimaryContainer),
-            ),
-          ],
-        ),
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: Colors.white70,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
-          labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-          unselectedLabelStyle: const TextStyle(fontSize: 14),
-          tabs: const [
-            Tab(text: 'Browse'),
-            Tab(text: 'Redundancy Report'),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Refresh',
-            onPressed: () {
-              ref.invalidate(publicProjectsProvider);
-              ref.invalidate(csp600ProposalsProvider);
-            },
-          ),
-        ],
-      ),
       body: _buildBody(csp650Async, csp600Async, isDesktop),
     );
   }
+
+  /// Title bar: scrolls away with the page and comes back (snaps) as soon as
+  /// the reader scrolls up, so it never eats list space on a phone.
+  Widget _buildTitleBar(
+    List<Project> csp650Projects,
+    AsyncValue<List<Project>> csp600Async,
+    bool isDesktop,
+  ) {
+    return SliverAppBar(
+      backgroundColor: DesignSystem.primary,
+      foregroundColor: Colors.white,
+      floating: true,
+      snap: true,
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Past Projects Guide',
+            style: (isDesktop ? DesignSystem.h2Mobile : DesignSystem.h3Mobile.copyWith(fontFamily: DesignSystem.serif))
+                .copyWith(color: Colors.white),
+          ),
+          // How much there is to browse, in mono ("Scholar + Lab").
+          Text(
+            [
+              '${csp650Projects.length} CSP650',
+              if (csp600Async.value != null) '${csp600Async.value!.length} CSP600',
+            ].join(' · '),
+            key: const Key('guide-counts'),
+            style: DesignSystem.kicker.copyWith(color: DesignSystem.onPrimaryContainer),
+          ),
+        ],
+      ),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.refresh),
+          tooltip: 'Refresh',
+          onPressed: () {
+            ref.invalidate(publicProjectsProvider);
+            ref.invalidate(csp600ProposalsProvider);
+          },
+        ),
+      ],
+    );
+  }
+
+  TabBar _buildTabBar() => TabBar(
+        controller: _tabController,
+        indicatorColor: Colors.white70,
+        labelColor: Colors.white,
+        unselectedLabelColor: Colors.white70,
+        labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+        unselectedLabelStyle: const TextStyle(fontSize: 14),
+        tabs: const [
+          Tab(text: 'Browse'),
+          Tab(text: 'Redundancy Report'),
+        ],
+      );
 
   Widget _buildBody(
     List<Project> csp650Projects,
@@ -301,57 +313,68 @@ class _JuniorProjectBrowserPageState
 
     final visible = _applyFilters(combined, similarityCounts);
 
-    return Column(
-      children: [
-        _buildSearchAndFilters(isDesktop, combined),
-        const SizedBox(height: 4),
-        _buildSectionSummary(visible, isDesktop),
-        if (csp600Async.isLoading)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 8),
-            child: Text(
-              'Loading CSP600 proposals…',
-              style: TextStyle(
-                fontStyle: FontStyle.italic,
-                color: DesignSystem.onSurfaceVariant,
-                fontSize: 12,
-              ),
-            ),
-          ),
-        if (csp600Async.hasError)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            child: Text(
-              'CSP600 data unavailable — showing CSP650 only.',
-              style: TextStyle(
-                fontStyle: FontStyle.italic,
-                color: DesignSystem.error,
-                fontSize: 12,
-              ),
-            ),
-          ),
-        Expanded(
-          child: TabBarView(
-            controller: _tabController,
+    final onBrowse = _tabController.index == 0;
+    return CustomScrollView(
+      slivers: [
+        _buildTitleBar(csp650Projects, csp600Async, isDesktop),
+        SliverPersistentHeader(
+          pinned: true,
+          delegate: _PinnedTabBar(_buildTabBar()),
+        ),
+        SliverToBoxAdapter(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _buildBrowseTab(visible, similarityCounts, isDesktop),
-              // Clusters are the expensive O(n^2) part of this feature —
-              // only compute them while this tab is actually selected, so
-              // typing in search while on Browse doesn't pay for it. Scoped
-              // to the full corpus (not the Browse-tab filters) so the
-              // report always reflects redundancy across the whole guide.
-              _tabController.index == 1
-                  ? _buildReportTab(
-                      fullProjList,
-                      categoryTagIndex,
-                      titleTokenIndex,
-                      similarityCounts,
-                      idToSection,
-                      isDesktop)
-                  : const SizedBox.shrink(),
+              // The report always covers the whole guide, so the Browse
+              // filters would only mislead there.
+              if (onBrowse) ...[
+                _buildSearchAndFilters(isDesktop, combined),
+                const SizedBox(height: 4),
+                _buildSectionSummary(visible, isDesktop),
+              ],
+              if (csp600Async.isLoading)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: Text(
+                    'Loading CSP600 proposals…',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontStyle: FontStyle.italic,
+                      color: DesignSystem.onSurfaceVariant,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              if (csp600Async.hasError)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Text(
+                    'CSP600 data unavailable — showing CSP650 only.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontStyle: FontStyle.italic,
+                      color: DesignSystem.error,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
+        if (onBrowse)
+          ..._buildBrowseTab(visible, similarityCounts, isDesktop)
+        else
+          // Clusters are the expensive O(n^2) part of this feature — only
+          // computed while this tab is selected, so typing in search while
+          // on Browse doesn't pay for it. Scoped to the full corpus (not
+          // the Browse filters) so the report reflects the whole guide.
+          ..._buildReportTab(
+              fullProjList,
+              categoryTagIndex,
+              titleTokenIndex,
+              similarityCounts,
+              idToSection,
+              isDesktop),
       ],
     );
   }
@@ -561,7 +584,7 @@ class _JuniorProjectBrowserPageState
             controller: _searchController,
             onChanged: _onSearchChanged,
             decoration: InputDecoration(
-              hintText: 'Search title, supervisor, tags…',
+              hintText: 'Search projects…',
               prefixIcon: const Icon(Icons.search, color: DesignSystem.primary),
               isDense: true,
               suffixIcon: _searchController.text.isNotEmpty
@@ -918,50 +941,50 @@ class _JuniorProjectBrowserPageState
     );
   }
 
-  Widget _buildBrowseTab(
+  List<Widget> _buildBrowseTab(
     List<SectionedProject> visible,
     Map<String, int> similarityCounts,
     bool isDesktop,
   ) {
     if (visible.isEmpty) {
-      return _buildEmptyState(isDesktop);
+      return [
+        SliverFillRemaining(hasScrollBody: false, child: _buildEmptyState(isDesktop)),
+      ];
     }
 
     final padding = isDesktop
         ? DesignSystem.marginDesktop
         : DesignSystem.marginMobile;
 
-    return Column(
-      children: [
-        if (isDesktop) _buildTableHeader(padding),
-        Expanded(
-          child: ListView.separated(
-            padding: EdgeInsets.only(
-              left: padding,
-              right: padding,
-              bottom: DesignSystem.spaceLg,
-              top: isDesktop ? 8 : 4,
-            ),
-            itemCount: visible.length,
-            separatorBuilder: (context, index) => const SizedBox(height: 8),
-            itemBuilder: (context, index) {
-              final sp = visible[index];
-              final simCount = similarityCounts[sp.project.id] ?? 0;
-              return ProjectRowWidget(
-                project: sp.project,
-                simCount: simCount,
-                showSection: true,
-                section: sp.section,
-                rowIndex: index,
-                onStatusTap: simCount > 0
-                    ? () => _openSimilarProjects(context, sp.project)
-                    : null,
-              );
-            },
-          ),
+    return [
+      if (isDesktop) SliverToBoxAdapter(child: _buildTableHeader(padding)),
+      SliverPadding(
+        padding: EdgeInsets.only(
+          left: padding,
+          right: padding,
+          bottom: DesignSystem.spaceLg,
+          top: isDesktop ? 8 : 4,
         ),
-      ],
-    );
+        sliver: SliverList.separated(
+          itemCount: visible.length,
+          separatorBuilder: (context, index) => const SizedBox(height: 8),
+          itemBuilder: (context, index) {
+            final sp = visible[index];
+            final simCount = similarityCounts[sp.project.id] ?? 0;
+            return ProjectRowWidget(
+              project: sp.project,
+              simCount: simCount,
+              showSection: true,
+              section: sp.section,
+              rowIndex: index,
+              onStatusTap: simCount > 0
+                  ? () => _openSimilarProjects(context, sp.project)
+                  : null,
+            );
+          },
+        ),
+      ),
+    ];
   }
 
   Widget _buildTableHeader(double horizontalPadding) {
@@ -1033,7 +1056,7 @@ class _JuniorProjectBrowserPageState
     return center ? Center(child: label) : label;
   }
 
-  Widget _buildReportTab(
+  List<Widget> _buildReportTab(
     List<Project> projList,
     Map<String, Set<String>> categoryTagIndex,
     Map<String, Set<String>> titleTokenIndex,
@@ -1078,7 +1101,7 @@ class _JuniorProjectBrowserPageState
       });
 
     if (tagClusters.isEmpty && titleClusters.isEmpty) {
-      return Center(
+      return [SliverFillRemaining(hasScrollBody: false, child: Center(
         child: Padding(
           padding: EdgeInsets.symmetric(
             horizontal: isDesktop
@@ -1110,19 +1133,19 @@ class _JuniorProjectBrowserPageState
             ],
           ),
         ),
-      );
+      ))];
     }
 
     final padding = isDesktop
         ? DesignSystem.marginDesktop
         : DesignSystem.marginMobile;
 
-    return ListView(
+    return [SliverPadding(
       padding: EdgeInsets.symmetric(
         horizontal: padding,
         vertical: DesignSystem.spaceLg,
       ),
-      children: [
+      sliver: SliverList.list(children: [
         if (tagClusters.isNotEmpty) ...[
           _reportSectionHeader(
             'Similar by Tech Stack',
@@ -1155,8 +1178,8 @@ class _JuniorProjectBrowserPageState
               isDesktop: isDesktop,
             ),
         ],
-      ],
-    );
+      ]),
+    )];
   }
 
   Widget _reportSectionHeader(String title, String subtitle, bool isDesktop) {
@@ -1213,3 +1236,23 @@ class _JuniorProjectBrowserPageState
   }
 }
 
+/// The Browse / Redundancy Report tabs: the only part of the header that
+/// stays pinned while the list scrolls.
+class _PinnedTabBar extends SliverPersistentHeaderDelegate {
+  _PinnedTabBar(this.tabBar);
+
+  final TabBar tabBar;
+
+  @override
+  double get minExtent => tabBar.preferredSize.height;
+
+  @override
+  double get maxExtent => tabBar.preferredSize.height;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) =>
+      Material(color: DesignSystem.primary, child: tabBar);
+
+  @override
+  bool shouldRebuild(_PinnedTabBar oldDelegate) => oldDelegate.tabBar != tabBar;
+}
