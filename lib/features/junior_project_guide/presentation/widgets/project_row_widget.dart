@@ -278,10 +278,10 @@ class ProjectRowWidget extends ConsumerWidget {
                 style: DesignSystem.bodyMd.copyWith(
                   fontWeight: FontWeight.w700,
                   color: DesignSystem.primary,
-                  height: 1.35,
-                  fontSize: 14,
+                  height: 1.4,
+                  fontSize: 14.5,
                 ),
-                maxLines: 2,
+                maxLines: 3,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -290,36 +290,36 @@ class ProjectRowWidget extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 8),
-        // Supervisor + programme + section
+        // Supervisor on its own line so long names aren't cut short.
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.only(top: 1),
+              child: Icon(Icons.person_outline, size: 14, color: DesignSystem.onSurfaceVariant),
+            ),
+            const SizedBox(width: 4),
+            Expanded(
+              child: Text(
+                project.supervisorDisplayName,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: DesignSystem.bodySm.copyWith(
+                  color: DesignSystem.onSurfaceVariant,
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        // Programme + section + category
         Wrap(
           spacing: 6,
           runSpacing: 6,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            ConstrainedBox(
-              // Cap the supervisor row so long names ellipsize instead of
-              // overflowing the card on narrow screens.
-              constraints: const BoxConstraints(maxWidth: 220),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.person_outline, size: 13, color: DesignSystem.onSurfaceVariant),
-                  const SizedBox(width: 4),
-                  Flexible(
-                    child: Text(
-                      project.supervisorDisplayName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: DesignSystem.bodySm.copyWith(
-                        color: DesignSystem.onSurfaceVariant,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
               decoration: BoxDecoration(

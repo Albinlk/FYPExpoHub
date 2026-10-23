@@ -31,7 +31,7 @@ void main() {
   });
   tearDown(() => FlutterError.onError = originalErrorHandler);
 
-  Future<void> pumpMobile(WidgetTester tester, Widget child) async {
+  Future<void> pumpMobile(WidgetTester tester, Widget child, {List<Project>? projects}) async {
     tester.view.physicalSize = const Size(390, 844);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -51,7 +51,7 @@ void main() {
         overrides: [
           supabaseDbServiceProvider.overrideWithValue(_StubDb()),
           publicProjectsProvider
-              .overrideWith(() => _ProjectsNotifierStub([_project()])),
+              .overrideWith(() => _ProjectsNotifierStub(projects ?? [_project()])),
         ],
         child: MaterialApp.router(routerConfig: router),
       ),
@@ -186,6 +186,37 @@ void main() {
     expect(find.text('Project Category'), findsOneWidget);
     expect(find.text('Tech Stack'), findsOneWidget);
     expect(find.text('Reset Filters'), findsOneWidget);
+  });
+
+  testWidgets('JuniorProjectBrowserPage mobile: filters scroll away, tabs stay pinned',
+      (tester) async {
+    final many = [
+      for (var i = 0; i < 30; i++)
+        _project().copyWith(id: 'p$i', slug: 'project-$i', title: 'Project number $i'),
+    ];
+    await pumpMobile(tester, const JuniorProjectBrowserPage(), projects: many);
+
+    final search = find.byType(TextField);
+    expect(tester.getRect(search).top, greaterThan(0));
+
+    await tester.drag(find.text('Project number 2'), const Offset(0, -700));
+    await tester.pumpAndSettle();
+
+    // The search box has scrolled off the top; the tab bar is still there.
+    expect(search.hitTestable(), findsNothing);
+    expect(find.text('Browse').hitTestable(), findsOneWidget);
+    expect(tester.getRect(find.text('Browse')).top, greaterThanOrEqualTo(0));
+  });
+
+  testWidgets('JuniorProjectBrowserPage: the report tab has no Browse filters',
+      (tester) async {
+    await pumpMobile(tester, const JuniorProjectBrowserPage());
+    expect(find.text('Filters'), findsOneWidget);
+
+    await tester.tap(find.text('Redundancy Report'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Filters'), findsNothing);
   });
 
   testWidgets('ProjectsPage mobile: search + Filters on one row, all filters in the sheet',
