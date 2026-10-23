@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fyp_expo_hub/core/domain/models/project.dart';
 import 'package:fyp_expo_hub/features/junior_project_guide/domain/project_similarity.dart';
@@ -154,12 +156,11 @@ void main() {
       expect(clusters.last.count, 2);
     });
 
-    test('drops a transitively-joined cluster left with no tag common to '
-        'every member (union-find only guarantees each PAIR met the '
-        'threshold, not the whole group)', () {
-      // a~b share {3,4}, b~c share {5,6}, a~c share {1,2} — each pairwise
-      // overlap meets the 2-tag threshold, transitively joining a, b, c
-      // into one cluster, but no single tag is common to all three.
+    test('pairs sharing DIFFERENT tags form separate groups instead of one '
+        'chained group with nothing in common', () {
+      // a~b share {3,4}, b~c share {5,6}, a~c share {1,2}. Transitive
+      // clustering chained all three into one group with no common tag and
+      // then hid it; each pair is now its own group.
       final a = _project(id: 'a', tags: ['1', '2', '3', '4']);
       final b = _project(id: 'b', tags: ['3', '4', '5', '6']);
       final c = _project(id: 'c', tags: ['5', '6', '1', '2']);
@@ -168,7 +169,67 @@ void main() {
         [a, b, c],
         minShared: 2,
       );
-      expect(clusters, isEmpty);
+      expect(clusters, hasLength(3));
+      expect(
+        clusters.map((c) => c.sharedTags.join('+')).toSet(),
+        {'1+2', '3+4', '5+6'},
+      );
+      for (final cluster in clusters) {
+        expect(cluster.count, 2);
+      }
+    });
+
+    test('a chain A~B~C where A and C share too little is two groups, not one',
+        () {
+      final a = _project(id: 'a', tags: ['X', 'Y']);
+      final b = _project(id: 'b', tags: ['X', 'Y', 'Z']);
+      final c = _project(id: 'c', tags: ['Y', 'Z']);
+
+      final clusters = ProjectSimilarity.buildClusters([a, b, c], minShared: 2);
+      expect(
+        clusters.map((c) => c.projects.map((p) => p.id).join()).toSet(),
+        {'ab', 'bc'},
+      );
+    });
+
+    test('a group inside a larger group with the same pairs is not repeated',
+        () {
+      // All four share X and Y; a, b, c also share Z. Every pair is already
+      // in the X+Y group of four, so the smaller a-b-c group is dropped.
+      final a = _project(id: 'a', tags: ['X', 'Y', 'Z']);
+      final b = _project(id: 'b', tags: ['X', 'Y', 'Z']);
+      final c = _project(id: 'c', tags: ['X', 'Y', 'Z']);
+      final d = _project(id: 'd', tags: ['X', 'Y']);
+
+      final clusters = ProjectSimilarity.buildClusters([a, b, c, d], minShared: 2);
+      expect(clusters, hasLength(1));
+      expect(clusters.first.count, 4);
+      expect(clusters.first.sharedTags, ['x', 'y']);
+    });
+  });
+
+  group('ProjectSimilarity - forEachOverlappingPair', () {
+    test('finds exactly the pairs a brute-force comparison finds', () {
+      final random = Random(42);
+      const vocab = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+      final sets = List.generate(60, (_) {
+        return {for (final t in vocab) if (random.nextInt(3) == 0) t};
+      });
+      for (final minShared in [1, 2, 3]) {
+        final expected = <String>{};
+        for (var i = 0; i < sets.length; i++) {
+          for (var j = i + 1; j < sets.length; j++) {
+            final shared = sets[i].intersection(sets[j]).length;
+            if (shared >= minShared) expected.add('$i-$j-$shared');
+          }
+        }
+        final actual = <String>{};
+        ProjectSimilarity.forEachOverlappingPair(sets, minShared, (i, j, shared) {
+          expect(i, lessThan(j));
+          actual.add('$i-$j-$shared');
+        });
+        expect(actual, expected, reason: 'minShared $minShared');
+      }
     });
   });
 

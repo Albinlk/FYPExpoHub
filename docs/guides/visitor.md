@@ -147,7 +147,8 @@ something new.
    Each match shows its **Shared categories** or **Shared title words**.
    Click **Back to the project guide** to return.
 6. Open the **Redundancy Report** tab to see groups of projects that are
-   **Similar by Tech Stack** or **Similar by Project Title**. A group marked
+   **Similar by Tech Stack** (every project in the group has all the
+   listed categories) or **Similar by Project Title**. A group marked
    **Cross-cohort overlap** means a junior proposal is close to a completed
    senior project.
 
