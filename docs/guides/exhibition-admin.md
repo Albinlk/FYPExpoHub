@@ -38,6 +38,10 @@ are explained in [Accounts and sign-in](accounts.md).
 The sidebar (or the drawer on a phone) is labelled **EXHIBITION ADMIN**. At the
 bottom are **Send Feedback** and **Exhibition Site** (back to the public site).
 
+Click a group name (**EXHIBITION**, **PROJECTS & BOOTHS**, …) to close or
+open that group, or use **COLLAPSE ALL** / **EXPAND ALL** at the top of the
+menu. A closed group still shows the page you are on.
+
 **Menu items and routes**
 
 | Group | Menu item | Route | Use it to |

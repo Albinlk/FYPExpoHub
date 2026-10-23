@@ -47,13 +47,125 @@ const List<({String? label, List<_AdminNavItem> items})> _adminNavGroups = [
   ]),
 ];
 
-Widget _adminGroupLabel(String label) => Padding(
-      padding: const EdgeInsets.fromLTRB(28, 12, 16, 4),
-      child: Text(
-        label.toUpperCase(),
-        style: DesignSystem.kicker.copyWith(color: DesignSystem.onPrimaryContainer, fontSize: 10.5),
+/// Labels of the menu groups the admin has collapsed. Shared by the sidebar
+/// and the phone drawer, and kept while moving between admin pages.
+final ValueNotifier<Set<String>> adminCollapsedGroups = ValueNotifier(<String>{});
+
+bool _isActiveRoute(String route, String currentPath) =>
+    (route == '/admin' && currentPath == '/admin') ||
+    (route != '/admin' && currentPath.startsWith(route));
+
+/// The grouped admin menu: each labelled group opens and closes from its
+/// header, and "Collapse all" / "Expand all" does every group at once. A
+/// closed group still shows the page you are on, so it never disappears.
+class _AdminNavList extends StatelessWidget {
+  const _AdminNavList({
+    required this.currentPath,
+    required this.itemBuilder,
+    this.padding = EdgeInsets.zero,
+  });
+
+  final String currentPath;
+  final Widget Function(_AdminNavItem item) itemBuilder;
+  final EdgeInsetsGeometry padding;
+
+  static final List<String> _labels = [
+    for (final g in _adminNavGroups)
+      if (g.label != null) g.label!,
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<Set<String>>(
+      valueListenable: adminCollapsedGroups,
+      builder: (context, collapsed, _) {
+        final allCollapsed = _labels.every(collapsed.contains);
+        void setCollapsed(String label, bool value) {
+          adminCollapsedGroups.value = {
+            ...collapsed.where((l) => l != label),
+            if (value) label,
+          };
+        }
+
+        return ListView(
+          padding: padding,
+          children: [
+            Align(
+              alignment: Alignment.centerRight,
+              child: Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: TextButton.icon(
+                  key: const Key('admin-nav-toggle-all'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.white70,
+                    visualDensity: VisualDensity.compact,
+                    textStyle: DesignSystem.kicker.copyWith(fontSize: 10.5),
+                  ),
+                  icon: Icon(allCollapsed ? Icons.unfold_more : Icons.unfold_less, size: 16),
+                  label: Text(allCollapsed ? 'EXPAND ALL' : 'COLLAPSE ALL'),
+                  onPressed: () => adminCollapsedGroups.value =
+                      allCollapsed ? <String>{} : _labels.toSet(),
+                ),
+              ),
+            ),
+            for (final g in _adminNavGroups) ...[
+              if (g.label != null)
+                _AdminGroupHeader(
+                  label: g.label!,
+                  expanded: !collapsed.contains(g.label),
+                  onTap: () => setCollapsed(g.label!, !collapsed.contains(g.label)),
+                ),
+              for (final i in g.items)
+                if (g.label == null ||
+                    !collapsed.contains(g.label) ||
+                    _isActiveRoute(i.route, currentPath))
+                  itemBuilder(i),
+            ],
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _AdminGroupHeader extends StatelessWidget {
+  const _AdminGroupHeader({required this.label, required this.expanded, required this.onTap});
+
+  final String label;
+  final bool expanded;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      expanded: expanded,
+      child: InkWell(
+        key: Key('admin-group-$label'),
+        onTap: onTap,
+        borderRadius: DesignSystem.radiusLg,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(28, 10, 20, 6),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  label.toUpperCase(),
+                  style: DesignSystem.kicker.copyWith(color: DesignSystem.onPrimaryContainer, fontSize: 10.5),
+                ),
+              ),
+              Icon(
+                expanded ? Icons.expand_less : Icons.expand_more,
+                size: 18,
+                color: DesignSystem.onPrimaryContainer,
+              ),
+            ],
+          ),
+        ),
       ),
     );
+  }
+}
 
 /// "Help": opens the exhibition admin guide of the handbook at the section
 /// for the current page (see [handbookUrlForLocation]) in a new tab.
@@ -203,14 +315,10 @@ class _AdminSidebar extends StatelessWidget {
       child: Column(
         children: [
           Expanded(
-            child: ListView(
-              padding: const EdgeInsets.symmetric(vertical: DesignSystem.spaceMd),
-              children: [
-                for (final g in _adminNavGroups) ...[
-                  if (g.label != null) _adminGroupLabel(g.label!),
-                  for (final i in g.items) _buildSidebarItem(context, i.title, i.icon, i.route),
-                ],
-              ],
+            child: _AdminNavList(
+              currentPath: currentPath,
+              padding: const EdgeInsets.symmetric(vertical: DesignSystem.spaceSm),
+              itemBuilder: (i) => _buildSidebarItem(context, i.title, i.icon, i.route),
             ),
           ),
           const Divider(color: Colors.white10),
@@ -235,7 +343,7 @@ class _AdminSidebar extends StatelessWidget {
   }
 
   Widget _buildSidebarItem(BuildContext context, String title, IconData icon, String route) {
-    final active = (route == '/admin' && currentPath == '/admin') || (route != '/admin' && currentPath.startsWith(route));
+    final active = _isActiveRoute(route, currentPath);
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
@@ -283,14 +391,9 @@ class _AdminDrawer extends StatelessWidget {
             ),
             const Divider(color: Colors.white10),
             Expanded(
-              child: ListView(
-                padding: EdgeInsets.zero,
-                children: [
-                  for (final g in _adminNavGroups) ...[
-                    if (g.label != null) _adminGroupLabel(g.label!),
-                    for (final i in g.items) _buildDrawerItem(context, i.title, i.icon, i.route),
-                  ],
-                ],
+              child: _AdminNavList(
+                currentPath: currentPath,
+                itemBuilder: (i) => _buildDrawerItem(context, i.title, i.icon, i.route),
               ),
             ),
             const Divider(color: Colors.white10),
@@ -333,7 +436,7 @@ class _AdminDrawer extends StatelessWidget {
   }
 
   Widget _buildDrawerItem(BuildContext context, String title, IconData icon, String route) {
-    final active = (route == '/admin' && currentPath == '/admin') || (route != '/admin' && currentPath.startsWith(route));
+    final active = _isActiveRoute(route, currentPath);
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
