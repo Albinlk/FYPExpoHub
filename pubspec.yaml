@@ -25,7 +25,7 @@ dependencies:
   json_annotation: ^4.12.0
   supabase_flutter: ^2.8.4
   excel: ^4.0.6
-  csv: ^5.0.2
+  csv: ^8.0.0
   http: ^1.2.0
   web: ^1.1.1
   # Imported directly (external links, sign-in help); previously only
