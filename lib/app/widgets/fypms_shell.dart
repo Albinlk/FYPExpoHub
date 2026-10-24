@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../site_hosts.dart';
 import '../../core/supabase/supabase_client_provider.dart';
 import '../../core/state/fypms_state_providers.dart';
+import '../../core/web/local_prefs.dart';
 import '../../core/widgets/scholar_lab.dart';
 import '../theme/theme.dart';
 import '../../features/fypms/presentation/widgets/semester_selector.dart';
@@ -366,10 +367,14 @@ List<_NavSection> _navSections({
   ];
 }
 
+/// Browser storage key for the titles of the open Workspace menu sections.
+const kWorkspaceNavOpenKey = 'fyp.workspaceNavOpen';
+
 /// The menu body shared by the desktop sidebar and the mobile drawer. With
 /// one role it is a plain list with small group labels; with several, each
-/// role is a collapsible section and the one holding the current page starts
-/// open.
+/// role is a collapsible section, "Collapse all" / "Expand all" does every
+/// section at once, and which sections are open is saved in the browser so a
+/// reload keeps it. The section holding the current page always opens.
 class _NavMenu extends StatefulWidget {
   const _NavMenu({required this.sections, required this.currentPath, required this.onOpen});
 
@@ -382,23 +387,45 @@ class _NavMenu extends StatefulWidget {
 }
 
 class _NavMenuState extends State<_NavMenu> {
-  late final Set<String> _open = {_activeSection() ?? widget.sections.firstOrNull?.title ?? ''};
+  late final Set<String> _open = _initialOpen();
 
-  String? _activeSection() {
-    for (final s in widget.sections) {
+  /// The saved sections plus the current one; on a first visit, just the
+  /// current one (or the first section when the page is not in the menu).
+  Set<String> _initialOpen() {
+    final active = _activeSection(widget);
+    final saved = readStringSet(kWorkspaceNavOpenKey);
+    if (saved != null) return {...saved, ?active};
+    return {active ?? widget.sections.firstOrNull?.title ?? ''};
+  }
+
+  static String? _activeSection(_NavMenu w) {
+    for (final s in w.sections) {
       for (final g in s.groups) {
-        if (g.items.any((i) => _navRouteIsActive(i.route, widget.currentPath))) return s.title;
+        if (g.items.any((i) => _navRouteIsActive(i.route, w.currentPath))) return s.title;
       }
     }
     return null;
   }
 
+  void _update(void Function() change) {
+    setState(change);
+    writeStringSet(kWorkspaceNavOpenKey, _open);
+  }
+
   @override
   void didUpdateWidget(_NavMenu old) {
     super.didUpdateWidget(old);
-    // Navigating into a collapsed section (e.g. from a dashboard link) opens it.
-    final active = _activeSection();
-    if (active != null) _open.add(active);
+    // Navigating into a collapsed section (e.g. from a dashboard link) opens
+    // it, as does the current page's section being renamed (the CSP section
+    // takes its course name once the taught courses load). Other rebuilds
+    // leave the sections as the user set them.
+    final active = _activeSection(widget);
+    if (active != null &&
+        !_open.contains(active) &&
+        (old.currentPath != widget.currentPath || _activeSection(old) != active)) {
+      _open.add(active);
+      writeStringSet(kWorkspaceNavOpenKey, _open);
+    }
   }
 
   @override
@@ -409,11 +436,35 @@ class _NavMenuState extends State<_NavMenu> {
       children: sections.length == 1
           ? _groups(sections.single)
           : [
+              _toggleAll(sections),
               for (final s in sections) ...[
                 _sectionHeader(s),
                 if (_open.contains(s.title)) ..._groups(s),
               ],
             ],
+    );
+  }
+
+  /// Same control as the exhibition admin menu's.
+  Widget _toggleAll(List<_NavSection> sections) {
+    final titles = [for (final s in sections) s.title];
+    final allClosed = !titles.any(_open.contains);
+    return Align(
+      alignment: Alignment.centerRight,
+      child: Padding(
+        padding: const EdgeInsets.only(right: 12),
+        child: TextButton.icon(
+          key: const Key('fypms-nav-toggle-all'),
+          style: TextButton.styleFrom(
+            foregroundColor: Colors.white70,
+            visualDensity: VisualDensity.compact,
+            textStyle: DesignSystem.kicker.copyWith(fontSize: 10.5),
+          ),
+          icon: Icon(allClosed ? Icons.unfold_more : Icons.unfold_less, size: 16),
+          label: Text(allClosed ? 'EXPAND ALL' : 'COLLAPSE ALL'),
+          onPressed: () => _update(() => allClosed ? _open.addAll(titles) : _open.removeAll(titles)),
+        ),
+      ),
     );
   }
 
@@ -440,7 +491,7 @@ class _NavMenuState extends State<_NavMenu> {
               Icon(open ? Icons.expand_less : Icons.expand_more, color: Colors.white70, size: 20),
             ],
           ),
-          onTap: () => setState(() => open ? _open.remove(s.title) : _open.add(s.title)),
+          onTap: () => _update(() => open ? _open.remove(s.title) : _open.add(s.title)),
         ),
       ),
     );

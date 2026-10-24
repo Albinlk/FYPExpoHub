@@ -1,0 +1,32 @@
+# Weekly update PRs, grouped so minor/patch bumps arrive as one PR per
+# ecosystem. CI (analyze, tests, Wasm build, strict handbook build) checks
+# each one; merge when green. Majors come as separate PRs to read first.
+version: 2
+updates:
+  - package-ecosystem: pub
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Asia/Kuala_Lumpur
+    open-pull-requests-limit: 5
+    groups:
+      dart-minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns: ["*"]
+
+  - package-ecosystem: pip
+    directory: /docs
+    schedule:
+      interval: monthly
+    groups:
+      handbook:
+        patterns: ["*"]

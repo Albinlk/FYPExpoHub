@@ -30,6 +30,27 @@ jobs:
           echo "status=down" >> "$GITHUB_OUTPUT"
           exit 0
 
+      # Free Supabase projects pause after 7 days without database activity
+      # and are deleted after 90 days paused. The site check above only
+      # fetches static files, so it never counts; this one-row read does.
+      - name: Keep Supabase active
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "Supabase secrets not set; skipping."
+            exit 0
+          fi
+          status=$(curl -sS -o /dev/null -w "%{http_code}" --connect-timeout 15 --max-time 40 \
+            -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+            "$SUPABASE_URL/rest/v1/events?select=id&limit=1" 2>/dev/null)
+          if [ "$status" = "200" ]; then
+            echo "Supabase answered (HTTP $status)."
+          else
+            echo "::warning::Supabase did not answer normally (HTTP $status). If the project is paused, restore it in the Supabase dashboard."
+          fi
+
       - name: Open issue if site is down
         if: steps.probe.outputs.status == 'down'
         uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7

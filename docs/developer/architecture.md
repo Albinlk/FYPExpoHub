@@ -146,10 +146,11 @@ are not subscribed; they refresh by refetch-after-mutation.
   icon × title initials × title-hash geometry) — zero network requests,
   unique per project
 - **Pattern**: the public projects, booths and schedule notifiers start the
-  Supabase request and load the fallback asset **alongside** it (not before
-  it). The fallback fills state only if nothing has arrived yet; live rows
-  replace it as soon as they come back (an empty live answer keeps the
-  fallback showing). Admin lists never use the fallback.
+  Supabase request and load the 640 KB fallback asset **only when needed**:
+  the request fails, answers empty, or is still pending after
+  `OfflineFallback.slowLiveTimeout` (4 s). A normal visit never downloads
+  it. Live rows replace the fallback as soon as they come back. Admin lists
+  never use the fallback.
 - **Load status** (G-31, `lib/core/state/expo/load_status.dart`): each public
   dataset (projects, booths, schedule, announcements, awards) reports a
   `DataLoadStatus` — `loading` (nothing confirmed yet), `live` (the server

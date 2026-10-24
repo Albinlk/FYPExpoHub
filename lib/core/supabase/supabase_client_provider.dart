@@ -5,6 +5,7 @@ import 'package:http/http.dart' show ClientException;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../utils/logger.dart';
+import 'select_columns.dart';
 
 /// Supabase client singleton provider
 final supabaseClientProvider = Provider<SupabaseClient>((ref) {
@@ -70,7 +71,7 @@ final currentProfileProvider = FutureProvider<UserProfile?>((ref) async {
   try {
     final data = await client
         .from('profiles')
-        .select()
+        .select(SelectColumns.profiles)
         .eq('id', user.id)
         .maybeSingle();
 

@@ -75,6 +75,11 @@ Free-tier Supabase projects are **paused** after 7 days of inactivity and
 - All data and schema are preserved
 - The project can be resumed from the Supabase dashboard
 
+To stop it pausing in the first place, `.github/workflows/uptime-monitor.yml`
+reads one row from `events` through the REST API every 30 minutes (the site
+check alone only fetches static files, which doesn't count as database
+activity). A failed read shows as a warning on that workflow run.
+
 See `lib/core/state/expo/load_status.dart` and
 `lib/core/widgets/public_load_state.dart` for the paused-project handling
 logic.

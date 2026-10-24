@@ -245,7 +245,7 @@ Requirement IDs use the pattern `FR-<area>-<nn>`. "Shall" statements describe im
 | FR-BTH-01 | The booth finder shall list projects by presentation day (Day 1 / Day 2; default Day 1), grouped by venue in hall order (BK 1–8, then DS 5–8), sorted by booth then title. |
 | FR-BTH-02 | Search shall match title, booth number or student name (250 ms debounce) and may be pre-filled from `?search=`. |
 | FR-BTH-03 | Filters shall be Day (always visible), Venue (derived from booth prefixes on the selected day) and Program; changing Day resets Venue. |
-| FR-BTH-04 | Each row shall show a booth thumbnail (`/booth_images/booth-<n>.png`, 221 images) or a colour-coded booth badge if the image is missing, the title, first student and programme; tapping opens the project. |
+| FR-BTH-04 | Each row shall show a booth thumbnail (`/booth_images/booth-<n>.webp`, 221 images, 132 px WebP) or a colour-coded booth badge if the image is missing, the title, first student and programme; tapping opens the project. |
 | FR-BTH-05 | On mobile Venue and Program shall collapse behind the Filters toggle with a "Clear Venue & Program" control. |
 
 ### 5.6 M06 Schedule

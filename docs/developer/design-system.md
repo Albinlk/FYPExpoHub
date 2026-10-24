@@ -70,6 +70,12 @@ Rules:
 - Title Case for buttons and page titles; sentence case for body copy.
 - No all-caps except mono kickers.
 
+Font files: the bundled `.ttf` files in `assets/fonts/` are subsets (Latin,
+punctuation, arrows, maths and a few symbols; every weight kept), 0.75 MB
+instead of 1.85 MB. Regenerate them from the upstream files with
+`python tool/subset_fonts.py <originals-dir>` after adding text in another
+script. A missing glyph still shows, through Flutter's Noto fallback.
+
 ## 4. Component styles
 
 - **Navigation (exhibition)**: 64px Warm Paper bar with a hairline bottom rule. Left: wordmark, serif "FYP" plus small mono "EXPO·HUB". Centre: text links in Inter; the active link is ink and bold with a 2px underline. Right: "Sign In" ink pill button. Narrow desktops move extra links into a "More" menu (all links from 1312px, five from 1024px, three below). Mobile: bottom tab bar (Home, Booths, Guide, Staff, Menu), white with 12px top corners.

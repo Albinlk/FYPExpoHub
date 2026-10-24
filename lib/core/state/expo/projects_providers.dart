@@ -47,10 +47,11 @@ class ProjectsNotifier extends Notifier<List<Project>>
     return const [];
   }
 
-  /// Loads remote data and the offline-fallback asset in parallel. The
-  /// fallback fills state first (near-instant content), and live Supabase
-  /// rows overwrite it as soon as they arrive — the fallback is skipped
-  /// entirely if remote wins the race.
+  /// Loads the live Supabase rows. The bundled offline-fallback asset is
+  /// fetched only when it's needed: if the request is still pending after
+  /// [OfflineFallback.slowLiveTimeout] (the fallback then fills state
+  /// meanwhile and live rows overwrite it when they arrive), or if the
+  /// request fails or answers empty. A normal visit never downloads it.
   ///
   /// The remote future gets an immediate no-op catchError so its error is
   /// never unhandled in the window before the later await re-throws into
@@ -63,10 +64,15 @@ class ProjectsNotifier extends Notifier<List<Project>>
     });
     // Admin lists skip the bundled fallback: its rows have no database
     // counterpart (non-uuid ids), so every edit to one would fail.
-    // The bundled fallback loads alongside the request rather than before
-    // it, so a slow asset never holds up live rows (or the load status).
     // The bundled data is the default event's; never show it for another.
-    if (publishedOnly && ActiveEvent.usesBundledData) unawaited(_applyFallback(() => remoteFailed));
+    final canFallback = publishedOnly && ActiveEvent.usesBundledData;
+    // A slow request: past the timeout the bundled copy fills the list
+    // meanwhile (live rows still replace it). A fast answer cancels this,
+    // so a normal visit never downloads the asset.
+    final slow = canFallback
+        ? Timer(OfflineFallback.slowLiveTimeout, () => unawaited(_applyFallback(() => remoteFailed)))
+        : null;
+    if (slow != null) ref.onDispose(slow.cancel);
     try {
       var first = true;
       await loadRemote(() async {
@@ -79,11 +85,18 @@ class ProjectsNotifier extends Notifier<List<Project>>
       remoteFailed = true;
       logDebug('Projects load from Supabase warning: $e');
     }
+    slow?.cancel();
     _reportLoad(remoteFailed: remoteFailed);
+    // A failed or empty answer with nothing showing: fetch the bundled copy
+    // now (a failure then moves on from "failed" to "offline" when it lands).
+    if (canFallback && ref.mounted && state.isEmpty) {
+      unawaited(_applyFallback(() => remoteFailed));
+    }
   }
 
   /// Fills state from the bundled offline data if nothing has arrived yet.
   Future<void> _applyFallback(bool Function() remoteFailed) async {
+    if (!ref.mounted || state.isNotEmpty) return;
     try {
       final data = await OfflineFallback.load();
       final fallback = _parseProjects(data['projects'] ?? const []);

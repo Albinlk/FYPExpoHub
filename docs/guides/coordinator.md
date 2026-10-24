@@ -21,6 +21,10 @@ own account, see [Accounts and sign-in](accounts.md).
 
 ## The Coordinator menu at a glance {#menu}
 
+If you also hold other roles, each role is its own menu section; use
+**COLLAPSE ALL** / **EXPAND ALL** at the top of the menu to close or open
+them all, and the menu remembers which sections you left open.
+
 **Menu items and what they are for**
 
 | Group | Menu item | Route | Use it to |

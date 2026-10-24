@@ -196,3 +196,22 @@ Applied via `supabase/migrations/20260925000001_audit_2_hardening.sql`
 Still open (need a decision or dashboard access, not code): rotate the demo
 accounts above; confirm Auth self-signup is disabled if only staff-created
 accounts should exist; review the non-repo objects on the live project.
+
+## Advisor fixes (October 2026)
+
+The live Supabase advisors couldn't be run (CLI and MCP sessions signed
+out), so `tool/lint_migrations.py` checks the migrations for the same
+problems instead; CI runs it with `--check`. It found, and
+`supabase/migrations/20261024000001_advisor_fixes.sql` fixes:
+
+| Lint | Found | Fix |
+|---|---|---|
+| Unindexed foreign keys | 59 foreign-key columns no index starts with | Index each one, checked against `pg_index` at apply time so nothing is duplicated |
+| `auth_rls_initplan` | 17 policies calling `auth.uid()` / `auth.role()` per row | Same conditions with `(select auth.uid())`, evaluated once per query |
+| RLS disabled, mutable `search_path` | None | — |
+
+The migration was tested on Postgres 17: it creates only missing indexes,
+skips tables and policies that don't exist, and is safe to run twice. It
+is **not applied** to the live project yet. After applying, run the
+advisors in the Supabase dashboard (Advisors → Security / Performance).
+

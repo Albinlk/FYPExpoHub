@@ -1,0 +1,72 @@
+name: Database Backup
+
+# Nightly encrypted dump of the Supabase database. The free plan has no
+# backups of its own. The repo is public, so the dump is encrypted with
+# BACKUP_PASSPHRASE before it is stored as a workflow artifact (30 days).
+# Restore steps: docs/developer/deployment.md, "Rolling Back the Database".
+#
+# Needs two repository secrets (skipped, not failed, until both exist):
+#   SUPABASE_DB_URL     Supabase: Project Settings > Database > Connection
+#                       string > Session pooler (URI, with the password)
+#   BACKUP_PASSPHRASE   any long random string; keep a copy outside GitHub
+
+on:
+  schedule:
+    - cron: '0 18 * * *' # 02:00 Malaysia time
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    env:
+      HAS_SECRETS: ${{ secrets.SUPABASE_DB_URL != '' && secrets.BACKUP_PASSPHRASE != '' }}
+    steps:
+      - name: Skip until the secrets exist
+        if: ${{ env.HAS_SECRETS != 'true' }}
+        run: echo "::warning::SUPABASE_DB_URL or BACKUP_PASSPHRASE is not set; no backup taken."
+
+      - name: Install pg_dump 17 (matches the Supabase Postgres major version)
+        if: ${{ env.HAS_SECRETS == 'true' }}
+        run: |
+          sudo apt-get install -y postgresql-common
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y postgresql-client-17
+
+      - name: Dump and encrypt
+        if: ${{ env.HAS_SECRETS == 'true' }}
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          stamp=$(date -u +%Y%m%d-%H%M)
+          mkdir -p dump
+          PG=/usr/lib/postgresql/17/bin
+          # App schema and data.
+          $PG/pg_dump "$SUPABASE_DB_URL" --schema=public --no-owner --no-privileges \
+            --file=dump/public.sql
+          # Accounts (auth.users, identities, MFA factors): data only, since
+          # Supabase owns the auth schema itself.
+          $PG/pg_dump "$SUPABASE_DB_URL" --schema=auth --data-only --no-owner --no-privileges \
+            --file=dump/auth-data.sql
+          # Storage metadata only (file contents stay in Supabase Storage).
+          $PG/pg_dump "$SUPABASE_DB_URL" --schema=storage --data-only --no-owner --no-privileges \
+            --table=storage.buckets --table=storage.objects --file=dump/storage-data.sql
+          tar -czf "backup-$stamp.tar.gz" -C dump .
+          gpg --batch --yes --pinentry-mode loopback --passphrase "$BACKUP_PASSPHRASE" \
+            --symmetric --cipher-algo AES256 --output "backup-$stamp.tar.gz.gpg" "backup-$stamp.tar.gz"
+          rm -rf dump "backup-$stamp.tar.gz"
+          ls -la backup-*.gpg
+          echo "BACKUP_FILE=backup-$stamp.tar.gz.gpg" >> "$GITHUB_ENV"
+
+      - name: Store encrypted backup
+        if: ${{ env.HAS_SECRETS == 'true' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: ${{ env.BACKUP_FILE }}
+          path: ${{ env.BACKUP_FILE }}
+          retention-days: 30
+          if-no-files-found: error

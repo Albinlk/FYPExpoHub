@@ -248,9 +248,51 @@ Sign-in is stored per site, so a lecturer signs in once on the main site (booth 
    ```
 
 ### Rolling Back the Database
-1. Restore from a Supabase database backup (available in Supabase Studio)
-2. Or re-run migrations from a specific point
-3. See [history/migration-report.md](history/migration-report.md) for details
+
+The free plan keeps no backups, so `.github/workflows/db-backup.yml` takes
+one every night at 02:00 Malaysia time: the `public` schema with its data,
+plus the data of `auth` (accounts) and `storage` (file metadata, not the
+files). It is encrypted with `BACKUP_PASSPHRASE` and kept as a workflow
+artifact for 30 days.
+
+| Secret | Value |
+|---|---|
+| `SUPABASE_DB_URL` | Supabase → Project Settings → Database → Connection string → **Session pooler** URI, with the database password |
+| `BACKUP_PASSPHRASE` | A long random string. Keep a copy outside GitHub: without it the backups can't be opened |
+
+Until both secrets exist the workflow skips with a warning instead of
+failing. Run it once by hand (Actions → Database Backup → Run workflow) to
+check it.
+
+**Restore**
+
+1. Download the artifact from the run (Actions → Database Backup → the run
+   → Artifacts) and unzip it.
+2. Decrypt and unpack:
+
+    ```bash
+    gpg --decrypt backup-YYYYMMDD-HHMM.tar.gz.gpg > backup.tar.gz
+    ```
+
+    ```bash
+    tar -xzf backup.tar.gz
+    ```
+
+3. Into an empty project (or after dropping the damaged `public` schema),
+   load the schema and data, then the accounts:
+
+    ```bash
+    psql "$SUPABASE_DB_URL" -f public.sql
+    ```
+
+    ```bash
+    psql "$SUPABASE_DB_URL" -f auth-data.sql
+    ```
+
+4. Uploaded files (reports, CVs, deliverables) are not in the dump; only
+   their `storage.objects` rows are (`storage-data.sql`).
+5. Smaller fixes: re-run migrations from a specific point, see
+   [history/migration-report.md](history/migration-report.md).
 
 ## Health Checks
 

@@ -37,19 +37,25 @@ class ScheduleNotifier extends Notifier<List<ScheduleItem>>
     return out;
   }
 
-  /// Same pattern as ProjectsNotifier: fallback asset fills state first,
-  /// live Supabase rows overwrite it when they arrive (remote wins). The
-  /// admin instance skips the fallback — those rows can't be saved.
+  /// Same pattern as ProjectsNotifier: the fallback asset is fetched only
+  /// when the live request is slow, fails or answers empty, and live
+  /// Supabase rows overwrite it when they arrive (remote wins). The admin
+  /// instance skips the fallback — those rows can't be saved.
   void _loadSchedule() async {
     var remoteFailed = false;
     final remote = _fetchRemoteSchedule().catchError((Object e) {
       remoteFailed = true;
       return <Map<String, dynamic>>[];
     });
-    // The bundled fallback loads alongside the request rather than before
-    // it, so a slow asset never holds up live rows (or the load status).
     // The bundled data is the default event's; never show it for another.
-    if (publishedOnly && ActiveEvent.usesBundledData) unawaited(_applyFallback(() => remoteFailed));
+    final canFallback = publishedOnly && ActiveEvent.usesBundledData;
+    // A slow request: past the timeout the bundled copy fills the list
+    // meanwhile (live rows still replace it). A fast answer cancels this,
+    // so a normal visit never downloads the asset.
+    final slow = canFallback
+        ? Timer(OfflineFallback.slowLiveTimeout, () => unawaited(_applyFallback(() => remoteFailed)))
+        : null;
+    if (slow != null) ref.onDispose(slow.cancel);
     try {
       var first = true;
       await loadRemote(() async {
@@ -61,11 +67,18 @@ class ScheduleNotifier extends Notifier<List<ScheduleItem>>
       remoteFailed = true;
       logDebug('Schedule load from Supabase warning: $e');
     }
+    slow?.cancel();
     _reportLoad(remoteFailed: remoteFailed);
+    // A failed or empty answer with nothing showing: fetch the bundled copy
+    // now (a failure then moves on from "failed" to "offline" when it lands).
+    if (canFallback && ref.mounted && state.isEmpty) {
+      unawaited(_applyFallback(() => remoteFailed));
+    }
   }
 
   /// Fills state from the bundled offline data if nothing has arrived yet.
   Future<void> _applyFallback(bool Function() remoteFailed) async {
+    if (!ref.mounted || state.isNotEmpty) return;
     try {
       final data = await OfflineFallback.load();
       final fallback = _parse(data['scheduleItems'] ?? const []);
