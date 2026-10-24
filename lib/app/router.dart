@@ -6,71 +6,9 @@ import '../app/router_title_io.dart'
 import '../app/theme/theme.dart';
 import '../core/supabase/supabase_client_provider.dart' show currentAuthUserProvider;
 import 'router_guards.dart';
-import '../features/fypms/presentation/pages/csp_dashboard_page.dart';
-import '../features/fypms/presentation/pages/csp_evaluations_page.dart';
-import '../features/fypms/presentation/pages/csp_marks_page.dart';
-import '../features/fypms/presentation/pages/csp_milestones_page.dart';
-import '../features/fypms/presentation/pages/csp_offerings_page.dart';
-import '../features/fypms/presentation/pages/csp_requests_page.dart';
-import '../features/fypms/presentation/pages/coordinator_assignments_page.dart';
-import '../features/fypms/presentation/pages/coordinator_mark_allocation_page.dart';
-import '../features/fypms/presentation/pages/coordinator_audit_page.dart';
-import '../features/fypms/presentation/pages/coordinator_dashboard_page.dart';
-import '../features/fypms/presentation/pages/coordinator_expo_page.dart';
-import '../features/fypms/presentation/pages/coordinator_presentations_page.dart';
-import '../features/fypms/presentation/pages/coordinator_records_page.dart';
-import '../features/fypms/presentation/pages/coordinator_requests_page.dart';
-import '../features/fypms/presentation/pages/supervisor_corrections_page.dart';
-import '../features/fypms/presentation/pages/supervisor_evaluations_page.dart';
-import '../features/fypms/presentation/pages/supervisor_milestones_page.dart';
-import '../features/fypms/presentation/pages/supervisor_progress_page.dart';
-import '../features/fypms/presentation/pages/supervisor_reports_page.dart';
-import '../features/fypms/presentation/pages/supervisor_requests_page.dart';
-import '../features/fypms/presentation/pages/examiner_dashboard_page.dart';
-import '../features/fypms/presentation/pages/examiner_corrections_page.dart';
-import '../features/fypms/presentation/pages/examiner_evaluations_page.dart';
-import '../features/fypms/presentation/pages/lecturer_record_detail_page.dart';
-import '../features/fypms/presentation/pages/student_corrections_page.dart';
-import '../features/fypms/presentation/pages/student_dashboard_page.dart';
-import '../features/fypms/presentation/pages/student_deliverables_page.dart';
-import '../features/fypms/presentation/pages/student_forms_page.dart';
-import '../features/fypms/presentation/pages/student_lean_canvas_page.dart';
-import '../features/fypms/presentation/pages/student_marks_page.dart';
-import '../features/fypms/presentation/pages/student_milestones_page.dart';
-import '../features/fypms/presentation/pages/student_presentations_page.dart';
-import '../features/fypms/presentation/pages/coordinator_semesters_page.dart';
-import '../features/fypms/presentation/pages/coordinator_users_page.dart';
-import '../features/fypms/presentation/pages/coordinator_rubrics_page.dart';
-import '../features/fypms/presentation/pages/notifications_page.dart';
-import '../features/admin_auth/mfa.dart';
-import '../features/fypms/presentation/pages/coordinator_reports_page.dart';
-import '../features/fypms/presentation/pages/coordinator_enrol_page.dart';
-import '../features/fypms/presentation/widgets/supervisor_change_widgets.dart'
-    show CoordinatorLettersPage, PuNominationsPage;
-import '../features/fypms/presentation/pages/student_progress_page.dart';
-import '../features/fypms/presentation/pages/student_record_detail_page.dart';
-import '../features/fypms/presentation/pages/student_records_page.dart';
-import '../features/fypms/presentation/pages/student_reports_page.dart';
-import '../features/fypms/presentation/pages/student_supervision_page.dart';
-import '../features/fypms/presentation/pages/supervisor_dashboard_page.dart';
-import '../features/admin_announcements/presentation/pages/admin_announcements_page.dart';
 import '../features/admin_auth/presentation/pages/sign_in_page.dart';
 import '../features/admin_auth/presentation/pages/reset_password_page.dart';
 import '../features/public_archive/presentation/pages/archive_page.dart';
-import '../features/admin_awards/presentation/pages/admin_awards_page.dart';
-import '../features/admin_booths/presentation/pages/admin_booths_page.dart';
-import '../features/admin_dashboard/presentation/pages/dashboard_page.dart';
-import '../features/admin_event/presentation/pages/admin_event_page.dart';
-import '../features/admin_feedback/presentation/pages/admin_feedback_page.dart';
-import '../features/admin_imports/presentation/pages/admin_imports_page.dart';
-import '../features/admin_imports/presentation/pages/import_detail_page.dart';
-import '../features/admin_lecturers/presentation/pages/admin_lecturers_page.dart';
-import '../features/admin_projects/presentation/pages/admin_projects_page.dart';
-import '../features/admin_schedule/presentation/pages/admin_schedule_page.dart';
-import '../features/admin_assignments/presentation/pages/admin_assignments_page.dart';
-import '../features/admin_audit/presentation/pages/admin_audit_page.dart';
-import '../features/admin_settings/presentation/pages/admin_settings_page.dart';
-import '../features/admin_visits/presentation/pages/admin_visits_page.dart';
 import '../features/exhibition_info/presentation/pages/info_page.dart';
 import '../features/faq_privacy/presentation/pages/faq_privacy_page.dart';
 import '../features/public_announcements/presentation/pages/announcements_page.dart';
@@ -86,13 +24,42 @@ import '../features/public_projects/presentation/pages/projects_page.dart';
 import '../features/public_schedule/presentation/pages/schedule_page.dart';
 import '../features/junior_project_guide/presentation/pages/junior_project_browser_page.dart';
 import '../features/junior_project_guide/presentation/pages/similar_projects_page.dart';
-import 'widgets/admin_shell.dart';
-import 'widgets/fypms_shell.dart';
 import 'widgets/public_shell.dart';
+import 'deferred/admin_pages.dart' deferred as admin;
+import 'deferred/deferred_page.dart';
+import 'deferred/fypms_pages.dart' deferred as fypms;
 import 'site_hosts.dart';
 import 'widgets/external_redirect_page.dart';
-import '../features/fypms/presentation/pages/csp_cohort_page.dart';
-import '../features/fypms/presentation/widgets/nomination_documents.dart';
+
+// -------------------------------------------------------------
+// DEFERRED AREAS
+// -------------------------------------------------------------
+// The Admin area and the FYP Workspace are deferred libraries: on the web the
+// JavaScript build ships them as separate part files that are downloaded the
+// first time someone opens /admin/** or /fypms/**, so exhibition visitors
+// never fetch that code. Route guards (resolveRouterRedirect) still run
+// before any of it is needed; only the page bodies wait for the download.
+
+final DeferredLibrary _adminLibrary = DeferredLibrary(admin.loadLibrary);
+final DeferredLibrary _fypmsLibrary = DeferredLibrary(fypms.loadLibrary);
+
+/// An Admin-area widget, built once the admin library has loaded.
+Widget _admin(Widget Function() build) =>
+    DeferredPage(library: _adminLibrary, builder: (_) => build());
+
+/// An FYP Workspace widget, built once the workspace library has loaded.
+Widget _fypms(Widget Function() build) =>
+    DeferredPage(library: _fypmsLibrary, builder: (_) => build());
+
+/// Fetches the Admin and FYP Workspace code ahead of time, e.g. once a
+/// signed-in user is about to enter either area. Safe to call repeatedly.
+///
+/// Tests that render pages from both areas in one file call this from
+/// `setUpAll`: on the Dart VM the first `loadLibrary` call is tied to the
+/// zone it ran in, so a load first started inside one `testWidgets` body can
+/// never complete in a later test's zone.
+Future<void> preloadDeferredAreas() =>
+    Future.wait([_adminLibrary.load(), _fypmsLibrary.load()]);
 
 final goRouterProvider = Provider<GoRouter>((ref) {
   // Re-run the redirect guards whenever the signed-in user changes —
@@ -249,72 +216,72 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       // PROTECTED ADMIN SHELL ROUTES
       // -------------------------------------------------------------
       ShellRoute(
-        builder: (context, state, child) => MfaGate(child: AdminShell(child: child)),
+        builder: (context, state, child) => _admin(() => admin.MfaGate(child: admin.AdminShell(child: child))),
         routes: [
           GoRoute(
             path: '/admin',
-            builder: (context, state) => const DashboardPage(),
+            builder: (context, state) => _admin(() => admin.DashboardPage()),
           ),
           GoRoute(
             path: '/admin/event',
-            builder: (context, state) => const AdminEventPage(),
+            builder: (context, state) => _admin(() => admin.AdminEventPage()),
           ),
           GoRoute(
             path: '/admin/schedule',
-            builder: (context, state) => const AdminSchedulePage(),
+            builder: (context, state) => _admin(() => admin.AdminSchedulePage()),
           ),
           GoRoute(
             path: '/admin/projects',
-            builder: (context, state) => const AdminProjectsPage(),
+            builder: (context, state) => _admin(() => admin.AdminProjectsPage()),
           ),
           GoRoute(
             path: '/admin/booths',
-            builder: (context, state) => const AdminBoothsPage(),
+            builder: (context, state) => _admin(() => admin.AdminBoothsPage()),
           ),
           GoRoute(
             path: '/admin/announcements',
-            builder: (context, state) => const AdminAnnouncementsPage(),
+            builder: (context, state) => _admin(() => admin.AdminAnnouncementsPage()),
           ),
           GoRoute(
             path: '/admin/feedback',
-            builder: (context, state) => const AdminFeedbackPage(),
+            builder: (context, state) => _admin(() => admin.AdminFeedbackPage()),
           ),
           GoRoute(
             path: '/admin/awards',
-            builder: (context, state) => const AdminAwardsPage(),
+            builder: (context, state) => _admin(() => admin.AdminAwardsPage()),
           ),
           GoRoute(
             path: '/admin/visits',
-            builder: (context, state) => const AdminVisitsPage(),
+            builder: (context, state) => _admin(() => admin.AdminVisitsPage()),
           ),
           GoRoute(
             path: '/admin/imports',
-            builder: (context, state) => const AdminImportsPage(),
+            builder: (context, state) => _admin(() => admin.AdminImportsPage()),
             routes: [
               GoRoute(
                 path: ':importId',
                 builder: (context, state) {
                   final importId = state.pathParameters['importId'] ?? '';
-                  return ImportDetailPage(importId: importId);
+                  return _admin(() => admin.ImportDetailPage(importId: importId));
                 },
               ),
             ],
           ),
           GoRoute(
             path: '/admin/lecturers',
-            builder: (context, state) => const AdminLecturersPage(),
+            builder: (context, state) => _admin(() => admin.AdminLecturersPage()),
           ),
           GoRoute(
             path: '/admin/assignments',
-            builder: (context, state) => const AdminAssignmentsPage(),
+            builder: (context, state) => _admin(() => admin.AdminAssignmentsPage()),
           ),
           GoRoute(
             path: '/admin/audit',
-            builder: (context, state) => const AdminAuditPage(),
+            builder: (context, state) => _admin(() => admin.AdminAuditPage()),
           ),
           GoRoute(
             path: '/admin/settings',
-            builder: (context, state) => const AdminSettingsPage(),
+            builder: (context, state) => _admin(() => admin.AdminSettingsPage()),
           ),
         ],
       ),
@@ -323,252 +290,252 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       // PROTECTED FYPMS SHELL ROUTES (role-aware)
       // -------------------------------------------------------------
       ShellRoute(
-        builder: (context, state, child) => MfaGate(child: FypmsShell(child: child)),
+        builder: (context, state, child) => _fypms(() => fypms.MfaGate(child: fypms.FypmsShell(child: child))),
         routes: [
           GoRoute(
             path: '/fypms',
-            builder: (context, state) => const StudentDashboardPage(),
+            builder: (context, state) => _fypms(() => fypms.StudentDashboardPage()),
           ),
           // ---- Student workspace ----
           GoRoute(
             path: '/fypms/student',
-            builder: (context, state) => const StudentDashboardPage(),
+            builder: (context, state) => _fypms(() => fypms.StudentDashboardPage()),
           ),
           GoRoute(
             path: '/fypms/student/records',
-            builder: (context, state) => const StudentRecordsPage(),
+            builder: (context, state) => _fypms(() => fypms.StudentRecordsPage()),
             routes: [
               GoRoute(
                 path: ':recordId',
                 builder: (context, state) {
                   final recordId = state.pathParameters['recordId'] ?? '';
-                  return StudentRecordDetailPage(recordId: recordId);
+                  return _fypms(() => fypms.StudentRecordDetailPage(recordId: recordId));
                 },
               ),
             ],
           ),
           GoRoute(
             path: '/fypms/student/supervision',
-            builder: (context, state) => const StudentSupervisionPage(),
+            builder: (context, state) => _fypms(() => fypms.StudentSupervisionPage()),
           ),
           GoRoute(
             path: '/fypms/student/progress',
-            builder: (context, state) => const StudentProgressPage(),
+            builder: (context, state) => _fypms(() => fypms.StudentProgressPage()),
           ),
           GoRoute(
             path: '/fypms/student/forms',
-            builder: (context, state) => const StudentFormsPage(),
+            builder: (context, state) => _fypms(() => fypms.StudentFormsPage()),
           ),
           GoRoute(
             path: '/fypms/student/lean-canvas',
-            builder: (context, state) => const StudentLeanCanvasPage(),
+            builder: (context, state) => _fypms(() => fypms.StudentLeanCanvasPage()),
           ),
           GoRoute(
             path: '/fypms/student/deliverables',
-            builder: (context, state) => const StudentDeliverablesPage(),
+            builder: (context, state) => _fypms(() => fypms.StudentDeliverablesPage()),
           ),
           GoRoute(
             path: '/fypms/student/reports',
-            builder: (context, state) => const StudentReportsPage(),
+            builder: (context, state) => _fypms(() => fypms.StudentReportsPage()),
           ),
           GoRoute(
             path: '/fypms/student/milestones',
-            builder: (context, state) => const StudentMilestonesPage(),
+            builder: (context, state) => _fypms(() => fypms.StudentMilestonesPage()),
           ),
           GoRoute(
             path: '/fypms/student/corrections',
-            builder: (context, state) => const StudentCorrectionsPage(),
+            builder: (context, state) => _fypms(() => fypms.StudentCorrectionsPage()),
           ),
           GoRoute(
             path: '/fypms/student/presentations',
-            builder: (context, state) => const StudentPresentationsPage(),
+            builder: (context, state) => _fypms(() => fypms.StudentPresentationsPage()),
           ),
           GoRoute(
             path: '/fypms/student/marks',
-            builder: (context, state) => const StudentMarksPage(),
+            builder: (context, state) => _fypms(() => fypms.StudentMarksPage()),
           ),
           // ---- Supervisor workspace ----
           GoRoute(
             path: '/fypms/supervisor',
-            builder: (context, state) => const SupervisorDashboardPage(),
+            builder: (context, state) => _fypms(() => fypms.SupervisorDashboardPage()),
           ),
           GoRoute(
             path: '/fypms/supervisor/records',
-            builder: (context, state) => const SupervisorDashboardPage(),
+            builder: (context, state) => _fypms(() => fypms.SupervisorDashboardPage()),
             routes: [
               GoRoute(
                 path: ':recordId',
                 builder: (context, state) {
                   final recordId = state.pathParameters['recordId'] ?? '';
-                  return LecturerRecordDetailPage(recordId: recordId);
+                  return _fypms(() => fypms.LecturerRecordDetailPage(recordId: recordId));
                 },
               ),
             ],
           ),
           GoRoute(
             path: '/fypms/supervisor/requests',
-            builder: (context, state) => const SupervisorRequestsPage(),
+            builder: (context, state) => _fypms(() => fypms.SupervisorRequestsPage()),
           ),
           GoRoute(
             path: '/fypms/supervisor/reports',
-            builder: (context, state) => const SupervisorReportsPage(),
+            builder: (context, state) => _fypms(() => fypms.SupervisorReportsPage()),
           ),
           GoRoute(
             path: '/fypms/supervisor/progress',
-            builder: (context, state) => const SupervisorProgressPage(),
+            builder: (context, state) => _fypms(() => fypms.SupervisorProgressPage()),
           ),
           GoRoute(
             path: '/fypms/supervisor/evaluations',
-            builder: (context, state) => const SupervisorEvaluationsPage(),
+            builder: (context, state) => _fypms(() => fypms.SupervisorEvaluationsPage()),
           ),
           GoRoute(
             path: '/fypms/supervisor/corrections',
-            builder: (context, state) => const SupervisorCorrectionsPage(),
+            builder: (context, state) => _fypms(() => fypms.SupervisorCorrectionsPage()),
           ),
           GoRoute(
             path: '/fypms/supervisor/milestones',
-            builder: (context, state) => const SupervisorMilestonesPage(),
+            builder: (context, state) => _fypms(() => fypms.SupervisorMilestonesPage()),
           ),
           // ---- Examiner workspace ----
           GoRoute(
             path: '/fypms/examiner',
-            builder: (context, state) => const ExaminerDashboardPage(),
+            builder: (context, state) => _fypms(() => fypms.ExaminerDashboardPage()),
           ),
           GoRoute(
             path: '/fypms/examiner/records',
-            builder: (context, state) => const ExaminerDashboardPage(),
+            builder: (context, state) => _fypms(() => fypms.ExaminerDashboardPage()),
             routes: [
               GoRoute(
                 path: ':recordId',
                 builder: (context, state) {
                   final recordId = state.pathParameters['recordId'] ?? '';
-                  return LecturerRecordDetailPage(recordId: recordId);
+                  return _fypms(() => fypms.LecturerRecordDetailPage(recordId: recordId));
                 },
               ),
             ],
           ),
           GoRoute(
             path: '/fypms/examiner/evaluations',
-            builder: (context, state) => const ExaminerEvaluationsPage(),
+            builder: (context, state) => _fypms(() => fypms.ExaminerEvaluationsPage()),
           ),
           GoRoute(
             path: '/fypms/examiner/corrections',
-            builder: (context, state) => const ExaminerCorrectionsPage(),
+            builder: (context, state) => _fypms(() => fypms.ExaminerCorrectionsPage()),
           ),
           // ---- CSP workspace ----
           GoRoute(
             path: '/fypms/csp',
-            builder: (context, state) => const CspDashboardPage(),
+            builder: (context, state) => _fypms(() => fypms.CspDashboardPage()),
           ),
           GoRoute(
             path: '/fypms/csp/requests',
-            builder: (context, state) => const CspRequestsPage(),
+            builder: (context, state) => _fypms(() => fypms.CspRequestsPage()),
           ),
           GoRoute(
             path: '/fypms/csp/offerings',
-            builder: (context, state) => const CspOfferingsPage(),
+            builder: (context, state) => _fypms(() => fypms.CspOfferingsPage()),
           ),
           GoRoute(
             path: '/fypms/csp/cohort',
-            builder: (context, state) => const CspCohortPage(),
+            builder: (context, state) => _fypms(() => fypms.CspCohortPage()),
           ),
           GoRoute(
             path: '/fypms/csp/nominations',
-            builder: (context, state) => const NominatorNominationsPage(),
+            builder: (context, state) => _fypms(() => fypms.NominatorNominationsPage()),
           ),
           GoRoute(
             path: '/fypms/csp/milestones',
-            builder: (context, state) => const CspMilestonesPage(),
+            builder: (context, state) => _fypms(() => fypms.CspMilestonesPage()),
           ),
           GoRoute(
             path: '/fypms/csp/evaluations',
-            builder: (context, state) => const CspEvaluationsPage(),
+            builder: (context, state) => _fypms(() => fypms.CspEvaluationsPage()),
           ),
           GoRoute(
             path: '/fypms/notifications',
-            builder: (context, state) => const NotificationsPage(),
+            builder: (context, state) => _fypms(() => fypms.NotificationsPage()),
           ),
           GoRoute(
             path: '/fypms/coordinator/reports',
-            builder: (context, state) => const CoordinatorReportsPage(),
+            builder: (context, state) => _fypms(() => fypms.CoordinatorReportsPage()),
           ),
           GoRoute(
             path: '/fypms/coordinator/rubrics',
-            builder: (context, state) => const CoordinatorRubricsPage(),
+            builder: (context, state) => _fypms(() => fypms.CoordinatorRubricsPage()),
           ),
           GoRoute(
             path: '/fypms/coordinator/users',
-            builder: (context, state) => const CoordinatorUsersPage(),
+            builder: (context, state) => _fypms(() => fypms.CoordinatorUsersPage()),
           ),
           GoRoute(
             path: '/fypms/coordinator/enrol',
-            builder: (context, state) => const CoordinatorEnrolPage(),
+            builder: (context, state) => _fypms(() => fypms.CoordinatorEnrolPage()),
           ),
           GoRoute(
             path: '/fypms/coordinator/semesters',
-            builder: (context, state) => const CoordinatorSemestersPage(),
+            builder: (context, state) => _fypms(() => fypms.CoordinatorSemestersPage()),
           ),
           GoRoute(
             path: '/fypms/pu',
-            builder: (context, state) => const PuNominationsPage(),
+            builder: (context, state) => _fypms(() => fypms.PuNominationsPage()),
           ),
           GoRoute(
             path: '/fypms/csp/presentations',
-            builder: (context, state) => const CoordinatorPresentationsPage(),
+            builder: (context, state) => _fypms(() => fypms.CoordinatorPresentationsPage()),
           ),
           GoRoute(
             path: '/fypms/csp/marks',
-            builder: (context, state) => const CspMarksPage(),
+            builder: (context, state) => _fypms(() => fypms.CspMarksPage()),
           ),
           // ---- Coordinator workspace ----
           GoRoute(
             path: '/fypms/coordinator',
-            builder: (context, state) => const CoordinatorDashboardPage(),
+            builder: (context, state) => _fypms(() => fypms.CoordinatorDashboardPage()),
           ),
           GoRoute(
             path: '/fypms/coordinator/records',
-            builder: (context, state) => const CoordinatorRecordsPage(),
+            builder: (context, state) => _fypms(() => fypms.CoordinatorRecordsPage()),
             routes: [
               GoRoute(
                 path: ':recordId',
                 builder: (context, state) {
                   final recordId = state.pathParameters['recordId'] ?? '';
-                  return LecturerRecordDetailPage(recordId: recordId);
+                  return _fypms(() => fypms.LecturerRecordDetailPage(recordId: recordId));
                 },
               ),
             ],
           ),
           GoRoute(
             path: '/fypms/coordinator/assignments',
-            builder: (context, state) => const CoordinatorAssignmentsPage(),
+            builder: (context, state) => _fypms(() => fypms.CoordinatorAssignmentsPage()),
           ),
           GoRoute(
             path: '/fypms/coordinator/requests',
-            builder: (context, state) => const CoordinatorRequestsPage(),
+            builder: (context, state) => _fypms(() => fypms.CoordinatorRequestsPage()),
           ),
           GoRoute(
             path: '/fypms/coordinator/presentations',
-            builder: (context, state) => const CoordinatorPresentationsPage(),
+            builder: (context, state) => _fypms(() => fypms.CoordinatorPresentationsPage()),
           ),
           GoRoute(
             path: '/fypms/coordinator/expo',
-            builder: (context, state) => const CoordinatorExpoPage(),
+            builder: (context, state) => _fypms(() => fypms.CoordinatorExpoPage()),
           ),
           GoRoute(
             path: '/fypms/coordinator/mark-allocation',
-            builder: (context, state) => const CoordinatorMarkAllocationPage(),
+            builder: (context, state) => _fypms(() => fypms.CoordinatorMarkAllocationPage()),
           ),
           GoRoute(
             path: '/fypms/coordinator/audit',
-            builder: (context, state) => const CoordinatorAuditPage(),
+            builder: (context, state) => _fypms(() => fypms.CoordinatorAuditPage()),
           ),
           GoRoute(
             path: '/fypms/coordinator/letters',
-            builder: (context, state) => const CoordinatorLettersPage(),
+            builder: (context, state) => _fypms(() => fypms.CoordinatorLettersPage()),
           ),
           GoRoute(
             path: '/fypms/coordinator/nominations',
-            builder: (context, state) => const NominatorNominationsPage(),
+            builder: (context, state) => _fypms(() => fypms.NominatorNominationsPage()),
           ),
         ],
       ),

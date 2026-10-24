@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/supabase/supabase_client_provider.dart';
+import '../../core/web/local_prefs.dart';
 import '../../core/widgets/scholar_lab.dart';
 import '../site_hosts.dart';
 import '../theme/theme.dart';
@@ -48,8 +49,9 @@ const List<({String? label, List<_AdminNavItem> items})> _adminNavGroups = [
 ];
 
 /// Labels of the menu groups the admin has collapsed. Shared by the sidebar
-/// and the phone drawer, and kept while moving between admin pages.
-final ValueNotifier<Set<String>> adminCollapsedGroups = ValueNotifier(<String>{});
+/// and the phone drawer, kept while moving between admin pages, and saved in
+/// the browser so a reload keeps them (read once, when the menu first builds).
+final PersistedStringSet adminCollapsedGroups = PersistedStringSet('fyp.adminNavCollapsed');
 
 bool _isActiveRoute(String route, String currentPath) =>
     (route == '/admin' && currentPath == '/admin') ||

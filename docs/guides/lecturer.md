@@ -28,7 +28,9 @@ down the left side (on a phone, tap the menu icon at the top left).
   Lecturer**, or **CSP600 & CSP650 Lecturer**), **Programme Unit** and
   **Coordinator**. Tap a section heading to open or close it. A closed
   section shows how many pages it holds. The section for the page you are
-  on opens by itself.
+  on opens by itself. **COLLAPSE ALL** / **EXPAND ALL** at the top of the
+  menu closes or opens every section at once, and the menu remembers which
+  sections you left open, even after you reload the page.
 - At the bottom of the menu, **Exhibition Site** takes you back to the public
   exhibition.
 

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:fyp_expo_hub/app/widgets/admin_shell.dart';
 import 'package:fyp_expo_hub/core/supabase/supabase_client_provider.dart';
+import 'package:fyp_expo_hub/core/web/local_prefs.dart';
 
 /// The exhibition admin menu's groups open and close from their headers,
 /// "Collapse all" / "Expand all" does every group at once, and the page you
@@ -42,7 +43,10 @@ Future<void> _pump(WidgetTester tester, {required Size size, String at = '/admin
 }
 
 void main() {
-  setUp(() => adminCollapsedGroups.value = <String>{});
+  setUp(() {
+    localPrefs = MemoryLocalPrefs();
+    adminCollapsedGroups.value = <String>{};
+  });
 
   const desktop = Size(1440, 1600);
 
@@ -95,6 +99,26 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('admin-nav-toggle-all')), findsOneWidget);
+    expect(find.text('Audit Log'), findsNothing);
+    expect(find.text('Booth Management'), findsOneWidget);
+  });
+
+  testWidgets('closing a group is saved in the browser', (tester) async {
+    await _pump(tester, size: desktop);
+    await tester.tap(find.byKey(const Key('admin-group-Projects & booths')));
+    await tester.pumpAndSettle();
+    expect(readStringSet('fyp.adminNavCollapsed'), {'Projects & booths'});
+
+    await tester.tap(find.byKey(const Key('admin-nav-toggle-all')));
+    await tester.pumpAndSettle();
+    expect(readStringSet('fyp.adminNavCollapsed'), {'Exhibition', 'Projects & booths', 'Lecturers & visits', 'System'});
+  });
+
+  testWidgets('saved groups come back closed after a reload', (tester) async {
+    localPrefs = MemoryLocalPrefs({'fyp.adminNavCollapsed': '["System"]'});
+    adminCollapsedGroups.reload();
+    await _pump(tester, size: desktop);
+
     expect(find.text('Audit Log'), findsNothing);
     expect(find.text('Booth Management'), findsOneWidget);
   });

@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../utils/logger.dart';
+import 'select_columns.dart';
 import 'supabase_database_service.dart';
 
 /// FYPMS database read queries. These map to the RLS-protected tables created
@@ -12,7 +13,7 @@ extension FypmsDatabaseService on SupabaseDatabaseService {
     try {
       final res = await Supabase.instance.client
           .from('academic_semesters')
-          .select()
+          .select(SelectColumns.academicSemesters)
           .order('start_date', ascending: true);
       return List<Map<String, dynamic>>.from(res);
     } catch (e) {
@@ -25,7 +26,7 @@ extension FypmsDatabaseService on SupabaseDatabaseService {
     try {
       final res = await Supabase.instance.client
           .from('academic_courses')
-          .select()
+          .select(SelectColumns.academicCourses)
           .eq('is_active', true)
           .order('code', ascending: true);
       return List<Map<String, dynamic>>.from(res);
@@ -39,7 +40,7 @@ extension FypmsDatabaseService on SupabaseDatabaseService {
     try {
       final res = await Supabase.instance.client
           .from('fyp_course_offerings')
-          .select()
+          .select(SelectColumns.fypCourseOfferings)
           .eq('is_active', true);
       return List<Map<String, dynamic>>.from(res);
     } catch (e) {
@@ -55,7 +56,7 @@ extension FypmsDatabaseService on SupabaseDatabaseService {
     try {
       final res = await Supabase.instance.client
           .from('fyp_records')
-          .select()
+          .select(SelectColumns.fypRecords)
           .eq('student_id', studentId)
           .order('created_at', ascending: false);
       return List<Map<String, dynamic>>.from(res);
@@ -67,7 +68,7 @@ extension FypmsDatabaseService on SupabaseDatabaseService {
 
   Future<List<Map<String, dynamic>>> getFypRecordsOnce({String? workflowStatus}) async {
     try {
-      var filter = Supabase.instance.client.from('fyp_records').select();
+      var filter = Supabase.instance.client.from('fyp_records').select(SelectColumns.fypRecords);
       if (workflowStatus != null) {
         filter = filter.eq('workflow_status', workflowStatus);
       }
@@ -86,7 +87,7 @@ extension FypmsDatabaseService on SupabaseDatabaseService {
     try {
       final res = await Supabase.instance.client
           .from('fyp_records')
-          .select()
+          .select(SelectColumns.fypRecords)
           .inFilter('id', ids.toList())
           .order('created_at', ascending: false);
       return List<Map<String, dynamic>>.from(res);
@@ -103,7 +104,7 @@ extension FypmsDatabaseService on SupabaseDatabaseService {
     try {
       final res = await Supabase.instance.client
           .from('fyp_record_assignments')
-          .select()
+          .select(SelectColumns.fypRecordAssignments)
           .eq('fyp_record_id', fypRecordId)
           .eq('is_active', true);
       return List<Map<String, dynamic>>.from(res);
@@ -117,7 +118,7 @@ extension FypmsDatabaseService on SupabaseDatabaseService {
     try {
       var filter = Supabase.instance.client
           .from('fyp_record_assignments')
-          .select('fyp_record_id, academic_role, lecturer_id, is_active')
+          .select(SelectColumns.fypRecordAssignmentRefs)
           .eq('lecturer_id', lecturerId)
           .eq('is_active', true);
       if (role != null) {
@@ -138,7 +139,7 @@ extension FypmsDatabaseService on SupabaseDatabaseService {
     try {
       final res = await Supabase.instance.client
           .from('fyp_supervision_requests')
-          .select()
+          .select(SelectColumns.fypSupervisionRequests)
           .eq('fyp_record_id', fypRecordId)
           .order('created_at', ascending: false);
       return List<Map<String, dynamic>>.from(res);
@@ -152,7 +153,7 @@ extension FypmsDatabaseService on SupabaseDatabaseService {
     try {
       final res = await Supabase.instance.client
           .from('fyp_supervision_requests')
-          .select()
+          .select(SelectColumns.fypSupervisionRequests)
           .eq('status', 'pending')
           .order('created_at', ascending: true);
       return List<Map<String, dynamic>>.from(res);
@@ -169,7 +170,7 @@ extension FypmsDatabaseService on SupabaseDatabaseService {
     try {
       final res = await Supabase.instance.client
           .from('fyp_progress_logs')
-          .select()
+          .select(SelectColumns.fypProgressLogs)
           .eq('fyp_record_id', fypRecordId)
           .order('week_number', ascending: false);
       return List<Map<String, dynamic>>.from(res);
@@ -186,7 +187,7 @@ extension FypmsDatabaseService on SupabaseDatabaseService {
     try {
       final res = await Supabase.instance.client
           .from('fyp_form_submissions')
-          .select()
+          .select(SelectColumns.fypFormSubmissions)
           .eq('fyp_record_id', fypRecordId)
           .order('created_at', ascending: false);
       return List<Map<String, dynamic>>.from(res);
@@ -200,7 +201,7 @@ extension FypmsDatabaseService on SupabaseDatabaseService {
     try {
       final res = await Supabase.instance.client
           .from('fyp_form_evaluations')
-          .select()
+          .select(SelectColumns.fypFormEvaluations)
           .eq('form_submission_id', formSubmissionId);
       return List<Map<String, dynamic>>.from(res);
     } catch (e) {
@@ -213,7 +214,7 @@ extension FypmsDatabaseService on SupabaseDatabaseService {
     try {
       var filter = Supabase.instance.client
           .from('fyp_rubric_templates')
-          .select()
+          .select(SelectColumns.fypRubricTemplates)
           .eq('is_active', true);
       if (formCode != null) {
         filter = filter.eq('form_code', formCode);
@@ -233,7 +234,7 @@ extension FypmsDatabaseService on SupabaseDatabaseService {
     try {
       final res = await Supabase.instance.client
           .from('fyp_report_submissions')
-          .select()
+          .select(SelectColumns.fypReportSubmissions)
           .eq('fyp_record_id', fypRecordId)
           .order('version', ascending: false);
       return List<Map<String, dynamic>>.from(res);
@@ -247,7 +248,7 @@ extension FypmsDatabaseService on SupabaseDatabaseService {
     try {
       final res = await Supabase.instance.client
           .from('fyp_deliverables')
-          .select()
+          .select(SelectColumns.fypDeliverables)
           .eq('fyp_record_id', fypRecordId)
           .order('created_at', ascending: false);
       return List<Map<String, dynamic>>.from(res);
@@ -262,7 +263,7 @@ extension FypmsDatabaseService on SupabaseDatabaseService {
     try {
       final res = await Supabase.instance.client
           .from('fyp_lean_canvases')
-          .select()
+          .select(SelectColumns.fypLeanCanvases)
           .eq('fyp_record_id', fypRecordId)
           .eq('is_latest', true)
           .order('canvas_version', ascending: false)
@@ -282,7 +283,7 @@ extension FypmsDatabaseService on SupabaseDatabaseService {
     try {
       final res = await Supabase.instance.client
           .from('fyp_milestones')
-          .select()
+          .select(SelectColumns.fypMilestones)
           .eq('fyp_record_id', fypRecordId)
           .order('target_date', ascending: true);
       return List<Map<String, dynamic>>.from(res);
@@ -299,7 +300,7 @@ extension FypmsDatabaseService on SupabaseDatabaseService {
     try {
       final res = await Supabase.instance.client
           .from('fyp_correction_items')
-          .select()
+          .select(SelectColumns.fypCorrectionItems)
           .eq('fyp_record_id', fypRecordId)
           .order('created_at', ascending: false);
       return List<Map<String, dynamic>>.from(res);
@@ -330,7 +331,7 @@ extension FypmsDatabaseService on SupabaseDatabaseService {
     try {
       var filter = Supabase.instance.client
           .from('fyp_presentation_sessions')
-          .select();
+          .select(SelectColumns.fypPresentationSessions);
       if (offeringId != null) {
         filter = filter.eq('offering_id', offeringId);
       }
@@ -346,7 +347,7 @@ extension FypmsDatabaseService on SupabaseDatabaseService {
     try {
       final res = await Supabase.instance.client
           .from('fyp_presentation_slots')
-          .select()
+          .select(SelectColumns.fypPresentationSlots)
           .eq('session_id', sessionId)
           .order('slot_number', ascending: true);
       return List<Map<String, dynamic>>.from(res);
@@ -365,7 +366,7 @@ extension FypmsDatabaseService on SupabaseDatabaseService {
     try {
       final res = await Supabase.instance.client
           .from('fyp_milestone_extensions')
-          .select('*, fyp_milestones!inner(fyp_record_id, milestone_code, milestone_title)')
+          .select(SelectColumns.fypMilestoneExtensions)
           .eq('fyp_milestones.fyp_record_id', fypRecordId)
           .order('created_at', ascending: false);
       return List<Map<String, dynamic>>.from(res);
@@ -380,7 +381,7 @@ extension FypmsDatabaseService on SupabaseDatabaseService {
     try {
       final res = await Supabase.instance.client
           .from('fyp_presentation_slots')
-          .select('*, fyp_presentation_sessions(*)')
+          .select(SelectColumns.fypPresentationSlotsWithSession)
           .eq('fyp_record_id', fypRecordId)
           .order('start_at');
       return List<Map<String, dynamic>>.from(res);
@@ -397,7 +398,7 @@ extension FypmsDatabaseService on SupabaseDatabaseService {
     try {
       final res = await Supabase.instance.client
           .from('fyp_supervisor_change_requests')
-          .select()
+          .select(SelectColumns.fypSupervisorChangeRequests)
           .eq('fyp_record_id', fypRecordId)
           .order('created_at', ascending: false);
       return List<Map<String, dynamic>>.from(res);
@@ -412,7 +413,7 @@ extension FypmsDatabaseService on SupabaseDatabaseService {
     try {
       final res = await Supabase.instance.client
           .from('fyp_supervisor_change_requests')
-          .select('*, fyp_records(project_title, matric_id)')
+          .select(SelectColumns.fypSupervisorChangeRequestsWithRecord)
           .eq('status', 'pending')
           .order('created_at');
       return List<Map<String, dynamic>>.from(res);
@@ -430,7 +431,7 @@ extension FypmsDatabaseService on SupabaseDatabaseService {
     try {
       final res = await Supabase.instance.client
           .from('fyp_special_evaluations')
-          .select()
+          .select(SelectColumns.fypSpecialEvaluations)
           .eq('fyp_record_id', fypRecordId)
           .maybeSingle();
       return res == null ? null : Map<String, dynamic>.from(res);
@@ -447,7 +448,7 @@ extension FypmsDatabaseService on SupabaseDatabaseService {
     try {
       final res = await Supabase.instance.client
           .from('fyp_marks_summaries')
-          .select()
+          .select(SelectColumns.fypMarksSummaries)
           .eq('fyp_record_id', fypRecordId);
       return List<Map<String, dynamic>>.from(res);
     } catch (e) {
@@ -463,7 +464,7 @@ extension FypmsDatabaseService on SupabaseDatabaseService {
     try {
       var filter = Supabase.instance.client
           .from('fyp_expo_publications')
-          .select();
+          .select(SelectColumns.fypExpoPublications);
       if (status != null) {
         filter = filter.eq('status', status);
       }
@@ -479,7 +480,7 @@ extension FypmsDatabaseService on SupabaseDatabaseService {
     try {
       final res = await Supabase.instance.client
           .from('fyp_audit_logs')
-          .select()
+          .select(SelectColumns.fypAuditLogs)
           .order('created_at', ascending: false)
           .limit(limit);
       return List<Map<String, dynamic>>.from(res);
@@ -496,7 +497,7 @@ extension FypmsDatabaseService on SupabaseDatabaseService {
     try {
       final res = await Supabase.instance.client
           .from('events')
-          .select()
+          .select(SelectColumns.eventSummaries)
           .eq('publication_status', 'published')
           .order('title', ascending: true);
       return List<Map<String, dynamic>>.from(res);

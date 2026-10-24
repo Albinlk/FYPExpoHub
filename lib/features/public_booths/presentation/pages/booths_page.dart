@@ -606,7 +606,7 @@ class _BoothsPageState extends ConsumerState<BoothsPage> with UrlStateSync<Booth
                   leading: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
                     child: Image.network(
-                      '/booth_images/booth-$boothNumber.png',
+                      '/booth_images/booth-$boothNumber.webp',
                       semanticLabel: 'Booth $boothNumber',
                       width: 44,
                       height: 44,

@@ -161,6 +161,12 @@ const _snakeToCamel = <String, String>{
   'file_size_bytes': 'fileSizeBytes',
   'uploaded_by': 'uploadedBy',
   'uploaded_at': 'uploadedAt',
+  // Were missing, so these fields always came back empty: rubric evaluator
+  // shares (shown on Mark Allocation / Rubrics and pre-filled when saving a
+  // new rubric version), who made an assignment, and the feedback browser.
+  'evaluator_shares': 'evaluatorShares',
+  'assigned_by': 'assignedBy',
+  'user_agent': 'userAgent',
 };
 
 /// Generic normalizer for any Supabase row (FYPMS + Expo Hub).

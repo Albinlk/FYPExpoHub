@@ -48,6 +48,12 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Check migrations (offline advisor lints)
+        # Tables without RLS, unindexed foreign keys, SECURITY DEFINER
+        # functions without a pinned search_path, per-row auth.uid() in
+        # policies. See tool/lint_migrations.py.
+        run: python tool/lint_migrations.py --check
+
       - name: Build Handbook (strict)
         # --strict turns broken links, missing nav pages and bad anchors in
         # docs/ into a failed PR instead of a broken /handbook/ page.

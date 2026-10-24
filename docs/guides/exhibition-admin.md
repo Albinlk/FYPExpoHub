@@ -40,7 +40,8 @@ bottom are **Send Feedback** and **Exhibition Site** (back to the public site).
 
 Click a group name (**EXHIBITION**, **PROJECTS & BOOTHS**, …) to close or
 open that group, or use **COLLAPSE ALL** / **EXPAND ALL** at the top of the
-menu. A closed group still shows the page you are on.
+menu. A closed group still shows the page you are on. The menu remembers
+which groups you closed, even after you reload the page in the same browser.
 
 **Menu items and routes**
 

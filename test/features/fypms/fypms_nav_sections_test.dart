@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:fyp_expo_hub/app/widgets/fypms_shell.dart';
 import 'package:fyp_expo_hub/core/state/fypms_state_providers.dart';
 import 'package:fyp_expo_hub/core/supabase/supabase_client_provider.dart';
+import 'package:fyp_expo_hub/core/web/local_prefs.dart';
 import 'package:fyp_expo_hub/features/fypms/presentation/pages/notifications_page.dart';
 
 /// The Workspace menu is grouped by role. Someone with several roles sees
@@ -46,6 +47,9 @@ Future<void> _pump(WidgetTester tester, {required List<String> roles, required S
 void main() {
   const lecturerAdmin = ['supervisor', 'csp600_lecturer', 'admin'];
 
+  // Each test starts from a browser that has never saved the menu.
+  setUp(() => localPrefs = MemoryLocalPrefs());
+
   testWidgets('several roles: one section per role, only the current one open', (tester) async {
     await _pump(tester, roles: lecturerAdmin, at: '/fypms/csp/marks');
 
@@ -81,5 +85,57 @@ void main() {
     expect(find.text('PEOPLE'), findsOneWidget);
     expect(find.text('SETUP'), findsOneWidget);
     expect(find.text('Users & Roles'), findsOneWidget);
+    expect(find.byKey(const Key('fypms-nav-toggle-all')), findsNothing);
+  });
+
+  testWidgets('Collapse all closes every section, then the button expands all', (tester) async {
+    await _pump(tester, roles: lecturerAdmin, at: '/fypms/csp/marks');
+    expect(find.text('COLLAPSE ALL'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('fypms-nav-toggle-all')));
+    await tester.pumpAndSettle();
+    for (final item in ['Marks', 'Report Endorsement', 'Users & Roles']) {
+      expect(find.text(item), findsNothing, reason: item);
+    }
+    expect(find.text('SUPERVISOR'), findsOneWidget); // the headings stay
+    expect(find.text('EXPAND ALL'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('fypms-nav-toggle-all')));
+    await tester.pumpAndSettle();
+    // (The Coordinator section is below the fold of the lazy list here.)
+    for (final item in ['Marks', 'Report Endorsement']) {
+      expect(find.text(item), findsOneWidget, reason: item);
+    }
+    expect(find.text('COLLAPSE ALL'), findsOneWidget);
+  });
+
+  testWidgets('the open sections are saved and come back after a reload', (tester) async {
+    await _pump(tester, roles: lecturerAdmin, at: '/fypms/csp/marks');
+    await tester.tap(find.byKey(const Key('nav-section-Supervisor')));
+    await tester.pumpAndSettle();
+    expect(readStringSet(kWorkspaceNavOpenKey), {'Supervisor', 'CSP600 Lecturer'});
+
+    // "Reload": a fresh app on the same browser storage.
+    await tester.pumpWidget(const SizedBox());
+    await _pump(tester, roles: lecturerAdmin, at: '/fypms/csp/marks');
+    expect(find.text('Report Endorsement'), findsOneWidget);
+    expect(find.text('Marks'), findsOneWidget);
+    expect(find.text('Users & Roles'), findsNothing);
+  });
+
+  testWidgets('the current page opens its section even if it was saved closed', (tester) async {
+    localPrefs = MemoryLocalPrefs({kWorkspaceNavOpenKey: '["Coordinator"]'});
+    await _pump(tester, roles: lecturerAdmin, at: '/fypms/csp/marks');
+
+    expect(find.text('Marks'), findsOneWidget); // CSP section: current page
+    expect(find.text('Users & Roles'), findsOneWidget); // saved open
+    expect(find.text('Report Endorsement'), findsNothing); // saved closed
+  });
+
+  testWidgets('Collapse all is saved too', (tester) async {
+    await _pump(tester, roles: lecturerAdmin, at: '/fypms/csp/marks');
+    await tester.tap(find.byKey(const Key('fypms-nav-toggle-all')));
+    await tester.pumpAndSettle();
+    expect(readStringSet(kWorkspaceNavOpenKey), isEmpty);
   });
 }

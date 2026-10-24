@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../utils/logger.dart';
+import 'select_columns.dart';
 import 'row_mappers.dart' show isUuid;
 
 /// The exhibition this build was first set up for (and whose data the
@@ -83,7 +84,7 @@ class SupabaseDatabaseService {
     int? offset,
   }) async {
     try {
-      var filter = _client.from('projects').select();
+      var filter = _client.from('projects').select(SelectColumns.projects);
       final eventId = await _currentEventId();
       if (eventId != null) filter = filter.eq('event_id', eventId);
       if (publishedOnly) {
@@ -126,7 +127,7 @@ class SupabaseDatabaseService {
     bool publishedOnly = false,
   }) async {
     try {
-      var filter = _client.from('schedule_items').select();
+      var filter = _client.from('schedule_items').select(SelectColumns.scheduleItems);
       final eventId = await _currentEventId();
       if (eventId != null) filter = filter.eq('event_id', eventId);
       if (publishedOnly) {
@@ -170,7 +171,7 @@ class SupabaseDatabaseService {
     bool publishedOnly = false,
   }) async {
     try {
-      var filter = _client.from('booths').select();
+      var filter = _client.from('booths').select(SelectColumns.booths);
       final eventId = await _currentEventId();
       if (eventId != null) filter = filter.eq('event_id', eventId);
       if (publishedOnly) {
@@ -210,7 +211,7 @@ class SupabaseDatabaseService {
     bool publishedOnly = false,
   }) async {
     try {
-      var filter = _client.from('announcements').select();
+      var filter = _client.from('announcements').select(SelectColumns.announcements);
       final eventId = await _currentEventId();
       if (eventId != null) filter = filter.eq('event_id', eventId);
       if (publishedOnly) {
@@ -252,7 +253,7 @@ class SupabaseDatabaseService {
     bool publishedOnly = false,
   }) async {
     try {
-      var filter = _client.from('award_winners').select();
+      var filter = _client.from('award_winners').select(SelectColumns.awardWinners);
       final eventId = await _currentEventId();
       if (eventId != null) filter = filter.eq('event_id', eventId);
       if (publishedOnly) {
@@ -295,7 +296,7 @@ class SupabaseDatabaseService {
       final column = isUuid(slugOrId) ? 'id' : 'slug';
       return await _client
           .from('events')
-          .select()
+          .select(SelectColumns.events)
           .eq(column, slugOrId)
           .maybeSingle();
     } catch (e) {
@@ -307,7 +308,7 @@ class SupabaseDatabaseService {
   /// Every published exhibition, newest first (the public archive, S7).
   Future<List<Map<String, dynamic>>> getEventsOnce() async {
     try {
-      final res = await _client.from('events').select().order('start_at', ascending: false);
+      final res = await _client.from('events').select(SelectColumns.eventSummaries).order('start_at', ascending: false);
       return List<Map<String, dynamic>>.from(res);
     } catch (e) {
       logDebug('Supabase getEventsOnce error: $e');
@@ -319,7 +320,7 @@ class SupabaseDatabaseService {
   Future<List<Map<String, dynamic>>> getEventProjectsOnce(String eventId) async {
     final res = await _client
         .from('projects')
-        .select()
+        .select(SelectColumns.projects)
         .eq('event_id', eventId)
         .eq('publication_status', 'published')
         .order('title');
@@ -329,7 +330,7 @@ class SupabaseDatabaseService {
   Future<List<Map<String, dynamic>>> getEventAwardWinnersOnce(String eventId) async {
     final res = await _client
         .from('award_winners')
-        .select()
+        .select(SelectColumns.awardWinners)
         .eq('event_id', eventId)
         .eq('publication_status', 'published')
         .order('created_at');
@@ -341,7 +342,7 @@ class SupabaseDatabaseService {
   // ---------------------------------------------------
   Future<Map<String, dynamic>?> getSetting(String key) async {
     try {
-      final data = await _client.from('settings').select().eq('key', key).maybeSingle();
+      final data = await _client.from('settings').select(SelectColumns.settings).eq('key', key).maybeSingle();
       return data != null ? (data['value'] as Map<String, dynamic>?) : null;
     } catch (e) {
       logDebug('Supabase getSetting error: $e');
@@ -353,7 +354,7 @@ class SupabaseDatabaseService {
   /// value: showing defaults after a failed read and then saving would
   /// overwrite the real setting.
   Future<Map<String, dynamic>?> getSettingStrict(String key) async {
-    final data = await _client.from('settings').select().eq('key', key).maybeSingle();
+    final data = await _client.from('settings').select(SelectColumns.settings).eq('key', key).maybeSingle();
     return data != null ? (data['value'] as Map<String, dynamic>?) : null;
   }
 
@@ -375,7 +376,7 @@ class SupabaseDatabaseService {
   // ---------------------------------------------------
   Future<List<Map<String, dynamic>>> getImportsOnce() async {
     try {
-      final response = await _client.from('imports').select().order('created_at', ascending: false);
+      final response = await _client.from('imports').select(SelectColumns.imports).order('created_at', ascending: false);
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
       logDebug('Supabase getImportsOnce error: $e');
@@ -418,7 +419,7 @@ class SupabaseDatabaseService {
 
   Future<List<Map<String, dynamic>>> getScheduleCandidates(String importId) async {
     try {
-      final res = await _client.from('import_schedule_candidates').select().eq('import_id', importId).order('row_number', ascending: true);
+      final res = await _client.from('import_schedule_candidates').select(SelectColumns.importScheduleCandidates).eq('import_id', importId).order('row_number', ascending: true);
       return List<Map<String, dynamic>>.from(res);
     } catch (e) {
       logDebug('Supabase getScheduleCandidates error: $e');
@@ -428,7 +429,7 @@ class SupabaseDatabaseService {
 
   Future<List<Map<String, dynamic>>> getAwardCandidates(String importId) async {
     try {
-      final res = await _client.from('import_award_candidates').select().eq('import_id', importId).order('row_number', ascending: true);
+      final res = await _client.from('import_award_candidates').select(SelectColumns.importAwardCandidates).eq('import_id', importId).order('row_number', ascending: true);
       return List<Map<String, dynamic>>.from(res);
     } catch (e) {
       logDebug('Supabase getAwardCandidates error: $e');
@@ -438,7 +439,7 @@ class SupabaseDatabaseService {
 
   Future<List<Map<String, dynamic>>> getValidationIssues(String importId) async {
     try {
-      final res = await _client.from('import_validation_issues').select().eq('import_id', importId).order('row_number', ascending: true);
+      final res = await _client.from('import_validation_issues').select(SelectColumns.importValidationIssues).eq('import_id', importId).order('row_number', ascending: true);
       return List<Map<String, dynamic>>.from(res);
     } catch (e) {
       logDebug('Supabase getValidationIssues error: $e');
@@ -448,7 +449,7 @@ class SupabaseDatabaseService {
 
   Future<List<Map<String, dynamic>>> getPrivacySkips(String importId) async {
     try {
-      final res = await _client.from('import_privacy_skips').select().eq('import_id', importId).order('row_number', ascending: true);
+      final res = await _client.from('import_privacy_skips').select(SelectColumns.importPrivacySkips).eq('import_id', importId).order('row_number', ascending: true);
       return List<Map<String, dynamic>>.from(res);
     } catch (e) {
       logDebug('Supabase getPrivacySkips error: $e');
@@ -511,7 +512,7 @@ class SupabaseDatabaseService {
   // ---------------------------------------------------
   Future<List<Map<String, dynamic>>> getLecturersOnce() async {
     try {
-      final res = await _client.from('profiles').select().eq('role', 'lecturer').order('display_name', ascending: true);
+      final res = await _client.from('profiles').select(SelectColumns.profiles).eq('role', 'lecturer').order('display_name', ascending: true);
       return List<Map<String, dynamic>>.from(res);
     } catch (e) {
       logDebug('Supabase getLecturersOnce error: $e');
@@ -521,7 +522,7 @@ class SupabaseDatabaseService {
 
   Future<Map<String, dynamic>?> getLecturer(String uid) async {
     try {
-      final res = await _client.from('profiles').select().eq('id', uid).maybeSingle();
+      final res = await _client.from('profiles').select(SelectColumns.profiles).eq('id', uid).maybeSingle();
       return res;
     } catch (e) {
       logDebug('Supabase getLecturer error: $e');
@@ -564,7 +565,7 @@ class SupabaseDatabaseService {
   // ---------------------------------------------------
   Future<List<Map<String, dynamic>>> getAssignmentsOnce() async {
     try {
-      final res = await _client.from('lecturer_assignments').select().order('assigned_at', ascending: false);
+      final res = await _client.from('lecturer_assignments').select(SelectColumns.lecturerAssignments).order('assigned_at', ascending: false);
       return List<Map<String, dynamic>>.from(res);
     } catch (e) {
       logDebug('Supabase getAssignmentsOnce error: $e');
@@ -574,7 +575,7 @@ class SupabaseDatabaseService {
 
   Future<Map<String, dynamic>?> getAssignment(String id) async {
     try {
-      final res = await _client.from('lecturer_assignments').select().eq('id', id).maybeSingle();
+      final res = await _client.from('lecturer_assignments').select(SelectColumns.lecturerAssignments).eq('id', id).maybeSingle();
       return res;
     } catch (e) {
       logDebug('Supabase getAssignment error: $e');
@@ -634,7 +635,7 @@ class SupabaseDatabaseService {
   // ---------------------------------------------------
   Future<List<Map<String, dynamic>>> getVisitsOnce({int limit = 1000}) async {
     try {
-      final res = await _client.from('student_project_visits').select().order('created_at', ascending: false).limit(limit);
+      final res = await _client.from('student_project_visits').select(SelectColumns.studentProjectVisits).order('created_at', ascending: false).limit(limit);
       return List<Map<String, dynamic>>.from(res);
     } catch (e) {
       logDebug('Supabase getVisitsOnce error: $e');
@@ -644,7 +645,7 @@ class SupabaseDatabaseService {
 
   Future<Map<String, dynamic>?> getVisit(String id) async {
     try {
-      final res = await _client.from('student_project_visits').select().eq('id', id).maybeSingle();
+      final res = await _client.from('student_project_visits').select(SelectColumns.studentProjectVisits).eq('id', id).maybeSingle();
       return res;
     } catch (e) {
       logDebug('Supabase getVisit error: $e');
@@ -658,7 +659,7 @@ class SupabaseDatabaseService {
   /// Categories in display order (RLS: the public sees active ones only).
   Future<List<Map<String, dynamic>>> getAwardCategoriesOnce() async {
     try {
-      final res = await _client.from('award_categories').select().order('sort_order').order('title');
+      final res = await _client.from('award_categories').select(SelectColumns.awardCategories).order('sort_order').order('title');
       return List<Map<String, dynamic>>.from(res);
     } catch (e) {
       logDebug('Supabase getAwardCategoriesOnce error: $e');
@@ -690,7 +691,7 @@ class SupabaseDatabaseService {
   // ---------------------------------------------------
   Future<List<Map<String, dynamic>>> getAuditLogsOnce({int limit = 200}) async {
     try {
-      final res = await _client.from('audit_logs').select().order('created_at', ascending: false).limit(limit);
+      final res = await _client.from('audit_logs').select(SelectColumns.auditLogs).order('created_at', ascending: false).limit(limit);
       return List<Map<String, dynamic>>.from(res);
     } catch (e) {
       logDebug('Supabase getAuditLogsOnce error: $e');
@@ -703,7 +704,7 @@ class SupabaseDatabaseService {
   // ---------------------------------------------------
   Future<List<Map<String, dynamic>>> getFeedbackEntriesOnce() async {
     try {
-      final res = await _client.from('feedback_entries').select().order('created_at', ascending: false);
+      final res = await _client.from('feedback_entries').select(SelectColumns.feedbackEntries).order('created_at', ascending: false);
       return List<Map<String, dynamic>>.from(res);
     } catch (e) {
       logDebug('Supabase getFeedbackEntriesOnce error: $e');
